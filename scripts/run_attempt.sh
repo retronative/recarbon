@@ -5,7 +5,7 @@
 #
 #   scripts/run_attempt.sh <name> [seconds] [--headless]
 #
-# Writes game/m3/<name>.log (git-ignored: it names game files and addresses)
+# Writes game/m3/<name>.log (user data in game/m3/home, see below) (git-ignored: it names game files and addresses)
 # and prints the exit status: 3 = an unimplemented import was reached,
 # >128 = a signal, 0 = a clean exit. A deadline stop is marked
 # "[run_attempt] deadline" in the log (then usually exit 0: SIGTERM quits).
@@ -18,6 +18,13 @@ mkdir -p game/m3
 # Muted unless the caller sets RECARBON_MUTE=0 (ReCarbon M5: audio checks need the device).
 export RECARBON_RESOLUTION=1x RECARBON_MUTE="${RECARBON_MUTE:-1}" RECARBON_HANG_SECS="${RECARBON_HANG_SECS:-20}"
 unset RECARBON_STUB_CONTINUE
+# ReCarbon: an isolated user folder (settings, saves, logs, caches) under
+# game/m3/home, so automated runs never touch the player's own
+# (~/Library/Application Support/ReCarbon). RECARBON_REAL_HOME=1 opts out.
+if [ "${RECARBON_REAL_HOME:-0}" != 1 ]; then
+  export HOME="$ROOT/game/m3/home"
+  mkdir -p "$HOME/Library/Application Support" "$HOME/Library/Caches"
+fi
 [ "${3:-}" = "--headless" ] && export RECARBON_HEADLESS=1
 # At the deadline: SIGTERM (the game quits cleanly, so the next run starts
 # without an "ended without quitting" notice), then SIGKILL 5 s later.
