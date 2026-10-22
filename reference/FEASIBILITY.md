@@ -580,6 +580,26 @@ a session).
   number. Smoothing is deferred to polish unless it causes gameplay issues.
 - Lip-sync isn't checked by eye and ear yet.
 
+### See-through road in gameplay: root-caused and fixed (commit 557d9b5)
+- **Symptom** (hand test): in gameplay the road was see-through, with buildings, terrain and
+  lights visible through it. In game-only frame dumps the road was flat black with no texture
+  or headlight light, and city lights showed on it. Road surfaces in the intro cutscene were
+  fine.
+- **Ruled out:** depth-format aliasing (every gameplay depth target is D24S8), and an
+  uncleared scene depth buffer. The game clears depth with a 4x-MSAA rectangle at half pitch,
+  which lands in a different host image than the 1x scene. Clearing the 1x image as well
+  changed nothing visible. That split is recorded, but it isn't this defect.
+- **Root cause:** the road's pixel shader uses `getGradients` (texture fetch opcode 18), which
+  the translator didn't implement. The shader failed to translate, so every road draw was
+  skipped, about 28 per frame (104,985 skipped draws in gameplay against 24 in the front end).
+- **Fix:** `getGradients` returns (ddx(x), ddy(x), ddx(y), ddy(y)) of its first two source
+  components with coarse derivatives, in pixel shaders only, as Xenia's SPIR-V translator does.
+  `shader_gradients_test` (hand-assembled microcode, no game bytes) passes; against the old
+  translator it fails 3 checks with the game's exact error. `ctest` 14/14.
+- **Verification:** gameplay frames show asphalt, centre lines and headlight light, with
+  nothing through the road. 0 translation failures, and skipped draws back to 24. Boot
+  regression 3/3.
+
 ### XMA and input
 - **XMA:** 3,749 frames decoded with the XMA1 decoder, 0 skipped, across five runs (menu sound
   effects). The front-end music isn't XMA. XMA1 against XMA2 isn't settled: the decoder's
