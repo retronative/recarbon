@@ -254,7 +254,7 @@ uint32_t XamShowMessageBoxUI(uint32_t dwUserIndex, be<uint16_t>* wszTitle, be<ui
 
     wprintf(L"[XamShowMessageBoxUI] !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
     wprintf(L"[XamShowMessageBoxUI] If you are encountering this message and the game has ceased functioning,\n");
-    wprintf(L"[XamShowMessageBoxUI] please report it at https://github.com/thixpin/recarbon/issues.\n");
+    wprintf(L"[XamShowMessageBoxUI] please report it at https://github.com/retronative/recarbon/issues.\n");
     wprintf(L"[XamShowMessageBoxUI] !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
     wprintf(L"[XamShowMessageBoxUI] %ls\n", texts[0].c_str());
     wprintf(L"[XamShowMessageBoxUI] %ls\n", texts[1].c_str());

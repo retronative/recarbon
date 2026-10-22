@@ -24,10 +24,10 @@ namespace update
 {
     // ReCarbon change: the GitHub repository ("owner/name") whose releases
     // are checked, never SpeedBreaker's (its downloads are for Most Wanted).
-    // ASSUMED from the bundle ID io.github.thixpin.recarbon: the repository
+    // ASSUMED from the bundle ID org.retronative.recarbon: the repository
     // must exist, with exactly this case (release pages that don't start with
     // kPagePrefix fall back to kReleasesPage), before a release ships.
-#define RECARBON_UPDATE_REPOSITORY "thixpin/recarbon"
+#define RECARBON_UPDATE_REPOSITORY "retronative/recarbon"
     // GitHub's newest release that is neither a draft nor a pre-release.
     inline constexpr const char kApiUrl[] = "https://api.github.com/repos/" RECARBON_UPDATE_REPOSITORY "/releases/latest";
     // Where "Open download page" goes when the answer names no page of this

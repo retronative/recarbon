@@ -30,7 +30,7 @@ See [reference/FEASIBILITY.md](reference/FEASIBILITY.md) and
 |---|---|
 | Target | Apple Silicon Macs, macOS 15 or later (primary test device: MacBook Air M5) |
 | App / executable | `ReCarbon.app` / `ReCarbon` (planned) |
-| Bundle ID | `io.github.thixpin.recarbon` |
+| Bundle ID | `org.retronative.recarbon` |
 
 ## How it will work
 

@@ -226,7 +226,7 @@ customization. The controls criterion is judged on the default mappings.
 ## M8 — Polish and distribution
 - **Do:**
   - Parametrize the installer: Carbon manifest, title ID, ReCarbon names.
-  - Package `ReCarbon.app` (bundle ID `io.github.thixpin.recarbon`, via `make_app.py`) with license notices and LGPL sources.
+  - Package `ReCarbon.app` (bundle ID `org.retronative.recarbon`, via `make_app.py`) with license notices and LGPL sources.
   - Optional: render scaling and widescreen hooks, reintroduced per Carbon render target.
   - Input customization, extending SpeedBreaker's existing rebinding on M5's binding layer
     (ARCHITECTURE §3.6):

@@ -11,7 +11,7 @@ architecture is for the **Xbox 360** release (title 0x454107EC). ROADMAP M0 veri
 | Project | ReCarbon |
 | Repository / directory | `recarbon` |
 | macOS app / executable | `ReCarbon.app` / `ReCarbon` |
-| Bundle ID | `io.github.thixpin.recarbon` |
+| Bundle ID | `org.retronative.recarbon` |
 | Recompiled library (CMake target) | `ReCarbonRecompLib` |
 | Recompiler config | `config/recarbon.toml` |
 | Environment-variable prefix | `RECARBON_` (replaces SpeedBreaker's `NFSMW_`) |

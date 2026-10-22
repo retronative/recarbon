@@ -265,7 +265,7 @@ runtime reference to a guest address was audited:
     `recarbon-*`;
   - installer for "Need for Speed: Carbon", title 0x454107EC, with a regenerated manifest:
     78 files, 5,738,577,280 B, default.xex `947f95c7…`, `$SystemUpdate` excluded;
-  - the update check points at `thixpin/recarbon`. That repository is **assumed** and returns
+  - the update check points at `retronative/recarbon`. That repository is **assumed** and returns
     "no release" until it exists.
 - **Imports:** `kernel/import_stubs.cpp` was regenerated from Carbon's `ppc/` with SpeedBreaker's
   generator. A stub logs the name and registers and **exits** (code 3); it continues only with the
