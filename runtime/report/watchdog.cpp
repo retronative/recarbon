@@ -119,6 +119,7 @@ namespace report
             bool answered = false;
             bool hasGuest = false;
             uint32_t lr = 0, r1 = 0;
+            uint32_t gpr[32]{};  // ReCarbon: r0-r31 (low words), for reading a wait's state
             void* pc = nullptr;
             std::vector<void*> frames;
         };
@@ -177,6 +178,13 @@ namespace report
                     sample.hasGuest = true;
                     sample.lr = uint32_t(s.guest->lr);
                     sample.r1 = s.guest->r1.u32;
+                    // By name: PPCContext doesn't lay r0-r31 out in order.
+                    const PPCContext& g = *s.guest;
+                    const PPCRegister* regs[32] = { &g.r0, &g.r1, &g.r2, &g.r3, &g.r4, &g.r5, &g.r6, &g.r7, &g.r8, &g.r9,
+                        &g.r10, &g.r11, &g.r12, &g.r13, &g.r14, &g.r15, &g.r16, &g.r17, &g.r18, &g.r19, &g.r20, &g.r21,
+                        &g.r22, &g.r23, &g.r24, &g.r25, &g.r26, &g.r27, &g.r28, &g.r29, &g.r30, &g.r31 };
+                    for (int i = 0; i < 32; i++)
+                        sample.gpr[i] = regs[i]->u32;
                 }
                 samples.push_back(std::move(sample));
             }
@@ -246,6 +254,10 @@ namespace report
                 if (s.hasGuest)
                     text += std::format("  (guest lr={:08X} r1={:08X})", s.lr, s.r1);
                 text += s.answered ? ":\n" : ": didn't answer (blocked in the kernel?)\n";
+                if (s.hasGuest)
+                    for (int i = 0; i < 32; i += 8)
+                        text += std::format("    r{:<2} {:08X} {:08X} {:08X} {:08X} {:08X} {:08X} {:08X} {:08X}\n", i, s.gpr[i],
+                            s.gpr[i + 1], s.gpr[i + 2], s.gpr[i + 3], s.gpr[i + 4], s.gpr[i + 5], s.gpr[i + 6], s.gpr[i + 7]);
                 text += FormatStack(s.pc, s.frames);
             }
             text += "\nThe log's last lines:\n" + RecentOutput(400);
