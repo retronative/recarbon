@@ -49,6 +49,9 @@ recarbon_test(raise_exception_test)
 # gpu::RingState: a re-initialized ring isn't overwritten by an old batch's end
 # (runtime/gpu/ring_state.h, header only; ReCarbon M3).
 recarbon_test(ring_state_test)
+# Which EDRAM colour formats share a target, and their sample sizes
+# (runtime/gpu/edram_format.h, header only; ReCarbon M4: black movies).
+recarbon_test(edram_format_test)
 
 # Not ported from SpeedBreaker (one line each: why).
 # write_watch_test: needs ppc/ (ppc_config.h, generated from the XEX) and XenonUtils.

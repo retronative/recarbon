@@ -3,6 +3,7 @@
 // vulkan/vulkan_pipeline_cache.cc.
 #include <stdafx.h>
 #include "renderer.h"
+#include "edram_format.h"
 #include <cpu/guest_thread.h>
 #include <cpu/host_cpu.h>
 #include <cpu/guest_time.h>
@@ -1794,16 +1795,10 @@ namespace gpu::renderer
             }
         }
 
+        // ReCarbon: Xenia's definition (edram_format.h); 2_10_10_10_FLOAT_AS_16_16_16_16 is 32 bpp.
         bool Is64bpp(uint32_t format)
         {
-            switch (xenos::ColorRenderTargetFormat(format))
-            {
-            case xenos::ColorRenderTargetFormat::k_16_16_16_16:
-            case xenos::ColorRenderTargetFormat::k_16_16_16_16_FLOAT:
-            case xenos::ColorRenderTargetFormat::k_2_10_10_10_FLOAT_AS_16_16_16_16:
-            case xenos::ColorRenderTargetFormat::k_32_32_FLOAT: return true;
-            default: return false;
-            }
+            return IsColorFormat64bpp(format);
         }
 
         // Untiled rendering (see TileShift); RECARBON_TILING=1 renders per tile.
@@ -2058,6 +2053,10 @@ namespace gpu::renderer
 
         RenderTarget* GetTarget(uint32_t base, uint32_t format, bool depth, uint32_t pitch)
         {
+            // ReCarbon: a colour format and its blending-precision variant
+            // share their pixels (edram_format.h), so they share a target.
+            if (!depth)
+                format = StorageColorFormat(format);
             bool wide = s_untiled && Reg<reg::RB_SURFACE_INFO>().msaa_samples != xenos::MsaaSamples::k1X &&
                 Reg<reg::PA_SU_SC_MODE_CNTL>().vtx_window_offset_enable && pitch < kUntiledWidth;
             uint64_t key = uint64_t(base) | (uint64_t(format) << 12) | (uint64_t(depth) << 16) | (uint64_t(pitch) << 17) |
