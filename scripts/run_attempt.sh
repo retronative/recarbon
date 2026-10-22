@@ -15,7 +15,8 @@ cd "$ROOT"
 name="${1:?usage: run_attempt.sh <name> [seconds] [--headless]}"
 secs="${2:-90}"
 mkdir -p game/m3
-export RECARBON_RESOLUTION=1x RECARBON_MUTE=1 RECARBON_HANG_SECS="${RECARBON_HANG_SECS:-20}"
+# Muted unless the caller sets RECARBON_MUTE=0 (ReCarbon M5: audio checks need the device).
+export RECARBON_RESOLUTION=1x RECARBON_MUTE="${RECARBON_MUTE:-1}" RECARBON_HANG_SECS="${RECARBON_HANG_SECS:-20}"
 unset RECARBON_STUB_CONTINUE
 [ "${3:-}" = "--headless" ] && export RECARBON_HEADLESS=1
 # At the deadline: SIGTERM (the game quits cleanly, so the next run starts
