@@ -20,7 +20,8 @@ Native recompilation of Need for Speed: Carbon (Xbox 360) for Apple Silicon.
 - **M1:** the whole executable recompiles to C++ with no errors, reproducibly.
 - **M2:** all of it compiles for arm64 and links with the adapted SpeedBreaker runtime into a
   native `ReCarbon` executable. It hasn't been run yet.
-- **Next, M3:** runtime initialization, not started.
+- **M3:** it boots Carbon: kernel and CRT init, data loading, GPU bring-up, and the game's own loading screen rendered. Movie video is still black and nothing is playable.
+- **Next, M4:** rendering, not started.
 
 See [reference/FEASIBILITY.md](reference/FEASIBILITY.md) and
 [reference/ROADMAP.md](reference/ROADMAP.md).

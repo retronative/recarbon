@@ -11,7 +11,8 @@ Date: 2026-10-22. Host: arm64, macOS 27.0.1. Reference: SpeedBreaker v0.1.7 (`31
 | Feasibility | **Conditionally feasible, medium risk.** Carbon has about 1.37× MW's code. The game-specific layer (hooks, widescreen, render queue) must be re-found. |
 | Recompilation (M1) | **Complete.** The whole executable translates: 72,864 functions, 0 recompiler errors or warnings, 0 failure markers, all structural checks pass, and the output is reproducible byte for byte (§3). |
 | Native build (M2) | **Complete.** All generated code compiles for arm64 and links with the adapted SpeedBreaker runtime into a 59.6 MB `ReCarbon` executable, with 0 unresolved symbols, in 98 s from clean on the MacBook Air M5 (§4). **Not run yet.** |
-| Next step | ROADMAP **M3**: runtime initialization (awaiting approval). |
+| Runtime (M3) | **Passed** through C5: the native executable boots Carbon, runs its kernel/CRT init, opens its data, brings up the GPU and presents frames in 15 of 15 consecutive windowed launches (plus 6 after the last changes). The game's own **loading screen** renders, verified by frame dumps in 3 of 3 runs. Movie video is still black (§5). |
+| Next step | ROADMAP **M4**: first frame / rendering (awaiting approval). |
 
 ## 1. Disc and executable (evidence)
 
@@ -378,7 +379,86 @@ unreferenced out-of-line copies, or reached in ways a static scan doesn't see (i
     by design;
   - iOS/SteamOS paths inherited but untested.
 
-## 5. Feasibility: Xbox 360 Carbon
+## 5. M3 results: runtime initialization (2026-10-22)
+
+**Method.** Each launch used `scripts/run_attempt.sh`: 1x internal resolution, audio muted,
+strict stubs (`RECARBON_STUB_CONTINUE` never set), hang reports after 20 s, and a deadline
+ending in SIGTERM.
+- Every stop was root-caused from the disassembly before any change.
+- Imports were implemented only when reached, with their semantics cited from Xenia (BSD-3)
+  at 95a5c3ee.
+- About 50 launches in all. The attempt table is in the local, untracked `WORKLOG.local.md`.
+
+### Checkpoints
+| | Checkpoint | State | Evidence |
+|---|---|---|---|
+| C1 | Image loaded, imports wired | **Passed** | `[loader] wired 355 function import slots, 14 data imports` every run |
+| C2 | Entry point, CRT, guest threads | **Passed** | `calling entry 829446E0`; `MainThread` and further threads created and named |
+| C3 | Data through the VFS | **Passed** | `D:\NFS\ZDIR.BIN`, `ZZDATA0–10.BIN` opened (`ZZDATA11` probed: not on the disc) |
+| C4 | GPU bring-up | **Passed** | interrupt callback `826DC070`, ring buffers, PM4 batches processed, renderer ready at 1x (`internal resolution 1x1`) |
+| C5 | First `VdSwap` | **Passed** | `[gpu] frame 1` in **15/15** consecutive windowed runs after the fixes (10 + 5), then 6/6 more on the final build; each ran to frame 900 within 40 s, with no hang, stub or crash |
+| C6 | First presented frame of the game's own UI | **Reached** (M4's goal) | frame dumps: "NEED FOR SPEED CARBON — LOADING..." from frame 2880 in 3/3 runs (and once more on the final build) |
+
+**Deepest verified point:** the game's own loading screen, rendered and presented through
+MoltenVK. A 240 s run went on to about 8,700 frames at 50–60 fps (about 1,220 draws per
+frame) with no stop, after the boot movies and the attract movie four times. That the game
+then sits at its title/attract loop is *inferred* from the files it opened, not seen: the
+movie frames are black.
+
+### Fixes (each with its evidence)
+| Stop | Root cause | Fix | Test |
+|---|---|---|---|
+| `RtlRaiseException` (stub) | XAPI `RaiseException(0x406D1388)`, MSVC's SetThreadName (callers 0x826D3748, 0x82924F20), raised under `__try/__except` | Name the thread and return, as Xenia does (`xboxkrnl_debug.cc`). Any other code is fatal, with its code logged (no SEH dispatch). | `raise_exception_test` |
+| `NetDll_XNetStartup`, `WSAStartup`, `WSAWaitForMultipleEvents`, `XNetGetTitleXnAddr` | Network init. The game's wrapper (0x829164F4) falls back to the import when `XexGetModuleHandle("xam.xex")` fails. | Xenia's semantics: a stack that starts, with no link. WSA waits keep the WSA contract (relative ms, `WSA_WAIT_EVENT_0+i`/`TIMEOUT`); Xenia passes a positive (NT: absolute) timeout, which isn't copied. | launches |
+| `ExRegisterTitleTerminateNotification` | title-lifetime registration | Recorded and removed as in Xenia. **Not run at exit** (Xenia doesn't either). | launches |
+| `XMsgStartIORequestEx` (XMP 0x0007001A) | the Ex entry point of an already implemented XMP message | Same as `XMsgStartIORequest`; the 6th argument is ignored, as in Xenia | launches |
+| `XboxKrnlVersion` zeroed | data import new in Carbon | Xenia's initializer (2.0xFFFF.0xFFFF, 0x80) | launches |
+| Abort: indirect call to `0x827C1A18` (movie player) | `leaf_switch_bounds.py` walked a leaf bound back past a `blr`, over a function whose pointer is built with `lis/addi` (0x827C2748). `find_entry_points.py` judged against the pass-1 function map. | Leaf bounds stop at code-built pointers; `survey.sh` reruns entry points to a fixed point | new HARD check in `validate_recomp.py` (2,642 pointers, all function starts); mutation: the old bound fails it |
+| **Intermittent stall before frame 1** (about 1 launch in 2) | **Two races in the command processor's ring handling**, found with lldb (fence completed 5, issued 13, target 11; ring read = write = 31) and a temporary kick/wait trace. Carbon calls `VdInitializeRingBuffer` twice (32 KB at 0x05B51000, then 64 KB at 0x05B49000). (1) An old-ring batch finishing after the re-initialization stored its end (31) over the read-index reset. (2) D3D's device init resets its own write-pointer copy (`device+10824` at 0x826DC6F8) without writing `CP_RB_WPTR`, which kept the old ring's 31. Either way the CP skipped the new ring's first packets, and D3D's fence wait (`sub_826DBD78`) spun forever. | `gpu/ring_state.h`: a generation-checked read advance, and `CP_RB_WPTR` reset and read under the same lock as the ring. This is upstream SpeedBreaker code, presumably latent for MW (inferred). | `ring_state_test` (both halves; each mutant fails it). Launches: 5/10 stalled with the first half fixed, 0/10 with both. |
+
+New tooling:
+- **`ctest` harness:** 8 tests, 7 from SpeedBreaker plus ReCarbon's `raise_exception` and
+  `ring_state`.
+- **Hang reports** now print every guest thread's r0–r31.
+- **Memexport-only draws** are logged once when dropped; previously they were silent.
+- **`scripts/run_attempt.sh`:** the launch harness.
+
+### Audits
+- **Memory:**
+  - guest base 0x7000000000 (lldb);
+  - the 0xA/0xC/0xE physical windows show identical data for the same physical address
+    (0x05B48000), with the 0xE window unshifted on 16K-page macOS, as SpeedBreaker records;
+  - guest memory is imported into Vulkan zero-copy.
+- **Threads:** every guest thread starts and names itself (`MainThread`,
+  `RWAudioCore Dac`). Threads 4, 5 and 15 name themselves "" (not checked whether that is the
+  game's string).
+- **Synchronization:**
+  - D3D and its interrupt callback share state only under spinlocks
+    (`KfAcquireSpinLock`/`KeAcquireSpinLockAtRaisedIrql`, real atomics here). No D3D function
+    relies on IRQL alone, which is a no-op here.
+  - The ring race above was a host-side data race, not a PowerPC ordering issue.
+  - Carbon's own lock-free queues (MW needed 7 fence hooks) show **no symptom yet**; still
+    open (R4).
+- **GPU heuristics:**
+  - 1x is exact (`internal resolution 1x1`), so the 640–1280 pitch window is moot.
+  - Unknown texture formats are logged (`texture format %u not implemented`), and none
+    occurred in a 240 s run.
+  - Memexport-only drops are now logged, and none occurred.
+  - The MW-only front-end and edge-bar code stays inert (no hooks).
+
+### Remaining blockers and limitations (not M3 criteria)
+- **Movie video is black.** Every boot movie opens and its four decoder threads start (entry
+  0x827C8B78…), but the presented frames are black for the 47 s of playback. Audio is
+  muted, so it isn't verified. M4/M5.
+- **Not exercised:** input, saves and profiles (166 imports are still logging stubs, among
+  them XamShow*UI, content, crypto and the rest of networking), and gameplay.
+- **Title terminate notifications** are recorded but not run at exit.
+- **The D3D hang check's clock**, `*(*(r13+256)+88)`, is unexamined.
+- **Assumed rather than verified:** `XexGetModuleHandle` failing for `xam.xex` and
+  `xboxkrnl.exe` (the game falls back to imports) is equivalent to the console's success
+  path.
+
+## 6. Feasibility: Xbox 360 Carbon
 
 ### Why it is plausible (evidence from M0)
 - **Shared codebase:** the original PE name is `NfsMWRelease.pe`. Carbon was built from the MW codebase lineage, so MW's EA stream-player and render-queue patterns are likely to recur (inferred from the name; to verify in code).
@@ -401,8 +481,8 @@ unreferenced out-of-line copies, or reached in ways a static scan doesn't see (i
 ### Verdict
 **Conditionally feasible, medium risk.** M0–M2 found no blocker; the CPU-translation and build risks are retired. Everything from here is runtime behaviour, which is untested. Expect first boot to the front end after roughly the effort SpeedBreaker spent on MW, minus the generic runtime work. Playable racing is plausible but not guaranteed.
 
-## 6. Recommendation
-Proceed to ROADMAP **M3** (runtime initialization) once approved. Start with Internal Resolution 1x, and find out which stubbed import the game reaches first.
+## 7. Recommendation
+Proceed to ROADMAP **M4** once approved. Start with why movie frames are black: the XMV player's GPU path, i.e. its textures and resolves. Then take the front end past the loading screen with input.
 
 ---
 
