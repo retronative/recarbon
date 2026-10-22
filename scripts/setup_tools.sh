@@ -11,9 +11,10 @@
 # - extract-xiso (to unpack the disc image).
 # - xexsurvey (survey/xexsurvey.cpp), linked against XenonRecomp's libraries,
 #   into tools/survey/xexsurvey.
+# - FFmpeg's XMA decoder (scripts/build_ffmpeg_xma.sh) into tools/ffmpeg-xma.
 #
 # Needs: git, cmake, ninja, clang 18+ (Homebrew LLVM on macOS, the system
-# clang elsewhere; override with LLVM=<bin dir>).
+# clang elsewhere; override with LLVM=<bin dir>), make, curl.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TOOLS="$ROOT/tools"
@@ -21,6 +22,7 @@ if [ -z "${LLVM:-}" ]; then
   if [ -x /opt/homebrew/opt/llvm/bin/clang ]; then LLVM=/opt/homebrew/opt/llvm/bin
   else LLVM="$(dirname "$(command -v clang)")"; fi
 fi
+sha256() { if command -v sha256sum >/dev/null; then sha256sum -c -; else shasum -a 256 -c -; fi; }
 XENONRECOMP_BASE=ddd128bcca99fe8bfbb99bea583c972351fa6ace   # hedge-dev/XenonRecomp main, 2025
 
 mkdir -p "$TOOLS"
@@ -67,6 +69,40 @@ if [ $survey_stale = 1 ]; then
   echo "built tools/survey/xexsurvey"
 fi
 
-# FFmpeg (XMA audio) and Xenia's instruction tests aren't needed until later milestones.
+# FFmpeg for XMA audio: a minimal static libavcodec (XMA1/XMA2/WMAPro
+# decoders only) with patches/ffmpeg applied (scripts/build_ffmpeg_xma.sh).
+# On macOS it is linked into the game, so it is built for the game's
+# deployment target. ReCarbon change: that is the same default as
+# CMakeLists.txt's, MACOSX_DEPLOYMENT_TARGET when set, else this Mac's major
+# version (<major>.0, like Homebrew's bottles), not SpeedBreaker's fixed 15.0;
+# one built for another macOS is rebuilt.
+FFMPEG_VERSION=7.1.1
+FFMPEG_SHA256=733984395e0dbbe5c046abda2dc49a5544e7e0e1e2366bba849222ae9e3a03b1
+ffmpeg_ok=1
+[ -f "$TOOLS/ffmpeg-xma/lib/libavcodec.a" ] || ffmpeg_ok=0
+if [ "$(uname -s)" = Darwin ]; then
+  export MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-$(sw_vers -productVersion | cut -d. -f1).0}"
+  if [ $ffmpeg_ok = 1 ] && [ "$(otool -l "$TOOLS/ffmpeg-xma/lib/libavcodec.a" "$TOOLS/ffmpeg-xma/lib/libavutil.a" \
+       | awk '/LC_BUILD_VERSION/{b=1} b&&/minos/{print $2; b=0}' | sort -u)" != "$MACOSX_DEPLOYMENT_TARGET" ]; then
+    echo "tools/ffmpeg-xma isn't built for macOS $MACOSX_DEPLOYMENT_TARGET: rebuilding it"; ffmpeg_ok=0
+  fi
+fi
+if [ $ffmpeg_ok = 0 ]; then
+  mkdir -p "$TOOLS/ffmpeg-src"
+  cd "$TOOLS/ffmpeg-src"
+  # Into a temporary file first: an interrupted download must not stay behind
+  # as the archive that the next run checks (and fails on).
+  if [ ! -f "ffmpeg-$FFMPEG_VERSION.tar.xz" ]; then
+    curl -sfL -o "ffmpeg-$FFMPEG_VERSION.tar.xz.part" "https://ffmpeg.org/releases/ffmpeg-$FFMPEG_VERSION.tar.xz"
+    mv "ffmpeg-$FFMPEG_VERSION.tar.xz.part" "ffmpeg-$FFMPEG_VERSION.tar.xz"
+  fi
+  echo "$FFMPEG_SHA256  ffmpeg-$FFMPEG_VERSION.tar.xz" | sha256
+  "$ROOT/scripts/build_ffmpeg_xma.sh" "$TOOLS/ffmpeg-src/ffmpeg-$FFMPEG_VERSION.tar.xz" "$TOOLS/ffmpeg-xma"
+  # FFmpeg's license texts, kept next to the source for packaging.
+  tar -xf "ffmpeg-$FFMPEG_VERSION.tar.xz" "ffmpeg-$FFMPEG_VERSION/COPYING.LGPLv2.1" "ffmpeg-$FFMPEG_VERSION/LICENSE.md"
+  cd "$ROOT"
+fi
+
+# Xenia's instruction tests aren't needed until later milestones.
 
 echo "tools ready: $(git -C "$TOOLS/XenonRecomp" log --oneline -1)"

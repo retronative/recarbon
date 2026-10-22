@@ -14,10 +14,12 @@ ReCarbon is derived from SpeedBreaker
 (https://github.com/SpeedBreakerProject/speedbreaker),
 Copyright (C) 2026 project(u) and SpeedBreaker contributors, GPL-3.0-or-later.
 Files taken from SpeedBreaker keep its attribution; changes are noted in each
-file. survey/, patches/xenonrecomp/0001-0008, tests/ and scripts/setup_tools.sh
-come from SpeedBreaker v0.1.7 (31849f5).
-XenonRecomp (MIT) and Xenia (BSD-3-Clause) are used under their own licenses:
-see the LICENSES folder.
+file. From SpeedBreaker v0.1.7 (31849f5): runtime/ (minus its NFS: Most Wanted
+game layer, replaced by runtime/game/title_hooks.cpp), recomp/, the CMake build,
+survey/, patches/xenonrecomp/0001-0008, patches/ffmpeg/, tests/ and scripts/.
+Third-party components are listed in THIRD_PARTY_NOTICES.md.
+XenonRecomp (MIT), Xenia (BSD-3-Clause), FFmpeg and libmspack (LGPL-2.1) and the
+other components are used under their own licenses: see the LICENSES folder.
 
 ReCarbon is an unofficial, fan-made project. It is not affiliated with,
 endorsed by, or sponsored by Electronic Arts Inc. or the Need for Speed brand.
