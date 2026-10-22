@@ -110,7 +110,8 @@ layer for Carbon.
 - Movies: the 360 disc ships 65 `.wmv` files, played by the XDK's XMV player (`XMEDIA` is
   linked). This is the same path as MW: decoding runs in recompiled guest code, and the host
   side needs only pacing hooks (`game/movie_pacing.cpp` logic, new addresses).
-- Input: reuse `hid/`, with a Carbon default key map.
+- Input: reuse `hid/`, with a Carbon default key map. Layering and the path to customization
+  are in §3.6.
 
 ### 3.5 macOS / Apple Silicon (MacBook Air M5)
 - Build with Homebrew LLVM, macOS 15 deployment target, MoltenVK 1.4.2 bundled, ad hoc signing
@@ -122,6 +123,48 @@ layer for Carbon.
     where MoltenVK allows it.
 - Use `-mcpu=apple-m4` or newer for the recompiled library. Validate with a generic `armv8.5-a`
   build first.
+
+### 3.6 Input (M5 baseline, M8 customization)
+M5–M7 keep SpeedBreaker's input as it is, including its keyboard rebinding (Settings > Controls
+and the `[keys]` table of `settings.toml`, fully working). M8 extends that rebinding with
+profiles, presets and switching on the same layers, without reworking them. Today's `hid/` (from SpeedBreaker) already has most of the parts:
+`hid/input.cpp` samples SDL3 and answers `XamInputGetState`, and `hid/key_map.h` turns held keys
+into buttons, triggers and stick axes (header-only, SDL-free, tested by `key_map_test`). The
+controller side is a fixed SDL-to-XInput table in `input.cpp`.
+
+Three layers, each with one job:
+
+| Layer | Does | Doesn't |
+|---|---|---|
+| **Device input** | Reads SDL3 keyboard and gamepad state and normalizes it into device events (key codes, gamepad buttons and axes). Hot-plug and focus. | Know about Xbox controls or the game. |
+| **Binding resolution** | Applies a mapping to the device state: which keys or pad inputs drive which of the 24 Xbox 360 controls (`keymap::Control`), plus deadzones and how keys combine into axes. | Read devices, or know the game. |
+| **Virtual controller** | Assembles one XInput state (`XAMINPUT_STATE`: buttons, triggers, sticks), the packet number and rumble. That's all the guest sees through `XamInputGetState`. | Know where a value came from. |
+
+Rules for M5 so that M8 is an addition, not a refactor:
+- **A mapping is data.** The binding layer takes a mapping (a keyboard mapping or a controller
+  mapping) as a value: a table from device inputs to `keymap::Control`. Until M8 the keyboard
+  mapping comes from the defaults plus `[keys]`, as today, and the controller mapping is the
+  default. M8 loads, saves and switches whole mappings.
+- **Keyboard and controller mappings are separate types.** M8's separate profiles are then just
+  one stored mapping of each.
+- **No game logic in input.** No Carbon address, no menu or race state in `hid/`. Game-specific
+  things (e.g. a different default for menus) belong in a mapping, never in a code path.
+- **The default mappings are the regression baseline.** They're recorded as tables, and unit
+  tests pin them. M8's "reset to default" restores those tables, and the tests must pass
+  unchanged.
+- **Keep existing rebinding working.** Settings > Controls and `[keys]` are not hidden, disabled
+  or removed in M5–M7, and their behaviour doesn't change.
+- **Not until M8:** no profile manager, presets or profile switching. M8 extends the existing
+  rebinding into profiles and migrates an existing `[keys]` table into the keyboard profile, so
+  no setting is lost.
+
+M8 adds, on top of the binding layer and the existing rebinding:
+- persistent, separate keyboard and controller profiles in the user folder;
+- user-defined mappings per profile (the controller gains rebinding);
+- WASD and Arrows keyboard presets (mappings);
+- manual switching;
+- reset to default;
+- migration of `[keys]` into the keyboard profile.
 
 ## 4. Legal / hygiene
 - The project is GPL-3.0-or-later, because the runtime is derived from SpeedBreaker and

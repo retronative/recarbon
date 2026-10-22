@@ -156,15 +156,27 @@ Diagnosing a failure is progress. It does not pass a criterion.
     hooks, which must be found in Carbon. Confirm at runtime that guest decoding is what plays
     them before adding any host decoder.
   - Port the controller and keyboard input with a Carbon key map.
+  - Keep SpeedBreaker's keyboard rebinding fully working: the Settings > Controls page and the
+    `[keys]` table of `settings.toml`. Don't hide, disable or remove them, and keep their
+    behaviour. No new customization (profiles, presets, switching) before M8.
+  - Keep the input in three layers, ready for M8 (ARCHITECTURE §3.6): device input → binding
+    resolution → a virtual Xbox 360 controller. Mappings are data that the binding layer reads,
+    nothing in it names a Carbon address, and input stays independent of game logic.
+  - Record the default keyboard and controller mappings as the regression baseline: a table in
+    the repository and unit tests that pin it (in the style of `key_map_test`).
 - **Accept:**
   - Front-end music plays without stalls for 5 minutes.
   - The intro movie plays at the correct cadence.
   - Menus are navigable with a controller and with the keyboard.
+  - The default keyboard and controller mappings are recorded and pinned by passing unit tests.
+  - Keyboard rebinding through Settings > Controls and `[keys]` still works and persists.
 - **Verify:** a windowed run with the audio log (`RECARBON_AUDIO_LOG`): no underruns over 5 minutes
   in the front end, and the intro movie's frame times in the log. Navigate by hand with a pad and
   with the keyboard, scripted with `RECARBON_INPUT_SCRIPT` where possible.
 
 ## M6 — First boot to free-roam / race load
+Input as in M5: SpeedBreaker's keyboard rebinding and `[keys]` keep working. No new
+customization.
 - **Do:**
   - Implement the missing kernel/XAM calls: content, saves and profile, scoped per title.
   - Find Carbon's render-queue and frame-time equivalents and add the ARM fence hooks.
@@ -179,6 +191,8 @@ Diagnosing a failure is progress. It does not pass a criterion.
   reports must be empty.
 
 ## M7 — Playable racing
+Input as in M5: SpeedBreaker's keyboard rebinding and `[keys]` keep working. No new
+customization. The controls criterion is judged on the default mappings.
 - **Accept** (each verified separately):
   - **Player controls:** steering, throttle, brake, handbrake, nitrous and the camera respond on a
     controller and on the keyboard.
@@ -198,12 +212,30 @@ Diagnosing a failure is progress. It does not pass a criterion.
   - Parametrize the installer: Carbon manifest, title ID, ReCarbon names.
   - Package `ReCarbon.app` (bundle ID `io.github.thixpin.recarbon`, via `make_app.py`) with license notices and LGPL sources.
   - Optional: render scaling and widescreen hooks, reintroduced per Carbon render target.
+  - Input customization, extending SpeedBreaker's existing rebinding on M5's binding layer
+    (ARCHITECTURE §3.6):
+    - Separate persistent profiles for the keyboard and the controller, stored in the user
+      folder, each holding user-defined mappings (rebinding extended to the controller).
+    - Keyboard presets: WASD and Arrows.
+    - Manual profile switching.
+    - Reset to default, which restores M5's baseline mapping exactly.
+    - Existing `[keys]` settings are preserved: migrated into the keyboard profile, never
+      dropped.
 - **Accept:**
   - A clean install from a disc image on a fresh macOS user account.
   - `check_app.py` passes.
   - The unit tests run in `ctest`.
+  - **Input customization:**
+    - The WASD and Arrows presets both drive the game.
+    - A custom keyboard mapping and a custom controller mapping each survive a restart,
+      independently of each other.
+    - Switching profiles takes effect without a restart.
+    - Reset to default matches M5's baseline table (the baseline tests still pass unchanged).
+    - A `settings.toml` with a customized `[keys]` table migrates to a keyboard profile with the
+      same bindings.
 - **Verify:** `scripts/macos` packaging plus `check_app.py`, an install on a fresh user account
-  from the disc image, and `ctest`.
+  from the disc image, and `ctest`. For input: unit tests for profile load, save, reset and
+  migration, plus a windowed session per preset with `RECARBON_INPUT_SCRIPT` where possible.
 
 ## Not planned
 - Any original-Xbox (XBE) port. That is out of scope unless re-approved (see ARCHITECTURE appendix).
