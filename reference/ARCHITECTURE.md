@@ -140,6 +140,11 @@ Three layers, each with one job:
 | **Binding resolution** | Applies a mapping to the device state: which keys or pad inputs drive which of the 24 Xbox 360 controls (`keymap::Control`), plus deadzones and how keys combine into axes. | Read devices, or know the game. |
 | **Virtual controller** | Assembles one XInput state (`XAMINPUT_STATE`: buttons, triggers, sticks), the packet number and rumble. That's all the guest sees through `XamInputGetState`. | Know where a value came from. |
 
+Today these are logical layers inside `hid/input.cpp`, not separate code (ARCHITECTURE_REVIEW
+F12). They're to be kept separable. The two seams M8 needs are a keyboard mapping read as a value
+instead of per-frame `settings::GetInt` calls, and the controller table moved into a tested header
+(ARCHITECTURE_REVIEW R2, R3). Both are behaviour-preserving.
+
 Rules for M5 so that M8 is an addition, not a refactor:
 - **A mapping is data.** The binding layer takes a mapping (a keyboard mapping or a controller
   mapping) as a value: a table from device inputs to `keymap::Control`. Until M8 the keyboard
