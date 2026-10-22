@@ -12,7 +12,7 @@ Date: 2026-10-22. Host: arm64, macOS 27.0.1. Reference: SpeedBreaker v0.1.7 (`31
 | Recompilation (M1) | **Complete.** The whole executable translates: 72,864 functions, 0 recompiler errors or warnings, 0 failure markers, all structural checks pass, and the output is reproducible byte for byte (§3). |
 | Native build (M2) | **Complete.** All generated code compiles for arm64 and links with the adapted SpeedBreaker runtime into a 59.6 MB `ReCarbon` executable, with 0 unresolved symbols, in 98 s from clean on the MacBook Air M5 (§4). **Not run yet.** |
 | Runtime (M3) | **Passed** through C5: the native executable boots Carbon, runs its kernel/CRT init, opens its data, brings up the GPU and presents frames: **10/10** consecutive windowed launches on the committed code (final1–10), after 10/10 on the ring-fix build (w01–w10). The game's own **loading screen** renders, verified by frame dumps in 3 of 3 runs. Movie video is still black (§5). |
-| Next step | ROADMAP **M4**: first frame / rendering (awaiting approval). |
+| Rendering (M4) | **In progress.** Movies and the EA logos now render (EDRAM format aliasing fixed), verified in game-only frame dumps. Guest system time is monotonic (flaky test root-caused). Open: an intermittent movie-teardown hang, about 1 launch in 50 (§6). |
 
 ## 1. Disc and executable (evidence)
 
@@ -471,7 +471,62 @@ New tooling:
   `xboxkrnl.exe` (the game falls back to imports) is equivalent to the console's success
   path.
 
-## 6. Feasibility: Xbox 360 Carbon
+## 6. M4 progress: rendering (2026-10-22, in progress)
+
+### Black movie video: fixed (commit 487cf65)
+Evidence chain:
+1. **Decoder:** fine. The Y plane read from guest memory mid-movie (lldb) is a real frame.
+2. **Movie draw:** the YUV→RGB pixel shader is correct. The movie is drawn into EDRAM base 0 as
+   `k_2_10_10_10_FLOAT` (format 3) and resolved.
+3. **Overlay:** the movie player then blends its overlay onto the **same EDRAM** as
+   `k_2_10_10_10_FLOAT_AS_16_16_16_16` (format 12), and resolves that to the front buffer.
+4. **Root cause:** the renderer keyed host render targets by the raw format, so format 12 was a
+   separate, never-written image. It also counted format 12 as 64 bpp.
+5. **Reference:** Xenia's `GetStorageColorFormat` (12 → 3, 10 → 2: "same packing and meaning of
+   values") and its 64-bpp list.
+
+**Fix:** `gpu/edram_format.h`; targets are keyed by storage format.
+
+**Verified:**
+- `edram_format_test` (the old behaviour fails 4 checks);
+- an isolated build at HEAD plus the fix: 10/10 launches;
+- frame dumps:
+  - the **EA logo** (frame 60) and **EA HD** (180);
+  - the Nikki PSA and movie scenes;
+  - the loading screen, unchanged from M3;
+  - frames 60–2760 all have content (all were black before).
+
+### Flaky `guest_time_test`: root-caused and fixed (commit 124cf31)
+`guesttime::RawSystem` read macOS `system_clock` on every call. It has 1 µs resolution and
+steps back: by 1 µs when several threads read it close together, and by milliseconds to
+seconds when the host time is adjusted. The guest's system time inherited that through
+`KeQuerySystemTime`, the time-stamp bundle and absolute-wait deadlines. The test's assertion
+was right.
+
+**Fix:** the wall clock is read once and advanced by the steady clock (no NTP tracking within
+a session).
+
+**Verified:**
+- new `system_time_monotonic_test`: the old code fails 6/6, the fix passes 6/6;
+- `guest_time_test` 0/25, previously 3/25;
+- `ctest` 10/10.
+
+### Counts and stability
+- **Unknown texture formats and memexport drops:** 0 of each over 25 windowed runs.
+- **Launches:**
+  - committed code without the clock fix: 25/25 clean;
+  - with it: 24/25.
+
+### Open: intermittent movie-teardown hang (about 1 in 50 launches)
+- **Symptom:** the main thread waits (`KeWaitForSingleObject`) on an event inside the movie
+  player (0x40084AD4) after its decoder threads have exited. The command processor is idle and
+  its ring consistent.
+- **Not attributable to the clock fix:** 1/25 against 0/25, and the wait isn't timed.
+- **Hypotheses:** a lost wakeup when a guest event header is re-initialized inline after
+  being bound to a host object, or an ordering race between the player and its decoders. Not
+  established.
+
+## 7. Feasibility: Xbox 360 Carbon
 
 ### Why it is plausible (evidence from M0)
 - **Shared codebase:** the original PE name is `NfsMWRelease.pe`. Carbon was built from the MW codebase lineage, so MW's EA stream-player and render-queue patterns are likely to recur (inferred from the name; to verify in code).
@@ -494,7 +549,7 @@ New tooling:
 ### Verdict
 **Conditionally feasible, medium risk.** M0–M2 found no blocker; the CPU-translation and build risks are retired. Everything from here is runtime behaviour, which is untested. Expect first boot to the front end after roughly the effort SpeedBreaker spent on MW, minus the generic runtime work. Playable racing is plausible but not guaranteed.
 
-## 7. Recommendation
+## 8. Recommendation
 Proceed to ROADMAP **M4** once approved. Start with why movie frames are black: the XMV player's GPU path, i.e. its textures and resolves. Then take the front end past the loading screen with input.
 
 ---
