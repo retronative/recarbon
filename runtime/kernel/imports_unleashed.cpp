@@ -10,6 +10,7 @@
 #include <cpu/guest_thread.h>
 #include <cpu/guest_time.h>
 #include "critical_section.h"
+#include "thread_priority.h"
 #include "dispatcher.h"
 #include "function.h"
 #include "xex.h"
@@ -237,6 +238,19 @@ void KeSetBasePriorityThread(GuestThreadHandle* hThread, int priority)
     }
 
     SetThreadPriority(hThread == GetKernelObject(CURRENT_THREAD_HANDLE) ? GetCurrentThread() : hThread->thread.native_handle(), priority);
+#elif defined(__APPLE__)
+    // ReCarbon: as a QoS class (kernel/thread_priority.h).
+    qos_class_t qos;
+    switch (kernel::HostQosForPriority(priority))
+    {
+    case kernel::HostQos::UserInteractive: qos = QOS_CLASS_USER_INTERACTIVE; break;
+    case kernel::HostQos::UserInitiated: qos = QOS_CLASS_USER_INITIATED; break;
+    default: return;
+    }
+    if (hThread == GetKernelObject(CURRENT_THREAD_HANDLE) || hThread->GetThreadId() == GuestThread::GetCurrentThreadId())
+        pthread_set_qos_class_self_np(qos, 0);
+    else
+        pthread_override_qos_class_start_np(hThread->thread, qos, 0);  // held for the thread's life
 #endif
 }
 

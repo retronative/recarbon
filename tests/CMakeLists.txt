@@ -59,6 +59,9 @@ recarbon_test(system_time_monotonic_test SOURCES ${RT}/cpu/guest_time.cpp)
 # (kernel/critical_section.h, header only; ReCarbon M4: the movie-teardown hang).
 recarbon_test(critical_section_test)
 target_include_directories(critical_section_test PRIVATE ${ROOT}/tools/XenonRecomp/XenonUtils)
+# The QoS class a guest thread priority gets on macOS (kernel/thread_priority.h,
+# header only; ReCarbon M5: front-end audio running dry).
+recarbon_test(thread_priority_test)
 
 # Not ported from SpeedBreaker (one line each: why).
 # write_watch_test: needs ppc/ (ppc_config.h, generated from the XEX) and XenonUtils.
