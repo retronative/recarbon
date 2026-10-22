@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: ReCarbon <recarbon@users.noreply.github.com>
+Date: Thu, 22 Oct 2026 21:49:06 +0700
+Subject: [PATCH] XRTL_CRITICAL_SECTION: big-endian LockCount, RecursionCount,
+ OwningThread
+
+Guest code reads them. NFS: Carbon's XAudio (sub_82A4E7A8) reads
+RecursionCount with lwz, leaves the section that many times and enters
+it again; host-endian, a count of 1 read as 0x01000000. Xenia's
+X_RTL_CRITICAL_SECTION has all three big-endian.
+---
+ XenonUtils/xbox.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/XenonUtils/xbox.h b/XenonUtils/xbox.h
+index 0361b0f..b5a2e58 100644
+--- a/XenonUtils/xbox.h
++++ b/XenonUtils/xbox.h
+@@ -198,13 +198,13 @@ typedef struct _XDISPATCHER_HEADER
+     XLIST_ENTRY WaitListHead;
+ } XDISPATCHER_HEADER, * XPDISPATCHER_HEADER;
+ 
+-// These variables are never accessed in guest code, we can safely use them in little endian
++// Guest code reads these (big-endian), as Xenia's X_RTL_CRITICAL_SECTION has them.
+ typedef struct _XRTL_CRITICAL_SECTION
+ {
+     XDISPATCHER_HEADER Header;
+-    int32_t LockCount;
+-    int32_t RecursionCount;
+-    uint32_t OwningThread;
++    be<int32_t> LockCount;
++    be<int32_t> RecursionCount;
++    be<uint32_t> OwningThread;
+ } XRTL_CRITICAL_SECTION;
+ 
+ typedef struct _XANSI_STRING {
+-- 
+2.54.0 (Apple Git-157)
+

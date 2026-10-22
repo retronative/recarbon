@@ -9,6 +9,7 @@
 #include <cpu/ppc_context.h>
 #include <cpu/guest_thread.h>
 #include <cpu/guest_time.h>
+#include "critical_section.h"
 #include "dispatcher.h"
 #include "function.h"
 #include "xex.h"
@@ -265,14 +266,7 @@ uint32_t KeSetAffinityThread(uint32_t Thread, uint32_t Affinity, be<uint32_t>* l
 
 void RtlLeaveCriticalSection(XRTL_CRITICAL_SECTION* cs)
 {
-    cs->RecursionCount--;
-
-    if (cs->RecursionCount != 0)
-        return;
-
-    std::atomic_ref owningThread(cs->OwningThread);
-    owningThread.store(0);
-    owningThread.notify_one();
+    kernel::LeaveCriticalSection(*cs);
 }
 
 void RtlEnterCriticalSection(XRTL_CRITICAL_SECTION* cs)
@@ -280,20 +274,7 @@ void RtlEnterCriticalSection(XRTL_CRITICAL_SECTION* cs)
     uint32_t thisThread = g_ppcContext->r13.u32;
     assert(thisThread != NULL);
 
-    std::atomic_ref owningThread(cs->OwningThread);
-
-    while (true) 
-    {
-        uint32_t previousOwner = 0;
-
-        if (owningThread.compare_exchange_weak(previousOwner, thisThread) || previousOwner == thisThread)
-        {
-            cs->RecursionCount++;
-            return;
-        }
-
-        owningThread.wait(previousOwner);
-    }
+    kernel::EnterCriticalSection(*cs, thisThread);
 }
 
 void KeBugCheckEx()
@@ -309,9 +290,7 @@ uint32_t KeGetCurrentProcessType()
 uint32_t RtlInitializeCriticalSection(XRTL_CRITICAL_SECTION* cs)
 {
     cs->Header.Absolute = 0;
-    cs->LockCount = -1;
-    cs->RecursionCount = 0;
-    cs->OwningThread = 0;
+    kernel::InitializeCriticalSection(*cs);
 
     return 0;
 }
@@ -429,25 +408,13 @@ bool RtlTryEnterCriticalSection(XRTL_CRITICAL_SECTION* cs)
     uint32_t thisThread = g_ppcContext->r13.u32;
     assert(thisThread != NULL);
 
-    std::atomic_ref owningThread(cs->OwningThread);
-
-    uint32_t previousOwner = 0;
-
-    if (owningThread.compare_exchange_weak(previousOwner, thisThread) || previousOwner == thisThread)
-    {
-        cs->RecursionCount++;
-        return true;
-    }
-
-    return false;
+    return kernel::TryEnterCriticalSection(*cs, thisThread);
 }
 
 void RtlInitializeCriticalSectionAndSpinCount(XRTL_CRITICAL_SECTION* cs, uint32_t spinCount)
 {
     cs->Header.Absolute = (spinCount + 255) >> 8;
-    cs->LockCount = -1;
-    cs->RecursionCount = 0;
-    cs->OwningThread = 0;
+    kernel::InitializeCriticalSection(*cs);
 }
 
 uint32_t RtlMultiByteToUnicodeN(be<uint16_t>* UnicodeString, uint32_t MaxBytesInUnicodeString, be<uint32_t>* BytesInUnicodeString, const char* MultiByteString, uint32_t BytesInMultiByteString)
