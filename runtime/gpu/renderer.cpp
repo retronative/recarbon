@@ -7085,7 +7085,14 @@ void main()
             depth = GetTarget(di.depth_base, uint32_t(di.depth_format), true, pitch);
         }
         if (!depth && writeMask == 0)
-            return;  // nothing visible (memexport-only draws are not supported yet)
+        {
+            // Nothing visible. Memexport-only draws are not supported yet:
+            // ReCarbon logs the first one it drops instead of losing it
+            // silently (ROADMAP M3/M4).
+            if (s_vs->info.usesMemExport || s_ps->info.usesMemExport)
+                LogOnce(0x5100, "memexport-only draw dropped (memexport not supported): its output is lost");
+            return;
+        }
         // RECARBON_OCCLUSION=1, an occlusion query bracket open: this draw is
         // counted (ZpassDone).
         const bool zpdCount = s_zpdOn && !s_zpdOpen.Empty();
