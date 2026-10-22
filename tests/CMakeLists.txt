@@ -62,6 +62,11 @@ target_include_directories(critical_section_test PRIVATE ${ROOT}/tools/XenonReco
 # The QoS class a guest thread priority gets on macOS (kernel/thread_priority.h,
 # header only; ReCarbon M5: front-end audio running dry).
 recarbon_test(thread_priority_test)
+# The controller's default button mapping, the M5 regression baseline
+# (hid/pad_map.h, header only; SDL3 for its button enum only).
+recarbon_test(pad_map_test)
+target_link_libraries(pad_map_test PRIVATE SDL3::SDL3)
+set_target_properties(pad_map_test PROPERTIES SKIP_BUILD_RPATH OFF)
 
 # Not ported from SpeedBreaker (one line each: why).
 # write_watch_test: needs ppc/ (ppc_config.h, generated from the XEX) and XenonUtils.

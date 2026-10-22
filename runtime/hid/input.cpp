@@ -2,6 +2,7 @@
 #include <stdafx.h>
 #include "input.h"
 #include "key_map.h"
+#include "pad_map.h"
 #include <cpu/guest_time.h>
 #include <kernel/function.h>
 #include <ui/ui.h>
@@ -603,20 +604,10 @@ namespace hid
         const float triggerDeadzone = settings::GetFloat(settings::Id::TriggerDeadzone);
         if (s_gamepad)
         {
-            static const std::pair<SDL_GamepadButton, uint16_t> map[] = {
-                { SDL_GAMEPAD_BUTTON_SOUTH, XAMINPUT_GAMEPAD_A }, { SDL_GAMEPAD_BUTTON_EAST, XAMINPUT_GAMEPAD_B },
-                { SDL_GAMEPAD_BUTTON_WEST, XAMINPUT_GAMEPAD_X }, { SDL_GAMEPAD_BUTTON_NORTH, XAMINPUT_GAMEPAD_Y },
-                { SDL_GAMEPAD_BUTTON_BACK, XAMINPUT_GAMEPAD_BACK }, { SDL_GAMEPAD_BUTTON_START, XAMINPUT_GAMEPAD_START },
-                { SDL_GAMEPAD_BUTTON_LEFT_STICK, XAMINPUT_GAMEPAD_LEFT_THUMB },
-                { SDL_GAMEPAD_BUTTON_RIGHT_STICK, XAMINPUT_GAMEPAD_RIGHT_THUMB },
-                { SDL_GAMEPAD_BUTTON_LEFT_SHOULDER, XAMINPUT_GAMEPAD_LEFT_SHOULDER },
-                { SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER, XAMINPUT_GAMEPAD_RIGHT_SHOULDER },
-                { SDL_GAMEPAD_BUTTON_DPAD_UP, XAMINPUT_GAMEPAD_DPAD_UP }, { SDL_GAMEPAD_BUTTON_DPAD_DOWN, XAMINPUT_GAMEPAD_DPAD_DOWN },
-                { SDL_GAMEPAD_BUTTON_DPAD_LEFT, XAMINPUT_GAMEPAD_DPAD_LEFT }, { SDL_GAMEPAD_BUTTON_DPAD_RIGHT, XAMINPUT_GAMEPAD_DPAD_RIGHT },
-            };
-            for (auto& [button, bit] : map)
-                if (bit != XAMINPUT_GAMEPAD_BACK && SDL_GetGamepadButton(s_gamepad, button))
-                    p.buttons |= bit;
+            // The default mapping (hid/pad_map.h); Back is handled below.
+            for (const padmap::Entry& e : padmap::kDefault)
+                if (e.xinput != XAMINPUT_GAMEPAD_BACK && SDL_GetGamepadButton(s_gamepad, e.sdl))
+                    p.buttons |= e.xinput;
             padBack = SDL_GetGamepadButton(s_gamepad, SDL_GAMEPAD_BUTTON_BACK);
             if (PadBackForGame(padBack, SDL_GetGamepadButton(s_gamepad, SDL_GAMEPAD_BUTTON_START)))
                 p.buttons |= XAMINPUT_GAMEPAD_BACK;
