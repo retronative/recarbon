@@ -48,12 +48,14 @@ layer for Carbon.
  ReCarbon.app  (arm64, macOS 15+, ad hoc signed, MoltenVK 1.4.2 bundled)
 ```
 
-## 2. Repository layout (planned)
+## 2. Repository layout (as built in M2)
 
 | Path | Origin | Notes |
 |---|---|---|
-| `runtime/{cpu,kernel,gpu,video,apu,hid,platform,user,report,ui,update}` | SpeedBreaker, imported with history/attribution | We change these as little as we can. Carbon fixes go here only if they're generic. |
-| `runtime/game/` | **new** | Carbon hooks only. MW hooks are removed, not ported. |
+| `runtime/{cpu,kernel,gpu,video,apu,hid,platform,user,report,ui,update,install}` | SpeedBreaker v0.1.7, imported with attribution | Changed only for identity (ReCarbon names, `RECARBON_` env vars, user folder, installer and update target). Carbon fixes go here only if they're generic. |
+| `runtime/game/` | **new** | `title_hooks.cpp` implements the `ultrawide.h`/`frame_time.h`/`movie_pacing.h` interface with logged "no hooks yet" states. MW's hooks (and their data writes, e.g. 0x8200FAC0) are removed, not ported. Carbon hooks go here, with their mid-asm entries in `config/recarbon.toml`. |
+| `runtime/debug/timeline.*` | SpeedBreaker, MW D3D hooks removed | Timing API kept. The game-wait and present counters stay 0 until Carbon's D3D functions are found. |
+| `runtime/kernel/import_stubs.cpp` | **generated** (`scripts/gen_import_stubs.py`) | A logging stub that exits for each of the 173 unimplemented imports. |
 | `runtime/install/manifest.inc` | **regenerated** | Carbon file list + SHA-256 values, via `scripts/gen_install_manifest.py`. |
 | `config/recarbon.toml`, `config/switch_tables*.toml` | **regenerated** | Made by the `survey/` pipeline against the Carbon XEX. |
 | `patches/xenonrecomp/` | SpeedBreaker 0001–0008, ReCarbon 0009+ | Patches stay upstreamable and game-agnostic. |

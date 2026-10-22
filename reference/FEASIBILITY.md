@@ -10,7 +10,8 @@ Date: 2026-10-22. Host: arm64, macOS 27.0.1. Reference: SpeedBreaker v0.1.7 (`31
 | Does it fit SpeedBreaker's pipeline? | **Yes, with no blockers found in M0.** All 8 compiler-helper patterns match, and every code section is covered by `.pdata`. 195 of 369 imports are already handled; 163 are imports MW also stubs, and only 11 are new. The original PE name is `NfsMWRelease.pe`, the same codebase lineage as MW. |
 | Feasibility | **Conditionally feasible, medium risk.** Carbon has about 1.37× MW's code. The game-specific layer (hooks, widescreen, render queue) must be re-found. |
 | Recompilation (M1) | **Complete.** The whole executable translates: 72,864 functions, 0 recompiler errors or warnings, 0 failure markers, all structural checks pass, and the output is reproducible byte for byte (§3). |
-| Next step | ROADMAP **M2**: native compilation and link against SpeedBreaker's runtime (awaiting approval). |
+| Native build (M2) | **Complete.** All generated code compiles for arm64 and links with the adapted SpeedBreaker runtime into a 59.6 MB `ReCarbon` executable, with 0 unresolved symbols, in 98 s from clean on the MacBook Air M5 (§4). **Not run yet.** |
+| Next step | ROADMAP **M3**: runtime initialization (awaiting approval). |
 
 ## 1. Disc and executable (evidence)
 
@@ -234,7 +235,150 @@ fails in both cases (ReCarbon change).
 - **The XenonRecomp build** prints one pre-existing warning (nodiscard `std::exchange`,
   `recompiler.cpp:34`).
 
-## 4. Feasibility: Xbox 360 Carbon
+## 4. M2 results: native arm64 compile and link (2026-10-22)
+
+### What was reused, and what was isolated
+SpeedBreaker v0.1.7's `runtime/`, `recomp/` and CMake build were imported. Before reuse, every
+runtime reference to a guest address was audited:
+- **`grep` for `sub_8xxxxxxx`/`0x8xxxxxxx`:** outside `game/` and two `debug/` files, every hit is
+  an NTSTATUS code, a constant, a memory-map base or a comment.
+- **MW game layer removed:** all of `runtime/game/*.cpp`/`.h` except the three interface headers.
+  It held 13 mid-asm hook targets and function overrides at MW addresses (glare, light trails,
+  movie pacing, render-queue fences, Hor+/Vert+ view scaling, frame/step time) and MW structure
+  offsets. MW's `SetAspectScale` also stored a float into guest memory at **0x8200FAC0** (MW's
+  movie aspect) on every presented frame; in Carbon's image that is unrelated `.rdata`.
+- **MW D3D hooks removed:** `debug/d3d_waits.cpp` (`sub_825A5B20`) and the two in
+  `debug/timeline.cpp` (`sub_82597498`, `sub_82593A58`). The timeline API stays; its game-wait and
+  present counters read 0, as documented in `timeline.h`.
+- **Override check:** no runtime object defines any `sub_…` symbol (`nm` over all runtime
+  objects), so nothing overrides a recompiled Carbon function.
+- **Replacement:** `runtime/game/title_hooks.cpp` implements the interface with the states
+  SpeedBreaker's own headers define for a `ppc/` without hooks. `HooksActive()` is false, so the
+  picture stays 16:9 letterboxed. `FrontEndScale*` = 0, so the renderer's front-end and edge-bar
+  logic never runs. `LastMovieFrameNs` = 0, and the frame stats are zeros. It logs this at startup
+  (`[title] NFS: Carbon: no title hooks yet …`). These are explicit, logged states, not silent
+  fakes.
+- **Identity:**
+  - executable `ReCarbon`, user folder `ReCarbon` (SpeedBreaker's folder migration removed, so a
+    real SpeedBreaker install is never touched), env prefix `RECARBON_`, thread names
+    `recarbon-*`;
+  - installer for "Need for Speed: Carbon", title 0x454107EC, with a regenerated manifest:
+    78 files, 5,738,577,280 B, default.xex `947f95c7…`, `$SystemUpdate` excluded;
+  - the update check points at `thixpin/recarbon`. That repository is **assumed** and returns
+    "no release" until it exists.
+- **Imports:** `kernel/import_stubs.cpp` was regenerated from Carbon's `ppc/` with SpeedBreaker's
+  generator. A stub logs the name and registers and **exits** (code 3); it continues only with the
+  developer switch `RECARBON_STUB_CONTINUE=1`.
+
+### Toolchain and inputs (exact)
+| Item | Version |
+|---|---|
+| Compiler | Homebrew clang 23.1.4, Release (`-O3`), C++20, `-UNDEBUG` (asserts on), `-Werror=unguarded-availability-new` |
+| Build | cmake 4.4.4, ninja 1.13.2 |
+| Libraries (Homebrew, dynamic) | SDL3 3.4.18, vulkan-loader 1.4.363, vulkan-headers 1.4.363.0, glslang 16.6.0, SPIRV-Tools 1.4.363.0, MoltenVK 1.4.2 |
+| Static | FFmpeg 7.1.1 XMA-only (`scripts/build_ffmpeg_xma.sh` + `patches/ffmpeg`), XenonUtils (XEX loader), o1heap, Dear ImGui, qrcodegen, FSR1 headers |
+| Deployment target | macOS 27.0, the host's, to match Homebrew's bottles (minos 27.0). A macOS 15 release build needs source-built deps (packaging, M8). |
+
+```sh
+scripts/setup_tools.sh && scripts/survey.sh       # tools (incl. FFmpeg-XMA, 65 s) and ppc/
+cmake -S . -B build/main -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++
+ninja -C build/main -j8
+```
+
+### Metrics (MacBook Air, Apple M5 4P+6E, 24 GB, macOS 27.0.1)
+| Measure | Value |
+|---|---|
+| Clean configure + build, `-j8` | **97.9 s** wall, 662 s user, 38.6 s sys; 395 steps |
+| Generated code alone (`ReCarbonRecompLib`, 285 TUs) | 66.0 s wall, 465 s user; archive 64 MB, 287 arm64 objects |
+| Peak memory | 2.56 GB combined compiler RSS (sampled every 1 s); system free memory ≥ 37 % throughout. The largest TU (`ppc_recomp.283.cpp`) takes 6.3 s and 683 MB alone. `-j8` needs no limit on this machine. |
+| Output | `build/main/runtime/ReCarbon`: Mach-O arm64 executable, **59,561,176 B** (unstripped) |
+| Diagnostics | 0 errors, 3 warnings, all in files byte-identical to SpeedBreaker's: the intentional `PPC_CALL_INDIRECT_FUNC` override (`cpu/indirect.h`) and two `uint32_t != NULL` asserts (`kernel/imports_unleashed.cpp:281,430`) |
+
+### Link validation
+- **No undefined-symbol tolerance:** the link uses no `-undefined dynamic_lookup`, `-U` or
+  flat namespace (`build.ninja`).
+- **Every undefined symbol is bound to a named library** (`nm -m -u`): libSystem 209, libc++
+  210, libvulkan 119, libSDL3 95, glslang 16, Foundation/AppKit/CoreFoundation/CoreGraphics/libobjc
+  34. Unbound: **0**.
+- **All 72,864 recompiled bodies are present:** exact name diff of `PPC_FUNC_IMPL` in `ppc/`
+  against `nm` of the binary, 0 missing.
+- **All 355 function imports are defined:** 182 real implementations, 173 logging stubs.
+- **Runtime overrides of `sub_…`:** 0.
+
+### Why 30,984 function-table entries become 72,864 functions
+`.pdata` is the exception/unwind table. The compiler emits an entry only for functions that need
+unwind data: those with a stack frame or saved registers. A **leaf function with no frame has no
+`.pdata` entry.** XenonRecomp (`recompiler.cpp:176-250`) builds its function list from:
+1. `.pdata`;
+2. every `bl` target;
+3. a scan of all remaining code;
+4. the config: helper addresses, `functions`, `secondary_entries`.
+
+It then translates every code byte. Classifying all 72,864 generated functions by origin:
+
+| Origin | Functions |
+|---|---|
+| `.pdata` entries (30,984; 6 also carry CRT helper names) | 30,978 |
+| CRT register save/restore entry points: save + restore × (18 GPR r14–31 + 18 FPR f14–31 + 18 VMX v14–31 + 64 VMX v64–127), from the helper addresses (each entry is a separate function) | 236 |
+| Config: leaf jump-table bounds and `b +4` stubs | 180 |
+| Config: secondary entry points | 26 |
+| Leaf functions called by `bl` (no `.pdata`) | 3,480 |
+| Leaf functions referenced from data, e.g. vtables or callbacks (no `.pdata`) | 6,738 |
+| Found only by the code scan | 31,226 |
+| **Total** | **72,864** |
+
+The last group breaks down by what precedes each function:
+- 26,283 start right after a `blr` or padding;
+- 3,121 follow an unconditional `b`;
+- 1,324 have addresses built in code (`lis`+`addi`);
+- 109 are `b` targets;
+- 389 fall through from the previous piece.
+
+They are small: median 16 B, 95th percentile 80 B, about 0.9 MB in total. Samples are complete
+tiny leaf functions such as `lwz r3,12(r3); blr` getters, field-pointer accessors and copy
+helpers. None is referenced by a direct branch or a data word, so they are presumably
+unreferenced out-of-line copies, or reached in ways a static scan doesn't see (inferred).
+
+**How each count was validated:**
+- **30,984:** parsed independently from the decrypted image's `.pdata` (8-byte entries, nonzero
+  begin). XenonRecomp reads the same table, and `validate_recomp.py` HARD-checks that every one
+  is a mapped, defined function.
+- **72,864:** the number of `PPC_FUNC_IMPL` bodies in `ppc/`. It equals the `PPC_WEAK_FUNC`
+  wrappers and the mapping entries minus 355 import thunks. It's one-to-one with no duplicates
+  (validator), and all of them are present in the linked binary (name diff, 0 missing).
+- **The breakdown:** computed from the image (`.pdata`, `bl` targets, data words, `lis`+`addi`
+  pairs) and the config. The categories are disjoint and sum exactly to 72,864.
+- **Coverage:** 98.69 % of code bytes. The only untranslated non-zero bytes are the 72 SEH
+  headers, i.e. data (§3).
+
+### Runtime limitations (known; M3+)
+- **Nothing has been executed.** M2 proves the code compiles and links, not that it is correct.
+- **173 imports are stubs that exit.** Among them are the 11 new to Carbon (`XexLoadImage`,
+  `XexGetProcedureAddress`, `XexGetModuleSection`, `XamContentResolve`, …), all `NetDll_*`/XNet,
+  crypto, and most `XamShow*UI`. The first one reached at runtime stops the game with its name in
+  the log.
+- **The data import `XboxKrnlVersion`** has no initialiser in `kernel/module.cpp`. It is zeroed
+  and logged (`main.cpp:157`), but it's a version structure the game may read.
+- **No Carbon title hooks.** These are inactive and logged: wide/tall screen fill (the Aspect
+  Ratio setting behaves as 16:9), movie pacing, frame-time stats, and the D3D wait/present
+  timeline counters. Carbon's lock-free render queue, if it is like MW's, has **no ARM fence
+  hooks yet** (risk R4).
+- **MW-tuned GPU heuristics still active** (audit of `gpu/`, `video/`):
+  - the render-scale pitch window 640–1280 with Internal Resolution "Auto" (the biggest risk:
+    Carbon's blur/bloom targets may be scaled);
+  - the 1280-wide untiled MSAA rule;
+  - MW-measured scale budgets and the Auto frame-rate draw thresholds.
+
+  Recommended for M3: start with Internal Resolution 1x and log Carbon's targets.
+- **Not distributable yet:**
+  - deployment target 27.0 (Homebrew deps);
+  - no app bundle, MoltenVK bundling or signing (M8);
+  - SpeedBreaker's unit tests (`tests/*.cpp`) not ported; `-DRECARBON_TESTS=ON` stops configure
+    by design;
+  - iOS/SteamOS paths inherited but untested.
+
+## 5. Feasibility: Xbox 360 Carbon
 
 ### Why it is plausible (evidence from M0)
 - **Shared codebase:** the original PE name is `NfsMWRelease.pe`. Carbon was built from the MW codebase lineage, so MW's EA stream-player and render-queue patterns are likely to recur (inferred from the name; to verify in code).
@@ -251,14 +395,14 @@ fails in both cases (ReCarbon change).
 | R3 | `XexLoadImage`/`XexGetProcedureAddress`/`XexGetModuleSection` actually used at runtime | Medium | Static call sites exist (§3 limitations), apparently for XAM lookups. Implement or log in M3. |
 | R4 | ARM memory-ordering bugs in lock-free engine code (MW needed 7 fence hooks) | Medium | Patch 0005 fences. Find Carbon's equivalent queue early. Run with TSan-style stress. |
 | R5 | MacBook Air thermals (fanless), with about 1.37× MW's code | Medium | 1x scale, Auto 30/60, `-O2` for the recompiled library, profile hot paths. |
-| R6 | Compile time / memory of the generated code (about 31k functions) on a laptop | Medium | Split into translation units, tune `ninja -j`, ccache. |
+| R6 | ~~Compile time / memory of the generated code~~ | **Retired in M2** | 98 s clean build, 2.6 GB peak at `-j8` on the MacBook Air (§4). |
 | R7 | Licence contamination of disc assets or generated code in git | Low | `.gitignore` covers `/game`, `/ppc` and `/tools`; checked with `git status`. |
 
 ### Verdict
-**Conditionally feasible, medium risk.** M0 and M1 found no blocker; the CPU-translation risk is retired. Expect first boot to the front end after roughly the effort SpeedBreaker spent on MW, minus the generic runtime work. Playable racing is plausible but not guaranteed.
+**Conditionally feasible, medium risk.** M0–M2 found no blocker; the CPU-translation and build risks are retired. Everything from here is runtime behaviour, which is untested. Expect first boot to the front end after roughly the effort SpeedBreaker spent on MW, minus the generic runtime work. Playable racing is plausible but not guaranteed.
 
-## 5. Recommendation
-Proceed to ROADMAP **M2** (native compile and link of `ppc/` against SpeedBreaker's runtime with the MW game layer removed) once approved.
+## 6. Recommendation
+Proceed to ROADMAP **M3** (runtime initialization) once approved. Start with Internal Resolution 1x, and find out which stubbed import the game reaches first.
 
 ---
 

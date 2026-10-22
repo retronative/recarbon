@@ -48,15 +48,27 @@ observed**, not inferred. The "Evidence" line in each milestone is what goes int
   - Structural validation passes.
   - `ppc/` is git-ignored and `git status` is clean of generated code.
 
-## M2 — Native compilation and link
+## M2 — Native compilation and link *(done 2026-10-22)*
+- **Evidence** (FEASIBILITY §4):
+  - **Build:** a clean `cmake` + `ninja -j8` builds `build/main/runtime/ReCarbon` (arm64 Mach-O,
+    59,561,176 B) in 97.9 s, with a 2.56 GB peak, 0 errors and 3 upstream warnings.
+  - **Link validation:**
+    - 0 unbound undefined symbols, and no undefined-symbol tolerance flags;
+    - all 72,864 recompiled bodies are present;
+    - all 355 imports are defined (182 real, 173 logging stubs that exit);
+    - no runtime override of any `sub_…` function.
+  - **Isolation:** the MW game layer and the MW D3D hooks are removed, including a per-frame
+    store into MW's data at 0x8200FAC0. They're replaced by `game/title_hooks.cpp`, whose
+    explicit "no hooks" states are logged at startup.
 - **Do:**
   - Compile `ppc/*.cpp` on arm64 with Homebrew clang.
-  - Link against an unmodified copy of SpeedBreaker's runtime with the game layer removed.
+  - Link against SpeedBreaker's runtime with the MW game layer removed and the identity adapted (otherwise unmodified).
   - Generate `import_stubs.cpp`.
 - **Accept:**
   - A `ReCarbon` arm64 Mach-O builds with `-Werror` settings unchanged.
   - The build time and peak RSS on the target Mac are recorded.
   - The list of unimplemented imports is recorded.
+  - No unresolved symbols; no silently disabled features or fabricated implementations.
 
 ## M3 — Runtime initialization
 - **Do:**

@@ -13,6 +13,7 @@ native arm64 macOS. It is built on SpeedBreaker (the NFS: Most Wanted port), and
 | `game/survey/` | Decrypted image, survey/recompiler logs | git-ignored, proprietary-derived |
 | `ppc/` | XenonRecomp output (generated game code) | git-ignored, never commit |
 | `tools/` | XenonRecomp (pinned + patches), extract-xiso, xexsurvey | git-ignored |
+| `runtime/` | SpeedBreaker's runtime with the MW game layer replaced by `game/title_hooks.cpp` | identity changes only, outside `game/` |
 | `config/` | `recarbon.toml` + switch tables | committed: addresses only, no game bytes |
 | `survey/` | Analysis pipeline (from SpeedBreaker, parametrized by `survey/layout.py`) | |
 | `patches/xenonrecomp/` | XenonRecomp patches applied by `scripts/setup_tools.sh` (0001–0008 SpeedBreaker, 0009+ ReCarbon) | |
@@ -26,6 +27,9 @@ scripts/setup_tools.sh     # build tools/ (idempotent)
 scripts/survey.sh          # xexsurvey → XenonAnalyse → table fixes → XenonRecomp → validate
 /opt/homebrew/bin/python3 survey/validate_recomp.py game/survey/recomp.log   # structural check
 tests/run_instr_tests.sh   # assemble tests/instr/*.s, recompile, run (fails on skipped tests)
+cmake -S . -B build/main -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++
+ninja -C build/main -j8    # build/main/runtime/ReCarbon (about 100 s clean, 2.6 GB peak)
 ```
 
 - The survey scripts need Python 3.11+ (`tomllib`). `/usr/bin/python3` is 3.9, so use
@@ -45,6 +49,10 @@ tests/run_instr_tests.sh   # assemble tests/instr/*.s, recompile, run (fails on 
   expected values from the ISA, never from the recompiler's output.
 - Fix recompiler problems with real fixes: correct config, switch tables, function bounds, or
   generic XenonRecomp patches with documented semantics. Never suppress errors.
+- Never port a SpeedBreaker hook, override or guest-memory write that names an MW address
+  (`sub_8…`, `0x82…`). The same address in Carbon is unrelated code or data. Carbon hooks are
+  found in Carbon's image and documented with their evidence.
+- After adding or implementing a kernel/XAM import, rerun `scripts/gen_import_stubs.py`.
 - Files taken from SpeedBreaker keep their attribution. Mark ReCarbon changes in comments.
 - Milestones (`reference/ROADMAP.md`) are gated. Don't start the next one without the user's
   approval.
