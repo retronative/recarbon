@@ -5,6 +5,9 @@
 // matching up to the first difference) where Xenia counts every match.
 #include <stdafx.h>
 #include "function.h"
+#include "raise_exception.h"
+#include <cpu/guest_thread.h>
+#include <report/report.h>
 
 uint32_t RtlCompareMemory(const uint8_t* a, const uint8_t* b, uint32_t length)
 {
@@ -88,9 +91,37 @@ uint32_t RtlTimeFieldsToTime(const XTIME_FIELDS* fields, be<int64_t>* time)
     return 1;
 }
 
+// ReCarbon (raise_exception.h): names the thread for 0x406D1388 and returns;
+// any other exception would need SEH dispatch, which the runtime lacks, so it
+// stops the game with the code in the log rather than resume past it.
+void RtlRaiseException(const be<uint32_t>* record)
+{
+    uint32_t info[15]{};
+    kernel::ExceptionRecordView view{ record[0], record[1], record[2], record[3], record[4], info };
+    for (uint32_t i = 0; i < std::min<uint32_t>(view.numberParameters, 15); i++)
+        info[i] = record[5 + i];
+    kernel::ThreadNameRequest request;
+    if (kernel::ParseThreadName(view, request))
+    {
+        const char* name = request.namePointer ? static_cast<const char*>(g_memory.Translate(request.namePointer)) : "";
+        const uint32_t self = GuestThread::GetCurrentThreadId();
+        const bool own = request.threadId == 0xFFFFFFFF || request.threadId == self;
+        fprintf(stderr, "[thread] %u names thread %u \"%.63s\"\n", self, own ? self : request.threadId, name);
+        if (own)
+            SetHostThreadName(name);
+        return;
+    }
+    fprintf(stderr, "[kernel] RtlRaiseException code %08X flags %08X address %08X params %u: SEH dispatch is not "
+        "implemented; stopping\n", view.code, view.flags, view.address, view.numberParameters);
+    fflush(stderr);
+    report::FlushLog();
+    std::_Exit(3);
+}
+
 GUEST_FUNCTION_HOOK(__imp__RtlCompareMemory, RtlCompareMemory);
 GUEST_FUNCTION_HOOK(__imp__RtlCompareMemoryUlong, RtlCompareMemoryUlong);
 GUEST_FUNCTION_HOOK(__imp__RtlFillMemoryUlong, RtlFillMemoryUlong);
+GUEST_FUNCTION_HOOK(__imp__RtlRaiseException, RtlRaiseException);
 GUEST_FUNCTION_HOOK(__imp__RtlInitUnicodeString, RtlInitUnicodeString);
 GUEST_FUNCTION_HOOK(__imp__RtlTimeToTimeFields, RtlTimeToTimeFields);
 GUEST_FUNCTION_HOOK(__imp__RtlTimeFieldsToTime, RtlTimeFieldsToTime);

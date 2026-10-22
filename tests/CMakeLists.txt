@@ -43,6 +43,9 @@ recarbon_test(settings_keys_test SOURCES ${RT}/user/settings.cpp)
 target_include_directories(settings_keys_test SYSTEM PRIVATE ${ROOT}/tools/XenonRecomp/thirdparty/tomlplusplus/include)
 # The keyboard's controls and how held keys become a pad (hid/key_map.h), header only.
 recarbon_test(key_map_test)
+# ReCarbon: which RtlRaiseException records are thread-name requests
+# (kernel/raise_exception.h, header only).
+recarbon_test(raise_exception_test)
 
 # Not ported from SpeedBreaker (one line each: why).
 # write_watch_test: needs ppc/ (ppc_config.h, generated from the XEX) and XenonUtils.
