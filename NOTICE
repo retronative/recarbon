@@ -1,0 +1,28 @@
+ReCarbon
+Copyright (C) 2026 ReCarbon contributors
+
+ReCarbon is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version (GPL-3.0-or-later). The full text of version 3 is in COPYING.
+
+ReCarbon is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+ReCarbon is derived from SpeedBreaker
+(https://github.com/SpeedBreakerProject/speedbreaker),
+Copyright (C) 2026 project(u) and SpeedBreaker contributors, GPL-3.0-or-later.
+Files taken from SpeedBreaker keep its attribution; changes are noted in each
+file. survey/, patches/xenonrecomp/0001-0008, tests/ and scripts/setup_tools.sh
+come from SpeedBreaker v0.1.7 (31849f5).
+XenonRecomp (MIT) and Xenia (BSD-3-Clause) are used under their own licenses:
+see the LICENSES folder.
+
+ReCarbon is an unofficial, fan-made project. It is not affiliated with,
+endorsed by, or sponsored by Electronic Arts Inc. or the Need for Speed brand.
+"Need for Speed" and "Carbon" are trademarks of Electronic Arts Inc. All other
+trademarks belong to their respective owners.
+
+No game files are included or distributed. You need your own legally obtained
+backup (a disc image) of your own Xbox 360 disc of Need for Speed: Carbon.

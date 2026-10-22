@@ -1,0 +1,58 @@
+# Game data is NEVER committed. Players supply their own disc.
+/game
+/private
+*.iso
+*.xex
+*.xexp
+*.xcp
+*.bun
+*.big
+*.lzc
+*.wmv
+*.xmv
+*.vp6
+*.bin
+*.BIN
+*.ast
+*.asf
+*.mus
+*.abk
+*.fsh
+*.fng
+*.str
+*.STR
+PAD[AB][12]
+
+# Generated recompiler output (from the player's own default.xex)
+/ppc
+ppc/
+
+# Analysis output derived from the game binary (disassembly, dumps, function lists)
+/reference/analysis/out
+*.ppm
+*.dump
+
+# Build output and packages
+build/
+out/
+.cache/
+*.tar.xz
+*.dmg
+*.dSYM/
+*.ipa
+xcuserdata/
+
+# Third-party tool checkouts and builds
+/tools
+
+# Logs
+*.log
+
+# macOS / editors
+.DS_Store
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
