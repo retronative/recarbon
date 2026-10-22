@@ -76,6 +76,38 @@ uint32_t NetDll_WSAWaitForMultipleEvents(uint32_t count, be<uint32_t>* events, u
     return kWaitFailed;
 }
 
+uint32_t NtSetEvent(uint32_t handle, be<uint32_t>* previousState);
+
+// Xenia NetDll_WSASetEvent_entry: NtSetEvent on the handle; TRUE, or FALSE
+// with the last error from the status. Carbon calls it on the main menu
+// (lr 0x829F129C, ROADMAP M5).
+uint32_t NetDll_WSASetEvent(uint32_t eventHandle)
+{
+    const uint32_t status = NtSetEvent(eventHandle, nullptr);
+    if (status != STATUS_SUCCESS)
+    {
+        GuestThread::SetLastError(RtlNtStatusToDosError(status));
+        return 0;
+    }
+    return 1;
+}
+
+uint32_t NtClearEvent(uint32_t handle);
+
+// Xenia NetDll_WSAResetEvent_entry: NtClearEvent on the handle; TRUE, or
+// FALSE with the last error from the status. Carbon's network thread
+// (sub_829EFAD0) resets the event WSASetEvent set (lr 0x829EFC8C, ROADMAP M5).
+uint32_t NetDll_WSAResetEvent(uint32_t eventHandle)
+{
+    const uint32_t status = NtClearEvent(eventHandle);
+    if (status != STATUS_SUCCESS)
+    {
+        GuestThread::SetLastError(RtlNtStatusToDosError(status));
+        return 0;
+    }
+    return 1;
+}
+
 // Xenia NetDll_XNetGetTitleXnAddr_entry: a loopback address, not online,
 // MAC CC:CC:CC:CC:CC:CC, XNET_GET_XNADDR_STATIC (4). Xenia gives a nonzero MAC
 // because titles build "random" ids from it (its note on RakNet/58411436).
@@ -95,7 +127,34 @@ uint32_t NetDll_XNetGetTitleXnAddr(uint32_t caller, uint8_t* address)
     return kXnAddrStatic;
 }
 
+// Xenia NetDll_XNetUnregisterKey_entry (canary_experimental; not in 95a5c3ee):
+// returns 0. Carbon calls it on the front end's way in (lr 0x829CFF04, ROADMAP
+// M5) without having registered a key: with no link there is nothing to drop.
+uint32_t NetDll_XNetUnregisterKey(uint32_t caller, const uint8_t* keyId)
+{
+    return 0;
+}
+
+// Xenia NetDll_WSACleanup_entry: does nothing, returns 0. Carbon calls it as
+// the main menu comes up (lr 0x829145B0, ROADMAP M5), after XNetUnregisterKey.
+uint32_t NetDll_WSACleanup(uint32_t caller)
+{
+    return 0;
+}
+
+// Xenia NetDll_XNetCleanup_entry: returns 0 (its xnet teardown is commented
+// out). Carbon calls it after WSACleanup (lr 0x829D078C, ROADMAP M5).
+uint32_t NetDll_XNetCleanup(uint32_t caller, const uint8_t* params)
+{
+    return 0;
+}
+
 GUEST_FUNCTION_HOOK(__imp__NetDll_XNetStartup, NetDll_XNetStartup);
 GUEST_FUNCTION_HOOK(__imp__NetDll_WSAStartup, NetDll_WSAStartup);
 GUEST_FUNCTION_HOOK(__imp__NetDll_WSAWaitForMultipleEvents, NetDll_WSAWaitForMultipleEvents);
 GUEST_FUNCTION_HOOK(__imp__NetDll_XNetGetTitleXnAddr, NetDll_XNetGetTitleXnAddr);
+GUEST_FUNCTION_HOOK(__imp__NetDll_XNetUnregisterKey, NetDll_XNetUnregisterKey);
+GUEST_FUNCTION_HOOK(__imp__NetDll_WSACleanup, NetDll_WSACleanup);
+GUEST_FUNCTION_HOOK(__imp__NetDll_XNetCleanup, NetDll_XNetCleanup);
+GUEST_FUNCTION_HOOK(__imp__NetDll_WSASetEvent, NetDll_WSASetEvent);
+GUEST_FUNCTION_HOOK(__imp__NetDll_WSAResetEvent, NetDll_WSAResetEvent);
