@@ -630,6 +630,11 @@ float xmul(float a, float b)
                     Line("texLod = " + Reg(op.src(), op.is_src_relative()) + "." + kComp[op.src_swizzle() & 3] + ";");
                     return;
                 }
+                if (op.opcode() == FetchOpcode::kGetTextureGradients)
+                {
+                    GetTextureGradients(op);
+                    return;
+                }
                 if (op.opcode() != FetchOpcode::kTextureFetch)
                 {
                     Error(std::format("texture fetch opcode {} not implemented yet", uint32_t(op.opcode())));
@@ -702,6 +707,39 @@ float xmul(float a, float b)
                 }
                 }
                 Line("vec4 tdata = " + value + ";");
+                StoreFetchResult(op.dest(), op.is_dest_relative(), op.dest_swizzle(), "tdata");
+                indent--;
+                Line("}");
+                if (op.is_predicated())
+                {
+                    indent--;
+                    Line("}");
+                }
+            }
+
+            // ReCarbon: getGradients (fetch opcode 18) reads no texture: the
+            // screen-space derivatives of its first two source components,
+            // (ddx(x), ddy(x), ddx(y), ddy(y)), coarse, as Xenia has it
+            // (spirv_shader_translator_fetch.cc). Only pixel shaders have
+            // derivatives; elsewhere it's zero. NFS: Carbon's road shader
+            // (ps_ecaa77d5ae144106) uses it: untranslated, the road wasn't
+            // drawn and what lay behind it showed through (ROADMAP M5).
+            void GetTextureGradients(const TextureFetchInstruction& op)
+            {
+                if (op.is_predicated())
+                {
+                    Line(std::format("if (p0 == {}) {{", op.predicate_condition() ? "true" : "false"));
+                    indent++;
+                }
+                Line("{");
+                indent++;
+                std::string src = Reg(op.src(), op.is_src_relative());
+                uint32_t sw = op.src_swizzle();
+                std::string x = src + "." + kComp[sw & 3], y = src + "." + kComp[(sw >> 2) & 3];
+                if (stage == ShaderStage::Pixel)
+                    Line(std::format("vec4 tdata = vec4(dFdxCoarse({0}), dFdyCoarse({0}), dFdxCoarse({1}), dFdyCoarse({1}));", x, y));
+                else
+                    Line("vec4 tdata = vec4(0.0);");
                 StoreFetchResult(op.dest(), op.is_dest_relative(), op.dest_swizzle(), "tdata");
                 indent--;
                 Line("}");
