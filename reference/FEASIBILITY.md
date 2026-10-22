@@ -471,7 +471,7 @@ New tooling:
   `xboxkrnl.exe` (the game falls back to imports) is equivalent to the console's success
   path.
 
-## 6. M4 progress: rendering (2026-10-22, in progress)
+## 6. M4 results: rendering (Passed 2026-10-22)
 
 ### Black movie video: fixed (commit 487cf65)
 Evidence chain:
@@ -517,14 +517,29 @@ a session).
   - committed code without the clock fix: 25/25 clean;
   - with it: 24/25.
 
-### Open: intermittent movie-teardown hang (about 1 in 50 launches)
-- **Symptom:** the main thread waits (`KeWaitForSingleObject`) on an event inside the movie
-  player (0x40084AD4) after its decoder threads have exited. The command processor is idle and
-  its ring consistent.
-- **Not attributable to the clock fix:** 1/25 against 0/25, and the wait isn't timed.
-- **Hypotheses:** a lost wakeup when a guest event header is re-initialized inline after
-  being bound to a host object, or an ordering race between the player and its decoders. Not
-  established.
+### Intermittent movie-teardown hang: root-caused and fixed (commit 7038a47)
+- **Symptom (about 1 in 50 launches):** the main thread waits (`KeWaitForSingleObject`) in
+  the movie player's teardown (`sub_827C9B30`) on decoder thread 3's done event (0x40084AD4).
+- **Ruled out:** a lost wakeup when a guest event header is re-initialized inline. An event
+  trace over 9 runs showed 16 re-binds per run, all with no waiters.
+- **Root cause:** the hang report shows decoder thread 3 alive, blocked in
+  `RtlEnterCriticalSection` from XAudio's voice yield (`sub_82A4E7A8`). That code reads the
+  critical section's `RecursionCount` with `lwz`, leaves the section that many times and
+  re-enters. `XRTL_CRITICAL_SECTION` stored its counters host-endian, so a count of 1 read as
+  0x01000000 (the thread's r30 in the report). The first leave released the section, and the
+  rest drove the count negative. A thread entering in between could never release it, so
+  thread 3 never set its done event.
+- **Fix:** big-endian `LockCount`, `RecursionCount` and `OwningThread` (XenonRecomp patch
+  0010, as Xenia has them), with the logic in `runtime/kernel/critical_section.h`.
+  `critical_section_test` passes. With the fields host-endian it fails 5 checks, without
+  deadlocking. `ctest` 11/11.
+- **Verification:**
+  - 58/58 launches clean: frame 900 and 8 movie opens each, no hang, no strict stub. 100 were
+    planned; the run was stopped at 58 by decision.
+  - 3/3 unmuted 60 s launches clean (MacBook Air speakers, 0 gaps over 50 ms).
+- **Remaining uncertainty:** the yield path wasn't hit in 28 instrumented launches. The fix is
+  shown by the hang report and the test, not observed in the game. At the old rate, 0/58 would
+  still happen about 31% of the time without the fix, so the launches are a regression check.
 
 ## 7. Feasibility: Xbox 360 Carbon
 

@@ -127,12 +127,15 @@ Diagnosing a failure is progress. It does not pass a criterion.
   compare the last meaningful log lines with the attempt table. Run `ctest --test-dir
   build/tests`.
 
-## M4 — First frame (rendering) *(In progress)*
-- **Evidence so far** (FEASIBILITY §6):
+## M4 — First frame (rendering) *(Passed 2026-10-22)*
+- **Evidence** (FEASIBILITY §6):
   - The EA logos and movies render in frame dumps (commit 487cf65).
   - Unknown-format and memexport counts are 0 over 25 runs.
   - Guest clock fixed (commit 124cf31).
-  - Open: an intermittent movie-teardown hang, about 1 in 50.
+  - Movie-teardown hang root-caused and fixed: guest critical-section counters stored
+    host-endian (commit 7038a47). 58/58 launches clean, of 100 planned (stopped by decision),
+    plus 3/3 unmuted. The bug's code path wasn't observed in 28 instrumented launches, so the
+    fix rests on the hang report and `critical_section_test`.
 - **Do:**
   - Enable the PM4/Xenos path at 1x, 16:9, with the MW-only renderer features disabled.
   - Add logging for unknown texture formats and dropped memexport draws.
@@ -143,7 +146,7 @@ Diagnosing a failure is progress. It does not pass a criterion.
 - **Verify:** `scripts/run_attempt.sh` windowed, three times. Each log shows a presented frame,
   and the screenshot matches.
 
-## M5 — Audio, movies, input
+## M5 — Audio, movies, input *(In progress)*
 - **Do:**
   - Enable XMA → FFmpeg → SDL3.
   - Movies: verified from the extracted files' headers (2026-10-22). All 65 are ASF (`.wmv`):
