@@ -212,7 +212,7 @@ functions = [
     { address = 0x827C0710, size = 0x11C },
     { address = 0x827C0970, size = 0xD0 },
     { address = 0x827C0A40, size = 0x4D8 },
-    { address = 0x827C1970, size = 0x40C },
+    { address = 0x827C1A18, size = 0x364 },
     { address = 0x827EDA40, size = 0x228 },
     { address = 0x827FFC28, size = 0x108 },
     { address = 0x828014D8, size = 0xD4 },

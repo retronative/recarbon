@@ -145,6 +145,37 @@ lost = sorted(pdata - map_addrs)
 hard(not lost, f'{len(pdata)} .pdata starts in code, {len(lost)} not in the mapping'
      + (': ' + ' '.join(f'{a:08X}' for a in lost[:20]) if lost else ''))
 
+# --- 3b. code pointers built in code (ReCarbon) ------------------------------
+# A code address built with lis + addi/ori that follows a blr, an unconditional
+# b or padding is a function the game calls through a pointer; if it isn't a
+# function start, the call aborts at runtime (cpu/indirect.cpp). NFS: Carbon
+# 0x827C1A18 was one, swallowed by a leaf bound (survey/leaf_switch_bounds.py).
+print('\n== code pointers built in code')
+w = lambda a: struct.unpack('>I', img[a - BASE:a - BASE + 4])[0]
+def uncond_exit(x):
+    return x == 0x4E800020 or (x >> 26 == 18 and x & 3 == 0)
+built = set()
+for s0, e0 in CODE:
+    for a in range(s0, e0, 4):
+        x = w(a)
+        if x >> 26 != 15 or (x >> 16) & 31:
+            continue
+        rd, hi = (x >> 21) & 31, (x & 0xFFFF) << 16
+        for b in range(a + 4, min(a + 36, e0), 4):
+            y = w(b)
+            op = y >> 26
+            if op in (14, 24) and (y >> 16) & 31 == rd:
+                lo = y & 0xFFFF
+                v = (hi + (lo - 0x10000 if op == 14 and lo & 0x8000 else lo)) & 0xFFFFFFFF
+                if in_code(v) and v % 4 == 0 and in_code(v - 4) and (w(v - 4) == 0 or uncond_exit(w(v - 4))):
+                    built.add(v)
+                break
+            if (y >> 21) & 31 == rd and op not in (36, 37, 32, 33):
+                break
+unmapped = sorted(built - map_addrs)
+hard(not unmapped, f'{len(built)} entry-like code pointers, {len(unmapped)} not a function start'
+     + (': ' + ' '.join(f'{a:08X}' for a in unmapped[:20]) if unmapped else ''))
+
 # --- 4. coverage -------------------------------------------------------------
 print('\n== coverage (extent = 4 * instruction comments; import thunks 16 bytes)')
 spans = [(mapping[n], mapping[n] + 4 * c) for n, c in extent.items() if n in mapping]

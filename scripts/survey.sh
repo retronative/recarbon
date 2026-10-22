@@ -47,4 +47,16 @@ recompile recomp_pass1.log
 "$PY" survey/leaf_switch_bounds.py --write
 "$PY" survey/find_entry_points.py --write
 recompile recomp.log
+# ReCarbon: find_entry_points.py judged against pass 1's function map, which
+# the leaf bounds just changed (an entry XenonRecomp found on its own in pass 1
+# can now lie inside a bounded function). Rerun it against the new map until
+# the secondary entries stop changing.
+for pass in 1 2 3; do
+  before=$(shasum config/recarbon.toml)
+  "$PY" survey/find_entry_points.py --write 2> "$OUT/entry_points.log"
+  [ "$(shasum config/recarbon.toml)" = "$before" ] && break
+  [ "$pass" = 3 ] && { echo "secondary entries didn't settle after 3 passes"; exit 1; }
+  echo "secondary entries changed (fixed-point pass $pass): recompiling"
+  recompile recomp.log
+done
 "$PY" survey/validate_recomp.py "$OUT/recomp.log"

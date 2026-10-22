@@ -41,7 +41,31 @@ for lo, hi in DATA:
         v = word(a)
         if TEXT[0] <= v < TEXT[1] and v % 4 == 0:
             data_refs.add(v)
-entries = bl_targets | data_refs
+# ReCarbon: also code addresses built in code (lis + addi/ori, as
+# find_entry_points.py finds them) that follow a blr, an unconditional b or
+# padding: a function the game calls through a pointer. Without them the start
+# walk below runs back past that function's first instruction and swallows it
+# (NFS: Carbon 0x827C1A18, called indirectly by its movie player, ended up
+# inside 0x827C1970 and aborted at runtime).
+code_refs = set()
+for a in range(TEXT[0], TEXT[1], 4):
+    w = word(a)
+    if w >> 26 != 15 or (w >> 16) & 31 != 0:        # lis rD,hi
+        continue
+    rd, hi = (w >> 21) & 31, (w & 0xFFFF) << 16
+    for b in range(a + 4, min(a + 36, TEXT[1]), 4):
+        x = word(b)
+        op = x >> 26
+        if op in (14, 24) and (x >> 16) & 31 == rd:  # addi / ori rX,rD,lo
+            lo = x & 0xFFFF
+            v = (hi + (lo - 0x10000 if op == 14 and lo & 0x8000 else lo)) & 0xFFFFFFFF
+            p = word(v - 4) if TEXT[0] < v < TEXT[1] and v % 4 == 0 else None
+            if p is not None and (p == 0 or is_uncond_exit(p)):
+                code_refs.add(v)
+            break
+        if (x >> 21) & 31 == rd and op not in (36, 37, 32, 33):
+            break
+entries = bl_targets | data_refs | code_refs
 
 out, rejected = {}, []
 for bctr in bad:
