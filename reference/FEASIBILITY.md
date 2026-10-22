@@ -649,6 +649,35 @@ a session).
   blind input script can't drive. Pending a human playthrough. The 16-minute gameplay soaks are
   the automated stability evidence so far.
 
+## 6c. M7 exploration: racing (in progress, 2026-10-23)
+
+### Quick Race
+- Main menu, in order: Career, My Cars, Challenge Series, Quick Race, Custom Match, Quick Match,
+  Reward Cards, Statistics, Options.
+- A scripted Quick Race loads, and the race runs with no crash, hang or strict stub in 8
+  minutes. Without steering, the script's car pins itself against the first corner.
+- **Frame pacing in that race:** 57.6 fps on average, no interval under 30 fps (the lowest
+  42.8). A run without frame dumps (soak) averages 59.5 fps. Frame dumps (`RECARBON_DUMP_FRAMES`)
+  add a ~57 ms stall every 60 frames, because the PPM is written synchronously, so they must be
+  off for any frame-time measurement.
+
+### EA audio CPU budget (SpeedBreaker v0.1.8's fix for MW)
+- Carbon's sound engine is RenderWare Audio Core (`rw::audio::core::System`, `Snd9Service`,
+  thread "RWAudioCore Dac"), not MW's EA SND. MW's addresses and code don't apply.
+- **Black-box test** (temporary probe): the RWAudioCore Dac thread was held for 20, 50, 100 and
+  300 ms during the title music and during a race with the engine at steady revs.
+  - The mix's level stayed in its normal range after every stall: race RMS 0.10–0.22 before and
+    after.
+  - MW's symptom, a persistent 4.5–8 dB drop until the next gear change, wasn't seen.
+- **Status:** no evidence of voice expulsion in Carbon (hypothesis level). Caveats: one
+  scenario; the whole-mix level could hide a single dropped voice; the thread a budget would
+  measure might not be the one held. It stays open for human gameplay testing.
+
+### Needs a human
+- Steering, so: controls, physics, AI racing and finishing, a full career race with progress
+  saved, and 10 minutes of racing frame times. The user has already driven the car with the
+  keyboard (hand test 1).
+
 ## 7. Feasibility: Xbox 360 Carbon
 
 ### Why it is plausible (evidence from M0)
