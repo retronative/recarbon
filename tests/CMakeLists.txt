@@ -70,6 +70,9 @@ set_target_properties(pad_map_test PROPERTIES SKIP_BUILD_RPATH OFF)
 # getGradients (fetch opcode 18) in the shader translator: Carbon's road shader
 # (gpu/shader_translator.cpp, gpu/xenos/ucode.cpp; ReCarbon M5: see-through road).
 recarbon_test(shader_gradients_test SOURCES ${RT}/gpu/shader_translator.cpp ${RT}/gpu/xenos/ucode.cpp)
+# Returning freed guest pages to zero touches no byte outside the range on a
+# 16 KB host (kernel/vmem.h ResetHostRange, header only; from SpeedBreaker v0.1.8).
+recarbon_test(vmem_host_pages_test)
 
 # Not ported from SpeedBreaker (one line each: why).
 # write_watch_test: needs ppc/ (ppc_config.h, generated from the XEX) and XenonUtils.

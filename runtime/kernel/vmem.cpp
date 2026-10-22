@@ -2,24 +2,29 @@
 #include "../stdafx.h"
 #include "vmem.h"
 
+#include <unistd.h>
+
 namespace vmem
 {
     PageHeap::PageHeap(uint32_t base, uint32_t size, uint32_t pageSize)
-        : m_base(base), m_size(size), m_pageSize(pageSize), m_pages(size / pageSize)
+        : m_base(base), m_size(size), m_pageSize(pageSize), m_hostPage(size_t(sysconf(_SC_PAGESIZE))),
+          m_pages(size / pageSize)
     {
     }
 
-    // Returns pages to fresh zero-filled memory. Remapping is lazy and cheap
-    // even for hundreds of megabytes, unlike memset.
+    // Returns pages to fresh zero-filled memory: whole host pages remapped
+    // (lazy and cheap even for hundreds of megabytes, unlike memset), any
+    // partial ones at the ends cleared in place (ResetHostRange).
     void PageHeap::ResetHostPages(uint32_t firstPage, uint32_t count)
     {
         void* host = g_memory.Translate(m_base + firstPage * m_pageSize);
         size_t bytes = size_t(count) * m_pageSize;
         // Physical memory is a shared object mirrored at three windows:
         // remapping would break the aliasing, so zero it in place.
-        if (m_base >= 0xA0000000 ||
-            mmap(host, bytes, PROT_READ | PROT_WRITE, MAP_FIXED | MAP_ANON | MAP_PRIVATE, -1, 0) == MAP_FAILED)
+        if (m_base >= 0xA0000000)
             memset(host, 0, bytes);
+        else
+            ResetHostRange(host, bytes, m_hostPage, RemapAnon);
     }
 
     uint32_t PageHeap::Alloc(uint32_t size, uint32_t alignment, uint32_t type, uint32_t protect, bool topDown,

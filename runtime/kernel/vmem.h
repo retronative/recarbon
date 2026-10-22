@@ -8,7 +8,10 @@
 // keep a single window (as Unleashed Recompiled does) until the GPU needs
 // the others. Physical address = guest address & 0x1FFFFFFF.
 #pragma once
+#include <cstddef>
 #include <cstdint>
+#include <cstring>
+#include <sys/mman.h>
 #include <mutex>
 #include <vector>
 
@@ -39,6 +42,39 @@ namespace vmem
         uint32_t state;             // X_MEM_COMMIT / X_MEM_RESERVE / X_MEM_FREE
         uint32_t protect;
     };
+
+    // ReCarbon (from SpeedBreaker v0.1.8, 86cfaa4): returns [host,
+    // host+bytes) to zero without touching a byte outside it. The whole host
+    // pages inside (`hostPage`, a power of two) are remapped with `remap`
+    // (cleared in place if that fails); the partial head and tail are cleared
+    // in place. mmap rounds a MAP_FIXED length up to whole host pages, so on a
+    // 16 KB host (Apple silicon) remapping a 4 KB-page heap's range that
+    // starts on a host page and ends inside one zeroed the guest pages after
+    // it: possibly another allocation's. tests/vmem_host_pages_test.cpp.
+    using RemapFn = bool (*)(void* host, size_t bytes);
+
+    // mmap(MAP_FIXED | MAP_ANON | MAP_PRIVATE): fresh zero-filled pages.
+    inline bool RemapAnon(void* host, size_t bytes)
+    {
+        return mmap(host, bytes, PROT_READ | PROT_WRITE, MAP_FIXED | MAP_ANON | MAP_PRIVATE, -1, 0) != MAP_FAILED;
+    }
+
+    inline void ResetHostRange(void* host, size_t bytes, size_t hostPage, RemapFn remap)
+    {
+        uint8_t* begin = static_cast<uint8_t*>(host);
+        uint8_t* end = begin + bytes;
+        uint8_t* wholeBegin = reinterpret_cast<uint8_t*>((uintptr_t(begin) + hostPage - 1) & ~uintptr_t(hostPage - 1));
+        uint8_t* wholeEnd = reinterpret_cast<uint8_t*>(uintptr_t(end) & ~uintptr_t(hostPage - 1));
+        if (wholeBegin >= wholeEnd)
+        {
+            memset(begin, 0, bytes);  // no whole host page inside
+            return;
+        }
+        memset(begin, 0, wholeBegin - begin);
+        if (!remap(wholeBegin, wholeEnd - wholeBegin))
+            memset(wholeBegin, 0, wholeEnd - wholeBegin);
+        memset(wholeEnd, 0, end - wholeEnd);
+    }
 
     class PageHeap
     {
@@ -83,6 +119,7 @@ namespace vmem
         void ResetHostPages(uint32_t firstPage, uint32_t count);
 
         uint32_t m_base, m_size, m_pageSize;
+        size_t m_hostPage;  // the host's page size (16 KB on Apple silicon)
         std::vector<Page> m_pages;
         std::mutex m_mutex;
     };
