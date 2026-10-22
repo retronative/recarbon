@@ -66,11 +66,19 @@ namespace guesttime
         return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
     }
 
+    // ReCarbon: the wall clock is read once and carried on by the steady
+    // clock. macOS's system_clock has 1 us resolution, and a thread reading
+    // it in a loop saw it go back: 1 us at a us boundary (one reading ahead
+    // of the next, dozens a second with 4-7 threads reading), and 12 ms to
+    // 1 s when the host's time was adjusted. The guest's system time went
+    // back with it (tests/guest_time_test.cpp failed 3 runs in 25), where
+    // the 360's only moves on.
     inline int64_t RawSystem()
     {
         constexpr int64_t kEpochDelta = 116444736000000000;  // 1601 to 1970 in 100 ns
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count() / 100 +
-            kEpochDelta;
+        static const int64_t wallMinusSteadyNs =
+            std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - RawNs();
+        return (RawNs() + wallMinusSteadyNs) / 100 + kEpochDelta;
     }
 
     template<int64_t (*Raw)(), Domain State::*D>

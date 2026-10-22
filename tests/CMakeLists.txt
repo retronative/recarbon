@@ -52,6 +52,9 @@ recarbon_test(ring_state_test)
 # Which EDRAM colour formats share a target, and their sample sizes
 # (runtime/gpu/edram_format.h, header only; ReCarbon M4: black movies).
 recarbon_test(edram_format_test)
+# Guest system time never goes back with several readers (cpu/guest_time.h;
+# ReCarbon M4: guest_time_test's intermittent system-time failure).
+recarbon_test(system_time_monotonic_test SOURCES ${RT}/cpu/guest_time.cpp)
 
 # Not ported from SpeedBreaker (one line each: why).
 # write_watch_test: needs ppc/ (ppc_config.h, generated from the XEX) and XenonUtils.
