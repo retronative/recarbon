@@ -8,8 +8,8 @@
 # Needs ppc/ (XenonRecomp output from your own default.xex, scripts/survey.sh)
 # and tools/ (scripts/setup_tools.sh, including tools/ffmpeg-xma), plus
 # Homebrew's sdl3, vulkan-loader, vulkan-headers, glslang, spirv-tools and
-# molten-vk. -DRECARBON_TESTS=ON adds the unit tests (tests/CMakeLists.txt,
-# not ported from SpeedBreaker yet).
+# molten-vk. -DRECARBON_TESTS=ON adds the unit tests (tests/CMakeLists.txt:
+# a first set ported from SpeedBreaker, plus ReCarbon's own; run with ctest).
 cmake_minimum_required(VERSION 3.20)
 
 # macOS deployment target. ReCarbon change: for now the game links Homebrew's
@@ -71,9 +71,6 @@ add_subdirectory(runtime)
 
 option(RECARBON_TESTS "Build the unit tests (tests/)" OFF)
 if(RECARBON_TESTS)
-    if(NOT EXISTS ${CMAKE_SOURCE_DIR}/tests/CMakeLists.txt)
-        message(FATAL_ERROR "RECARBON_TESTS: there is no tests/CMakeLists.txt yet (SpeedBreaker's unit tests aren't ported)")
-    endif()
     enable_testing()
     add_subdirectory(tests)
 endif()
