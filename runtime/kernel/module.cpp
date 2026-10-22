@@ -91,6 +91,18 @@ namespace module
             s_timeStamp = address;
             std::thread(TimeStampThread).detach();
         }
+        else if (n == "XboxKrnlVersion")
+        {
+            // ReCarbon (NFS: Carbon imports it; MW didn't). Xenia's values
+            // (xboxkrnl_module.cc): 2.65535.65535, qfe 0x80, as high as the
+            // format allows, since titles only check it with >=.
+            auto u16 = [&](uint32_t off, uint16_t v) { *reinterpret_cast<be<uint16_t>*>(p + off) = v; };
+            u16(0, 2);
+            u16(2, 0xFFFF);
+            u16(4, 0xFFFF);
+            p[6] = 0x80;
+            p[7] = 0x00;
+        }
         else if (n == "VdGpuClockInMHz")
         {
             u32(0, 500);
