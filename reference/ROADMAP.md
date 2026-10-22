@@ -1,7 +1,18 @@
 # ReCarbon — Roadmap (Xbox 360 → Apple Silicon)
 
-Every milestone is gated. Don't start the next one until the acceptance criteria are met **and
-observed**, not inferred. The "Evidence" line in each milestone is what goes into the milestone's PR description.
+Every milestone is gated. Starting each milestone needs the user's **explicit approval**, even
+when the previous one passed. A milestone passes only when its acceptance criteria are met **and
+observed**, not inferred. The "Evidence" line records what was observed. The "Verify" line is how
+anyone can reproduce it from a clean checkout plus their own disc.
+
+Each milestone, and each M3 checkpoint, is in one of three states:
+- **Passed:** every criterion is observed, and the result is reproducible (the same result in 3
+  consecutive runs where the criterion involves running the game).
+- **Partial:** some criteria are observed and the rest are not yet met. The report lists which.
+- **Blocked:** a known failure stops progress. It's documented with its root cause, or with what
+  is still unknown.
+
+Diagnosing a failure is progress. It does not pass a criterion.
 
 ## M0 — Correct input binary *(done 2026-10-22)*
 - **Evidence:** FEASIBILITY §1.
@@ -21,6 +32,9 @@ observed**, not inferred. The "Evidence" line in each milestone is what goes int
   - Header parsed: title ID, version, base, image size, sections, import libraries and counts, TLS, stack size.
   - Hashes recorded in `reference/FEASIBILITY.md`.
   - The XEX decrypts and decompresses via `Xex2LoadImage` from the player's own disc.
+- **Verify:** `shasum -a 256 game/files/default.xex`, `python3 -I reference/analysis/xexinfo.py
+  game/files/default.xex`, and `tools/survey/xexsurvey game/files/default.xex game/survey` (the
+  image is 17,629,184 B). Compare the results with FEASIBILITY §1.
 
 ## M1 — Toolchain + recompile-only PoC *(done 2026-10-22)*
 - **Evidence** (FEASIBILITY §3):
@@ -47,6 +61,8 @@ observed**, not inferred. The "Evidence" line in each milestone is what goes int
   - Counts are recorded for: functions, switch tables, "switch case outside function" errors, and secondary entries.
   - Structural validation passes.
   - `ppc/` is git-ignored and `git status` is clean of generated code.
+- **Verify:** `scripts/setup_tools.sh && scripts/survey.sh` (it ends with `validate_recomp.py`; every
+  check must say `ok`), then `tests/run_instr_tests.sh` (exit 0, "0 failed checks").
 
 ## M2 — Native compilation and link *(done 2026-10-22)*
 - **Evidence** (FEASIBILITY §4):
@@ -69,16 +85,36 @@ observed**, not inferred. The "Evidence" line in each milestone is what goes int
   - The build time and peak RSS on the target Mac are recorded.
   - The list of unimplemented imports is recorded.
   - No unresolved symbols; no silently disabled features or fabricated implementations.
+- **Verify:** a clean `cmake` + `ninja -j8` (README "Building"), then the link checks in
+  FEASIBILITY §4: `nm -m -u` shows no symbol without a library, and the generated-function and
+  import name diffs show 0 missing.
 
 ## M3 — Runtime initialization
 - **Do:**
-  - Load the XEX image into the 4 GB guest space.
-  - Wire the imports.
-  - Run the guest entry point with `STUB_CONTINUE` off.
-- **Accept:**
-  - Guest code reaches `main`, opens files through the VFS (logged), and spawns guest threads.
-  - The first unimplemented import or crash is diagnosed, with no silent stubs.
-  - No host crash for at least 60 s, or a root-caused failure.
+  - Run the binary at 1x (`scripts/run_attempt.sh`: strict stubs, never `RECARBON_STUB_CONTINUE`).
+  - Debug one stop at a time, finding the root cause before changing anything.
+  - Implement only the imports actually reached, with cited semantics and regression tests.
+- **Checkpoints** (each marked Passed, Partial or Blocked by its log evidence):
+  - **C1:** the image is loaded and all imports are wired (`[loader] wired …`).
+  - **C2:** the guest entry point runs, the CRT initializes, and guest threads start.
+  - **C3:** the game opens its data through the VFS (`ZDIR.BIN`, `ZZDATA*.BIN`).
+  - **C4:** GPU bring-up: `VdInitializeEngines`, the ring buffer, the interrupt callback, and PM4
+    packets reaching the command processor.
+  - **C5:** the first `VdSwap`.
+  - **C6:** the first presented frame. This is M4's goal; M3 doesn't require it.
+- **Accept (Passed):**
+  - The executable launches.
+  - The deepest checkpoint claimed is reached, with the same stop point, in **3 consecutive runs**.
+  - Every import the game reached on the way is implemented, with cited semantics. None is
+    bypassed, and `RECARBON_STUB_CONTINUE` is never used.
+  - Every stop or crash before that checkpoint is root-caused and fixed, and each significant fix
+    has a regression test in `ctest`.
+  - An attempt table records the stop point, the root cause and the fix of every run.
+- **Partial:** a checkpoint below C4 is reached reproducibly, but the next stop isn't root-caused
+  or fixed yet. **Blocked:** no checkpoint beyond C1 is reproducible.
+- **Verify:** build, then run `scripts/run_attempt.sh <name> 90 [--headless]` three times and
+  compare the last meaningful log lines with the attempt table. Run `ctest --test-dir
+  build/tests`.
 
 ## M4 — First frame (rendering)
 - **Do:**
@@ -88,30 +124,58 @@ observed**, not inferred. The "Evidence" line in each milestone is what goes int
   - The EA/Black Box logos or the first front-end frame are presented through MoltenVK.
   - A screenshot is captured locally (never committed).
   - Unknown-format and dropped-draw counts are recorded.
+- **Verify:** `scripts/run_attempt.sh` windowed, three times. Each log shows a presented frame,
+  and the screenshot matches.
 
 ## M5 — Audio, movies, input
 - **Do:**
   - Enable XMA → FFmpeg → SDL3.
-  - Verify the movie format (VP6/XMV) and add pacing hooks.
+  - Movies: verified from the extracted files' headers (2026-10-22). All 65 are ASF (`.wmv`):
+    - video WMV3 (WMV9 Main), 1280×720 (63 files) or 640×480 (2);
+    - audio WMA Pro (format tag 0x0162), 5.1 at 44.1 kHz (60) or stereo at 48 kHz (1), or
+      WMA v2 (0x0161) stereo at 48 kHz (4).
+
+    None uses XMA. The title links the XDK's XMEDIA/XMV player (`.XBMOVIE` section), so the
+    decoding runs in recompiled guest code, as in SpeedBreaker. The host side needs only pacing
+    hooks, which must be found in Carbon. Confirm at runtime that guest decoding is what plays
+    them before adding any host decoder.
   - Port the controller and keyboard input with a Carbon key map.
 - **Accept:**
   - Front-end music plays without stalls for 5 minutes.
   - The intro movie plays at the correct cadence.
   - Menus are navigable with a controller and with the keyboard.
+- **Verify:** a windowed run with the audio log (`RECARBON_AUDIO_LOG`): no underruns over 5 minutes
+  in the front end, and the intro movie's frame times in the log. Navigate by hand with a pad and
+  with the keyboard, scripted with `RECARBON_INPUT_SCRIPT` where possible.
 
 ## M6 — First boot to free-roam / race load
 - **Do:**
   - Implement the missing kernel/XAM calls: content, saves and profile, scoped per title.
   - Find Carbon's render-queue and frame-time equivalents and add the ARM fence hooks.
-- **Accept:**
-  - A race loads from a new profile, and the save is created and reloaded across restarts.
-  - No deadlock for 10 minutes in free-roam.
+- **Accept** (each verified separately):
+  - **Profile and save:** a new profile is created, the save is written, and it reloads intact
+    after a restart.
+  - **Race loading:** a race or free-roam loads from the front end and reaches control of the
+    car.
+  - **Stability:** no deadlock or crash for 10 minutes in free-roam.
+- **Verify:** a windowed session following a written route (new profile → free-roam → race
+  load), then a restart. Logs and the save file's presence and size are recorded; watchdog
+  reports must be empty.
 
 ## M7 — Playable racing
-- **Accept:**
-  - One full career race completes at a stable 30 fps or better on the MacBook Air M5, measured with frame-time logs over 10 minutes and thermal state noted.
-  - No missing world geometry.
-  - Audio stays in sync.
+- **Accept** (each verified separately):
+  - **Player controls:** steering, throttle, brake, handbrake, nitrous and the camera respond on a
+    controller and on the keyboard.
+  - **Vehicle physics:** the car behaves consistently. Compare against the Xbox 360 version where
+    possible (e.g. top speed or a lap time on a known route), with notes.
+  - **AI opponents:** they spawn, race and finish.
+  - **Race completion:** one full career race finishes, the results screen shows, and the career
+    progress is saved and survives a restart.
+  - **Frame pacing:** a stable 30 fps or better on the MacBook Air M5, from frame-time logs over
+    10 minutes of racing, with the thermal state noted.
+  - **Audio and picture:** audio stays in sync, and no world geometry is missing.
+- **Verify:** a written test route repeated 3 times; the frame-time log and the session log are
+  attached per run.
 
 ## M8 — Polish and distribution
 - **Do:**
@@ -122,6 +186,8 @@ observed**, not inferred. The "Evidence" line in each milestone is what goes int
   - A clean install from a disc image on a fresh macOS user account.
   - `check_app.py` passes.
   - The unit tests run in `ctest`.
+- **Verify:** `scripts/macos` packaging plus `check_app.py`, an install on a fresh user account
+  from the disc image, and `ctest`.
 
 ## Not planned
 - Any original-Xbox (XBE) port. That is out of scope unless re-approved (see ARCHITECTURE appendix).
