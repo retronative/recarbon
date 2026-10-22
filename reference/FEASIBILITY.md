@@ -541,6 +541,54 @@ a session).
   shown by the hang report and the test, not observed in the game. At the old rate, 0/58 would
   still happen about 31% of the time without the fix, so the launches are a regression check.
 
+## 6a. M5 progress: audio, movies, input (in progress, 2026-10-23)
+
+### Unmuted baseline (no audio code changed)
+- 180 s through the boot movies and the title: the device opens (MacBook Air speakers, 5.1
+  float, 48 kHz), 0 gaps over 50 ms, sound throughout.
+- Front end reached by script: START on the title, then A on "Create a new alias?" → No.
+  Five strict stubs stood in the way. They're implemented from Xenia's `xam_net.cc` (commit
+  752537e): `XNetUnregisterKey`, `WSACleanup`, `XNetCleanup`, `WSASetEvent` and
+  `WSAResetEvent`. The offline path then shows "Cannot connect to Xbox Live!".
+
+### Front-end audio underruns: root-caused and fixed (commit 79573bb)
+- **Symptom:** in the menus, device-empty frames and gaps of 50–165 ms; none during boot.
+- **Evidence:**
+  - The guest render callback took 15–103 ms, not 5.33 ms. Late wakes were only catch-up.
+  - No critical-section or spinlock wait over 5 ms on the audio thread.
+  - A stack sample showed the callback setting an event and then waiting for XAudio's mixing
+    thread (`sub_82A4FCC8`).
+  - XAudio sets that thread to priority 15 (time critical), but `KeSetBasePriorityThread` was
+    compiled for Windows only. The thread ran at the default QoS while the waiting callback ran
+    at user-interactive: a priority inversion.
+- **Fix:** `kernel/thread_priority.h` reads the priority as Win32's `THREAD_PRIORITY_*`, as the
+  runtime's Windows path does. 15 and above map to user-interactive, 1–2 to user-initiated,
+  and nothing is lowered. `thread_priority_test` passes; with priorities ignored, it fails 5
+  checks.
+- **Verification:** 3 unmuted 420 s runs with over 5 minutes of menu music each, 0 gaps over
+  50 ms and 1 device-empty frame at start-up. Boot regression 5/5. `ctest` 12/12.
+
+### Movies
+- **Speed (passes for M5):** a temporary probe compared each presented picture with the last.
+  - Nikki PSA: 11.38 s against 11.40 s in its ASF header. EAHD bumper: 3.97 s against 4.00 s.
+  - Attract: 2,224 picture changes in its 75.58 s; the file has about 2,265 frames.
+  - The XMV player times frames against audio played (MW's disassembly; the same XDK
+    component, assumed for Carbon), so the audio clock runs at the right rate too.
+- **Known limitation, not smooth:** 72–80% of movie frames show for 2 vblanks and 20–28% for 1
+  or 3. That's MW's judder before SpeedBreaker's pacing hooks (7–10% there). Carbon has no
+  pacing hooks. The probe flushes the GPU and reads back every frame, which may inflate the
+  number. Smoothing is deferred to polish unless it causes gameplay issues.
+- Lip-sync isn't checked by eye and ear yet.
+
+### XMA and input
+- **XMA:** 3,749 frames decoded with the XMA1 decoder, 0 skipped, across five runs (menu sound
+  effects). The front-end music isn't XMA. XMA1 against XMA2 isn't settled: the decoder's
+  synthetic packets work for both.
+- **Input:** the controller's default button mapping moved unchanged to `hid/pad_map.h` and is
+  pinned by `pad_map_test` (commit af3aeea). An SDL virtual controller reaches the main menu.
+  Keyboard rebinding is unchanged, and `settings_keys_test` and `key_map_test` pass.
+- **Pending, by hand:** keyboard, physical controller, audio quality and lip-sync.
+
 ## 7. Feasibility: Xbox 360 Carbon
 
 ### Why it is plausible (evidence from M0)

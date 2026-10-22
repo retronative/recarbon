@@ -147,6 +147,19 @@ Diagnosing a failure is progress. It does not pass a criterion.
   and the screenshot matches.
 
 ## M5 — Audio, movies, input *(In progress)*
+- **Evidence so far** (FEASIBILITY §6a). M5 stays open until the hand tests below are done:
+  - Front-end music: over 5 minutes with no underruns or gaps, in 3/3 runs, after guest thread
+    priorities were mapped to macOS QoS (commit 79573bb).
+  - The main menu is reached with scripted keyboard input and with an SDL virtual controller.
+    The default controller mapping is pinned by a test (commit af3aeea); the keyboard defaults
+    by `settings_keys_test`.
+  - Movies play at the correct speed (Nikki PSA 11.38 s against 11.40 s in the file), which
+    is accepted as the correct cadence for M5. **Known limitation:** frame pacing isn't
+    smooth. 20–28% of movie frames show for 1 or 3 vblanks instead of 2 (measured with a probe
+    that may inflate it). Smoothing is deferred to polish unless it causes gameplay issues.
+  - XMA decodes without errors (3,749 frames, 0 skipped). XMA1 against XMA2 isn't settled.
+  - **Pending, by hand:** keyboard navigation and `[keys]` rebinding in game, a physical
+    controller (expected in about a week), and audio quality and movie lip-sync by ear and eye.
 - **Do:**
   - Enable XMA → FFmpeg → SDL3.
   - Movies: verified from the extracted files' headers (2026-10-22). All 65 are ASF (`.wmv`):
