@@ -609,6 +609,46 @@ a session).
   Keyboard rebinding is unchanged, and `settings_keys_test` and `key_map_test` pass.
 - **Pending, by hand:** keyboard, physical controller, audio quality and lip-sync.
 
+## 6b. M6 progress: profile, saves, stability (in progress, 2026-10-23)
+
+### Profile and save
+- **Flow (fresh user folder):** title → "Cannot connect to Xbox Live!" → main menu. An alias is
+  only demanded at Career > Start Career, which offers the game's own Enter Name screen, with
+  START for Done. The save `rmcsave:\<alias>` is written just before the career intro: 286,764 B
+  plus a 308 B `.xcontent`.
+- **Reload:** on the next launch, `[xam] found save`. The game opens and reads the save and
+  goes straight to the main menu with no alias prompt. The save's SHA-256 is unchanged.
+- Automated runs use an isolated user folder (`scripts/run_attempt.sh`, commit 30e6ebf).
+
+### Deferred render-callback queue: root-caused and fixed (commit e40e9ec)
+- **Symptom:** in a 16-minute soak (alias, career intro, prologue restarts), SIGABRT after
+  158 s: `indirect call to 8209B4AC, which is not a recompiled function`, in `sub_824694C0` on
+  the main thread. `0x8209B4AC` is in `.rdata`: a bad pointer, not a missed function.
+- **Root cause:** `sub_824694C0` plays back a lock-free single-producer, single-consumer queue
+  (state `0x82B8C764`) that `sub_82469448` fills from another thread with no barriers. On ARM64
+  the publish (write pointer, then count) can become visible before the entry's stores. This is
+  MW's race, which SpeedBreaker fixed the same way, and which FEASIBILITY R4 and
+  ARCHITECTURE_REVIEW F8 anticipated.
+- **Fix:** mid-asm hooks put a release fence before the publish (`0x824694B0`) and an acquire
+  fence before the consumer reads an entry (`0x82469518`). `validate_recomp.py` now
+  hard-checks that every configured hook is emitted at its address: it failed before the
+  regeneration and passes after.
+- **Verification:** 2 further 16-minute soaks clean, 54,900 frames each. The crash was seen once
+  in one soak, so the launches are a regression check; the root cause rests on the mechanism.
+
+### Packaging and memory (M8 work done early)
+- `scripts/macos/make_app.py` and `check_app.py` are ported (commit eda0ab1). The app carries
+  bundle ID `org.retronative.recarbon`, signs ad hoc and runs from its bundle. `check_app` check
+  3 fails: Homebrew's Vulkan loader names `/opt/homebrew`, so a release needs libraries built
+  from source.
+- The 16 KB host-page release fix is ported from SpeedBreaker v0.1.8 with ReCarbon's own test
+  and a mutation check (commit 84df8f3). It was latent: never observed in play.
+
+### Open
+- Free-roam 10 minutes: free-roam opens only after a player escapes the prologue chase, which a
+  blind input script can't drive. Pending a human playthrough. The 16-minute gameplay soaks are
+  the automated stability evidence so far.
+
 ## 7. Feasibility: Xbox 360 Carbon
 
 ### Why it is plausible (evidence from M0)
