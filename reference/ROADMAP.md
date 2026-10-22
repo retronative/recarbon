@@ -91,14 +91,15 @@ Diagnosing a failure is progress. It does not pass a criterion.
 
 ## M3 — Runtime initialization *(Passed 2026-10-22, through C5; C6 reached)*
 - **Evidence** (FEASIBILITY §5):
-  - C1–C5 passed. 15/15 consecutive windowed launches reached frame 1 and ran to frame 900,
-    plus 6/6 on the final build.
-  - C6 reached: the game's own loading screen, in frame dumps in 3/3 runs.
+  - C1–C5 passed. 10/10 consecutive windowed launches on the committed code reached frame 1
+    and ran to frame 900, after 10/10 on the ring-fix build.
+  - C6 reached: the game's own loading screen, in frame dumps in 3/3 runs (ring-fix build)
+    and 1/1 on the committed code.
   - 7 imports were implemented with cited semantics, plus `XboxKrnlVersion`. Two root-caused
     races in the command processor's ring were fixed, and a survey bug behind an
     indirect-call abort.
   - `ctest`: 8 tests, including regression tests for both races and the thread-name
-    exception.
+    exception. Upstream `guest_time_test` is flaky (3/25).
   - Open: movie video is black (M4/M5).
 - **Do:**
   - Run the binary at 1x (`scripts/run_attempt.sh`: strict stubs, never `RECARBON_STUB_CONTINUE`).
