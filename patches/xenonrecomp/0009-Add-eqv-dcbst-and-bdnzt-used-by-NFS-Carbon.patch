@@ -1,0 +1,77 @@
+From 4eba72a975ff0040c24c6908610ba4a4271b5154 Mon Sep 17 00:00:00 2001
+From: ReCarbon <recarbon@users.noreply.github.com>
+Date: Thu, 22 Oct 2026 17:06:07 +0700
+Subject: [PATCH] Add eqv, dcbst and bdnzt (used by NFS: Carbon)
+
+These were logged as unrecognized and dropped. eqv computes
+~(rS ^ rB) on all 64 bits, with cr0 from the low word for eqv. as the
+other logical ops do. dcbst only writes a data cache block back to
+memory, which host memory needs no help with, so it is a no-op like
+dcbf. bdnzt decrements CTR as 64 bits and branches if its low word is
+nonzero and CR bit BI (bit BI%4 of field BI/4) is set, as Xenia's bcx
+does; targets outside the function become a tail call.
+---
+ XenonRecomp/recompiler.cpp | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+
+diff --git a/XenonRecomp/recompiler.cpp b/XenonRecomp/recompiler.cpp
+index b75a7ef..3cda865 100644
+--- a/XenonRecomp/recompiler.cpp
++++ b/XenonRecomp/recompiler.cpp
+@@ -670,6 +670,28 @@ bool Recompiler::Recompile(
+         println("\tif ({}.u32 != 0 && !{}.eq) goto loc_{:X};", ctr(), cr(insn.operands[0] / 4), insn.operands[1]);
+         break;
+ 
++    case PPC_INST_BDNZT:
++    {
++        // BO=0100y: CTR is decremented as 64 bits but tested on its low word
++        // (Xenia's bcx); CR bit BI is bit BI%4 of field BI/4.
++        constexpr std::string_view fields[] = { "lt", "gt", "eq", "so" };
++        println("\t--{}.u64;", ctr());
++        auto condition = fmt::format("{}.u32 != 0 && {}.{}", ctr(), cr(insn.operands[0] / 4), fields[insn.operands[0] % 4]);
++        if (insn.operands[1] < fn.base || insn.operands[1] >= fn.base + fn.size)
++        {
++            println("\tif ({}) {{", condition);
++            print("\t");
++            printFunctionCall(insn.operands[1]);
++            println("\t\treturn;");
++            println("\t}}");
++        }
++        else
++        {
++            println("\tif ({}) goto loc_{:X};", condition, insn.operands[1]);
++        }
++        break;
++    }
++
+     case PPC_INST_BEQ:
+         printConditionalBranch(false, "eq");
+         break;
+@@ -806,6 +828,11 @@ bool Recompiler::Recompile(
+         // no op
+         break;
+ 
++    case PPC_INST_DCBST:
++        // no op: like dcbf, it only writes the block back to memory, and host
++        // memory is already coherent
++        break;
++
+     case PPC_INST_DCBT:
+         // no op
+         break;
+@@ -855,6 +882,12 @@ bool Recompiler::Recompile(
+         println("\t__atomic_thread_fence(__ATOMIC_RELEASE);");
+         break;
+ 
++    case PPC_INST_EQV:
++        println("\t{}.u64 = ~({}.u64 ^ {}.u64);", r(insn.operands[0]), r(insn.operands[1]), r(insn.operands[2]));
++        if (strchr(insn.opcode->name, '.'))
++            println("\t{}.compare<int32_t>({}.s32, 0, {});", cr(0), r(insn.operands[0]), xer());
++        break;
++
+     case PPC_INST_EXTSB:
+         println("\t{}.s64 = {}.s8;", r(insn.operands[0]), r(insn.operands[1]));
+         if (strchr(insn.opcode->name, '.'))
+-- 
+2.54.0 (Apple Git-157)
+
