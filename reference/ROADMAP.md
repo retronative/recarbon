@@ -256,3 +256,23 @@ customization. The controls criterion is judged on the default mappings.
 ## Not planned
 - Any original-Xbox (XBE) port. That is out of scope unless re-approved (see ARCHITECTURE appendix).
 - Wine/CrossOver or runtime CPU emulation.
+
+## Future improvements (post-alpha backlog, from SpeedBreaker v0.1.8)
+Backlog, not milestone criteria. Details and evidence: `UPSTREAM_SPEEDBREAKER_0.1.8.md`.
+Nothing upstream counts as verified for Carbon until ReCarbon reproduces it.
+1. Port SpeedBreaker's 16 KB-host page-release fix (`kernel/vmem.cpp` `ResetHostRange`, with
+   its test). ReCarbon has the latent bug. Value high, risk low, effort low.
+2. Find whether Carbon's EA sound library has MW's CPU-budget voice expulsion (issue #35: sounds
+   drop until re-triggered when the mixer thread is starved). If so, port the "never expel for
+   time" hook with Carbon addresses and a test. Value high, risk medium, effort medium.
+3. Virtual-pad `DETACH`/`ATTACH` steps for controller hot-unplug tests. Value medium, risk low,
+   effort low.
+4. World-step timed scripted input, once Carbon's world stepper is found. Value medium, risk
+   low, effort medium.
+5. Generated-code assertions in the test of every title hook. Value medium, risk low, effort
+   low.
+6. Vertex-range narrowing for dynamic buffers, only if racing profiles show guard stalls.
+   Value low–medium, risk medium, effort medium.
+
+Optional future features: Smooth Motion (120 FPS) and USB steering wheels. Excluded from
+planning: split screen and multiple controllers.
