@@ -46,6 +46,9 @@ recarbon_test(key_map_test)
 # ReCarbon: which RtlRaiseException records are thread-name requests
 # (kernel/raise_exception.h, header only).
 recarbon_test(raise_exception_test)
+# gpu::RingState: a re-initialized ring isn't overwritten by an old batch's end
+# (runtime/gpu/ring_state.h, header only; ReCarbon M3).
+recarbon_test(ring_state_test)
 
 # Not ported from SpeedBreaker (one line each: why).
 # write_watch_test: needs ppc/ (ppc_config.h, generated from the XEX) and XenonUtils.

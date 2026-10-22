@@ -18,6 +18,7 @@
 #include "renderer.h"
 #include "gpu_clock.h"
 #include "zpd_report.h"
+#include "ring_state.h"
 #include <kernel/write_watch.h>
 #include <debug/timeline.h>
 #include <report/report.h>
@@ -61,9 +62,7 @@ namespace gpu
         // of 0.94 instead of 1.28.
         alignas(4096) uint32_t s_regs[REGISTER_COUNT];
 
-        std::atomic<uint32_t> s_primaryBuffer{ 0 };  // physical
-        uint32_t s_primarySize = 0;                  // bytes
-        uint32_t s_readIndex = 0;                    // dwords
+        RingState s_ring;  // base, size and read position (ring_state.h: ReCarbon)
         std::atomic<uint32_t> s_readWriteback{ 0 };  // physical, 0 = off
         std::atomic<uint32_t> s_interruptCallback{ 0 };
         std::atomic<uint32_t> s_interruptData{ 0 };
@@ -1072,9 +1071,9 @@ namespace gpu
             auto lastWork = std::chrono::steady_clock::now();
             while (true)
             {
-                uint32_t primary = s_primaryBuffer;
-                uint32_t writeIndex = *MmioRegister(REG_CP_RB_WPTR);
-                if (primary == 0 || writeIndex == s_readIndex || writeIndex * 4 >= s_primarySize)
+                uint32_t writeIndex = 0;
+                const RingState::Snapshot ring = s_ring.Take([] { return uint32_t(*MmioRegister(REG_CP_RB_WPTR)); }, writeIndex);
+                if (ring.primary == 0 || writeIndex == ring.readIndex || writeIndex * 4 >= ring.size)
                 {
                     // Kicks come in bursts and the game often waits on their
                     // results: poll with yields for 2 ms after the last work,
@@ -1099,8 +1098,8 @@ namespace gpu
                     continue;
                 }
                 s_regs[REG_CP_RB_WPTR] = writeIndex;
-                Reader r{ Physical(primary), s_primarySize, s_readIndex * 4, writeIndex * 4 };
-                timeline::Mark(timeline::BatchBegin, (writeIndex - s_readIndex) & (s_primarySize / 4 - 1));
+                Reader r{ Physical(ring.primary), ring.size, ring.readIndex * 4, writeIndex * 4 };
+                timeline::Mark(timeline::BatchBegin, (writeIndex - ring.readIndex) & (ring.size / 4 - 1));
                 s_busyFrom = std::chrono::steady_clock::now();
                 s_busyWaitFrom = renderer::g_cpWaitNs;
                 ExecuteBuffer(r, ctx);
@@ -1109,13 +1108,15 @@ namespace gpu
                 if (writewatch::g_submitRequested.exchange(false))
                     renderer::Submit();
                 renderer::SubmitIfIdle();
-                s_readIndex = writeIndex;
                 // The read pointer is fetch progress (as on the hardware), not
                 // completion: everything the batch needs has been consumed or
                 // copied, so its ring space is free now. D3D tracks resource
                 // lifetimes with fences, which stay deferred to GPU completion.
-                if (uint32_t wb = s_readWriteback)
-                    *reinterpret_cast<be<uint32_t>*>(Physical(wb)) = writeIndex;
+                // ReCarbon: not if the ring was re-initialized meanwhile
+                // (ring_state.h); its write-back then stays the new ring's.
+                if (s_ring.Advance(ring, writeIndex))
+                    if (uint32_t wb = s_readWriteback)
+                        *reinterpret_cast<be<uint32_t>*>(Physical(wb)) = writeIndex;
                 lastWork = std::chrono::steady_clock::now();
             }
         }
@@ -1244,10 +1245,12 @@ namespace gpu
 
     void InitializeRingBuffer(uint32_t guestAddress, uint32_t sizeLog2)
     {
-        s_primarySize = 1u << (sizeLog2 + 3);
-        s_readIndex = 0;
-        s_primaryBuffer = guestAddress & 0x1FFFFFFF;
-        fprintf(stderr, "[gpu] ring buffer %08X, %u bytes\n", guestAddress, s_primarySize);
+        const uint32_t size = 1u << (sizeLog2 + 3);
+        s_ring.Initialize(guestAddress & 0x1FFFFFFF, size, [] {
+            *MmioRegister(REG_CP_RB_WPTR) = 0;
+            s_regs[REG_CP_RB_WPTR] = 0;
+        });
+        fprintf(stderr, "[gpu] ring buffer %08X, %u bytes\n", guestAddress, size);
         StartOnce();
     }
 
@@ -1290,8 +1293,9 @@ namespace gpu
         }
         else
             text += "Not in a WAIT_REG_MEM.\n";
+        const RingState::Snapshot ring = s_ring.Take();
         text += std::format("Frames {}, draws {}, guest vblanks {}; ring buffer {:08X} ({} bytes), read index {} of write index {}\n",
-            s_frames.load(), s_draws.load(), s_vblanks.load(), s_primaryBuffer.load(), s_primarySize, s_readIndex,
+            s_frames.load(), s_draws.load(), s_vblanks.load(), ring.primary, ring.size, ring.readIndex,
             uint32_t(*MmioRegister(REG_CP_RB_WPTR)));
         text += FormatHistory();
         return text;
