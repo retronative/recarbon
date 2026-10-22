@@ -213,6 +213,37 @@ for kind, items in sorted(markers.items()):
 # A complete translation (ROADMAP M1) leaves no failure marker.
 hard(not markers, f'{sum(map(len, markers.values()))} translation-failure markers')
 
+# --- 5b. mid-asm hooks (ReCarbon M6) -----------------------------------------
+# Every [[midasm_hook]] in config/recarbon.toml is called at its address in
+# ppc/: XenonRecomp silently skips a hook whose address isn't an instruction
+# of a recompiled function. The call is the first line after the hooked
+# instruction's comment (after its code with after_instruction), so its
+# address is the function's start + 4 * (comments so far - 1).
+print('\n== mid-asm hooks')
+import tomllib
+want_hooks = {(h['name'], h['address']) for h in tomllib.load(open('config/recarbon.toml', 'rb')).get('midasm_hook', [])}
+HOOK_RE = re.compile(r'^\t(?:if \()?(\w+)\(')
+found_hooks = set()
+names = {n for n, _ in want_hooks}
+for path in sorted(glob.glob(os.path.join(PPC, 'ppc_recomp.*.cpp'))):
+    start = count = None
+    for line in open(path):
+        m = re.match(r'^PPC_FUNC_IMPL\(__imp__sub_([0-9A-F]+)\)', line)
+        if m:
+            start, count = int(m.group(1), 16), 0
+            continue
+        if start is None:
+            continue
+        if line.startswith('\t// '):
+            count += 1
+            continue
+        h = HOOK_RE.match(line)
+        if h and h.group(1) in names and count:
+            found_hooks.add((h.group(1), start + 4 * (count - 1)))
+for name, addr in sorted(want_hooks - found_hooks, key=lambda x: x[1]):
+    print(f'  missing: {name} at {addr:08X}')
+hard(want_hooks <= found_hooks, f'{len(want_hooks)} mid-asm hooks configured, {len(want_hooks & found_hooks)} called at their address')
+
 # --- 6. recompiler log -------------------------------------------------------
 if len(sys.argv) > 1:
     print(f'\n== log {sys.argv[1]}')

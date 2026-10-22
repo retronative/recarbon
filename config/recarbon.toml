@@ -265,3 +265,16 @@ functions = [
     { address = 0x82A469A0, size = 0x28 },
     # manual (see MANUAL in survey/leaf_switch_bounds.py)
 ]
+
+# Deferred render-callback queue (state 0x82B8C764): lock-free producer
+# (sub_82469448) and consumer (sub_824694C0, main thread) across threads with
+# no barriers (see runtime/game/render_queue.cpp). Release before the publish
+# (stw r10,20(r31): the write pointer, then the count), acquire before the
+# consumer reads an entry's callback (lwz r11,0(r30)).
+[[midasm_hook]]
+name = "RenderQueuePublish"
+address = 0x824694B0
+
+[[midasm_hook]]
+name = "RenderQueueAcquire"
+address = 0x82469518

@@ -5,9 +5,10 @@
 // Hor+/Vert+ view scaling, sun glare, nitrous trails, frame pacing, movie
 // pacing) and stores into MW's data (the movie aspect at 0x8200FAC0). Those
 // addresses mean nothing in Carbon's image, so none of that code is built
-// here (reference/ARCHITECTURE.md). Until Carbon's equivalents are found,
-// config/recarbon.toml has no mid-asm hooks and this file reports exactly
-// what the interface headers define for a ppc/ without the hooks:
+// here (reference/ARCHITECTURE.md). Carbon's own so far: the render-queue
+// fences (game/render_queue.cpp, ROADMAP M6). Until its view, frame-time and
+// movie equivalents are found this file reports exactly what the interface
+// headers define for a ppc/ without those hooks:
 //   - HooksActive()/TallHooksActive(): false, so the presenter shows the
 //     16:9 frame letterboxed or pillarboxed instead of stretching it
 //     (video/picture_fit.h), and the renderer's front-end detection, which
