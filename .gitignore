@@ -56,3 +56,6 @@ xcuserdata/
 # Python
 __pycache__/
 *.pyc
+
+# Local debugging log (AGENTS.md)
+WORKLOG.local.md

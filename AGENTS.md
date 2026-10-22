@@ -56,6 +56,19 @@ ninja -C build/main -j8    # build/main/runtime/ReCarbon (about 100 s clean, 2.6
 - Files taken from SpeedBreaker keep their attribution. Mark ReCarbon changes in comments.
 - Milestones (`reference/ROADMAP.md`) are gated. Don't start the next one without the user's
   approval.
-- Git: 1–3 Conventional Commits per verified milestone, single-line messages, no
-  co-author trailers. Review `git status`/`git diff` first. Never commit game data,
-  `ppc/`, `game/` or `tools/`. Never push or amend without approval.
+
+## Git
+
+- One atomic commit per independently verified bug fix or logical change. Group tightly
+  related fixes into one commit. There is no fixed commit count per milestone.
+- Never commit debugging attempts, temporary instrumentation or speculative workarounds.
+- Before each commit, run the relevant tests and regression checks (`ctest`,
+  `survey/validate_recomp.py`, `tests/run_instr_tests.sh`, a launch with
+  `scripts/run_attempt.sh`, as the change needs). Every commit must build: keep history
+  bisectable (e.g. `runtime/kernel/import_stubs.cpp` regenerated in the same commit as
+  the imports it stops stubbing).
+- Conventional Commits (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`),
+  single-line messages, no co-author trailers. Review `git status`/`git diff` first.
+- Never commit game data, decrypted images, `ppc/`, `game/`, `tools/` or build output.
+- Commit locally only. Never push, amend or rewrite history without approval.
+- Record debugging attempts and findings in `WORKLOG.local.md` (untracked, git-ignored).
