@@ -180,6 +180,10 @@ set_tests_properties(write_watch_test PROPERTIES TIMEOUT 60)
 # SpeedBreaker v0.1.8's, without its Most Wanted dispatches (ReCarbon M8 tests).
 recarbon_test(switch_tables_test ARGS ${ROOT}/config/switch_tables.toml ${ROOT}/config/switch_tables_inline.toml
     ${ROOT}/config/recarbon.toml)
+# The display's refresh measured from present times, and which displays are a
+# whole multiple of 60 Hz (video/refresh_fit.cpp, video/refresh_multiple.h).
+# From SpeedBreaker v0.1.8's (ReCarbon M8 tests).
+recarbon_test(refresh_fit_test SOURCES ${RT}/video/refresh_fit.cpp)
 # scripts/frame_times.py (M7 frame pacing) on synthetic frame logs with known
 # answers, and the runtime's log and CSV formats it reads. Python 3.9+.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
@@ -195,7 +199,7 @@ add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOUR
 # movie_cadence_sim.py: MW's movie cadence (not a ctest in SpeedBreaker either).
 # launcher_prime_test.sh: needs scripts/steamos/bundle/speedbreaker.sh, which ReCarbon doesn't have.
 # gpu_choice_test,
-#   band_filter_test, scale_budget_test, refresh_fit_test,
+#   band_filter_test, scale_budget_test,
 #   refresh_notice_test,
 #   code_signature_test, memory_status_test,
 #   settings_scaling_test, fsr1_test: not checked against ReCarbon's runtime yet;
