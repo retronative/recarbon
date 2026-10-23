@@ -58,17 +58,6 @@ const flowDashes = Array.from({ length: 6 }, (_, i) => {
 		delay: (-(i * DASH_DUR) / 6).toFixed(2),
 	};
 });
-// The player's headlights on the road ahead: soft pools along the car's lane,
-// each smaller, flatter and dimmer the farther it is from the car (light
-// spreading and falling off with distance, at the road's perspective).
-const laneX = (y: number) => VP.x + (1122 - VP.x) * ((y - VP.y) / (800 - VP.y));
-// Width follows the distance below the horizon (perspective); the pools
-// overlap, so together they fall off smoothly rather than in bands.
-const headlightPools = [710, 686, 664, 645, 628, 612, 598, 586].map((y, i) => {
-	const d = y - VP.y;
-	return { y, cx: laneX(y).toFixed(1), rx: (d * 0.93).toFixed(1), ry: (d * 0.21).toFixed(1), o: (0.86 ** i).toFixed(2) };
-});
-
 // Road particles: dust and small reflective details on the road and its
 // shoulders, each on its own ray with its own size, brightness, duration and
 // start offset, so they never reset together and the loop can't be seen.
@@ -88,7 +77,7 @@ const particles = [...studs, ...dust].map((p) => {
 		cy: c.y.toFixed(2),
 		r: p.r.toFixed(3),
 		kind: p.kind,
-		style: `--dur:${p.dur.toFixed(2)}s;--delay:${p.delay.toFixed(2)}s;--peak:${(p.kind === 'dust' ? 0.25 + rand() * 0.3 : 0.75).toFixed(2)}`,
+		style: `--dur:${p.dur.toFixed(2)}s;--delay:${p.delay.toFixed(2)}s;--peak:${(p.kind === 'dust' ? 0.14 + rand() * 0.22 : 0.75).toFixed(2)}`,
 	};
 });
 ---
@@ -134,11 +123,6 @@ const particles = [...studs, ...dust].map((p) => {
 							<stop offset="0" stop-color="#ff2b3a" stop-opacity="0.55" />
 							<stop offset="1" stop-color="#ff2b3a" stop-opacity="0" />
 						</linearGradient>
-						<radialGradient id="pool-glow" r="0.5">
-							<stop offset="0" stop-color="#f4f1e6" stop-opacity="0.16" />
-							<stop offset="0.55" stop-color="#f4f1e6" stop-opacity="0.07" />
-							<stop offset="1" stop-color="#f4f1e6" stop-opacity="0" />
-						</radialGradient>
 						<linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
 							<stop offset="0" stop-color="#e9f6ff" stop-opacity="0.55" />
 							<stop offset="1" stop-color="#e9f6ff" stop-opacity="0" />
@@ -197,13 +181,6 @@ const particles = [...studs, ...dust].map((p) => {
 						))}
 					</g>
 
-					{/* The player's headlights on the road ahead: light only, the lamps are out of view. */}
-					<g class="headlights">
-						{headlightPools.map((p) => (
-							<ellipse cx={p.cx} cy={p.y} rx={p.rx} ry={p.ry} fill="url(#pool-glow)" opacity={p.o} />
-						))}
-					</g>
-
 					{/* Forward motion: lane dashes, dust and road studs flowing out of the VP. */}
 					<g class="motion">
 						{flowDashes.map((d) => (
@@ -221,28 +198,51 @@ const particles = [...studs, ...dust].map((p) => {
 						<circle cx={VP.x + 11} cy={VP.y + 16} r="16" fill="url(#lamp)" />
 					</g>
 
-					{/* A stylized car seen from behind, pulling away: generic shapes, no real model. */}
-					<g class="car">
-						<path class="trail" d="M 992 752 L 1052 752 L 1004 900 L 900 900 Z" fill="url(#trail)" />
-						<path class="trail" d="M 1192 752 L 1252 752 L 1352 900 L 1248 900 Z" fill="url(#trail)" />
-						<ellipse cx="1122" cy="802" rx="170" ry="14" fill="#000" opacity="0.55" />
-						<rect x="988" y="782" width="46" height="20" rx="4" fill="#050608" />
-						<rect x="1210" y="782" width="46" height="20" rx="4" fill="#050608" />
-						<path
-							class="body"
-							d="M 976 788 L 980 748 Q 984 732 1004 728 L 1046 722 Q 1066 692 1096 686 L 1148 686 Q 1178 692 1198 722 L 1240 728 Q 1260 732 1264 748 L 1268 788 Q 1268 798 1258 798 L 986 798 Q 976 798 976 788 Z"
-						/>
-						<path class="glass" d="M 1066 720 Q 1080 698 1100 694 L 1144 694 Q 1164 698 1178 720 Z" />
-						<rect class="wing" x="994" y="711" width="256" height="6" rx="3" />
-						<rect x="1036" y="716" width="5" height="10" fill="#0b0d12" />
-						<rect x="1203" y="716" width="5" height="10" fill="#0b0d12" />
-						<ellipse cx="1022" cy="748" rx="70" ry="26" fill="url(#siren-red)" opacity="0.7" />
-						<ellipse cx="1222" cy="748" rx="70" ry="26" fill="url(#siren-red)" opacity="0.7" />
-						<rect class="tail" x="990" y="744" width="64" height="8" rx="4" />
-						<rect class="tail" x="1190" y="744" width="64" height="8" rx="4" />
-						<rect x="1084" y="758" width="76" height="16" rx="2" fill="#0b0d12" stroke="#2a303a" />
-					</g>
 				</svg>
+			)
+		}
+		{
+			!video && (
+				<>
+					{/* The player's headlights: one soft radial glow on the road, like the
+					    pursuit glows at the horizon, brightest just ahead of the car (its
+					    centre is under the car) and fading smoothly outwards, stretched and
+					    tilted along the lane. Its own static layer, blended onto the road and
+					    the particles below; it never moves, as the car doesn't. */}
+					<svg class="scene beam-layer" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice">
+						<defs>
+							<radialGradient id="headlight" r="0.5">
+								<stop offset="0" stop-color="#f4f1e6" stop-opacity="0.3" />
+								<stop offset="0.45" stop-color="#f4f1e6" stop-opacity="0.13" />
+								<stop offset="1" stop-color="#f4f1e6" stop-opacity="0" />
+							</radialGradient>
+						</defs>
+						<ellipse cx="1106" cy="705" rx="190" ry="150" fill="url(#headlight)" transform="rotate(-13 1106 705)" />
+					</svg>
+					<svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice">
+						{/* A stylized car seen from behind, pulling away: generic shapes, no real model. */}
+						<g class="car">
+							<path class="trail" d="M 992 752 L 1052 752 L 1004 900 L 900 900 Z" fill="url(#trail)" />
+							<path class="trail" d="M 1192 752 L 1252 752 L 1352 900 L 1248 900 Z" fill="url(#trail)" />
+							<ellipse cx="1122" cy="802" rx="170" ry="14" fill="#000" opacity="0.55" />
+							<rect x="988" y="782" width="46" height="20" rx="4" fill="#050608" />
+							<rect x="1210" y="782" width="46" height="20" rx="4" fill="#050608" />
+							<path
+								class="body"
+								d="M 976 788 L 980 748 Q 984 732 1004 728 L 1046 722 Q 1066 692 1096 686 L 1148 686 Q 1178 692 1198 722 L 1240 728 Q 1260 732 1264 748 L 1268 788 Q 1268 798 1258 798 L 986 798 Q 976 798 976 788 Z"
+							/>
+							<path class="glass" d="M 1066 720 Q 1080 698 1100 694 L 1144 694 Q 1164 698 1178 720 Z" />
+							<rect class="wing" x="994" y="711" width="256" height="6" rx="3" />
+							<rect x="1036" y="716" width="5" height="10" fill="#0b0d12" />
+							<rect x="1203" y="716" width="5" height="10" fill="#0b0d12" />
+							<ellipse cx="1022" cy="748" rx="70" ry="26" fill="url(#siren-red)" opacity="0.7" />
+							<ellipse cx="1222" cy="748" rx="70" ry="26" fill="url(#siren-red)" opacity="0.7" />
+							<rect class="tail" x="990" y="744" width="64" height="8" rx="4" />
+							<rect class="tail" x="1190" y="744" width="64" height="8" rx="4" />
+							<rect x="1084" y="758" width="76" height="16" rx="2" fill="#0b0d12" stroke="#2a303a" />
+						</g>
+					</svg>
+				</>
 			)
 		}
 		<div class="scrim"></div>
@@ -463,9 +463,8 @@ const particles = [...studs, ...dust].map((p) => {
 	.particle.stud {
 		fill: #ffd27a;
 	}
-	.headlights {
+	.beam-layer {
 		mix-blend-mode: screen;
-		pointer-events: none;
 	}
 	/* Fewer particles on a phone: lighter, and the hero is mostly text there. */
 	@media (max-width: 40rem) {
