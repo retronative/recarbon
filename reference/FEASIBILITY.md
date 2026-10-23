@@ -740,6 +740,49 @@ hand03 3600` with `RECARBON_REAL_HOME=1 RECARBON_MUTE=0`), on the keyboard, at b
     The game thread's frame time and a host stack sample, both taken during a stall, would
     separate these.
 
+### Hand test 4: a career race, a restart, progress kept (2026-10-23)
+- **The run:** build 184d87f, the real user folder, 720p internal (`RECARBON_RESOLUTION`; the
+  saved setting is Auto). Both sessions were put in fullscreen by the system.
+  - Session 1: `2026-10-23_13-31-57`, 13:31:57–13:47:42.
+  - Session 2: `2026-10-23_13-48-17`, 13:48:17–13:56:14.
+  - The times come from the log file names, the relative timestamps and the files' modification
+    times, which agree. The times the user noted (save 13:42, session 1 ending 13:44, session 2
+    13:51–13:54) are 2–5 minutes earlier; the log times are used here.
+- **User's results:**
+  - Profile ALIAS_TESTER. Race Zone Heat 1 (Circuit): 1st place, no retries.
+  - Cash went from $5,000 to $10,200.
+  - All four criteria passed: the race finished and the results screen showed; the AI opponents
+    moved, steered and finished; session 1 quit cleanly; the cash and career progress were still
+    there after the restart.
+- **The log agrees:**
+  - Both sessions exited with code 0. Session 1 quit through the Quit Game menu at 944.8 s, and
+    session 2 by closing its window at 477.0 s.
+  - Neither session wrote a hang or crash report, and the watchdog reported nothing; its only
+    log line is the threshold it announces at startup. There were no strict stubs and no
+    "not a recompiled function" errors.
+  - The only failed opens were the disc files that don't exist (`sound\NISRevData\*.bin`), which
+    the game skips as before.
+  - Audio: no gaps longer than 50 ms. `settings.toml` is unchanged (hash `4bb7535e…`).
+  - Session 1's race window, inferred from the cutscene files (the log has no race events):
+    - the `intro04ng02` cutscene was requested at 595.6 s (13:41:53);
+    - the `endingcareer11ng` cutscene was requested at 845.0 s (13:46:02);
+    - the `Boss_Tuner_Kenji` movie followed at 887.5 s.
+- **Save evidence, and where it stops:**
+  - Session 1 opened the save at 23.4 s and 81.4 s. It opened it again at 916.8 s (13:47:14),
+    after the race and the movie and 28 s before quitting.
+  - The `[file] open` line doesn't record whether a file was opened for writing, so the log can't
+    prove that session 1 wrote the save.
+  - No hash was taken between the two sessions. The save's last write time, 13:54:26, matches
+    session 2's open at 369.5 s, so its hash now (`287ce0f8…`, against `c6c4a362…` before the
+    test) is session 2's write and says nothing about session 1.
+  - Session 2 found the save at 1.8 s and opened it at 18.2 s.
+  - Persistence therefore rests on the user seeing the race's cash and progress after the
+    restart. Session 1 is the only place they could have come from: no other session ran in
+    between.
+  - Session 2 also played the `intro05ng02` cutscene (175.2 s), changed render targets
+    (191.6 s and 357.2 s) and saved at 369.5 s. The user's report doesn't cover this part.
+- Next time, take the save's hash between sessions. The route repeats for M7.7 will do that.
+
 ### EA audio CPU budget (SpeedBreaker v0.1.8's fix for MW)
 - Carbon's sound engine is RenderWare Audio Core (`rw::audio::core::System`, `Snd9Service`,
   thread "RWAudioCore Dac"), not MW's EA SND. MW's addresses and code don't apply.

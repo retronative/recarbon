@@ -235,6 +235,19 @@ customization. The controls criterion is judged on the default mappings.
   - **Audio and picture:** audio stays in sync, and no world geometry is missing.
 - **Verify:** a written test route repeated 3 times; the frame-time log and the session log are
   attached per run.
+- **Evidence so far** (FEASIBILITY §6c):
+  - **AI opponents, and race completion:** passed by hand in hand test 4, and the log agrees.
+    - Zone Heat 1 (Circuit): 1st place; cash went from $5,000 to $10,200.
+    - The results screen showed, both sessions exited cleanly, and the cash and progress were
+      still there after a restart.
+    - The log doesn't show whether session 1 wrote the save, and no hash was taken between
+      the sessions, so persistence rests on what the user saw after the restart.
+  - **Still pending:**
+    - controls on a controller and on the keyboard;
+    - physics;
+    - frame pacing over 10 minutes of racing;
+    - audio and picture;
+    - the written route repeated 3 times.
 
 ## M8 — Polish and distribution
 - **Do:**
