@@ -145,20 +145,15 @@ const calloutsOf = (id: string) =>
 	.key.is-hot {
 		opacity: 1 !important;
 	}
+	/* Picked: a muted tint of the mode colour and a thin light outline. */
 	:global([data-mode]) .key.is-hot[data-key] .cap {
-		fill: var(--mode-color);
-		stroke: #fff;
-		stroke-width: 2.5;
+		fill: color-mix(in srgb, var(--mode-color) 38%, #161a20);
+		stroke: color-mix(in srgb, var(--mode-color) 45%, #e9eef5);
+		stroke-width: 1.5;
 		stroke-dasharray: none;
-		filter: drop-shadow(0 0 10px var(--mode-color));
 	}
 	:global([data-mode]) .key.is-hot[data-key] .legend {
-		fill: #05070b;
+		fill: #fff;
 		font-weight: 700;
-	}
-	@media (prefers-reduced-motion: reduce) {
-		.key.is-hot .cap {
-			filter: none;
-		}
 	}
 </style>

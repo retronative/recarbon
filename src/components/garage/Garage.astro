@@ -234,7 +234,7 @@ const groups = (mode: Mode) => {
 		</div>
 		<svg class="leaders" aria-hidden="true">
 			<defs>
-				<marker id="leader-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+				<marker id="leader-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
 					<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--mode-color)"></path>
 				</marker>
 			</defs>
@@ -416,8 +416,11 @@ const groups = (mode: Mode) => {
 	.leaders :global(path.leader) {
 		fill: none;
 		stroke: var(--mode-color);
-		stroke-width: 1.5;
-		opacity: 0.9;
+		stroke-width: 1;
+		opacity: 0.45;
+	}
+	.leaders :global(marker path) {
+		opacity: 0.6;
 	}
 
 	/* Callout plates. */
@@ -802,17 +805,21 @@ const groups = (mode: Mode) => {
 			// No leader to a row scrolled out of view.
 			const headerBottom = document.querySelector('.hud')?.getBoundingClientRect().bottom ?? 0;
 			if (b.bottom < headerBottom || b.top > innerHeight) return;
-			const ex = b.left - box.left - 6;
+			// Traces run from the row into the gutter between the drawing and the
+			// list, then straight across to the part, so they never cross the
+			// detail panel under the drawing.
+			const pane = root.querySelector<HTMLElement>('.device-pane')!.getBoundingClientRect();
+			const ex = b.left - box.left - 4;
 			const ey = b.top - box.top + b.height / 2;
+			const gx = (pane.right - box.left + ex) / 2;
 			for (const p of lit) {
 				const r = p.getBoundingClientRect();
-				if (r.width === 0) continue;
-				const sx = r.left - box.left + r.width / 2;
+				if (r.width === 0 || r.bottom < pane.top || r.top > pane.bottom) continue;
+				const sx = r.right - box.left + 3;
 				const sy = r.top - box.top + r.height / 2;
-				const mid = sx + (ex - sx) * 0.55;
 				const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 				path.setAttribute('class', 'leader');
-				path.setAttribute('d', `M ${ex} ${ey} H ${mid} L ${sx} ${sy}`);
+				path.setAttribute('d', `M ${ex} ${ey} H ${gx} V ${sy} H ${sx}`);
 				path.setAttribute('marker-end', 'url(#leader-arrow)');
 				leaders.appendChild(path);
 			}

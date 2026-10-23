@@ -41,8 +41,8 @@ const dpad = [
 	<title id="pad-title">A generic Xbox-layout controller. ReCarbon's mapped buttons are lit for the selected mode; the list beside it names each one.</title>
 	<defs>
 		<linearGradient id="pad-body" x1="0" y1="0" x2="0" y2="1">
-			<stop offset="0" stop-color="#232832"></stop>
-			<stop offset="1" stop-color="#14171c"></stop>
+			<stop offset="0" stop-color="#2a303b"></stop>
+			<stop offset="1" stop-color="#181c23"></stop>
 		</linearGradient>
 	</defs>
 
@@ -143,12 +143,12 @@ const dpad = [
 	}
 	.body {
 		fill: url(#pad-body);
-		stroke: #353c48;
+		stroke: #4a5363;
 		stroke-width: 2;
 	}
 	.well {
-		fill: #0f1216;
-		stroke: #2a303a;
+		fill: #12151a;
+		stroke: #353c48;
 	}
 	.part {
 		fill: #2b313c;
@@ -218,19 +218,14 @@ const dpad = [
 	.pad-el.is-hot {
 		opacity: 1 !important;
 	}
+	/* Picked: a muted tint of the mode colour and a thin light outline. */
 	:global([data-mode]) .pad-el.is-hot[data-el] .part {
-		fill: var(--mode-color);
-		stroke: #fff;
-		stroke-width: 2.5;
+		fill: color-mix(in srgb, var(--mode-color) 40%, #1b2027);
+		stroke: color-mix(in srgb, var(--mode-color) 45%, #e9eef5);
+		stroke-width: 1.5;
 		stroke-dasharray: none;
-		filter: drop-shadow(0 0 10px var(--mode-color));
 	}
 	:global([data-mode]) .pad-el.is-hot[data-el] .lbl {
-		fill: #05070b;
-	}
-	@media (prefers-reduced-motion: reduce) {
-		.pad-el.is-hot .part {
-			filter: none;
-		}
+		fill: #fff;
 	}
 </style>
