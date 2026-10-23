@@ -109,6 +109,11 @@ recarbon_test(frame_rate_policy_test SOURCES ${RT}/video/frame_rate_policy.cpp)
 # display size (video/swapchain_policy.cpp): the Mac's scenarios of
 # SpeedBreaker v0.1.8's, plus fullscreen as the M5 logged it (ReCarbon M8 tests).
 recarbon_test(swapchain_policy_test SOURCES ${RT}/video/swapchain_policy.cpp)
+# Settings > Quit Game: where it is offered, and its confirmation (ui/quit_game.h,
+# header only); the code around it is read: the gate, the focus on Cancel, B and
+# Escape cancelling, the quit taking the window close's way out. From SpeedBreaker
+# v0.1.8's (ReCarbon M8 tests).
+recarbon_test(quit_game_test ARGS ${RT})
 # scripts/frame_times.py (M7 frame pacing) on synthetic frame logs with known
 # answers, and the runtime's log and CSV formats it reads. Python 3.9+.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
@@ -129,7 +134,7 @@ add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOUR
 # launcher_prime_test.sh: needs scripts/steamos/bundle/speedbreaker.sh, which ReCarbon doesn't have.
 # depth24_pack_test, depth_only_test,
 #   display_tone_test, swapchain_use_test, fullscreen_policy_test,
-#   cursor_idle_test, quit_game_test, clean_exit_test: grep runtime sources
+#   cursor_idle_test, clean_exit_test: grep runtime sources
 #   for SpeedBreaker's code; deferred to keep this first set small.
 # memory_plan_test, zpd_report_test, pipeline_cache_header_test,
 #   gpu_choice_test, present_schedule_test, audio_cadence_test,
