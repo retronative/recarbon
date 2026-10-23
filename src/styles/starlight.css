@@ -21,23 +21,6 @@
 	--sl-color-hairline-shade: #000;
 }
 
-:root[data-theme='light'],
-[data-theme='light'] ::backdrop {
-	--sl-color-accent-low: #c9f3fa;
-	--sl-color-accent: #007a8c;
-	--sl-color-accent-high: #00424c;
-	--sl-color-white: var(--rn-asphalt);
-	--sl-color-gray-1: var(--rn-carbon);
-	--sl-color-gray-2: #2b313b;
-	--sl-color-gray-3: #4c5566;
-	--sl-color-gray-4: #7c8597;
-	--sl-color-gray-5: #c3cad6;
-	--sl-color-gray-6: #e6eaf0;
-	--sl-color-gray-7: #f4f6f9;
-	--sl-color-black: #ffffff;
-	--sl-color-bg-nav: rgb(255 255 255 / 0.94);
-}
-
 /* Display type: Chakra Petch, upright letters on a slanted rhythm. */
 .sl-markdown-content :is(h1, h2, h3),
 h1#_top {

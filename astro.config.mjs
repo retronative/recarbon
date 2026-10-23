@@ -26,6 +26,9 @@ export default defineConfig({
 				Footer: './src/components/starlight/Footer.astro',
 				Banner: './src/components/starlight/Banner.astro',
 				MobileMenuFooter: './src/components/starlight/MobileMenuFooter.astro',
+				// Dark-only (D7): the theme is always dark and there is no theme menu.
+				ThemeProvider: './src/components/starlight/ThemeProvider.astro',
+				ThemeSelect: './src/components/starlight/ThemeSelect.astro',
 			},
 			sidebar: [
 				{

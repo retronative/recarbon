@@ -41,10 +41,8 @@
 	}
 }
 
-/* Surfaces, text and diagram colours for the custom pages (landing, Garage),
-   dark by default and light when the visitor picks it (data-theme, shared
-   with the docs). The brand colours above stay as they are; the hero keeps
-   its night palette in both themes. */
+/* Surfaces, text and diagram colours for the custom pages (landing, Garage).
+   The site is dark-only (decision D7). */
 :root {
 	--page-bg: #0b0d10;
 	--page-bg-deep: #08090c;
@@ -89,55 +87,8 @@
 	--guide-muted: #8a94a6;
 }
 
-:root[data-theme='light'] {
-	--page-bg: #f4f6f9;
-	--page-bg-deep: #e9edf2;
-	--surface: #ffffff;
-	--surface-2: #eef1f5;
-	--line: #d5dbe3;
-	--line-strong: #aab3c0;
-	--text: #15181d;
-	--text-2: #2b313b;
-	--text-muted: #4c5566;
-	--kbd-bg: #ffffff;
-	--mix-base: #ffffff;
-	--mode-drive: #00788a;
-	--mode-menu: #4d7a00;
-	--mode-settings: #b8500c;
-	--link: #00606f;
-
-	--kb-case: #e3e8ee;
-	--kb-case-line: #c3cad6;
-	--kb-cap-top: #ffffff;
-	--kb-cap-bot: #f0f3f7;
-	--kb-cap-line: #b9c1cd;
-	--kb-legend: #2b313b;
-	--kb-legend-strong: #05070b;
-	--kb-dim-unused: 0.45;
-	--kb-dim-bound: 0.7;
-
-	--pad-body-top: #f3f5f8;
-	--pad-body-bot: #dfe4ea;
-	--pad-line: #8d97a6;
-	--pad-part: #ffffff;
-	--pad-part-line: #8d97a6;
-	--pad-stick: #f7f8fa;
-	--pad-well: #e3e8ee;
-	--pad-well-line: #b9c1cd;
-	--pad-label: #2b313b;
-	--pad-off: #eef1f5;
-	--guide-line: #8d97a6;
-	--guide-chip: #ffffff;
-	--guide-chip-line: #8d97a6;
-	--guide-text: #15181d;
-	--guide-muted: #5c6577;
-}
 
 :root {
 	--ink-amber: #ffb02e;
 	color-scheme: dark;
-}
-:root[data-theme='light'] {
-	--ink-amber: #8a5a00;
-	color-scheme: light;
 }

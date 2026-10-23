@@ -1,8 +1,7 @@
 ---
-// The docs header as the race HUD bar: logo, the site's links, search, theme.
+// The docs header as the race HUD bar: logo, the site's links, search.
 import Search from '@astrojs/starlight/components/Search.astro';
 import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
-import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro';
 import SiteNav from '../SiteNav.astro';
 import VersionChip from '../VersionChip.astro';
 ---
@@ -17,9 +16,6 @@ import VersionChip from '../VersionChip.astro';
 	</nav>
 	<div class="search print:hidden">
 		<Search />
-	</div>
-	<div class="right print:hidden">
-		<ThemeSelect />
 	</div>
 </div>
 
@@ -58,16 +54,10 @@ import VersionChip from '../VersionChip.astro';
 	.search {
 		margin-inline-start: auto;
 	}
-	.right {
-		display: none;
-	}
 	/* From 50rem the mobile menu (and its nav) is gone, so the nav shows here. */
 	@media (min-width: 50rem) {
 		.main-nav {
 			display: block;
-		}
-		.right {
-			display: flex;
 		}
 	}
 	@media (min-width: 50rem) and (max-width: 72rem) {

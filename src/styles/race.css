@@ -79,17 +79,9 @@ a {
 	display: none;
 	margin-inline-start: auto;
 }
-/* The theme menu sits in the bar on wide screens, inside Menu on phones. */
-.hud > .theme-select {
-	display: none;
-}
 .hud-menu {
 	position: relative;
 	margin-inline-start: auto;
-}
-.hud-menu .theme-select {
-	display: block;
-	margin: 0.5rem 0.75rem 0.25rem;
 }
 .hud-menu summary {
 	display: flex;
@@ -122,9 +114,6 @@ a {
 }
 @media (min-width: 52rem) {
 	.hud-nav {
-		display: block;
-	}
-	.hud > .theme-select {
 		display: block;
 	}
 	.hud-menu {
