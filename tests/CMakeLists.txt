@@ -105,6 +105,10 @@ recarbon_test(picture_fit_test SOURCES ${RT}/video/picture_fit.cpp ${RT}/game/ti
 # From SpeedBreaker v0.1.8's, with Carbon's draw counts, and two rules
 # upstream's cases didn't pin (ReCarbon M8 tests).
 recarbon_test(frame_rate_policy_test SOURCES ${RT}/video/frame_rate_policy.cpp)
+# When the presenter builds its swapchain again and at what size, and the UI's
+# display size (video/swapchain_policy.cpp): the Mac's scenarios of
+# SpeedBreaker v0.1.8's, plus fullscreen as the M5 logged it (ReCarbon M8 tests).
+recarbon_test(swapchain_policy_test SOURCES ${RT}/video/swapchain_policy.cpp)
 # scripts/frame_times.py (M7 frame pacing) on synthetic frame logs with known
 # answers, and the runtime's log and CSV formats it reads. Python 3.9+.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
@@ -130,7 +134,7 @@ add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOUR
 # memory_plan_test, zpd_report_test, pipeline_cache_header_test,
 #   gpu_choice_test, present_schedule_test, audio_cadence_test,
 #   band_filter_test, scale_budget_test, refresh_fit_test,
-#   refresh_notice_test, swapchain_policy_test,
+#   refresh_notice_test,
 #   code_signature_test, memory_status_test, report_zip_test,
 #   settings_scaling_test, fsr1_test: not checked against ReCarbon's runtime yet;
 #   deferred to keep this first set small.
