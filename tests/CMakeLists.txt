@@ -82,6 +82,11 @@ recarbon_test(key_bindable_test)
 recarbon_test(profiles_test SOURCES ${RT}/user/settings.cpp ${RT}/user/atomic_file.cpp)
 target_link_libraries(profiles_test PRIVATE SDL3::SDL3)
 set_target_properties(profiles_test PROPERTIES SKIP_BUILD_RPATH OFF)
+# The input profiles' files, the startup that keeps [keys], the edit rule, and
+# the running store: switching, edits, a failed write (user/profiles.cpp; M8).
+recarbon_test(profile_store_test SOURCES ${RT}/user/profiles.cpp ${RT}/user/settings.cpp ${RT}/user/atomic_file.cpp)
+target_link_libraries(profile_store_test PRIVATE SDL3::SDL3)
+set_target_properties(profile_store_test PROPERTIES SKIP_BUILD_RPATH OFF)
 # scripts/frame_times.py (M7 frame pacing) on synthetic frame logs with known
 # answers, and the runtime's log and CSV formats it reads. Python 3.9+.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
