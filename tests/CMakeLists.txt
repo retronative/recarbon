@@ -91,6 +91,11 @@ set_target_properties(profile_store_test PROPERTIES SKIP_BUILD_RPATH OFF)
 # the HTTP answer, release notes and every outcome. From SpeedBreaker's, with
 # ReCarbon's repository (ReCarbon M8).
 recarbon_test(update_check_test SOURCES ${RT}/update/check.cpp)
+# The internal resolution's guest <-> host pixel arithmetic and the scaled
+# resolve memory's layout (gpu/render_scale.h, header only), and that
+# renderer.cpp's shaders splice the shared code. From SpeedBreaker v0.1.8's,
+# with generic resolve pieces instead of MW's scene (ReCarbon M8 tests).
+recarbon_test(render_scale_test ARGS ${RT}/gpu/renderer.cpp)
 # scripts/frame_times.py (M7 frame pacing) on synthetic frame logs with known
 # answers, and the runtime's log and CSV formats it reads. Python 3.9+.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
@@ -109,7 +114,7 @@ add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOUR
 # install_folder_test: asserts MW install names (.nfsmw-install*, SpeedBreaker folders) ~20 times; ReCarbon uses .recarbon-install-*; adapt separately.
 # portable_test: asserts the same MW install and folder names ~40 times; adapt separately.
 # launcher_prime_test.sh: needs scripts/steamos/bundle/speedbreaker.sh, which ReCarbon doesn't have.
-# depth24_pack_test, depth_only_test, render_scale_test,
+# depth24_pack_test, depth_only_test,
 #   display_tone_test, swapchain_use_test, fullscreen_policy_test,
 #   cursor_idle_test, quit_game_test, clean_exit_test: grep runtime sources
 #   for SpeedBreaker's code; deferred to keep this first set small.
