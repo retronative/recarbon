@@ -147,7 +147,7 @@ Diagnosing a failure is progress. It does not pass a criterion.
   and the screenshot matches.
 
 ## M5 — Audio, movies, input *(In progress)*
-- **Evidence so far** (FEASIBILITY §6a). M5 stays open until the hand tests below are done:
+- **Evidence so far** (FEASIBILITY §6a). M5 stays open until the user closes it:
   - Front-end music: over 5 minutes with no underruns or gaps, in 3/3 runs, after guest thread
     priorities were mapped to macOS QoS (commit 79573bb).
   - The main menu is reached with scripted keyboard input and with an SDL virtual controller.
@@ -161,8 +161,10 @@ Diagnosing a failure is progress. It does not pass a criterion.
   - Hand test 2 (2026-10-23, by the user): keyboard navigation, `[keys]` rebinding in game
     surviving a restart, audio quality, movie lip-sync and audio latency on the built-in
     speakers all pass (FEASIBILITY §6a).
-  - **Pending, by hand:** a physical controller (expected in about a week). M5 stays open
-    until it passes.
+  - **Physical controller: Deferred — not verified.** By the user's decision (2026-10-23) it is no longer an
+    alpha gate. It is to be tested by hand once the 8BitDo is available, and never recorded as a
+    pass before then. The SDL virtual controller (menus, hot-unplug with `DETACH`/`ATTACH`, commit
+    05607a2) is automated evidence for the input path, not proof that physical controllers work.
 - **Do:**
   - Enable XMA → FFmpeg → SDL3.
   - Movies: verified from the extracted files' headers (2026-10-22). All 65 are ASF (`.wmv`):
@@ -186,12 +188,13 @@ Diagnosing a failure is progress. It does not pass a criterion.
 - **Accept:**
   - Front-end music plays without stalls for 5 minutes.
   - The intro movie plays at the correct cadence.
-  - Menus are navigable with a controller and with the keyboard.
+  - Menus are navigable with a controller and with the keyboard. *(The physical controller:
+    Deferred — not verified, not an alpha gate, user decision 2026-10-23. The keyboard remains required.)*
   - The default keyboard and controller mappings are recorded and pinned by passing unit tests.
   - Keyboard rebinding through Settings > Controls and `[keys]` still works and persists.
 - **Verify:** a windowed run with the audio log (`RECARBON_AUDIO_LOG`): no underruns over 5 minutes
-  in the front end, and the intro movie's frame times in the log. Navigate by hand with a pad and
-  with the keyboard, scripted with `RECARBON_INPUT_SCRIPT` where possible.
+  in the front end, and the intro movie's frame times in the log. Navigate by hand with a pad (deferred)
+  and with the keyboard, scripted with `RECARBON_INPUT_SCRIPT` where possible.
 
 ## M6 — First boot to free-roam / race load
 Input as in M5: SpeedBreaker's keyboard rebinding and `[keys]` keep working. No new
@@ -224,7 +227,8 @@ Input as in M5: SpeedBreaker's keyboard rebinding and `[keys]` keep working. No 
 customization. The controls criterion is judged on the default mappings.
 - **Accept** (each verified separately):
   - **Player controls:** steering, throttle, brake, handbrake, nitrous and the camera respond on a
-    controller and on the keyboard.
+    controller and on the keyboard. *(The physical controller: Deferred — not verified, not an alpha gate, user
+    decision 2026-10-23. The keyboard remains required.)*
   - **Vehicle physics:** the car behaves consistently. Compare against the Xbox 360 version where
     possible (e.g. top speed or a lap time on a known route), with notes.
   - **AI opponents:** they spawn, race and finish.
@@ -260,11 +264,12 @@ customization. The controls criterion is judged on the default mappings.
     lock (FEASIBILITY §6c). To revisit before a public release, or sooner if they become
     frequent.
   - GPU-idle stalls of 250–600 ms, with no lock wait: cause unknown (FEASIBILITY §6c).
-  - The physical controller hasn't been tested yet (M5).
+  - Physical controller: Deferred — not verified (not an alpha gate, user decision 2026-10-23). The
+    virtual-controller and hot-unplug tests pass, but they don't show physical compatibility.
   - Release packaging still links Homebrew's libraries from `/opt/homebrew` (`check_app`
     check 3; M8).
   - **Still pending:**
-    - controls on a controller and on the keyboard;
+    - the driving controls on the keyboard (the physical controller is deferred);
     - physics;
     - frame pacing over 10 minutes of racing;
     - audio and picture;

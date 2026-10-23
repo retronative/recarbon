@@ -607,7 +607,11 @@ a session).
 - **Input:** the controller's default button mapping moved unchanged to `hid/pad_map.h` and is
   pinned by `pad_map_test` (commit af3aeea). An SDL virtual controller reaches the main menu.
   Keyboard rebinding is unchanged, and `settings_keys_test` and `key_map_test` pass.
-- **Pending, by hand:** a physical controller (expected about 2026-10-30).
+- **Physical controller: Deferred — not verified.** By the user's decision (2026-10-23) it is no longer an
+  alpha gate for M5 or M7, and is to be tested once the 8BitDo is available. The virtual-controller
+  tests (menus, hot-unplug: commit 05607a2) are automated evidence for the input path only. The
+  game never sees an unplug, because the keyboard stays controller 0. They don't show that a
+  physical controller works.
 
 ### Hand test 2 (2026-10-23, keyboard, by the user)
 Two sessions in the player's own user folder (`scripts/run_attempt.sh` with
