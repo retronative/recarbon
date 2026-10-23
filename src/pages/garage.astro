@@ -1,0 +1,178 @@
+---
+import RaceLayout from '../layouts/RaceLayout.astro';
+import Garage from '../components/garage/Garage.astro';
+import ControlsTables from '../components/garage/ControlsTables.astro';
+import StatusBadge from '../components/StatusBadge.astro';
+import { BINDING, SOURCE, STATUS, type Status } from '../lib/controls';
+import { url } from '../lib/url';
+---
+
+<RaceLayout
+	title="Garage: ReCarbon controls"
+	description="ReCarbon's keyboard and controller controls, interactive: driving, menus and the Settings overlay, with how each one was verified."
+>
+	<section class="section garage-page">
+		<div class="wrap">
+			<p class="eyebrow">Garage · Controls</p>
+			<h1 class="display title">Tune your controls</h1>
+			<p class="intro">
+				ReCarbon turns the keyboard into an Xbox 360 controller. Pick a device and a mode; hover, tap or tab
+				through the list to light up each control. These are the <strong>defaults</strong>: you can rebind every key.
+			</p>
+
+			<Garage />
+
+			<div class="panels">
+				<details class="panel cut">
+					<summary>Text table: every mode</summary>
+					<ControlsTables />
+				</details>
+
+				<details class="panel cut" id="your-bindings">
+					<summary>Your bindings</summary>
+					<p>
+						The Garage shows ReCarbon's defaults. To change a key, open Settings (<kbd>F1</kbd>, <kbd>Fn</kbd>+<kbd
+							>F1</kbd
+						> or <kbd>⌘</kbd>+<kbd>,</kbd>), go to <strong>Controls</strong> with <kbd>Q</kbd> / <kbd>E</kbd>, pick a row
+						and press <kbd>Space</kbd>, then the new key. <kbd>⌫</kbd> clears a slot; <kbd>⌦</kbd> resets the control.
+					</p>
+					<p>Or edit the <code>[keys]</code> table of <code>~/Library/Application Support/ReCarbon/settings.toml</code>:</p>
+					<pre><code>[keys]
+right_trigger = "w"
+right_trigger_2 = "up"      # a second key for the same control
+left_stick_left = "a"
+left_stick_left_2 = "left"
+x = "left_shift"</code></pre>
+					<p>
+						Names are physical key positions (<code>"semicolon"</code>, <code>"keypad_1"</code>, <code>"none"</code>).
+						Keyboard and controller profiles and WASD / Arrows presets are <strong>planned (M8)</strong>.
+						<a href={url('docs/controls/#rebinding-keys')}>More on rebinding</a>
+					</p>
+				</details>
+
+				<details class="panel cut">
+					<summary>8BitDo Ultimate 2 notes</summary>
+					<p>
+						<StatusBadge status={BINDING.physicalController.status} /> Pending hand test: no physical controller has been tested
+						with ReCarbon yet. An 8BitDo is due for the M5 controller test.
+					</p>
+					<ul>
+						<li>
+							ReCarbon reads pads through SDL3 by position: South, East, West, North are A, B, X, Y; the bumpers, triggers,
+							sticks, stick clicks, View, Menu and D-pad map one to one.
+						</li>
+						<li>
+							<StatusBadge status="not-mapped" /> Back paddles and extra buttons (L4/R4, the Guide button) aren't read by
+							ReCarbon. Whether they reach SDL at all depends on the device and its mode, and is
+							<strong>unverified</strong>.
+						</li>
+						<li>
+							If the pad's own firmware or software remaps a paddle to another button, it acts as that button: ReCarbon only
+							sees the result.
+						</li>
+					</ul>
+				</details>
+
+				<section class="panel cut legend" aria-labelledby="legend-title">
+					<h2 id="legend-title">Status legend</h2>
+					<ul>
+						{
+							(Object.keys(STATUS) as Status[]).map((s) => (
+								<li>
+									<StatusBadge status={s} /> <span>{STATUS[s].meaning}</span>
+								</li>
+							))
+						}
+					</ul>
+					<p class="src">
+						Generated from ReCarbon's source{SOURCE.commit && <> at <code>{SOURCE.commit.slice(0, 7)}</code></>}:
+						{SOURCE.files.map((f, i) => (
+							<>
+								{i > 0 && ', '}
+								<code>{f}</code>
+							</>
+						))}.
+					</p>
+				</section>
+			</div>
+		</div>
+	</section>
+</RaceLayout>
+
+<style>
+	.title {
+		font-size: clamp(2.2rem, 6vw, 4rem);
+	}
+	.intro {
+		max-width: 44rem;
+		margin: 1rem 0 2rem;
+		color: #c3cad6;
+	}
+	.panels {
+		display: grid;
+		gap: 1rem;
+		margin-top: 2.5rem;
+	}
+	.panel {
+		padding: 1rem 1.25rem;
+		background: var(--rn-carbon);
+		border: 1px solid var(--rn-graphite);
+	}
+	.panel summary {
+		min-height: 44px;
+		display: flex;
+		align-items: center;
+		font-family: var(--rn-font-display);
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		cursor: pointer;
+	}
+	.panel h2 {
+		margin: 0 0 0.75rem;
+		font-family: var(--rn-font-display);
+		font-size: 1rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+	.panel :global(kbd) {
+		font-family: var(--rn-font-mono);
+		font-size: 0.8em;
+		padding: 0 0.35em;
+		border: 1px solid #3a4250;
+		border-bottom-width: 2px;
+		border-radius: 3px;
+	}
+	.panel pre {
+		overflow-x: auto;
+		padding: 0.75rem 1rem;
+		background: #0b0d10;
+		border: 1px solid var(--rn-graphite);
+		font-family: var(--rn-font-mono);
+		font-size: 0.85rem;
+	}
+	.panel code {
+		font-family: var(--rn-font-mono);
+		font-size: 0.85em;
+		overflow-wrap: anywhere;
+	}
+	.legend ul {
+		display: grid;
+		gap: 0.5rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.legend li {
+		display: grid;
+		grid-template-columns: 9.5rem 1fr;
+		gap: 0.75rem;
+		align-items: baseline;
+		font-size: 0.9rem;
+	}
+	.src {
+		margin: 1rem 0 0;
+		font-size: 0.8rem;
+		color: var(--rn-muted);
+	}
+</style>
