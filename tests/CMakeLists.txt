@@ -135,6 +135,15 @@ recarbon_test(pipeline_cache_header_test)
 # presenter.cpp's shaders and settings.cpp's defaults read. From SpeedBreaker
 # v0.1.8's (ReCarbon M8 tests).
 recarbon_test(display_tone_test ARGS ${RT}/video/presenter.cpp ${RT}/user/settings.cpp)
+# Presentation, from SpeedBreaker v0.1.8's (ReCarbon M8 tests): the 120 Hz
+# present schedule and its watchdog (video/present_schedule.h), Fullscreen
+# against the window's own state (video/fullscreen_policy.h; presenter.cpp read),
+# the present waiter's use of a swapchain (video/swapchain_use.h; presenter.cpp
+# read), and when the mouse cursor shows (ui/cursor_idle.h; ui.cpp read).
+recarbon_test(present_schedule_test)
+recarbon_test(fullscreen_policy_test ARGS ${RT}/video/presenter.cpp)
+recarbon_test(swapchain_use_test ARGS ${RT}/video/presenter.cpp)
+recarbon_test(cursor_idle_test ARGS ${RT}/ui/ui.cpp)
 # scripts/frame_times.py (M7 frame pacing) on synthetic frame logs with known
 # answers, and the runtime's log and CSV formats it reads. Python 3.9+.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
@@ -153,11 +162,8 @@ add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOUR
 # install_folder_test: asserts MW install names (.nfsmw-install*, SpeedBreaker folders) ~20 times; ReCarbon uses .recarbon-install-*; adapt separately.
 # portable_test: asserts the same MW install and folder names ~40 times; adapt separately.
 # launcher_prime_test.sh: needs scripts/steamos/bundle/speedbreaker.sh, which ReCarbon doesn't have.
-# swapchain_use_test, fullscreen_policy_test,
-#   cursor_idle_test: grep runtime sources
-#   for SpeedBreaker's code; deferred to keep this first set small.
 # memory_plan_test,
-#   gpu_choice_test, present_schedule_test, audio_cadence_test,
+#   gpu_choice_test, audio_cadence_test,
 #   band_filter_test, scale_budget_test, refresh_fit_test,
 #   refresh_notice_test,
 #   code_signature_test, memory_status_test, report_zip_test,
