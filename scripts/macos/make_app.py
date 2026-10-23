@@ -78,7 +78,7 @@
 # builder), and the compression (diskutil has no zlib level to set; on
 # v0.1.1's app its dmg came out 4% smaller than hdiutil's level 9).
 # DMG_TOOL=hdiutil or DMG_TOOL=diskutil uses only that one.
-import json, os, plistlib, re, shutil, stat, subprocess, sys, tempfile
+import hashlib, json, os, plistlib, re, shutil, stat, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ARGS = [a for a in sys.argv[1:] if not a.startswith('--')]
@@ -108,6 +108,13 @@ MOLTENVK = os.environ.get('MOLTENVK', '/opt/homebrew/opt/molten-vk/lib/libMolten
 # version can change how the game runs and how fast. A `brew upgrade` must not
 # change it silently: another is taken only when MOLTENVK_VERSION names it.
 MOLTENVK_PINNED = '1.4.2'
+# ReCarbon (M8): the file itself is pinned too, the keg's libMoltenVK.dylib as
+# Homebrew pours it (byte-identical on the M5 and the M1). Provenance: the
+# molten-vk 1.4.2 formula's arm64_golden_gate bottle, SHA-256 BOTTLE below,
+# whose dylib Homebrew relocates and re-signs on pouring into this file.
+# Another file is taken only when MOLTENVK_SHA256 names it.
+MOLTENVK_SHA256_PINNED = 'e21bceade8d0638bb2bc041f3166fbd54da19fa0958d8bbaff584afd7958d542'
+MOLTENVK_BOTTLE = 'molten-vk 1.4.2 bottle arm64_golden_gate, SHA-256 0de19dbda466d4dabcfdd57963f81764e6f33447b723623683a0a3ddde954031'
 # Projects compiled into a bundled library that come with their own license:
 # their files go next to the library's (LICENSES/ has them).
 EMBEDDED = {'molten-vk': [('cereal, BSD-3-Clause', 'LICENSES/cereal-BSD-3-Clause.txt', 'cereal-LICENSE.txt')]}
@@ -234,6 +241,19 @@ def moltenvk_version():
     return version
 
 
+def moltenvk_checked():
+    """The SHA-256 of the MoltenVK to bundle, refused unless it's the pinned
+    file or MOLTENVK_SHA256 names it."""
+    with open(os.path.realpath(MOLTENVK), 'rb') as f:
+        found = hashlib.sha256(f.read()).hexdigest()
+    wanted = os.environ.get('MOLTENVK_SHA256', MOLTENVK_SHA256_PINNED)
+    if found != wanted:
+        raise SystemExit(f'make_app.py: {MOLTENVK} has SHA-256 {found}, not {wanted}'
+                         + ('' if 'MOLTENVK_SHA256' in os.environ else ' (the pinned file). To bundle it anyway, '
+                            'set MOLTENVK_SHA256=<its SHA-256>.'))
+    return found
+
+
 def keg(path):
     """The Homebrew keg a library file is in (/opt/homebrew/Cellar/<name>/<version>), or None."""
     m = re.match(r'(.*/Cellar/[^/]+/[^/]+)/', os.path.realpath(path))
@@ -330,7 +350,11 @@ def copy_licenses(resources, libraries):
             for name, text, file in EMBEDDED.get(package, []) if found else []:
                 shutil.copy2(os.path.join(ROOT, text), os.path.join(dest, file))
                 embedded.append(f'{name} ({file})')
-            lines.append(f'  {lib}: {package} {version}, from Homebrew '
+            provenance = ''
+            if package == 'molten-vk':
+                with open(os.path.realpath(src), 'rb') as f:
+                    provenance = f' [{MOLTENVK_BOTTLE}; this file SHA-256 {hashlib.sha256(f.read()).hexdigest()} before bundling]'
+            lines.append(f'  {lib}: {package} {version}, from Homebrew{provenance} '
                          f'({", ".join(sorted(set(found))) or "no license file found"})'
                          + (f'; it includes {", ".join(embedded)}' if embedded else ''))
         else:
@@ -510,6 +534,7 @@ def main():
         print(f'make_app.py: warning: {BUILD} is configured for macOS {minimum}, not the project\'s {default} '
               f'(CMakeLists.txt): not for release', file=sys.stderr)
     mvk_version = moltenvk_version()
+    moltenvk_checked()
     app = os.path.join(OUT, NAME + '.app')
     shutil.rmtree(app, ignore_errors=True)
     contents = os.path.join(app, 'Contents')
