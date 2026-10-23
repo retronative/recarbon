@@ -621,10 +621,18 @@ passed:
 - audio latency on the built-in speakers.
 
 The logs show no crash, hang report or stub. Audio had 1 device-empty frame at start-up in
-each session and one gap of 258 ms in the second, at 457 s. Both sessions opened the output
-on the WH-CH720N headphones; the default output was the built-in speakers afterwards. The
-output follows the system default device, so the gap is consistent with a switch of device
-there, which the log doesn't record.
+each session and one gap of 258 ms in the second, at 457.5 s (10:41:41–42). Both sessions
+opened the output on the WH-CH720N headphones (the system default). The user switched to the
+built-in speakers during the second session. The macOS log (`coreaudiod`) puts that switch in
+the same second as the gap:
+- 10:41:41.995 and 10:41:42.099: the headphones' two Bluetooth audio devices disconnect.
+- 10:41:42.121: macOS picks `BuiltInSpeakerDevice` as the default output.
+
+The first session has no such event. The latency check on the speakers therefore ran in the
+second session after 10:41:42 (about 770 s on the speakers). The output stream opens the
+default device and follows it, so the gap coincides with the device change, not with steady
+playback. How long the switch itself takes isn't measured: the runtime doesn't log a change of
+device.
 
 Keyboard players can't see that Q and E turn the settings pages: the footer named only LB
 and RB. It now shows "LB RB / Q E: page" (commit 4f6e0f5).
@@ -633,8 +641,9 @@ and RB. It now shows "LB RB / Q E: page" (commit 4f6e0f5).
 page drew the default letter keys W, S, A and D as the replacement glyph (U+FFFD). Named keys
 (Up, Space) drew correctly. A probe showed that SDL names the keys correctly, and that the font
 has the glyphs at the size drawn with valid atlas coordinates. With that probe in the build,
-the letters drew correctly (1 of 1 run). So the failure depends on timing in Dear ImGui's
-on-demand glyph loading or atlas upload. It isn't fixed: there is no confirmed cause yet.
+the letters drew correctly (1 of 1 run). In the user's own sessions the letters showed
+correctly. So far it has appeared only in automated runs with a fresh user folder, which
+capture the screen. The condition isn't known, and neither is the cause. It isn't fixed.
 
 ## 6b. M6 progress: profile, saves, stability (in progress, 2026-10-23)
 
