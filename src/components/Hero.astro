@@ -43,11 +43,10 @@ const dashes = Array.from({ length: 9 }, (_, i) => {
 // Motion toward the viewer: short pieces on rays from the vanishing point,
 // scaled about it (see .flow in the styles). Scaling about the VP moves a
 // piece out along its ray and lengthens it, which is perspective. Each ray
-// runs from the VP to E; a piece starts at T0..T1 of the way there.
+// runs from the VP to E; a piece starts T0 of the way there.
 const T0 = 0.035;
-const T1 = 0.06;
 const along = (e: { x: number; y: number }, t: number) => ({ x: VP.x + (e.x - VP.x) * t, y: VP.y + (e.y - VP.y) * t });
-const DASH_DUR = 1.4;
+const DASH_DUR = 0.95;
 const flowDashes = Array.from({ length: 6 }, (_, i) => {
 	const e = { x: 930, y: 900 };
 	const a = along(e, T0);
@@ -59,16 +58,28 @@ const flowDashes = Array.from({ length: 6 }, (_, i) => {
 		delay: (-(i * DASH_DUR) / 6).toFixed(2),
 	};
 });
-const streaks = [
-	{ e: { x: 170, y: 900 }, c: 'white', dur: 2.3, d: 0.2 },
-	{ e: { x: 1720, y: 900 }, c: 'white', dur: 2.1, d: 1.3 },
-	{ e: { x: 680, y: 900 }, c: 'white', dur: 2.9, d: 0.9 },
-	{ e: { x: 1280, y: 900 }, c: 'white', dur: 2.6, d: 2.0 },
-	{ e: { x: -240, y: 400 }, c: 'amber', dur: 3.2, d: 0.5 },
-	{ e: { x: -240, y: 470 }, c: 'amber', dur: 2.7, d: 2.2 },
-	{ e: { x: 1840, y: 330 }, c: 'amber', dur: 3.0, d: 1.6 },
-	{ e: { x: 1840, y: 430 }, c: 'white', dur: 3.4, d: 0.1 },
-].map((r) => ({ a: along(r.e, T0), b: along(r.e, T1), c: r.c, style: `--dur:${r.dur}s;--delay:-${r.d}s` }));
+// Road particles: dust and small reflective details on the road and its
+// shoulders, each on its own ray with its own size, brightness, duration and
+// start offset, so they never reset together and the loop can't be seen.
+// Each piece starts T0 of the way out; at full scale it has passed the
+// bottom edge (or gone under the car, drawn on top of them).
+const studs = [300, 1560].flatMap((x, side) =>
+	Array.from({ length: 5 }, (_, i) => ({ x: x + (side ? 30 : -30) * rand(), r: 0.16, kind: 'stud', dur: 1.3, delay: -((i * 1.3) / 5 + rand() * 0.08) })),
+);
+const dust = Array.from({ length: 34 }, () => {
+	const dur = 0.85 + rand() * 1.3;
+	return { x: 120 + rand() * 1560, r: 0.05 + rand() * 0.08, kind: rand() < 0.2 ? 'glint' : 'dust', dur, delay: -rand() * dur };
+});
+const particles = [...studs, ...dust].map((p) => {
+	const c = along({ x: p.x, y: 900 }, T0 + rand() * 0.01);
+	return {
+		cx: c.x.toFixed(2),
+		cy: c.y.toFixed(2),
+		r: p.r.toFixed(3),
+		kind: p.kind,
+		style: `--dur:${p.dur.toFixed(2)}s;--delay:${p.delay.toFixed(2)}s;--peak:${(p.kind === 'dust' ? 0.25 + rand() * 0.3 : 0.75).toFixed(2)}`,
+	};
+});
 ---
 
 <section class="hero" aria-labelledby="hero-title" data-hero data-video={video ? JSON.stringify(video) : undefined}>
@@ -95,10 +106,6 @@ const streaks = [
 							<stop offset="0" stop-color="#151922" />
 							<stop offset="1" stop-color="#06070a" />
 						</linearGradient>
-						<linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
-							<stop offset="0" stop-color="#e9f6ff" stop-opacity="0.55" />
-							<stop offset="1" stop-color="#e9f6ff" stop-opacity="0" />
-						</linearGradient>
 						<radialGradient id="lamp" r="0.5">
 							<stop offset="0" stop-color="#ffffff" />
 							<stop offset="0.25" stop-color="#d9f3ff" stop-opacity="0.9" />
@@ -116,6 +123,15 @@ const streaks = [
 							<stop offset="0" stop-color="#ff2b3a" stop-opacity="0.55" />
 							<stop offset="1" stop-color="#ff2b3a" stop-opacity="0" />
 						</linearGradient>
+						<linearGradient id="pool" x1="0" y1="1" x2="0" y2="0">
+							<stop offset="0" stop-color="#f4f1e6" stop-opacity="0.3" />
+							<stop offset="0.6" stop-color="#f4f1e6" stop-opacity="0.1" />
+							<stop offset="1" stop-color="#f4f1e6" stop-opacity="0" />
+						</linearGradient>
+						<radialGradient id="pool-glow" r="0.5">
+							<stop offset="0" stop-color="#f4f1e6" stop-opacity="0.14" />
+							<stop offset="1" stop-color="#f4f1e6" stop-opacity="0" />
+						</radialGradient>
 						<linearGradient id="wet" x1="0" y1="0" x2="0" y2="1">
 							<stop offset="0" stop-color="#7cf0ff" stop-opacity="0.22" />
 							<stop offset="1" stop-color="#7cf0ff" stop-opacity="0" />
@@ -170,19 +186,24 @@ const streaks = [
 						))}
 					</g>
 
-					{/* Forward motion: lane dashes and passing lights flowing out of the VP. */}
+					{/* The player's headlights on the road ahead: light only, the lamps are out of view. */}
+					<g class="headlights">
+						<path d="M 975 740 L 1270 740 L 1140 565 L 1092 565 Z" fill="url(#pool)" />
+						<ellipse cx="1120" cy="680" rx="230" ry="70" fill="url(#pool-glow)" />
+					</g>
+
+					{/* Forward motion: lane dashes, dust and road studs flowing out of the VP. */}
 					<g class="motion">
 						{flowDashes.map((d) => (
 							<polygon class="flow dash" points={d.points} style={`--dur:${DASH_DUR}s;--delay:${d.delay}s`} />
 						))}
-						{streaks.map((l) => (
-							<line class={`flow streak ${l.c}`} x1={l.a.x} y1={l.a.y} x2={l.b.x} y2={l.b.y} style={l.style} vector-effect="non-scaling-stroke" />
+						{particles.map((p) => (
+							<circle class={`flow particle ${p.kind}`} cx={p.cx} cy={p.cy} r={p.r} style={p.style} />
 						))}
 					</g>
 
-					{/* Oncoming headlights, light only: no car is drawn. */}
+					{/* An oncoming car's headlights far down the road: lamps only, no car is drawn. */}
 					<g class="oncoming">
-						<path d={`M ${VP.x - 18} ${VP.y + 18} L ${VP.x + 18} ${VP.y + 18} L ${VP.x + 220} 900 L ${VP.x - 260} 900 Z`} fill="url(#beam)" opacity="0.35" />
 						<circle cx={VP.x - 11} cy={VP.y + 16} r="16" fill="url(#lamp)" />
 						<circle cx={VP.x + 11} cy={VP.y + 16} r="16" fill="url(#lamp)" />
 					</g>
@@ -420,17 +441,24 @@ const streaks = [
 		fill: rgb(255 210 122 / 0.8);
 		--peak: 0.85;
 	}
-	.streak {
-		stroke-linecap: round;
-		stroke-width: 1.4;
-		--peak: 0.32;
+	.particle.dust {
+		fill: #b9c1cd;
 	}
-	.streak.white {
-		stroke: #e9eef5;
+	.particle.glint {
+		fill: #f4f1e6;
 	}
-	.streak.amber {
-		stroke: #ffc46b;
-		--peak: 0.4;
+	.particle.stud {
+		fill: #ffd27a;
+	}
+	.headlights {
+		mix-blend-mode: screen;
+		pointer-events: none;
+	}
+	/* Fewer particles on a phone: lighter, and the hero is mostly text there. */
+	@media (max-width: 40rem) {
+		.particle:nth-of-type(3n) {
+			display: none;
+		}
 	}
 	@keyframes approach-flow {
 		0% {
