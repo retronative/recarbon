@@ -716,6 +716,29 @@ hand03 3600` with `RECARBON_REAL_HOME=1 RECARBON_MUTE=0`), on the keyboard, at b
   42.8). A run without frame dumps (soak) averages 59.5 fps. Frame dumps (`RECARBON_DUMP_FRAMES`)
   add a ~57 ms stall every 60 frames, because the PPM is written synchronously, so they must be
   off for any frame-time measurement.
+- **Open: a stall in free-roam (hand test 3, cause unconfirmed).**
+  - **Timing:** session `2026-10-23_11-36-32` (started 11:36:32, build 184d87f), 1304.6–1305.8 s,
+    about 11:58:16–17. The worst frame was 333.2 ms, frame 71043 at 1305.4 s, inside a burst of
+    150.2, 151.5 and 125.5 ms frames.
+  - **User's observation** (from their recording): a slight stutter around 11:58:17, possibly as
+    they swerved to avoid a white traffic car entering an intersection. They've occasionally
+    seen similar stutters in SpeedBreaker; whether the cause is the same isn't known.
+  - **What the log records for frame 71043 and the other 11 slow frames in 1303–1306 s:**
+    - The command processor was idle 311.1 of the 333.2 ms (busy 7.9, waits 14.2, all of them
+      register/memory waits). No translated frame was ready to process for most of the time.
+    - No shader or pipeline was created, and no image or texture was created or uploaded.
+      Nothing was read from files (0 KB), and no `[pipelines]` line was logged in that window.
+    - 19 write-watch faults, 0 stalls; 7,003 KB of snapshots.
+    - "game: longest frame 0.0 ms": Carbon's frame-time hooks don't exist yet, so this log
+      can't measure the game thread's own frame time.
+  - **To investigate later** (no hypothesis is preferred yet):
+    - shader and pipeline compilation, including guest-side shader setup the log doesn't show;
+    - asset streaming, from memory as well as from files;
+    - CPU-side simulation on the game's threads (traffic AI, physics, collision);
+    - GPU and CPU synchronization.
+
+    The game thread's frame time and a host stack sample, both taken during a stall, would
+    separate these.
 
 ### EA audio CPU budget (SpeedBreaker v0.1.8's fix for MW)
 - Carbon's sound engine is RenderWare Audio Core (`rw::audio::core::System`, `Snd9Service`,
