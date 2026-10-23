@@ -47,6 +47,30 @@ h1#_top {
 	background: var(--sl-color-accent);
 }
 
+/* The docs' mobile menu toggle as the custom pages' square Menu button (race.css). */
+:root {
+	--sl-menu-button-size: 44px;
+}
+.sl-menu-button {
+	border: 1px solid var(--sl-color-gray-5);
+	border-radius: 3px;
+	background-color: transparent;
+	color: var(--sl-color-white);
+	box-shadow: none;
+	padding: 0.6rem;
+}
+.sl-menu-button {
+	display: grid;
+	place-items: center;
+}
+.sl-menu-button svg {
+	width: 22px;
+	height: 22px;
+}
+.sl-menu-button:has(~ :popover-open) {
+	background-color: var(--sl-color-gray-6);
+}
+
 /* Header: a race HUD bar with a speed-line underline. */
 header.header {
 	backdrop-filter: blur(8px);

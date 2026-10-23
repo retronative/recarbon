@@ -53,8 +53,8 @@ a {
 	align-items: center;
 	gap: 1rem;
 	height: var(--rn-header-h);
-	padding: 0 clamp(1rem, 3vw, 2rem);
-	background: color-mix(in srgb, var(--page-bg) 88%, transparent);
+	padding: 0 1rem;
+	background: color-mix(in srgb, var(--page-bg) 92%, transparent);
 	backdrop-filter: blur(10px);
 	border-bottom: 1px solid transparent;
 	border-image: linear-gradient(90deg, transparent, var(--rn-neon) 20%, var(--rn-ember) 60%, transparent) 1;
@@ -84,18 +84,19 @@ a {
 	margin-inline-start: auto;
 }
 .hud-menu summary {
-	display: flex;
-	align-items: center;
-	gap: 0.4rem;
-	min-height: 44px;
-	padding: 0 0.75rem;
-	font-family: var(--rn-font-display);
-	font-weight: 700;
-	text-transform: uppercase;
-	letter-spacing: 0.08em;
+	/* The same square button as the docs' menu toggle (starlight.css). */
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	color: var(--text);
 	cursor: pointer;
 	list-style: none;
 	border: 1px solid var(--line);
+	border-radius: 3px;
+}
+.hud-menu[open] summary {
+	background: var(--surface);
 }
 .hud-menu summary::-webkit-details-marker {
 	display: none;
@@ -112,7 +113,23 @@ a {
 .hud-menu .site-nav {
 	flex-direction: column;
 }
-@media (min-width: 52rem) {
+/* As the docs header: no version chip on a phone, and between 50 and 72rem
+   the logo stands alone. */
+@media (max-width: 30rem) {
+	.hud > .version-chip {
+		display: none;
+	}
+}
+@media (min-width: 50rem) and (max-width: 72rem) {
+	.brand span,
+	.hud > .version-chip {
+		display: none;
+	}
+}
+@media (min-width: 50rem) {
+	.hud {
+		padding: 0 1.5rem;
+	}
 	.hud-nav {
 		display: block;
 	}

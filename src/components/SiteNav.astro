@@ -50,7 +50,7 @@ const isCurrent = (href: string) => {
 		padding: 0;
 		list-style: none;
 	}
-	a {
+	.site-nav a {
 		display: block;
 		padding: 0.5rem 0.75rem;
 		font-family: var(--rn-font-display);
@@ -64,8 +64,8 @@ const isCurrent = (href: string) => {
 		border-bottom: 2px solid transparent;
 		transition: color var(--rn-fast) var(--rn-ease), border-color var(--rn-fast) var(--rn-ease);
 	}
-	a:hover,
-	a:focus-visible {
+	.site-nav a:hover,
+	.site-nav a:focus-visible {
 		color: var(--sl-color-white, var(--text));
 		border-bottom-color: var(--rn-ember);
 	}
@@ -83,7 +83,7 @@ const isCurrent = (href: string) => {
 		clip: rect(0 0 0 0);
 		white-space: nowrap;
 	}
-	a[aria-current='page'] {
+	.site-nav a[aria-current='page'] {
 		color: var(--sl-color-accent-high, var(--link));
 		border-bottom-color: var(--rn-neon);
 	}

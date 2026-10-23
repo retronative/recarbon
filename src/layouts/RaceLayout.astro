@@ -48,7 +48,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 				<SiteNav />
 			</nav>
 			<details class="hud-menu">
-				<summary aria-label="Menu"><span aria-hidden="true">☰</span> Menu</summary>
+				<summary aria-label="Menu">
+					<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
+				</summary>
 				<nav aria-label="Main (mobile)">
 					<SiteNav class="stacked" />
 				</nav>

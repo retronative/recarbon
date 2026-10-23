@@ -35,10 +35,19 @@ import VersionChip from '../VersionChip.astro';
 		padding: 0.25rem;
 		margin: -0.25rem;
 	}
+	/* Logo and wordmark sized as on the custom pages (RaceLayout's .brand). */
+	.title-wrapper :global(.site-title) {
+		gap: 0.6rem;
+	}
+	.title-wrapper :global(.site-title img) {
+		width: 48px;
+		height: 30px;
+	}
 	.title-wrapper :global(.site-title span) {
 		font-family: var(--rn-font-display);
 		font-style: italic;
 		font-weight: 700;
+		font-size: 1.25rem;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
 		color: var(--sl-color-white);
@@ -54,10 +63,14 @@ import VersionChip from '../VersionChip.astro';
 	.search {
 		margin-inline-start: auto;
 	}
+	.main-nav + .search {
+		margin-inline-start: 0;
+	}
 	/* From 50rem the mobile menu (and its nav) is gone, so the nav shows here. */
 	@media (min-width: 50rem) {
 		.main-nav {
 			display: block;
+			margin-inline-start: auto;
 		}
 	}
 	@media (min-width: 50rem) and (max-width: 72rem) {
