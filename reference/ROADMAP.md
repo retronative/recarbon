@@ -208,6 +208,16 @@ customization.
 - **Verify:** a windowed session following a written route (new profile → free-roam → race
   load), then a restart. Logs and the save file's presence and size are recorded; watchdog
   reports must be empty.
+- **Evidence so far** (FEASIBILITY §6b):
+  - **Profile and save:** an alias save is created at Start Career (286,764 B) and reloads after
+    a restart with its hash unchanged.
+  - **Race loading:** the prologue reaches control of the car. A Quick Race loads from the front
+    end (§6c).
+  - **Stability:** hand test 3 (2026-10-23, by the user): 15 minutes in a row in free-roam after
+    the prologue chase. The log shows no crash, hang report, strict stub or watchdog report, and
+    a clean exit. Before that, the render-queue race was fixed (e40e9ec), and two 16-minute
+    soaks ran clean.
+  - Each criterion now has evidence. Closing M6 is left to the user.
 
 ## M7 — Playable racing
 Input as in M5: SpeedBreaker's keyboard rebinding and `[keys]` keep working. No new

@@ -645,7 +645,7 @@ the letters drew correctly (1 of 1 run). In the user's own sessions the letters 
 correctly. So far it has appeared only in automated runs with a fresh user folder, which
 capture the screen. The condition isn't known, and neither is the cause. It isn't fixed.
 
-## 6b. M6 progress: profile, saves, stability (in progress, 2026-10-23)
+## 6b. M6 progress: profile, saves, stability (2026-10-23)
 
 ### Profile and save
 - **Flow (fresh user folder):** title → "Cannot connect to Xbox Live!" → main menu. An alias is
@@ -680,10 +680,30 @@ capture the screen. The condition isn't known, and neither is the cause. It isn'
 - The 16 KB host-page release fix is ported from SpeedBreaker v0.1.8 with ReCarbon's own test
   and a mutation check (commit 84df8f3). It was latent: never observed in play.
 
-### Open
-- Free-roam 10 minutes: free-roam opens only after a player escapes the prologue chase, which a
-  blind input script can't drive. Pending a human playthrough. The 16-minute gameplay soaks are
-  the automated stability evidence so far.
+### Free-roam stability: verified by hand test 3 (2026-10-23)
+Free-roam opens only after a player escapes the prologue chase, which a blind input script can't
+drive, so the user played it. The session ran in the user's own user folder (`scripts/run_attempt.sh
+hand03 3600` with `RECARBON_REAL_HOME=1 RECARBON_MUTE=0`), on the keyboard, at build 184d87f.
+- **User's report:** the prologue chase was won at the first attempt. Free-roam ran from 11:45 to
+  12:00, 15 minutes in a row, with nothing unusual seen and the Mac at a normal temperature.
+- **Log correlation:** the session started at 11:36:32, so free-roam ran from about 508 s to
+  1408 s. The game ran until 1427 s and quit cleanly (`window closed`, exit 0).
+  - No new crash or hang report in the user folder; the last ones date from 2026-10-22.
+  - No strict-stub hit, no "not a recompiled function", no watchdog report.
+  - 457 performance samples in that window: 59.7 fps presented on average, the lowest 34.8,
+    thermal state "fair" throughout. No audio gap over 50 ms.
+  - The longest frame was 333 ms, at 1305 s, in a burst of 125–333 ms frames. The command
+    processor was idle for most of each of those frames (311 ms of the 333), so the game
+    submitted nothing then. The cause isn't investigated, and the user didn't notice a stall.
+  - The career save was rewritten at 980 s: same size, new hash. Whether it reloads is part of
+    M7's race-completion check, not verified here.
+  - The user opened Settings > Controls between 1202 s and 1265 s and put every binding back as
+    it was: `settings.toml` is identical to its backup from before the test.
+  - The game looked for `D:\sound\NISRevData\introcareer06ng.bin`, `introcareer07ng.bin`,
+    `introcareer08ng.bin`, `endingcareer22.bin` and `D:\NFS\ZZDATA11.BIN`. None of them is on
+    this disc. The game carried on each time; it was also seen in earlier sessions.
+- **Result:** the M6 stability criterion, no deadlock or crash for 10 minutes in free-roam, is
+  met. The two 16-minute automated soaks, after the render-queue fix, are the regression check.
 
 ## 6c. M7 exploration: racing (in progress, 2026-10-23)
 
