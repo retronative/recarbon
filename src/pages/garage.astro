@@ -3,7 +3,7 @@ import RaceLayout from '../layouts/RaceLayout.astro';
 import Garage from '../components/garage/Garage.astro';
 import ControlsTables from '../components/garage/ControlsTables.astro';
 import StatusBadge from '../components/StatusBadge.astro';
-import { BINDING, SOURCE, STATUS, type Status } from '../lib/controls';
+import { BINDING, SOURCE, STATUS, TESTED_CONTROLLERS, type Status } from '../lib/controls';
 import { url } from '../lib/url';
 ---
 
@@ -51,27 +51,48 @@ x = "left_shift"</code></pre>
 				</details>
 
 				<details class="panel cut">
-					<summary>8BitDo Ultimate 2 notes</summary>
+					<summary>Controller notes</summary>
 					<p>
-						<StatusBadge status={BINDING.physicalController.status} /> Pending hand test: no physical controller has been tested
-						with ReCarbon yet. An 8BitDo is due for the M5 controller test.
+						<StatusBadge status={BINDING.physicalController.status} /> No physical controller has been hand-tested with ReCarbon yet.
+						The mapping below is pinned by a unit test; what each button does in a race is still to verify.
 					</p>
 					<ul>
 						<li>
-							ReCarbon reads pads through SDL3 by position: South, East, West, North are A, B, X, Y; the bumpers, triggers,
-							sticks, stick clicks, View, Menu and D-pad map one to one.
+							ReCarbon reads pads through SDL3 by button position: South, East, West, North are A, B, X, Y. On a
+							PlayStation-style pad that makes Cross A, Circle B, Square X and Triangle Y; the Xbox / PlayStation switch
+							above changes the names shown, not the mapping. No PlayStation controller has been tested.
 						</li>
 						<li>
-							<StatusBadge status="not-mapped" /> Back paddles and extra buttons (L4/R4, the Guide button) aren't read by
-							ReCarbon. Whether they reach SDL at all depends on the device and its mode, and is
-							<strong>unverified</strong>.
+							The bumpers, triggers, sticks, stick presses, View, Menu and D-pad map one to one.
 						</li>
 						<li>
-							If the pad's own firmware or software remaps a paddle to another button, it acts as that button: ReCarbon only
+							<StatusBadge status="not-mapped" /> Back paddles, extra buttons and the Guide button aren't read by ReCarbon.
+							If a pad's own firmware or software remaps a paddle to another button, it acts as that button: ReCarbon only
 							sees the result.
 						</li>
 					</ul>
 				</details>
+
+				<section class="panel cut" aria-labelledby="tested-title">
+					<h2 id="tested-title">Tested controllers</h2>
+					{
+						TESTED_CONTROLLERS.length ? (
+							<ul>
+								{TESTED_CONTROLLERS.map((t) => (
+									<li>
+										<strong>{t.model}</strong>: hand-tested {t.date}. {t.evidence}
+									</li>
+								))}
+							</ul>
+						) : (
+							<p>
+								None yet. A controller model is listed here only after it passes a physical hand test with ReCarbon (the
+								first is due in milestone M5). A listing records a test result; it is not an endorsement or a
+								recommendation.
+							</p>
+						)
+					}
+				</section>
 
 				<section class="panel cut legend" aria-labelledby="legend-title">
 					<h2 id="legend-title">Status legend</h2>

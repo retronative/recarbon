@@ -8,12 +8,13 @@ import Keyboard from './Keyboard.astro';
 import Controller from './Controller.astro';
 import StatusBadge from '../StatusBadge.astro';
 import { KEYBOARD, KEYBOARD_CLUSTERS, KEYBOARD_HEIGHT, KEYBOARD_WIDTH } from '../../data/keyboard-75';
-import { BINDING, CALLOUTS, MODES, type Mode, PAD_NAMES, PAD_UNMAPPED, UI, controlsOfKey, isBindable, keyLabel, keyName } from '../../lib/controls';
+import { BINDING, CALLOUTS, MODES, type Mode, PAD_NAMES, PAD_NAMES_PS, PAD_UNMAPPED, UI, controlsOfKey, isBindable, keyLabel, keyName } from '../../lib/controls';
 
 const keyText = (groups: string[][]) => groups.map((g) => g.map(keyLabel).join(' + '));
+// Each pad name as Xbox and PlayStation-style labels (display only).
 const padText = (els: string[], chord?: boolean) => {
-	const names = els.map((e) => PAD_NAMES[e] ?? e);
-	return chord ? [names.join(' + ')] : names;
+	const names = els.map((e) => ({ xb: PAD_NAMES[e] ?? e, ps: PAD_NAMES_PS[e] ?? e }));
+	return chord ? [{ xb: names.map((n) => n.xb).join(' + '), ps: names.map((n) => n.ps).join(' + ') }] : names;
 };
 const keyFacts = Object.fromEntries(
 	KEYBOARD.map((k) => [
@@ -88,6 +89,13 @@ const groups = (mode: Mode) => {
 				<Keyboard />
 			</div>
 			<div class="device" id="garage-controller" data-device-pane="controller">
+				<div class="label-switch" data-label-switch hidden>
+					<div class="switch" role="group" aria-label="Button labels">
+						<button type="button" class="sw sw--sm" data-set-labels="xb" aria-pressed="true">Xbox</button>
+						<button type="button" class="sw sw--sm" data-set-labels="ps" aria-pressed="false">PlayStation</button>
+					</div>
+					<p class="label-note">Labels only. ReCarbon reads a pad by button position; no PlayStation controller has been tested.</p>
+				</div>
 				<Controller />
 			</div>
 			<p class="pad-note" data-for-device="controller">
@@ -101,7 +109,12 @@ const groups = (mode: Mode) => {
 					<article class="sheet" data-sheet={c.id} hidden>
 						<header>
 							<h3>
-								{c.lines.length > 0 ? `${c.title}: ` : ''}
+								{c.lines.length > 0 && (
+									<>
+										<span class="xb">{c.title}</span>
+										<span class="ps">{c.titlePs}</span>:{' '}
+									</>
+								)}
 								<span class:list={{ tbd: c.status === 'unverified' }}>{c.action}</span>
 							</h3>
 							<StatusBadge status={c.status} />
@@ -139,14 +152,18 @@ const groups = (mode: Mode) => {
 													{l.setting2} = "{l.keys[1] ?? 'none'}"
 												</code>
 											</td>
-											<td>{c.pad.map((p) => PAD_NAMES[p]).join(', ')}</td>
+											<td>
+												<span class="xb">{c.pad.map((p) => PAD_NAMES[p]).join(', ')}</span>
+												<span class="ps">{c.pad.map((p) => PAD_NAMES_PS[p]).join(', ')}</span>
+											</td>
 										</tr>
 									))}
 								</tbody>
 							</table>
 						) : (
 							<p>
-								Keyboard: {keyText(c.keyGroups).join(', ')}. Controller: {padText(c.pad, c.padChord).join(', ')}. These are
+								Keyboard: {keyText(c.keyGroups).join(', ')}. Controller: <span class="xb">{padText(c.pad, c.padChord).map((n) => n.xb).join(', ')}</span>
+								<span class="ps">{padText(c.pad, c.padChord).map((n) => n.ps).join(', ')}</span>. These are
 								ReCarbon's own Settings keys, not rebindable.
 							</p>
 						)}
@@ -203,11 +220,24 @@ const groups = (mode: Mode) => {
 												aria-pressed="false"
 											>
 												<span class="glyph" aria-hidden="true">
-													{c.glyph}
+													<span class="xb">{c.glyph}</span>
+													<span class="ps">{c.glyphPs}</span>
 												</span>
 												<span class="what">
-													<span class="act">{g.tbd ? c.title : c.action}</span>
-													{!g.tbd && c.lines.length > 0 && <span class="ctl">{c.title}</span>}
+													{g.tbd ? (
+														<span class="act">
+															<span class="xb">{c.title}</span>
+															<span class="ps">{c.titlePs}</span>
+														</span>
+													) : (
+														<span class="act">{c.action}</span>
+													)}
+													{!g.tbd && c.lines.length > 0 && (
+														<span class="ctl">
+															<span class="xb">{c.title}</span>
+															<span class="ps">{c.titlePs}</span>
+														</span>
+													)}
 												</span>
 												<span class="inputs inputs--keyboard">
 													{keyText(c.keyGroups).map((k) => (
@@ -218,7 +248,10 @@ const groups = (mode: Mode) => {
 												<span class="inputs inputs--controller">
 													{c.lines.length === 0 &&
 														padText(c.pad, c.padChord).map((p) => (
-															<kbd>{p}</kbd>
+															<kbd>
+																<span class="xb">{p.xb}</span>
+																<span class="ps">{p.ps}</span>
+															</kbd>
 														))}
 												</span>
 												{!g.tbd && <StatusBadge status={c.status} compact />}
@@ -364,9 +397,6 @@ const groups = (mode: Mode) => {
 			max-height: calc(100vh - var(--rn-header-h) - 2rem);
 			overflow-y: auto;
 			scrollbar-width: thin;
-		}
-		.device-pane :global(.pad) {
-			max-height: 21rem;
 		}
 	}
 	/* Below the two-column layout the drawing itself sticks under the header,
@@ -576,6 +606,36 @@ const groups = (mode: Mode) => {
 	.garage:not(.js) .device + .device {
 		margin-top: 2rem;
 	}
+	/* Xbox names by default; PlayStation-style ones in controller view when chosen. */
+	.garage .ps {
+		display: none;
+	}
+	.garage[data-device='controller'][data-labels='ps'] .ps {
+		display: inline;
+	}
+	.garage[data-device='controller'][data-labels='ps'] .xb {
+		display: none;
+	}
+	.label-switch:not([hidden]) {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.4rem 0.9rem;
+		margin-bottom: 0.5rem;
+	}
+	.sw--sm {
+		min-height: 36px;
+		padding: 0.25rem 0.9rem;
+		font-size: 0.75rem;
+		border: 0;
+		background: none;
+		cursor: pointer;
+	}
+	.label-note {
+		margin: 0;
+		font-size: 0.75rem;
+		color: var(--rn-muted);
+	}
 	.garage[data-device='keyboard'] .inputs--controller,
 	.garage[data-device='controller'] .inputs--keyboard {
 		display: none;
@@ -728,6 +788,9 @@ const groups = (mode: Mode) => {
 
 	function setup(root: HTMLElement) {
 		root.classList.add('js');
+		root.dataset.labels = 'xb';
+		const labelSwitch = root.querySelector<HTMLElement>('[data-label-switch]');
+		if (labelSwitch) labelSwitch.hidden = false;
 		// Without JS the switches are anchors to each section; with it they're toggle buttons.
 		for (const el of root.querySelectorAll<HTMLElement>('[data-set-mode], [data-set-device]')) {
 			el.setAttribute('role', 'button');
@@ -777,6 +840,9 @@ const groups = (mode: Mode) => {
 			setPressed('[data-set-mode]', 'data-set-mode', mode);
 			setPressed('[data-set-device]', 'data-set-device', device);
 			clusters.hidden = !(narrow.matches && device === 'keyboard');
+			// On a phone the controller shows the pad alone; the list names the actions.
+			const pad = root.querySelector<SVGSVGElement>('svg.pad');
+			if (pad) pad.setAttribute('viewBox', narrow.matches ? pad.dataset.padBox! : pad.dataset.fullBox!);
 			if (clusters.hidden) zoom(null);
 			unpin();
 			draw(null);
@@ -796,10 +862,13 @@ const groups = (mode: Mode) => {
 			const parts =
 				device === 'keyboard'
 					? button.dataset.keys!.split(' ').map((k) => kb.querySelector(`[data-key="${k}"]`))
-					: button.dataset.pad!.split(' ').map((p) => root.querySelector(`.pad [data-el="${p}"]`));
+					: button.dataset.pad!.split(' ').map((p) => root.querySelector(`.pad .pad-el[data-el="${p}"]`));
 			const lit = parts.filter((p): p is SVGGElement => !!p);
 			for (const p of lit) p.classList.add('is-hot');
-			if (!wide.matches || button.offsetParent === null) return;
+			// The controller guide's own label for it.
+			for (const g of root.querySelectorAll(`.gl[data-callouts~="${id}"]`)) g.classList.add('is-hot');
+			// Long traces only for the keyboard: the controller guide has its own short lines.
+			if (!wide.matches || device === 'controller' || button.offsetParent === null) return;
 			const box = stage.getBoundingClientRect();
 			const b = button.getBoundingClientRect();
 			// No leader to a row scrolled out of view.
@@ -927,6 +996,14 @@ const groups = (mode: Mode) => {
 
 		root.addEventListener('click', (e) => {
 			const t = e.target as Element;
+			const labels = t.closest<HTMLElement>('[data-set-labels]');
+			if (labels) {
+				root.dataset.labels = labels.dataset.setLabels!;
+				setPressed('[data-set-labels]', 'data-set-labels', root.dataset.labels);
+				live.textContent = `${labels.textContent} button labels`;
+				if (pinned) draw(pinned);
+				return;
+			}
 			const dev = t.closest<HTMLElement>('[data-set-device]');
 			const mode = t.closest<HTMLElement>('[data-set-mode]');
 			const c = t.closest<HTMLButtonElement>('[data-callout]');

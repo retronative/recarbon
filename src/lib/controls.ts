@@ -84,6 +84,23 @@ export const PAD_NAMES: Record<string, string> = {
 	RIGHT_PADDLE1: 'Right back paddle',
 };
 
+// The same buttons as a PlayStation-style pad labels them. Display only:
+// ReCarbon maps a pad by position (pad_map.h), so Cross is A, and so on.
+export const PAD_NAMES_PS: Record<string, string> = {
+	...PAD_NAMES,
+	SOUTH: 'Cross (South)',
+	EAST: 'Circle (East)',
+	WEST: 'Square (West)',
+	NORTH: 'Triangle (North)',
+	BACK: 'Create (Back)',
+	START: 'Options (Start)',
+	LEFT_SHOULDER: 'L1 (left bumper)',
+	RIGHT_SHOULDER: 'R1 (right bumper)',
+	LEFT_TRIGGER: 'L2 (left trigger)',
+	RIGHT_TRIGGER: 'R2 (right trigger)',
+	GUIDE: 'Home button',
+};
+
 export const PAD_UNMAPPED = ['GUIDE', 'MISC1', 'LEFT_PADDLE1', 'RIGHT_PADDLE1'];
 
 const axisElement: Record<string, string> = {
@@ -119,23 +136,24 @@ export function isBindable(id: string): boolean {
 // --- Callouts -----------------------------------------------------------------
 
 // The Xbox controls as the Garage groups them: one callout plate each.
-const CLUSTERS: { id: string; title: string; glyph: string; controls: ControlId[] }[] = [
-	{ id: 'rt', title: 'Right trigger', glyph: 'RT', controls: ['RightTrigger'] },
-	{ id: 'lt', title: 'Left trigger', glyph: 'LT', controls: ['LeftTrigger'] },
-	{ id: 'lsx', title: 'Left stick ← →', glyph: 'LS', controls: ['LeftStickLeft', 'LeftStickRight'] },
-	{ id: 'lsy', title: 'Left stick ↑ ↓', glyph: 'LS', controls: ['LeftStickUp', 'LeftStickDown'] },
-	{ id: 'a', title: 'A (South)', glyph: 'A', controls: ['A'] },
-	{ id: 'b', title: 'B (East)', glyph: 'B', controls: ['B'] },
-	{ id: 'x', title: 'X (West)', glyph: 'X', controls: ['X'] },
-	{ id: 'y', title: 'Y (North)', glyph: 'Y', controls: ['Y'] },
-	{ id: 'lb', title: 'Left bumper', glyph: 'LB', controls: ['LB'] },
-	{ id: 'rb', title: 'Right bumper', glyph: 'RB', controls: ['RB'] },
-	{ id: 'dpad', title: 'D-pad', glyph: 'D', controls: ['DpadUp', 'DpadDown', 'DpadLeft', 'DpadRight'] },
-	{ id: 'start', title: 'Menu (Start)', glyph: '≡', controls: ['Start'] },
-	{ id: 'back', title: 'View (Back)', glyph: '⧉', controls: ['Back'] },
-	{ id: 'rs', title: 'Right stick', glyph: 'RS', controls: ['RightStickUp', 'RightStickDown', 'RightStickLeft', 'RightStickRight'] },
-	{ id: 'lsc', title: 'Left stick click', glyph: 'L3', controls: ['LeftStickClick'] },
-	{ id: 'rsc', title: 'Right stick click', glyph: 'R3', controls: ['RightStickClick'] },
+// `ps` is the same control's PlayStation-style name and glyph (display only).
+const CLUSTERS: { id: string; title: string; glyph: string; ps: [string, string]; controls: ControlId[] }[] = [
+	{ id: 'rt', title: 'Right trigger', glyph: 'RT', ps: ['R2 trigger', 'R2'], controls: ['RightTrigger'] },
+	{ id: 'lt', title: 'Left trigger', glyph: 'LT', ps: ['L2 trigger', 'L2'], controls: ['LeftTrigger'] },
+	{ id: 'lsx', title: 'Left stick ← →', glyph: 'LS', ps: ['Left stick ← →', 'LS'], controls: ['LeftStickLeft', 'LeftStickRight'] },
+	{ id: 'lsy', title: 'Left stick ↑ ↓', glyph: 'LS', ps: ['Left stick ↑ ↓', 'LS'], controls: ['LeftStickUp', 'LeftStickDown'] },
+	{ id: 'a', title: 'A (South)', glyph: 'A', ps: ['Cross (South)', '✕'], controls: ['A'] },
+	{ id: 'b', title: 'B (East)', glyph: 'B', ps: ['Circle (East)', '○'], controls: ['B'] },
+	{ id: 'x', title: 'X (West)', glyph: 'X', ps: ['Square (West)', '□'], controls: ['X'] },
+	{ id: 'y', title: 'Y (North)', glyph: 'Y', ps: ['Triangle (North)', '△'], controls: ['Y'] },
+	{ id: 'lb', title: 'Left bumper', glyph: 'LB', ps: ['L1 bumper', 'L1'], controls: ['LB'] },
+	{ id: 'rb', title: 'Right bumper', glyph: 'RB', ps: ['R1 bumper', 'R1'], controls: ['RB'] },
+	{ id: 'dpad', title: 'D-pad', glyph: 'D', ps: ['D-pad', 'D'], controls: ['DpadUp', 'DpadDown', 'DpadLeft', 'DpadRight'] },
+	{ id: 'start', title: 'Menu (Start)', glyph: '≡', ps: ['Options (Start)', '≡'], controls: ['Start'] },
+	{ id: 'back', title: 'View (Back)', glyph: '⧉', ps: ['Create (Back)', '⧉'], controls: ['Back'] },
+	{ id: 'rs', title: 'Right stick', glyph: 'RS', ps: ['Right stick', 'RS'], controls: ['RightStickUp', 'RightStickDown', 'RightStickLeft', 'RightStickRight'] },
+	{ id: 'lsc', title: 'Left stick click', glyph: 'L3', ps: ['Left stick press (L3)', 'L3'], controls: ['LeftStickClick'] },
+	{ id: 'rsc', title: 'Right stick click', glyph: 'R3', ps: ['Right stick press (R3)', 'R3'], controls: ['RightStickClick'] },
 ];
 check(
 	CLUSTERS.flatMap((c) => c.controls).sort().join() === [...controls.keys()].sort().join(),
@@ -156,6 +174,9 @@ export interface Callout {
 	mode: Mode;
 	title: string;
 	glyph: string;
+	cluster?: string; // the Xbox control group, for control callouts
+	titlePs: string; // PlayStation-style labels (display only)
+	glyphPs: string;
 	action: string; // what it does, or "Action to verify"
 	status: Status;
 	evidence: string;
@@ -195,6 +216,9 @@ function controlCallouts(mode: 'driving' | 'menu'): Callout[] {
 			mode,
 			title: cluster.title,
 			glyph: cluster.glyph,
+			cluster: cluster.id,
+			titlePs: cluster.ps[0],
+			glyphPs: cluster.ps[1],
 			action,
 			status: first.status,
 			evidence: first.evidence,
@@ -220,6 +244,8 @@ function settingsCallouts(): Callout[] {
 			mode: 'settings' as const,
 			title: s.label,
 			glyph: id === 'open' ? 'F1' : '',
+			titlePs: s.label,
+			glyphPs: id === 'open' ? 'F1' : '',
 			action: s.label,
 			status: s.status as Status,
 			evidence: ui?.evidence ?? (s as { evidence: string }).evidence,
@@ -265,6 +291,10 @@ export function controlsOfKey(id: string): { label: string; setting: string; slo
 		.filter((c) => c.keys.includes(id))
 		.map((c) => (c.keys[0] === id ? { label: c.label, setting: c.setting, slot: 1 as const } : { label: c.label, setting: c.setting2, slot: 2 as const }));
 }
+
+// Controller models that passed a physical hand test, with its evidence.
+// Empty until one does; a listing is not an endorsement.
+export const TESTED_CONTROLLERS = (overlay as { testedControllers?: { model: string; date: string; evidence: string }[] }).testedControllers ?? [];
 
 export const BINDING = overlay.binding as Record<string, { status: Status; evidence: string }>;
 export const SOURCE = generated.source;

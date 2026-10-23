@@ -1,8 +1,11 @@
 ---
 // A generic Xbox-layout controller, drawn from scratch (no product photo
-// traced): front face, shoulders and triggers above it, and an inset for the
-// rear paddles some pads have. Element ids are SDL3's gamepad button names.
-import { CALLOUTS, PAD_NAMES, PAD_UNMAPPED, padStates, type Mode } from '../../lib/controls';
+// traced), as a control guide: the pad in the middle, and around it each
+// button's action in the selected mode on a short dotted line. Element ids
+// are SDL3's gamepad button names. Every label comes from the controls model
+// (ReCarbon's source plus the actions overlay); an action not yet known
+// reads "to verify". The Xbox / PlayStation switch changes names only.
+import { CALLOUTS, PAD_NAMES, PAD_UNMAPPED, STATUS, padStates, type Callout, type Mode } from '../../lib/controls';
 
 const modes: Mode[] = ['driving', 'menu', 'settings'];
 const calloutsOf = (el: string) =>
@@ -24,10 +27,10 @@ const attrs = (el: string) => {
 	};
 };
 const face = [
-	{ el: 'NORTH', x: 452, y: 150, l: 'Y' },
-	{ el: 'WEST', x: 414, y: 186, l: 'X' },
-	{ el: 'EAST', x: 490, y: 186, l: 'B' },
-	{ el: 'SOUTH', x: 452, y: 222, l: 'A' },
+	{ el: 'NORTH', x: 452, y: 150, l: 'Y', ps: '△' },
+	{ el: 'WEST', x: 414, y: 186, l: 'X', ps: '□' },
+	{ el: 'EAST', x: 490, y: 186, l: 'B', ps: '○' },
+	{ el: 'SOUTH', x: 452, y: 222, l: 'A', ps: '✕' },
 ];
 const dpad = [
 	{ el: 'DPAD_UP', d: 'M 244 222 h 22 v 26 l -11 11 l -11 -11 z', lx: 255, ly: 240, l: '▲' },
@@ -35,10 +38,130 @@ const dpad = [
 	{ el: 'DPAD_LEFT', d: 'M 218 248 v 22 h 26 l 11 -11 l -11 -11 z', lx: 230, ly: 263, l: '◀' },
 	{ el: 'DPAD_RIGHT', d: 'M 292 248 v 22 h -26 l -11 -11 l 11 -11 z', lx: 280, ly: 263, l: '▶' },
 ];
+
+// --- The guide around the pad ------------------------------------------------
+// The pad sits at OX, OY in a wider canvas; the slots are where each callout
+// line meets its button, in canvas units.
+const OX = 220;
+const OY = 22;
+const W = 1080;
+const H = 470;
+const VX = 70; // the canvas as shown: the label columns' outer margins trimmed
+const VW = 940;
+type Slot = { slot: string; els: string[]; ax: number; ay: number; chip: [string, string] };
+const LEFT: Slot[] = [
+	{ slot: 'LT', els: ['LEFT_TRIGGER'], ax: 372, ay: 84, chip: ['LT', 'L2'] },
+	{ slot: 'LB', els: ['LEFT_SHOULDER'], ax: 352, ay: 130, chip: ['LB', 'L1'] },
+	{ slot: 'LS', els: ['LEFT_STICK'], ax: 379, ay: 208, chip: ['LS', 'LS'] },
+	{ slot: 'DPAD', els: ['DPAD_UP', 'DPAD_DOWN', 'DPAD_LEFT', 'DPAD_RIGHT'], ax: 438, ay: 281, chip: ['✛', '✛'] },
+];
+const RIGHT: Slot[] = [
+	{ slot: 'RT', els: ['RIGHT_TRIGGER'], ax: 708, ay: 84, chip: ['RT', 'R2'] },
+	{ slot: 'RB', els: ['RIGHT_SHOULDER'], ax: 728, ay: 130, chip: ['RB', 'R1'] },
+	{ slot: 'RS', els: ['RIGHT_STICK'], ax: 637, ay: 284, chip: ['RS', 'RS'] },
+];
+const FACE: Slot[] = [
+	{ slot: 'SOUTH', els: ['SOUTH'], ax: 727, ay: 208, chip: ['A', '✕'] },
+	{ slot: 'EAST', els: ['EAST'], ax: 727, ay: 208, chip: ['B', '○'] },
+	{ slot: 'WEST', els: ['WEST'], ax: 727, ay: 208, chip: ['X', '□'] },
+	{ slot: 'NORTH', els: ['NORTH'], ax: 727, ay: 208, chip: ['Y', '△'] },
+];
+const TOP: Slot[] = [
+	{ slot: 'BACK', els: ['BACK'], ax: 505, ay: 196, chip: ['⧉', '⧉'] },
+	{ slot: 'START', els: ['START'], ax: 575, ay: 196, chip: ['≡', '≡'] },
+];
+
+// Short names for ReCarbon's own Settings keys, per slot where they differ.
+const SETTINGS_SHORT: Record<string, Record<string, string>> = {
+	open: { BACK: 'Hold both', START: 'Settings' },
+	pages: { LB: 'Previous tab', RB: 'Next tab' },
+	navigate: { default: 'Choose / change' },
+	activate: { default: 'Set key / select' },
+	clearSlot: { default: 'Clear key slot' },
+	resetControl: { default: 'Reset control' },
+	close: { default: 'Close / back' },
+};
+const QUALIFIER: Record<string, string> = { lsx: '← →', lsy: '↑ ↓', lsc: 'press', rsc: 'press' };
+const VERIFIED = new Set(['tested', 'automated', 'hand-verified']);
+
+// "Steer left / right" reads as "Steer" beside a stick: the drawing shows the
+// directions. The list and the detail panel keep the full name.
+const brief = (action: string) => action.replace(/^(\w+) (?:up|down|left|right)(?: \/ (?:up|down|left|right))+$/, '$1');
+
+type Entry = { id: string; text: string; status: Callout['status']; qual: string };
+function entries(mode: Mode, slot: Slot): Entry[] {
+	return CALLOUTS[mode]
+		.filter((c) => c.pad.some((p) => slot.els.includes(p)))
+		.map((c) => {
+			const key = c.id.slice(mode.length + 1);
+			const short = mode === 'settings' ? (SETTINGS_SHORT[key]?.[slot.slot] ?? SETTINGS_SHORT[key]?.default) : undefined;
+			return {
+				id: c.id,
+				text: short ?? (c.status === 'unverified' ? 'to verify' : brief(c.action)),
+				status: c.status,
+				qual: QUALIFIER[c.cluster ?? ''] ?? '',
+			};
+		});
+}
+// One label: the best-known entry as its line, the others as small notes.
+function label(mode: Mode, slot: Slot) {
+	const all = entries(mode, slot);
+	if (!all.length) return null;
+	const main = all.find((e) => e.status !== 'unverified') ?? all[0];
+	const subs = all.filter((e) => e !== main).map((e) => `${e.qual ? `${e.qual}: ` : ''}${e.text}`);
+	return { main, subs, ids: all.map((e) => e.id).join(' ') };
+}
+const chipW = (chip: [string, string]) => Math.max(26, Math.max(chip[0].length, chip[1].length) * 9 + 12);
+// A small mark on game actions that are expected but not yet hand-tested.
+// ReCarbon's own Settings keys aren't game actions, so they carry none.
+const markFor = (mode: Mode) => (s: Callout['status']) =>
+	mode === 'settings' || VERIFIED.has(s) || s === 'unverified' ? '' : STATUS[s].icon;
+
+type Row = { slot: Slot; y: number; l: NonNullable<ReturnType<typeof label>> };
+function column(mode: Mode, slots: Slot[]): Row[] {
+	const rows: Row[] = [];
+	let bottom = -Infinity;
+	for (const slot of slots) {
+		const l = label(mode, slot);
+		if (!l) continue;
+		const y = Math.max(slot.ay, bottom + 25);
+		rows.push({ slot, y, l });
+		bottom = y + 11 + 16 * l.subs.length;
+	}
+	return rows;
+}
+function faceRows(mode: Mode, after: number): Row[] {
+	const found = FACE.map((slot) => ({ slot, l: label(mode, slot) })).filter((r) => r.l);
+	const start = Math.max(after, 208 - ((found.length - 1) * 26) / 2);
+	return found.map((r, i) => ({ slot: r.slot, y: start + i * 26, l: r.l! }));
+}
+const guides = modes.map((mode) => {
+	const left = column(mode, LEFT);
+	const rightTop = column(mode, RIGHT.slice(0, 2));
+	const lastTop = rightTop.at(-1);
+	const face = faceRows(mode, lastTop ? lastTop.y + 11 + 16 * lastTop.l.subs.length + 22 : 0);
+	const lastFace = face.at(-1);
+	const rs = column(mode, RIGHT.slice(2)).map((r) => ({ ...r, y: Math.max(r.y, lastFace ? lastFace.y + 30 : r.y) }));
+	const top = TOP.map((slot) => ({ slot, l: label(mode, slot) })).filter((r) => r.l);
+	return { mode, left, right: [...rightTop, ...rs], face, top };
+});
+const LX = 300; // left chips end here
+const RX = 780; // right chips start here
 ---
 
-<svg class="pad" viewBox="0 0 640 430" role="img" aria-labelledby="pad-title">
-	<title id="pad-title">A generic Xbox-layout controller. ReCarbon's mapped buttons are lit for the selected mode; the list beside it names each one.</title>
+<svg
+	class="pad"
+	viewBox={`${VX} 0 ${VW} ${H}`}
+	data-full-box={`${VX} 0 ${VW} ${H}`}
+	data-pad-box={`${OX} ${OY} 640 430`}
+	role="img"
+	aria-labelledby="pad-title"
+>
+	<title id="pad-title">
+		A generic Xbox-layout controller with each button's action in the selected mode. The list beside it names each one.
+	</title>
+	<g transform={`translate(${OX} ${OY})`}>
+
 	<defs>
 		<linearGradient id="pad-body" x1="0" y1="0" x2="0" y2="1">
 			<stop offset="0" stop-color="#2a303b"></stop>
@@ -49,19 +172,19 @@ const dpad = [
 	<!-- Triggers and bumpers, seen from above the top edge. -->
 	<g {...attrs('LEFT_TRIGGER')}>
 		<path class="part" d="M 150 70 q 10 -40 70 -42 q 34 0 38 22 l 4 30 z"></path>
-		<text class="lbl" x="206" y="66">LT</text>
+		<text class="lbl xb" x="206" y="66">LT</text><text class="lbl ps" x="206" y="66">L2</text>
 	</g>
 	<g {...attrs('RIGHT_TRIGGER')}>
 		<path class="part" d="M 490 70 q -10 -40 -70 -42 q -34 0 -38 22 l -4 30 z"></path>
-		<text class="lbl" x="434" y="66">RT</text>
+		<text class="lbl xb" x="434" y="66">RT</text><text class="lbl ps" x="434" y="66">R2</text>
 	</g>
 	<g {...attrs('LEFT_SHOULDER')}>
 		<path class="part" d="M 128 112 q 20 -30 90 -32 l 52 2 l 4 22 q -70 -2 -146 8 z"></path>
-		<text class="lbl" x="212" y="102">LB</text>
+		<text class="lbl xb" x="212" y="102">LB</text><text class="lbl ps" x="212" y="102">L1</text>
 	</g>
 	<g {...attrs('RIGHT_SHOULDER')}>
 		<path class="part" d="M 512 112 q -20 -30 -90 -32 l -52 2 l -4 22 q 70 -2 146 8 z"></path>
-		<text class="lbl" x="428" y="102">RB</text>
+		<text class="lbl xb" x="428" y="102">RB</text><text class="lbl ps" x="428" y="102">R1</text>
 	</g>
 
 	<path
@@ -94,19 +217,22 @@ const dpad = [
 		face.map((b) => (
 			<g {...attrs(b.el)}>
 				<circle class="part" cx={b.x} cy={b.y} r="17" />
-				<text class="lbl" x={b.x} y={b.y + 6} text-anchor="middle">
+				<text class="lbl xb" x={b.x} y={b.y + 6} text-anchor="middle">
 					{b.l}
+				</text>
+				<text class="lbl ps" x={b.x} y={b.y + 6} text-anchor="middle">
+					{b.ps}
 				</text>
 			</g>
 		))
 	}
 	<g {...attrs('BACK')}>
 		<rect class="part" x="272" y="176" width="26" height="16" rx="8"></rect>
-		<text class="lbl tiny" x="285" y="212" text-anchor="middle">View</text>
+		<text class="lbl tiny xb" x="285" y="212" text-anchor="middle">View</text><text class="lbl tiny ps" x="285" y="212" text-anchor="middle">Create</text>
 	</g>
 	<g {...attrs('START')}>
 		<rect class="part" x="342" y="176" width="26" height="16" rx="8"></rect>
-		<text class="lbl tiny" x="355" y="212" text-anchor="middle">Menu</text>
+		<text class="lbl tiny xb" x="355" y="212" text-anchor="middle">Menu</text><text class="lbl tiny ps" x="355" y="212" text-anchor="middle">Options</text>
 	</g>
 	<g {...attrs('GUIDE')}>
 		<circle class="part" cx="320" cy="140" r="17"></circle>
@@ -129,6 +255,101 @@ const dpad = [
 			<text class="lbl tiny" x="361" y="380" text-anchor="middle">P2</text>
 		</g>
 	</g>
+
+	</g>
+
+	<g class="guide" aria-hidden="true">
+		{
+			guides.map((g) => (
+				<g data-for-mode={g.mode}>
+					{g.left.map((r) => {
+						const w = chipW(r.slot.chip);
+						const cx = LX - w;
+						return (
+							<g class="gl" data-callouts={r.l.ids} data-el={r.slot.els[0]}>
+								<path class="g-line" d={`M ${LX + 6} ${r.y} H ${Math.max(LX + 6, r.slot.ax - 18)} L ${r.slot.ax} ${r.slot.ay}`} />
+								<g class="g-chip">
+									<rect x={cx} y={r.y - 11} width={w} height="22" rx="4" />
+									<text class="xb" x={cx + w / 2} y={r.y + 5} text-anchor="middle">{r.slot.chip[0]}</text>
+									<text class="ps" x={cx + w / 2} y={r.y + 5} text-anchor="middle">{r.slot.chip[1]}</text>
+								</g>
+								<text class:list={['g-text', { tbd: r.l.main.status === 'unverified' }]} x={cx - 8} y={r.y + 6} text-anchor="end">
+									{r.l.main.text}
+									{markFor(g.mode)(r.l.main.status) && <tspan class="g-mark" dx="4">{markFor(g.mode)(r.l.main.status)}</tspan>}
+								</text>
+								{r.l.subs.map((t, i) => (
+									<text class="g-sub" x={cx - 8} y={r.y + 22 + 16 * i} text-anchor="end">{t}</text>
+								))}
+							</g>
+						);
+					})}
+					{g.right.map((r) => {
+						const w = chipW(r.slot.chip);
+						return (
+							<g class="gl" data-callouts={r.l.ids} data-el={r.slot.els[0]}>
+								<path class="g-line" d={`M ${RX - 6} ${r.y} H ${Math.min(RX - 6, r.slot.ax + 18)} L ${r.slot.ax} ${r.slot.ay}`} />
+								<g class="g-chip">
+									<rect x={RX} y={r.y - 11} width={w} height="22" rx="4" />
+									<text class="xb" x={RX + w / 2} y={r.y + 5} text-anchor="middle">{r.slot.chip[0]}</text>
+									<text class="ps" x={RX + w / 2} y={r.y + 5} text-anchor="middle">{r.slot.chip[1]}</text>
+								</g>
+								<text class:list={['g-text', { tbd: r.l.main.status === 'unverified' }]} x={RX + w + 8} y={r.y + 6}>
+									{r.l.main.text}
+									{markFor(g.mode)(r.l.main.status) && <tspan class="g-mark" dx="4">{markFor(g.mode)(r.l.main.status)}</tspan>}
+								</text>
+								{r.l.subs.map((t, i) => (
+									<text class="g-sub" x={RX + w + 8} y={r.y + 22 + 16 * i}>{t}</text>
+								))}
+							</g>
+						);
+					})}
+					{g.face.length > 0 && (
+						<path
+							class="g-line"
+							d={`M 727 208 H ${RX - 14} M ${RX - 14} ${g.face[0].y - 9} V ${g.face.at(-1)!.y + 9}`}
+						/>
+					)}
+					{g.face.map((r) => (
+						<g class="gl" data-callouts={r.l.ids} data-el={r.slot.els[0]}>
+							<g class="g-chip">
+								<rect x={RX} y={r.y - 11} width="26" height="22" rx="4" />
+								<text class="xb" x={RX + 13} y={r.y + 5} text-anchor="middle">{r.slot.chip[0]}</text>
+								<text class="ps" x={RX + 13} y={r.y + 5} text-anchor="middle">{r.slot.chip[1]}</text>
+							</g>
+							<text class:list={['g-text', { tbd: r.l.main.status === 'unverified' }]} x={RX + 34} y={r.y + 6}>
+								{r.l.main.text}
+								{markFor(g.mode)(r.l.main.status) && <tspan class="g-mark" dx="4">{markFor(g.mode)(r.l.main.status)}</tspan>}
+							</text>
+						</g>
+					))}
+					{g.top.map((r) => {
+						const w = chipW(r.slot.chip);
+						const left = r.slot.slot === 'BACK';
+						return (
+							<g class="gl" data-callouts={r.l!.ids} data-el={r.slot.els[0]}>
+								<path class="g-line" d={`M ${r.slot.ax} 48 V ${r.slot.ay - 10}`} />
+								<g class="g-chip">
+									<rect x={r.slot.ax - w / 2} y="22" width={w} height="22" rx="4" />
+									<text class="xb" x={r.slot.ax} y="38" text-anchor="middle">{r.slot.chip[0]}</text>
+									<text class="ps" x={r.slot.ax} y="38" text-anchor="middle">{r.slot.chip[1]}</text>
+								</g>
+								<text
+									class:list={['g-text', { tbd: r.l!.main.status === 'unverified' }]}
+									x={left ? r.slot.ax - w / 2 - 8 : r.slot.ax + w / 2 + 8}
+									y="39"
+									text-anchor={left ? 'end' : 'start'}
+								>
+									{r.l!.main.text}
+									{markFor(g.mode)(r.l!.main.status) && <tspan class="g-mark" dx="4">{markFor(g.mode)(r.l!.main.status)}</tspan>}
+								</text>
+							</g>
+						);
+					})}
+				</g>
+			))
+		}
+		<text class="g-sub" x={OX + 320} y={H - 8} text-anchor="middle">Back paddles and extra buttons: not mapped by ReCarbon</text>
+	</g>
 </svg>
 
 <style>
@@ -136,7 +357,6 @@ const dpad = [
 		display: block;
 		width: 100%;
 		height: auto;
-		max-height: 32rem;
 		user-select: none;
 		-webkit-user-select: none;
 		touch-action: manipulation;
@@ -227,5 +447,83 @@ const dpad = [
 	}
 	:global([data-mode]) .pad-el.is-hot[data-el] .lbl {
 		fill: #fff;
+	}
+
+	/* The guide: action names on short dotted lines. */
+	.g-line {
+		fill: none;
+		stroke: #6b7486;
+		stroke-width: 1.2;
+		stroke-dasharray: 2 4;
+	}
+	.g-chip rect {
+		fill: #0f1216;
+		stroke: #5a6377;
+		stroke-width: 1.2;
+	}
+	.g-chip text {
+		font-family: var(--rn-font-display);
+		font-weight: 700;
+		font-size: 14px;
+		fill: #e9eef5;
+	}
+	.g-text {
+		font-family: var(--rn-font-display);
+		font-weight: 700;
+		font-style: italic;
+		font-size: 19px;
+		fill: #e9eef5;
+	}
+	.g-text.tbd {
+		font-family: var(--rn-font-body);
+		font-weight: 500;
+		font-size: 15.5px;
+		fill: #8a94a6;
+	}
+	.g-mark {
+		font-style: normal;
+		font-size: 12px;
+		fill: var(--rn-amber);
+	}
+	.g-sub {
+		font-family: var(--rn-font-body);
+		font-size: 13.5px;
+		fill: #8a94a6;
+	}
+	.gl {
+		cursor: pointer;
+		transition: opacity var(--rn-fast);
+	}
+	.gl.is-hot .g-text:not(.tbd) {
+		fill: color-mix(in srgb, var(--mode-color) 70%, #fff);
+	}
+	.gl.is-hot .g-chip rect,
+	.gl.is-hot .g-line {
+		stroke: color-mix(in srgb, var(--mode-color) 70%, #fff);
+	}
+	:global(.has-hot) .gl:not(.is-hot) {
+		opacity: 0.5;
+	}
+	/* Labels for the selected mode only. */
+	:global([data-mode='driving']) [data-for-mode]:not([data-for-mode='driving']),
+	:global([data-mode='menu']) [data-for-mode]:not([data-for-mode='menu']),
+	:global([data-mode='settings']) [data-for-mode]:not([data-for-mode='settings']) {
+		display: none;
+	}
+	/* Xbox names by default; PlayStation-style ones when chosen. */
+	.ps {
+		display: none;
+	}
+	:global([data-labels='ps']) .ps {
+		display: inline;
+	}
+	:global([data-labels='ps']) .xb {
+		display: none;
+	}
+	/* On a phone the names are too small to read: the pad alone, with the list. */
+	@media (max-width: 40rem) {
+		.guide {
+			display: none;
+		}
 	}
 </style>

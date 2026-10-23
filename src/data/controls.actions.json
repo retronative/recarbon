@@ -1,5 +1,6 @@
 {
 	"$comment": "Hand-written overlay on controls.generated.json (docs/PLAN.md §2): what each Xbox control does in the game, per mode, with a status and its evidence. Ids must exist in the generated file; the build fails otherwise. Never upgrade a status here without the evidence that does it. An action with no label is shown as 'to verify' and never named.",
+	"testedControllers": [],
 	"binding": {
 		"keyboard": {
 			"status": "tested",
@@ -11,7 +12,7 @@
 		},
 		"physicalController": {
 			"status": "pending",
-			"evidence": "ROADMAP M5: a physical controller hand test, with an 8BitDo due about 2026-10-30. Until it passes, nothing on a real pad is verified."
+			"evidence": "ROADMAP M5: a physical controller hand test, due about 2026-10-30. Until it passes, nothing on a real pad is verified."
 		},
 		"virtualController": {
 			"status": "automated",
