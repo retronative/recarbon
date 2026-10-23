@@ -46,6 +46,13 @@ recompile recomp_pass1.log
 "$PY" survey/fix_switch_tables.py
 "$PY" survey/leaf_switch_bounds.py --write
 "$PY" survey/find_entry_points.py --write
+# ReCarbon: the generated lists must be [main]'s keys. Written after a table
+# (a [[midasm_hook]]), they would be that table's, and XenonRecomp would
+# recompile with no function bounds (thousands of "switch case outside function").
+"$PY" -c 'import sys, tomllib
+main = tomllib.load(open("config/recarbon.toml", "rb"))["main"]
+missing = [k for k in ("functions", "secondary_entries") if k not in main]
+sys.exit(f"config/recarbon.toml: {missing} not in [main] (written after a table?)" if missing else 0)'
 recompile recomp.log
 # ReCarbon: find_entry_points.py judged against pass 1's function map, which
 # the leaf bounds just changed (an entry XenonRecomp found on its own in pass 1
