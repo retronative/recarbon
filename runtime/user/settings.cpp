@@ -244,14 +244,14 @@ namespace settings
             // Controls (Settings > Controls; hid/key_map.h reads them). The
             // defaults are v0.1.4's keys: the arrows steer as well as A
             // and D, and are the D-pad; O/L/K/; are the right stick.
-            KeyOption(Id::KeyRightTrigger, "right_trigger", "Right Trigger", "Gas in the game's default layout.", "w"),
-            KeyOption2(Id::KeyRightTrigger2, "right_trigger_2", "Right Trigger", "none"),
-            KeyOption(Id::KeyLeftTrigger, "left_trigger", "Left Trigger", "Brake and reverse in the game's default layout.", "s"),
-            KeyOption2(Id::KeyLeftTrigger2, "left_trigger_2", "Left Trigger", "none"),
-            KeyOption(Id::KeyLeftStickLeft, "left_stick_left", "Left Stick Left", "Steer left.", "a"),
-            KeyOption2(Id::KeyLeftStickLeft2, "left_stick_left_2", "Left Stick Left", "left"),
-            KeyOption(Id::KeyLeftStickRight, "left_stick_right", "Left Stick Right", "Steer right.", "d"),
-            KeyOption2(Id::KeyLeftStickRight2, "left_stick_right_2", "Left Stick Right", "right"),
+            KeyOption(Id::KeyRightTrigger, "right_trigger", "Throttle", "Right Trigger (keys.right_trigger). Confirmed in play on the keyboard.", "w"),
+            KeyOption2(Id::KeyRightTrigger2, "right_trigger_2", "Throttle", "none"),
+            KeyOption(Id::KeyLeftTrigger, "left_trigger", "Brake", "Left Trigger (keys.left_trigger). Braking is confirmed in play; reversing isn't yet.", "s"),
+            KeyOption2(Id::KeyLeftTrigger2, "left_trigger_2", "Brake", "none"),
+            KeyOption(Id::KeyLeftStickLeft, "left_stick_left", "Steering Left", "Left Stick, left (keys.left_stick_left). Confirmed in play.", "a"),
+            KeyOption2(Id::KeyLeftStickLeft2, "left_stick_left_2", "Steering Left", "left"),
+            KeyOption(Id::KeyLeftStickRight, "left_stick_right", "Steering Right", "Left Stick, right (keys.left_stick_right). Confirmed in play.", "d"),
+            KeyOption2(Id::KeyLeftStickRight2, "left_stick_right_2", "Steering Right", "right"),
             KeyOption(Id::KeyLeftStickUp, "left_stick_up", "Left Stick Up", "The left stick pushed up (menus).", "up"),
             KeyOption2(Id::KeyLeftStickUp2, "left_stick_up_2", "Left Stick Up", "none"),
             KeyOption(Id::KeyLeftStickDown, "left_stick_down", "Left Stick Down", "The left stick pulled down.", "down"),

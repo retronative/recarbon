@@ -71,10 +71,10 @@ int main()
     // 1, named <key>_2, with the row's label.
     struct Default { Id id; const char* key; const char* label; const char* first; const char* second; };
     const Default defaults[] = {
-        { Id::KeyRightTrigger, "right_trigger", "Right Trigger", "w", "none" },
-        { Id::KeyLeftTrigger, "left_trigger", "Left Trigger", "s", "none" },
-        { Id::KeyLeftStickLeft, "left_stick_left", "Left Stick Left", "a", "left" },
-        { Id::KeyLeftStickRight, "left_stick_right", "Left Stick Right", "d", "right" },
+        { Id::KeyRightTrigger, "right_trigger", "Throttle", "w", "none" },
+        { Id::KeyLeftTrigger, "left_trigger", "Brake", "s", "none" },
+        { Id::KeyLeftStickLeft, "left_stick_left", "Steering Left", "a", "left" },
+        { Id::KeyLeftStickRight, "left_stick_right", "Steering Right", "d", "right" },
         { Id::KeyLeftStickUp, "left_stick_up", "Left Stick Up", "up", "none" },
         { Id::KeyLeftStickDown, "left_stick_down", "Left Stick Down", "down", "none" },
         { Id::KeyA, "a", "A", "space", "none" },
