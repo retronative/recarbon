@@ -8,8 +8,12 @@ Native recompilation of Need for Speed: Carbon (Xbox 360) for Apple Silicon.
 > trademarks of Electronic Arts Inc. and are used here only to describe the game.
 >
 > **No game files are included or distributed.** You need your own legally obtained copy of
-> the Xbox 360 disc. The repository contains no game code, assets or executables, and no code
-> generated from them. Please don't ask for, or share, game files or disc images.
+> the Xbox 360 disc. The repository contains no game code, assets or executables. It does contain
+> metadata from analysing the game's executable: function and jump-table addresses (`config/`),
+> the installer's list of disc files with their sizes and SHA-256 hashes
+> (`runtime/install/manifest.inc`), and the names of the system functions the game imports
+> (`runtime/kernel/import_stubs.cpp`). The recompiled code is generated on your Mac from your own
+> copy and is never committed. Please don't ask for, or share, game files or disc images.
 
 ## Status
 
