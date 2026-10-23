@@ -184,24 +184,45 @@ recarbon_test(switch_tables_test ARGS ${ROOT}/config/switch_tables.toml ${ROOT}/
 # whole multiple of 60 Hz (video/refresh_fit.cpp, video/refresh_multiple.h).
 # From SpeedBreaker v0.1.8's (ReCarbon M8 tests).
 recarbon_test(refresh_fit_test SOURCES ${RT}/video/refresh_fit.cpp)
+# Upscaling, from SpeedBreaker v0.1.8's (ReCarbon M8 tests): which pass draws a
+# frame and FSR 1's GLSL (video/fsr1.cpp, with runtime/generated/fsr1_headers.inc;
+# it writes the GLSL to fsr1_glsl, compiled to SPIR-V after it where
+# glslangValidator is installed), and Upscaling's values in settings.toml
+# (user/settings.cpp), in a scratch folder.
+recarbon_test(fsr1_test SOURCES ${RT}/video/fsr1.cpp ${RT}/video/picture_fit.cpp
+    ARGS ${RT}/thirdparty/fsr1 ${RT}/video ${CMAKE_CURRENT_BINARY_DIR}/fsr1_glsl)
+target_include_directories(fsr1_test PRIVATE ${CMAKE_BINARY_DIR}/runtime/generated)
+find_program(RECARBON_GLSLANG_VALIDATOR glslangValidator)
+if(RECARBON_GLSLANG_VALIDATOR)
+    foreach(shader easu.comp rcas.frag rcas_tone.frag)
+        add_test(NAME fsr1_glsl_check_${shader} COMMAND ${RECARBON_GLSLANG_VALIDATOR} -V --target-env vulkan1.1
+            ${CMAKE_CURRENT_BINARY_DIR}/fsr1_glsl/${shader} -o ${CMAKE_CURRENT_BINARY_DIR}/fsr1_glsl/${shader}.spv)
+        set_tests_properties(fsr1_glsl_check_${shader} PROPERTIES DEPENDS fsr1_test)
+    endforeach()
+endif()
+recarbon_test(settings_scaling_test SOURCES ${RT}/user/settings.cpp ${RT}/user/atomic_file.cpp
+    ARGS ${CMAKE_CURRENT_BINARY_DIR}/settings_scaling_scratch)
+target_include_directories(settings_scaling_test SYSTEM PRIVATE ${ROOT}/tools/XenonRecomp/thirdparty/tomlplusplus/include)
 # scripts/frame_times.py (M7 frame pacing) on synthetic frame logs with known
 # answers, and the runtime's log and CSV formats it reads. Python 3.9+.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
 add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/frame_times_test.py)
 
-# Not ported from SpeedBreaker (one line each: why).
-# edge_bars_test: MW's police vid-cam bars, intro frames and results backdrop.
+# Not ported from SpeedBreaker v0.1.8 (one line each: why).
+# edge_bars_test, band_filter_test, fade_layers_test: the edge-bar fills and the
+#   band split act only with a view scale below 1, which needs MW's view hooks;
+#   Carbon has none (game/title_hooks.cpp).
 # menu_borders_test: MW's Showcase vignette and Blacklist bio panel (GitHub #19).
-# glare_fit_test: game/glare.h, removed with MW's game layer.
-# front_end_matrix_test: game/front_end_matrix.h, removed (MW's front-end matrix hook).
-# whole_vblanks_test: game/whole_vblanks.h, removed (MW's game time).
-# light_trails_test: game/light_trails.h, removed (MW's nitrous trails, GitHub #10).
+# glare_fit_test, front_end_matrix_test, whole_vblanks_test, light_trails_test,
+#   player_slots_test, split_views_test, ea_cpu_budget_test: MW's game layer
+#   (game/*.h, apu/ea_cpu_budget.h), removed.
+# hfr_blend_test, hfr_grid_test, hfr_schedule_test, wheel_map_test: v0.1.8
+#   features ReCarbon's runtime doesn't have (HFR, wheels).
+# refresh_notice_test: v0.1.8's notice (its HFR inputs); ReCarbon's is older.
+# scale_budget_test: the iPhone and iPad budgets only.
+# code_signature_test, memory_status_test: read only on iOS (a Mac build reads no
+#   signature); memory_status's Mac part is the [memory] log line.
+# gpu_choice_test: picks among several GPUs; an Apple silicon Mac has one.
+# vblank_timer_test, vblank_lock_sim: timing-sensitive (scheduler latency).
 # movie_cadence_sim.py: MW's movie cadence (not a ctest in SpeedBreaker either).
 # launcher_prime_test.sh: needs scripts/steamos/bundle/speedbreaker.sh, which ReCarbon doesn't have.
-# gpu_choice_test,
-#   band_filter_test, scale_budget_test,
-#   refresh_notice_test,
-#   code_signature_test, memory_status_test,
-#   settings_scaling_test, fsr1_test: not checked against ReCarbon's runtime yet;
-#   deferred to keep this first set small.
-# vblank_timer_test, vblank_lock_sim: timing-sensitive (scheduler latency); deferred.
