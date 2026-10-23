@@ -59,9 +59,12 @@ h1#_top {
 	box-shadow: none;
 	padding: 0.6rem;
 }
-.sl-menu-button {
-	display: grid;
-	place-items: center;
+/* Only below 50rem: from there Starlight hides the button (md:sl-hidden). */
+@media (max-width: 49.99rem) {
+	.sl-menu-button {
+		display: grid;
+		place-items: center;
+	}
 }
 .sl-menu-button svg {
 	width: 22px;
