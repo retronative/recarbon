@@ -3,13 +3,14 @@
 ReCarbon is free software under the GNU General Public License, version 3 or (at your option) any
 later version (GPL-3.0-or-later; [`COPYING`](COPYING), [`NOTICE`](NOTICE)). It is derived from
 SpeedBreaker, Copyright (C) 2026 project(u) and SpeedBreaker contributors (GPL-3.0-or-later). It is
-built from software by others under their own licenses, listed here (as SpeedBreaker lists them;
-the rows mention SpeedBreaker's downloads where they did). The license texts are in
+built from software by others under their own licenses, listed here. The license texts are in
 [`LICENSES/`](LICENSES).
 
-ReCarbon publishes no downloads yet. Development builds link Homebrew's SDL3, Vulkan loader,
-glslang, SPIRV-Tools and MoltenVK dynamically. A ReCarbon release must carry these notices and
-license texts with it, as SpeedBreaker's do.
+ReCarbon publishes no downloads yet. Its one deliverable is the Mac app (`ReCarbon.app`, Apple
+silicon, macOS 27 or later), built by [`scripts/macos/make_app.py`](scripts/macos/make_app.py). The
+app bundles SDL3, the Vulkan loader, glslang, SPIRV-Tools and MoltenVK, and carries these notices,
+the license texts and each bundled library's license files in `Contents/Resources/licenses/`. A
+ReCarbon release must carry them too.
 
 ## Compiled into ReCarbon (as into SpeedBreaker)
 
@@ -32,23 +33,22 @@ license texts with it, as SpeedBreaker's do.
 | **AMD FidelityFX Super Resolution 1** (FSR 1, `ffx_a.h` and `ffx_fsr1.h` at commit a21ffb8): Copyright (c) 2021 Advanced Micro Devices, Inc. | Settings > Graphics > Upscaling's FSR 1: its EASU and RCAS shader code, compiled into the game's shaders, and its constant setup (`runtime/thirdparty/fsr1`, unmodified). | MIT | [`LICENSES/FidelityFX-FSR-MIT.txt`](LICENSES/FidelityFX-FSR-MIT.txt) |
 | **FFmpeg** 7.1.1: the FFmpeg developers | The XMA1, XMA2 and WMA Pro audio decoders, linked statically. Built without any GPL parts, with one SpeedBreaker change: [`patches/ffmpeg/0001-xma-single-stream-no-holdback.patch`](patches/ffmpeg/0001-xma-single-stream-no-holdback.patch) (no sample hold-back for single-stream XMA, which the game's audio mixer depends on). Source: `https://ffmpeg.org/releases/ffmpeg-7.1.1.tar.xz` plus that patch; [`scripts/build_ffmpeg_xma.sh`](scripts/build_ffmpeg_xma.sh) builds it. | LGPL-2.1-or-later | [`LICENSES/FFmpeg-LGPL-2.1.txt`](LICENSES/FFmpeg-LGPL-2.1.txt) |
 
-## Libraries in the downloads
+## Libraries in the Mac app
 
 | Project | Where | License | Text |
 |---|---|---|---|
-| **SDL3**: Copyright (C) 1997-2026 Sam Lantinga | Windows, input, audio and the app's lifecycle. In the Mac app, both SteamOS downloads and the iPhone and iPad IPA. It includes HIDAPI (controllers; Copyright (c) 2010 Alan Ott, Signal 11 Software; under its BSD-style license, one of the three it offers) and yuv2rgb (Copyright (c) 2016 Adrien Descamps). | zlib; HIDAPI and yuv2rgb: BSD-3-Clause | [`LICENSES/SDL3-Zlib.txt`](LICENSES/SDL3-Zlib.txt); [`LICENSES/HIDAPI-BSD-3-Clause.txt`](LICENSES/HIDAPI-BSD-3-Clause.txt); [`LICENSES/yuv2rgb-BSD-3-Clause.txt`](LICENSES/yuv2rgb-BSD-3-Clause.txt) |
-| **glslang**: The Khronos Group Inc. and others | Compiles the game's shaders while it runs. In the Mac app, both SteamOS downloads and the iPhone and iPad IPA (without its optimizer). | BSD-3-Clause and others (its own list) | [`LICENSES/glslang.txt`](LICENSES/glslang.txt) |
-| **SPIRV-Tools**: The Khronos Group Inc. and others | Used by glslang. In the Mac app and both SteamOS downloads. | Apache-2.0 | [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt) |
-| **MoltenVK** (with SPIRV-Cross): Copyright (c) 2015-2026 The Brenwill Workshop Ltd., The Khronos Group Inc. | Vulkan on Apple's Metal. In the Mac app and the iPhone and iPad IPA (and an iPhone or iPad build). It includes cereal (Copyright (c) 2013-2022 Randolph Voorhies, Shane Grant; BSD-3-Clause), which saves its shader conversions, and SPIRV-Tools (below). | Apache-2.0; cereal: BSD-3-Clause | [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt); [`LICENSES/cereal-BSD-3-Clause.txt`](LICENSES/cereal-BSD-3-Clause.txt) |
-| **Vulkan Loader**: The Khronos Group Inc., Valve Corporation, LunarG, Inc. | In the Mac app (SteamOS has its own). It includes cJSON (Copyright (c) 2009-2017 Dave Gamble and cJSON contributors). | Apache-2.0; cJSON: MIT | [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt); [`LICENSES/cJSON-MIT.txt`](LICENSES/cJSON-MIT.txt) |
+| **SDL3**: Copyright (C) 1997-2026 Sam Lantinga | The window, input, audio and the app's lifecycle. In the Mac app. It includes HIDAPI (controllers; Copyright (c) 2010 Alan Ott, Signal 11 Software; under its BSD-style license, one of the three it offers) and yuv2rgb (Copyright (c) 2016 Adrien Descamps). | zlib; HIDAPI and yuv2rgb: BSD-3-Clause | [`LICENSES/SDL3-Zlib.txt`](LICENSES/SDL3-Zlib.txt); [`LICENSES/HIDAPI-BSD-3-Clause.txt`](LICENSES/HIDAPI-BSD-3-Clause.txt); [`LICENSES/yuv2rgb-BSD-3-Clause.txt`](LICENSES/yuv2rgb-BSD-3-Clause.txt) |
+| **glslang**: The Khronos Group Inc. and others | Compiles the game's shaders while it runs. In the Mac app. | BSD-3-Clause and others (its own list) | [`LICENSES/glslang.txt`](LICENSES/glslang.txt) |
+| **SPIRV-Tools**: The Khronos Group Inc. and others | Used by glslang (with its optimizer). In the Mac app. | Apache-2.0 | [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt) |
+| **MoltenVK** (with SPIRV-Cross): Copyright (c) 2015-2026 The Brenwill Workshop Ltd., The Khronos Group Inc. | Vulkan on Apple's Metal. In the Mac app. It includes cereal (Copyright (c) 2013-2022 Randolph Voorhies, Shane Grant; BSD-3-Clause), which saves its shader conversions, and SPIRV-Tools (below). | Apache-2.0; cereal: BSD-3-Clause | [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt); [`LICENSES/cereal-BSD-3-Clause.txt`](LICENSES/cereal-BSD-3-Clause.txt) |
+| **Vulkan Loader**: The Khronos Group Inc., Valve Corporation, LunarG, Inc. | In the Mac app. It includes cJSON (Copyright (c) 2009-2017 Dave Gamble and cJSON contributors). | Apache-2.0; cJSON: MIT | [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt); [`LICENSES/cJSON-MIT.txt`](LICENSES/cJSON-MIT.txt) |
 | **Vulkan-Headers** and **SPIRV-Headers**: The Khronos Group Inc. | Headers the game, the Vulkan Loader, glslang and SPIRV-Tools are built with. | Apache-2.0 or MIT (Vulkan-Headers); MIT (SPIRV-Headers) | [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt) or [`LICENSES/Vulkan-Headers-MIT.txt`](LICENSES/Vulkan-Headers-MIT.txt); [`LICENSES/SPIRV-Headers.txt`](LICENSES/SPIRV-Headers.txt) |
-| **GNU C Library** (glibc) and **GCC's runtime libraries** (libstdc++, libgcc_s) | In the SteamOS x86-64 download only, from the Arch Linux packages it was built with (the download's `licenses/README.txt` names each package and version). The Steam Frame download uses SteamOS's own. | glibc: LGPL-2.1-or-later. GCC's runtime: GPL-3.0 with the GCC Runtime Library Exception | in the download's `licenses/` |
+| **GNU C Library** (glibc) and **GCC's runtime libraries** (libstdc++, libgcc_s) | **Not shipped by ReCarbon.** SpeedBreaker's SteamOS downloads carry them; ReCarbon builds only for macOS, where the app uses the system's own C and C++ libraries. Listed for completeness. | glibc: LGPL-2.1-or-later. GCC's runtime: GPL-3.0 with the GCC Runtime Library Exception | in SpeedBreaker's SteamOS downloads |
 
-Every SteamOS download's `licenses/` folder also holds the license files of the exact packages its
-libraries came from. The Mac app's libraries (all but MoltenVK) are built from their projects' own
-source releases by [`scripts/macos/build_deps.sh`](scripts/macos/build_deps.sh), for the oldest macOS
-the app supports; the app's `Contents/Resources/licenses/README.txt` names the version, source archive
-and SHA-256 of each, next to its license files.
+The Mac app's libraries are currently Homebrew's builds, copied into the app by `make_app.py`; the
+app's `Contents/Resources/licenses/README.txt` names each one's project, version and origin
+(Homebrew), next to its license files. Building them from their projects' own source releases (SpeedBreaker's
+`scripts/macos/build_deps.sh`) isn't ported yet (ROADMAP M8).
 
 ## Source code of the LGPL and GPL parts
 
@@ -61,7 +61,8 @@ pinned submodule has it. SpeedBreaker does this with a third-party-source archiv
 
 ## Tools used to build it, not shipped
 
-- **XenonRecomp** (above) and **XenosRecomp**: hedge-dev and contributors, MIT.
+- **XenonRecomp** (above): hedge-dev and contributors, MIT. (**XenosRecomp**, hedge-dev, MIT, which
+  SpeedBreaker lists, is not used by ReCarbon: its shaders are translated while the game runs.)
 - **extract-xiso**: for developers unpacking their own disc image.
 - **Instruction tests** (`tests/`): SpeedBreaker's generated tests and ReCarbon's hand-computed ones.
 
