@@ -242,6 +242,10 @@ customization. The controls criterion is judged on the default mappings.
       still there after a restart.
     - The log doesn't show whether session 1 wrote the save, and no hash was taken between
       the sessions, so persistence rests on what the user saw after the restart.
+  - **Frame pacing:** open. Hand test 4's race averaged 58.5 fps over about 4 minutes. The user
+    felt one brief stutter while driving. The log has spikes of two kinds, neither explained:
+    about 1 s spent in GPU submission (5 frames during the race), and one where the command
+    processor sat idle, like hand test 3's stall (FEASIBILITY §6c).
   - **Still pending:**
     - controls on a controller and on the keyboard;
     - physics;

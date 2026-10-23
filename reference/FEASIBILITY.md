@@ -782,6 +782,44 @@ hand03 3600` with `RECARBON_REAL_HOME=1 RECARBON_MUTE=0`), on the keyboard, at b
   - Session 2 also played the `intro05ng02` cutscene (175.2 s), changed render targets
     (191.6 s and 357.2 s) and saved at 369.5 s. The user's report doesn't cover this part.
 - Next time, take the save's hash between sessions. The route repeats for M7.7 will do that.
+- **Open: frame spikes in the race (hand test 4, cause unconfirmed).**
+  - **User's observation:** one brief stutter while actively driving in the race, not during
+    loading or the results screen. They didn't note a time.
+  - **The race window as a whole** (595–845 s, about 4 minutes, so not the 10 minutes M7.5
+    asks for): 118 two-second intervals averaging 58.5 fps. The lowest interval was 29.6 fps, at
+    610.7 s, just after the race's opening cutscene.
+  - **Two kinds of spike, apart from loading and cutscenes.** Which one the user felt can't be
+    pinned down without a time:
+    - **Kind 1, submit-bound:** most of the frame was spent in the command processor's
+      submission (`submits … ms`).
+      - Frames of about 1 s: 607.8 and 608.9 s (right after the cutscene), then 802.3, 809.6
+        and 811.3 s (each 1016.5–1033.3 ms, with 1003–1014 ms in submissions).
+      - A run of 67–117 ms frames at 778.2–780.0 s and 800.9–801.0 s, with 48–98 ms in
+        submissions.
+      - None of these frames created a shader, a pipeline or an image. File reads were 0 KB,
+        or 128 KB in three of the 1 s frames.
+    - **Kind 2, command processor idle:** one 116.6 ms frame at 796.2 s, idle 100.1 ms, with
+      4.1 ms in submissions. This is the same pattern as hand test 3's 333 ms free-roam stall
+      (idle 311 ms); kind 1 is not.
+  - **The 1 s frames elsewhere:** 7 in session 1 and 7 in session 2. Session 2's include 23.7
+    and 27.1 s while loading the profile, and frames at 193.5, 194.8 and 365.7 s.
+    - Earlier logs from today, same build and also fullscreen by the system: one in session
+      `10-34-04`, none in `10-57-39` and none in hand test 3's `11-36-32`.
+    - Two of session 2's frames (174.5 and 176.2 s, around a cutscene) are the other way round:
+      idle and short of draws, with ~1 s in submissions.
+    - The durations cluster just above 1.0 s (1003–1050 ms).
+  - **What the code says about "submits ms"** (`gpu/renderer.cpp`, the submit path): it counts
+    waiting for the Vulkan queue mutex plus `vkQueueSubmit` itself. On macOS the presenter holds
+    that mutex across `vkQueuePresentKHR`, which is where MoltenVK takes the CAMetalLayer
+    drawable (comment in `video/presenter.cpp`, swapchain setup).
+    - A present waiting about 1 s for a drawable, with the command processor queued behind it,
+      would fit kind 1. That is a candidate, not a finding: the hitch line doesn't split the
+      lock wait from `vkQueueSubmit`, and no present duration was logged.
+    - `RECARBON_LOG_LATENCY=1` already logs the split ("queue lock" vs "vkQueueSubmit" ms/s).
+      A run with it, plus the present's duration, would test this without a code change to the
+      game path.
+  - The other candidates from hand test 3 (shader and pipeline compilation, asset streaming,
+    CPU simulation, GPU sync) also stay open, kind 2 especially. No fix has been attempted.
 
 ### EA audio CPU budget (SpeedBreaker v0.1.8's fix for MW)
 - Carbon's sound engine is RenderWare Audio Core (`rw::audio::core::System`, `Snd9Service`,
