@@ -6,9 +6,10 @@
 // keyboard clusters.
 import Keyboard from './Keyboard.astro';
 import Controller from './Controller.astro';
+import PadGuideList from './PadGuideList.astro';
 import StatusBadge from '../StatusBadge.astro';
 import { KEYBOARD, KEYBOARD_CLUSTERS, KEYBOARD_HEIGHT, KEYBOARD_WIDTH } from '../../data/keyboard-75';
-import { BINDING, CALLOUTS, MODES, type Mode, PAD_NAMES, PAD_NAMES_PS, PAD_UNMAPPED, UI, controlsOfKey, isBindable, keyLabel, keyName } from '../../lib/controls';
+import { BINDING, CALLOUTS, MODES, STATUS, type Mode, PAD_NAMES, PAD_NAMES_PS, PAD_UNMAPPED, UI, controlsOfKey, isBindable, keyLabel, keyName } from '../../lib/controls';
 
 const keyText = (groups: string[][]) => groups.map((g) => g.map(keyLabel).join(' + '));
 // Each pad name as Xbox and PlayStation-style labels (display only).
@@ -98,10 +99,12 @@ const groups = (mode: Mode) => {
 				</div>
 				<Controller />
 			</div>
+			<PadGuideList />
 			<p class="pad-note" data-for-device="controller">
-				<StatusBadge status={BINDING.physicalController.status} />
-				Physical controller: not hand-tested yet. The mapping itself is <StatusBadge status="tested" />. Back paddles
-				and extra buttons: <StatusBadge status="not-mapped" />
+				<span class="pn"><span class="pn-ico is-pending" aria-hidden="true">{STATUS.pending.icon}</span>Not yet tested on a physical controller</span>
+				<span class="pn pn-more"><span class="pn-ico is-tested" aria-hidden="true">{STATUS.tested.icon}</span>Mapping unit-tested</span>
+				<span class="pn pn-more"><span class="pn-ico" aria-hidden="true">{STATUS['not-mapped'].icon}</span>Paddles not mapped</span>
+				<a href="#controller-notes">Notes</a>
 			</p>
 			<div class="detail is-empty" id="garage-detail" aria-live="polite">
 				<p class="detail-empty">Hover, tap or focus a control to see its keys, its settings.toml name and how it was verified.</p>
@@ -429,10 +432,34 @@ const groups = (mode: Mode) => {
 		display: none;
 	}
 	.pad-note {
-		margin: 1rem 0 0;
-		font-size: 0.8rem;
-		line-height: 2;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.2rem 1rem;
+		margin: 0.75rem 0 0;
+		font-size: 0.78rem;
 		color: var(--text-muted);
+	}
+	.pn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+	.pn-ico {
+		font-weight: 700;
+	}
+	.pn-ico.is-pending {
+		color: var(--ink-amber);
+	}
+	.pn-ico.is-tested {
+		color: var(--mode-menu);
+	}
+	.pad-note a {
+		margin-inline-start: auto;
+	}
+	@media (max-width: 40rem) {
+		.pn-more {
+			display: none;
+		}
 	}
 
 	.leaders {
@@ -996,6 +1023,8 @@ const groups = (mode: Mode) => {
 
 		root.addEventListener('click', (e) => {
 			const t = e.target as Element;
+			// "Notes" in the controller footer: open the notes it points to.
+			if (t.closest('a[href="#controller-notes"]')) document.querySelector('#controller-notes')?.setAttribute('open', '');
 			const labels = t.closest<HTMLElement>('[data-set-labels]');
 			if (labels) {
 				root.dataset.labels = labels.dataset.setLabels!;
