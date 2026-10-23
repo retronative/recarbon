@@ -820,6 +820,42 @@ hand03 3600` with `RECARBON_REAL_HOME=1 RECARBON_MUTE=0`), on the keyboard, at b
       game path.
   - The other candidates from hand test 3 (shader and pipeline compilation, asset streaming,
     CPU simulation, GPU sync) also stay open, kind 2 especially. No fix has been attempted.
+  - **Measured: kind 1 reproduced in isolation (lat01b, lat01c, lat01d; 2026-10-23).** Setup:
+    the scripted Quick Race in the isolated user folder, `RECARBON_LOG_LATENCY=1`,
+    `RECARBON_VBLANK_LOG`, and macOS `sample` taking host stacks.
+    - **Every run had kind 1, and not only in the race.** Lat01c had 419–1034 ms frames on the
+      title screen at 53 draws per frame.
+    - **It's waiting for the lock, not a slow submit:** in each such frame, its submission time
+      matches the latency log's queue-lock time for the same second.
+      - lat01b 150.0 s: 1050 ms frame, lock 1038.8 ms/s, `vkQueueSubmit` 25.6 ms/s.
+      - lat01d 143.9 s: 1318 ms frame, lock 1060.6 ms/s.
+      - Each has a gap of the same length between presents in the present log.
+    - **Who holds the lock** (lat01d, sampled over the whole run at 8.55 ms per sample):
+      - The presenter thread spent 282 samples, about 2.41 s, blocked in
+        `-[CAMetalLayer nextDrawable]`, waiting on a semaphore with a timeout. The path is
+        `RunFrame` → its own `vkQueueSubmit`, made while holding the queue mutex → MoltenVK's
+        `getCAMetalDrawable` → `nextDrawable`.
+      - The command processor spent 287 samples, about 2.45 s, waiting for the mutex in
+        `SubmitRecorded`.
+      - The latency log's lock waits for the run total 2.78 s.
+      - So MoltenVK takes the drawable when the command buffer first uses the swapchain image,
+        inside `vkQueueSubmit`, not in `vkQueuePresentKHR` as the comment in `presenter.cpp`
+        says.
+    - **What this establishes:** kind 1 is the presenter waiting for a free CAMetalLayer
+      drawable while holding the queue lock, with the command processor queued behind it.
+      `sample` only gives totals, so the match is between totals; individual spikes weren't
+      caught one by one.
+    - **Still unknown:**
+      - Why no drawable is free for about a second.
+      - Whether `nextDrawable` gives up at its timeout. The spikes cluster at 1.00–1.07 s, and
+        nothing about it is logged.
+      - Whether hand test 4's 1 s frames are the same thing. They have the same signature, but
+        that run had no latency split.
+    - **Kind 2** (command processor idle, no lock wait) happened in every run too, and its cause
+      is still unknown.
+    - `vkQueueSubmit` itself (MoltenVK encodes at submit) took 300–390 ms per second during the
+      race. That cost is spread across frames and isn't the cause of a spike.
+    - No runtime change was made.
 
 ### EA audio CPU budget (SpeedBreaker v0.1.8's fix for MW)
 - Carbon's sound engine is RenderWare Audio Core (`rw::audio::core::System`, `Snd9Service`,
