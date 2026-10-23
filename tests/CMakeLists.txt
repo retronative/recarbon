@@ -129,6 +129,12 @@ recarbon_test(depth24_pack_test ARGS ${RT}/gpu/renderer.cpp)
 recarbon_test(depth_only_test ARGS ${RT}/gpu/renderer.cpp)
 recarbon_test(zpd_report_test)
 recarbon_test(pipeline_cache_header_test)
+# The picture's tone curve (Settings > Display > Brightness) and the 360's
+# display gamma ramp as the game programs it (video/display_tone.h,
+# video/display_gamma.h, header only), Carbon's logged ramp included;
+# presenter.cpp's shaders and settings.cpp's defaults read. From SpeedBreaker
+# v0.1.8's (ReCarbon M8 tests).
+recarbon_test(display_tone_test ARGS ${RT}/video/presenter.cpp ${RT}/user/settings.cpp)
 # scripts/frame_times.py (M7 frame pacing) on synthetic frame logs with known
 # answers, and the runtime's log and CSV formats it reads. Python 3.9+.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
@@ -147,7 +153,7 @@ add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOUR
 # install_folder_test: asserts MW install names (.nfsmw-install*, SpeedBreaker folders) ~20 times; ReCarbon uses .recarbon-install-*; adapt separately.
 # portable_test: asserts the same MW install and folder names ~40 times; adapt separately.
 # launcher_prime_test.sh: needs scripts/steamos/bundle/speedbreaker.sh, which ReCarbon doesn't have.
-# display_tone_test, swapchain_use_test, fullscreen_policy_test,
+# swapchain_use_test, fullscreen_policy_test,
 #   cursor_idle_test: grep runtime sources
 #   for SpeedBreaker's code; deferred to keep this first set small.
 # memory_plan_test,
