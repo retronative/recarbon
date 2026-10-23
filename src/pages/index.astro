@@ -1,0 +1,387 @@
+---
+import RaceLayout from '../layouts/RaceLayout.astro';
+import Hero from '../components/Hero.astro';
+import Keyboard from '../components/garage/Keyboard.astro';
+import { site } from '../site.config';
+import { url } from '../lib/url';
+
+// Measured figures only, each with its date and conditions (PLAN §4).
+const stats = [
+	{ value: '58.5', unit: 'fps', label: 'Average in a career race', note: 'Hand test 4, MacBook Air M5, 720p internal, about 4 min · 2026-10-23' },
+	{ value: '72,864', unit: 'fns', label: 'Functions recompiled to native code', note: '0 recompiler errors or warnings · 2026-10-22' },
+	{ value: '15:00', unit: 'min', label: 'Free-roam without a crash or hang', note: 'Hand test 3, MacBook Air M5 · 2026-10-23' },
+	{ value: '4', unit: 's', label: 'To copy and verify 5.3 GB from a disc image', note: '78 files, alpha packaging check · 2026-10-23' },
+];
+
+// What works now: ReCarbon's roadmap, milestone by milestone.
+const works = [
+	{ m: 'M0–M2', title: 'Recompiled & native', state: 'done', text: 'The whole executable translates to C++ and links into a native arm64 app.' },
+	{ m: 'M3–M4', title: 'Boots & renders', state: 'done', text: 'Kernel, GPU bring-up, the EA logos and the movies, through MoltenVK on Metal.' },
+	{ m: 'M5', title: 'Audio, movies, input', state: 'progress', text: 'Music, lip-sync and keyboard menus pass by hand. A physical controller is next.' },
+	{ m: 'M6', title: 'Saves & free-roam', state: 'evidence', text: 'A career profile saves and reloads; 15 minutes of free-roam ran clean.' },
+	{ m: 'M7', title: 'Racing', state: 'progress', text: 'A career race finished in 1st, with AI racing. Controls and physics are next.' },
+	{ m: 'M8', title: 'Release', state: 'open', text: 'App packaging started; a release still needs libraries built from source.' },
+];
+const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence in', progress: 'In progress', open: 'Not yet' };
+---
+
+<RaceLayout
+	title={`${site.name}: ${site.tagline}`}
+	description="ReCarbon is a native Apple Silicon recompilation of an Xbox 360 racing classic: no emulator, bring your own disc. Unofficial fan project."
+>
+	<Hero />
+
+	<section class="section stats" aria-labelledby="stats-title">
+		<div class="wrap">
+			<p class="eyebrow">Telemetry</p>
+			<h2 id="stats-title" class="display h2">Native on Apple Silicon</h2>
+			<ul class="stat-grid">
+				{
+					stats.map((s) => (
+						<li class="stat cut">
+							<p class="lap">
+								<span class="value">{s.value}</span>
+								<span class="unit">{s.unit}</span>
+							</p>
+							<p class="stat-label">{s.label}</p>
+							<p class="stat-note">{s.note}</p>
+						</li>
+					))
+				}
+			</ul>
+		</div>
+	</section>
+
+	<section class="section" aria-labelledby="works-title">
+		<div class="wrap">
+			<p class="eyebrow">Season progress</p>
+			<h2 id="works-title" class="display h2">What works now</h2>
+			<ol class="cards">
+				{
+					works.map((w) => (
+						<li class={`card cut state-${w.state}`}>
+							<p class="card-top">
+								<span class="m">{w.m}</span>
+								<span class="state">{stateLabel[w.state]}</span>
+							</p>
+							<h3>{w.title}</h3>
+							<p>{w.text}</p>
+						</li>
+					))
+				}
+			</ol>
+			<p class="more"><a href={url('docs/')}>Read the full status in the docs →</a></p>
+		</div>
+	</section>
+
+	<section class="section garage-teaser" aria-labelledby="garage-title">
+		<div class="wrap teaser-grid">
+			<div>
+				<p class="eyebrow">Garage</p>
+				<h2 id="garage-title" class="display h2">Know your controls</h2>
+				<p>
+					Keyboard or controller, in a race, the menus or ReCarbon's own Settings: every default, where it comes from, and
+					how it was verified. Actions not yet tested in a race say so.
+				</p>
+				<a class="btn" href={url('garage/')}>Open the Garage</a>
+			</div>
+			<a class="teaser-board cut" href={url('garage/')} data-mode="driving" aria-label="Open the Garage: interactive controls">
+				<Keyboard />
+			</a>
+		</div>
+	</section>
+
+	<section class="section" aria-labelledby="start-title">
+		<div class="wrap">
+			<p class="eyebrow">Grid</p>
+			<h2 id="start-title" class="display h2">Get started in 3 steps</h2>
+			<ol class="steps">
+				<li class="step cut">
+					<svg class="arc" viewBox="0 0 60 36" aria-hidden="true"><path d="M5 32 A25 25 0 0 1 55 32" pathLength="3" class="arc-1"></path></svg>
+					<h3>Your disc</h3>
+					<p>Make an image of your own Xbox 360 disc. ReCarbon includes no game files.</p>
+				</li>
+				<li class="step cut">
+					<svg class="arc" viewBox="0 0 60 36" aria-hidden="true"><path d="M5 32 A25 25 0 0 1 55 32" pathLength="3" class="arc-2"></path></svg>
+					<h3>Install</h3>
+					<p>The first-run installer copies and verifies the game. Or, in Terminal:</p>
+					<code>ReCarbon --install &lt;image.iso&gt;</code>
+				</li>
+				<li class="step cut">
+					<svg class="arc" viewBox="0 0 60 36" aria-hidden="true"><path d="M5 32 A25 25 0 0 1 55 32" pathLength="3" class="arc-3"></path></svg>
+					<h3>Race</h3>
+					<p>Start ReCarbon. Press <kbd>F1</kbd> (<kbd>Fn</kbd>+<kbd>F1</kbd> on a Mac) for its Settings.</p>
+				</li>
+			</ol>
+			<p class="more">
+				<a href={url('docs/installation/')}>Installation guide →</a> · No public release yet:
+				<a href={url('docs/download/')}>Download</a>
+			</p>
+		</div>
+	</section>
+
+	<section class="section issues" aria-labelledby="issues-title">
+		<div class="wrap">
+			<p class="eyebrow">Pit wall</p>
+			<h2 id="issues-title" class="display h2">Known issues</h2>
+			<ul class="issue-list">
+				<li>Occasional stalls of about a second while driving.</li>
+				<li>Shorter GPU-idle stalls (250–600 ms), cause unknown.</li>
+				<li>No physical controller tested yet.</li>
+				<li>Current builds need macOS 27 or newer.</li>
+			</ul>
+			<p class="more"><a href={url('docs/known-issues/')}>All known issues →</a></p>
+		</div>
+	</section>
+
+	<section class="section credits" aria-labelledby="credits-title">
+		<div class="wrap">
+			<h2 id="credits-title" class="eyebrow">Built on</h2>
+			<p class="credit-strip">
+				<a href="https://github.com/SpeedBreakerProject/speedbreaker">SpeedBreaker</a> by project(u) · XenonRecomp by hedge-dev
+				· Unleashed Recompiled · Xenia · SDL3 · MoltenVK · FFmpeg · Dear ImGui
+			</p>
+			<p class="more"><a href={url('docs/credits/')}>Credits and licenses →</a></p>
+		</div>
+	</section>
+</RaceLayout>
+
+<style>
+	.h2 {
+		font-size: clamp(1.9rem, 4.5vw, 3rem);
+		margin-bottom: 2rem;
+	}
+	.more {
+		margin: 1.5rem 0 0;
+		color: var(--rn-muted);
+	}
+	.more a {
+		font-weight: 600;
+	}
+
+	.stat-grid {
+		display: grid;
+		gap: 1rem;
+		grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.stat {
+		padding: 1.25rem 1.25rem 1rem;
+		background: linear-gradient(160deg, #161a20, #0f1216);
+		border-top: 2px solid var(--rn-neon);
+	}
+	.lap {
+		display: flex;
+		align-items: baseline;
+		gap: 0.4rem;
+		margin: 0;
+		font-family: var(--rn-font-display);
+		font-style: italic;
+		font-weight: 700;
+	}
+	.value {
+		font-size: clamp(2.2rem, 5vw, 3rem);
+		line-height: 1;
+		font-variant-numeric: tabular-nums;
+	}
+	.unit {
+		font-size: 0.9rem;
+		color: var(--rn-neon);
+		text-transform: uppercase;
+	}
+	.stat-label {
+		margin: 0.5rem 0 0;
+		font-weight: 600;
+	}
+	.stat-note {
+		margin: 0.4rem 0 0;
+		font-size: 0.78rem;
+		color: var(--rn-muted);
+	}
+
+	.cards {
+		display: grid;
+		gap: 1rem;
+		grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.card {
+		--c: var(--rn-muted);
+		padding: 1.25rem;
+		background: var(--rn-carbon);
+		border-inline-start: 3px solid var(--c);
+	}
+	.state-done {
+		--c: var(--rn-volt);
+	}
+	.state-evidence {
+		--c: var(--rn-neon);
+	}
+	.state-progress {
+		--c: var(--rn-amber);
+	}
+	.card-top {
+		display: flex;
+		justify-content: space-between;
+		margin: 0;
+		font-family: var(--rn-font-mono);
+		font-size: 0.75rem;
+		text-transform: uppercase;
+	}
+	.state {
+		color: var(--c);
+	}
+	.state::before {
+		content: '● ';
+	}
+	.state-open .state::before {
+		content: '○ ';
+	}
+	.card h3 {
+		margin: 0.6rem 0 0.3rem;
+		font-family: var(--rn-font-display);
+		font-size: 1.25rem;
+	}
+	.card p:last-child {
+		margin: 0;
+		color: #c3cad6;
+		font-size: 0.92rem;
+	}
+
+	.teaser-grid {
+		display: grid;
+		gap: 2rem;
+		align-items: center;
+	}
+	@media (min-width: 60rem) {
+		.teaser-grid {
+			grid-template-columns: 1fr 1.6fr;
+		}
+	}
+	.teaser-grid p {
+		color: #c3cad6;
+		margin: 0 0 1.5rem;
+	}
+	.teaser-board {
+		--mode-color: var(--rn-neon);
+		display: block;
+		padding: 1.25rem;
+		background: radial-gradient(ellipse at 50% 0%, rgb(25 227 255 / 0.1), transparent 60%), #0e1115;
+		border: 1px solid var(--rn-graphite);
+		transition: transform var(--rn-slow) var(--rn-ease);
+	}
+	.teaser-board:hover {
+		transform: translateY(-3px);
+	}
+
+	.steps {
+		display: grid;
+		gap: 1rem;
+		grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		counter-reset: step;
+	}
+	.step {
+		position: relative;
+		padding: 1.25rem;
+		background: var(--rn-carbon);
+		counter-increment: step;
+	}
+	.step::after {
+		content: counter(step);
+		position: absolute;
+		top: 0.75rem;
+		right: 1rem;
+		font-family: var(--rn-font-display);
+		font-style: italic;
+		font-weight: 700;
+		font-size: 2.5rem;
+		color: rgb(233 238 245 / 0.08);
+	}
+	.arc {
+		width: 3.5rem;
+		fill: none;
+		stroke-width: 4;
+		stroke-linecap: round;
+	}
+	.arc path {
+		stroke: var(--rn-neon);
+		stroke-dasharray: 3;
+	}
+	.arc-1 {
+		stroke-dashoffset: 2;
+	}
+	.arc-2 {
+		stroke-dashoffset: 1;
+	}
+	.arc-3 {
+		stroke-dashoffset: 0;
+		stroke: var(--rn-ember) !important;
+	}
+	.step h3 {
+		margin: 0.5rem 0 0.25rem;
+		font-family: var(--rn-font-display);
+		font-size: 1.2rem;
+		text-transform: uppercase;
+	}
+	.step p {
+		margin: 0;
+		color: #c3cad6;
+	}
+	.step code {
+		display: block;
+		margin-top: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		font-family: var(--rn-font-mono);
+		font-size: 0.82rem;
+		background: #0b0d10;
+		border: 1px solid var(--rn-graphite);
+		overflow-wrap: anywhere;
+	}
+	.step kbd {
+		font-family: var(--rn-font-mono);
+		font-size: 0.8em;
+		padding: 0 0.35em;
+		border: 1px solid #3a4250;
+		border-bottom-width: 2px;
+		border-radius: 3px;
+	}
+
+	.issue-list {
+		display: grid;
+		gap: 0.6rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.issue-list li {
+		padding: 0.75rem 1rem;
+		background: repeating-linear-gradient(-45deg, rgb(255 176 46 / 0.06) 0 10px, transparent 10px 20px), var(--rn-carbon);
+		border-inline-start: 3px solid var(--rn-amber);
+	}
+
+	.credits .eyebrow {
+		font-size: 0.78rem;
+	}
+	.credit-strip {
+		margin: 0;
+		font-family: var(--rn-font-display);
+		font-size: clamp(1rem, 2.2vw, 1.3rem);
+		letter-spacing: 0.04em;
+		color: #c3cad6;
+	}
+	.credit-strip a {
+		color: var(--rn-text);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.teaser-board:hover {
+			transform: none;
+		}
+	}
+</style>

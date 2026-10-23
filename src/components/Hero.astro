@@ -1,0 +1,428 @@
+---
+// The landing hero (PLAN §5). Until real ReCarbon footage is approved (D8),
+// it is the abstract placeholder of §5.5: speed lines and a neon sweep over
+// carbon weave, no invented gameplay. With `site.heroVideo` set, the muted
+// loop is attached by JS after load, and only when the visitor hasn't asked
+// for reduced motion or Save-Data and isn't on a slow connection; it pauses
+// offscreen and in background tabs. `site.trailer` (D5) adds the sound-on
+// video in a dialog, loaded only on demand.
+import { site } from '../site.config';
+import { url } from '../lib/url';
+
+const video = site.heroVideo;
+const trailer = site.trailer;
+const lines = Array.from({ length: 14 }, (_, i) => ({
+	top: 8 + ((i * 37) % 84),
+	delay: -((i * 1.7) % 6).toFixed(2),
+	dur: (3.2 + ((i * 0.9) % 3)).toFixed(2),
+	w: 18 + ((i * 13) % 30),
+	hue: i % 4 === 0 ? 'ember' : 'neon',
+}));
+---
+
+<section class="hero" aria-labelledby="hero-title" data-hero data-video={video ? JSON.stringify(video) : undefined}>
+	<div class="backdrop" aria-hidden="true">
+		{video && <img class="poster" src={video.poster} alt="" fetchpriority="high" decoding="async" />}
+		<svg class="weave" width="100%" height="100%">
+			<defs>
+				<pattern id="carbon" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+					<rect width="16" height="16" fill="#0d1014"></rect>
+					<rect width="8" height="8" fill="#161a20"></rect>
+					<rect x="8" y="8" width="8" height="8" fill="#161a20"></rect>
+					<rect width="8" height="2" fill="#1d222a"></rect>
+					<rect x="8" y="8" width="2" height="8" fill="#1d222a"></rect>
+				</pattern>
+			</defs>
+			<rect width="100%" height="100%" fill="url(#carbon)"></rect>
+		</svg>
+		<div class="sweep"></div>
+		<div class="road"></div>
+		<div class="speed">
+			{lines.map((l) => <i class={l.hue} style={`--top:${l.top}%;--delay:${l.delay}s;--dur:${l.dur}s;--w:${l.w}vw`} />)}
+		</div>
+		<div class="scrim"></div>
+		<div class="hud-frame">
+			<span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+			<svg class="tach" viewBox="0 0 200 120">
+				<path d="M 20 110 A 80 80 0 0 1 180 110" fill="none" stroke="#2a303a" stroke-width="10"></path>
+				<path class="tach-fill" d="M 20 110 A 80 80 0 0 1 180 110" fill="none" stroke="url(#tach-g)" stroke-width="10" pathLength="100"></path>
+				<defs>
+					<linearGradient id="tach-g" x1="0" x2="1">
+						<stop offset="0" stop-color="#19e3ff"></stop>
+						<stop offset="0.75" stop-color="#19e3ff"></stop>
+						<stop offset="1" stop-color="#ff4d2e"></stop>
+					</linearGradient>
+				</defs>
+				<text x="100" y="98" text-anchor="middle">60</text>
+				<text x="100" y="114" text-anchor="middle" class="unit">FPS · DEFAULT</text>
+			</svg>
+		</div>
+	</div>
+
+	<div class="content wrap">
+		<p class="eyebrow">Unofficial fan project · Native on Apple Silicon</p>
+		<h1 id="hero-title" class="display wordmark">
+			<span class="re">Re</span>Carbon
+		</h1>
+		<p class="tagline">{site.tagline}</p>
+		<p class="lede">
+			A static recompilation of the Xbox 360 racing classic: native arm64 code, Metal through MoltenVK, no emulator.
+			Bring your own disc.
+		</p>
+		<div class="ctas">
+			<a class="btn" href={url('docs/download/')}>Download</a>
+			<a class="btn btn--ghost" href={url('docs/installation/')}>Get started</a>
+			{
+				trailer && (
+					<button class="btn btn--ghost" type="button" data-trailer-open>
+						▶ Watch trailer
+					</button>
+				)
+			}
+		</div>
+	</div>
+
+	<button class="motion-toggle" type="button" data-motion-toggle aria-pressed="false" aria-label="Pause background animation">
+		<span aria-hidden="true" class="ico-pause">❚❚</span><span aria-hidden="true" class="ico-play">▶</span>
+	</button>
+
+	{
+		trailer && (
+			<dialog class="trailer" data-trailer aria-label="Trailer">
+				<form method="dialog">
+					<button class="btn btn--ghost close" aria-label="Close trailer">
+						✕
+					</button>
+				</form>
+				<video controls preload="none" playsinline data-src={trailer.src} data-type={trailer.type}>
+					{trailer.captions && <track kind="captions" src={trailer.captions} srclang="en" label="English" default />}
+				</video>
+			</dialog>
+		)
+	}
+</section>
+
+<style>
+	.hero {
+		position: relative;
+		display: grid;
+		align-items: center;
+		min-height: min(88vh, 54rem);
+		min-height: min(88svh, 54rem);
+		overflow: hidden;
+		isolation: isolate;
+	}
+	.backdrop,
+	.backdrop > * {
+		position: absolute;
+		inset: 0;
+	}
+	.backdrop {
+		z-index: -1;
+	}
+	.poster,
+	.backdrop :global(video) {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+	.weave {
+		opacity: 0.9;
+	}
+	.sweep {
+		inset: -40% -20%;
+		background:
+			radial-gradient(40% 35% at 30% 40%, rgb(25 227 255 / 0.22), transparent 70%),
+			radial-gradient(30% 25% at 75% 65%, rgb(255 77 46 / 0.16), transparent 70%);
+		animation: sweep 18s var(--rn-ease) infinite alternate;
+		will-change: transform;
+	}
+	@keyframes sweep {
+		from {
+			transform: translate3d(-6%, -2%, 0) rotate(-4deg);
+		}
+		to {
+			transform: translate3d(6%, 3%, 0) rotate(3deg);
+		}
+	}
+	.road {
+		top: 55%;
+		inset-inline: -50%;
+		bottom: -30%;
+		background:
+			linear-gradient(90deg, transparent 49.6%, rgb(233 238 245 / 0.25) 49.6% 50.4%, transparent 50.4%),
+			repeating-linear-gradient(90deg, transparent 0 11.9%, rgb(25 227 255 / 0.18) 11.9% 12.1%);
+		transform: perspective(600px) rotateX(72deg);
+		transform-origin: 50% 0;
+		mask-image: linear-gradient(180deg, transparent, #000 40%);
+		opacity: 0.6;
+	}
+	.speed i {
+		position: absolute;
+		top: var(--top);
+		left: 0;
+		width: var(--w);
+		height: 2px;
+		background: linear-gradient(90deg, transparent, var(--rn-neon));
+		opacity: 0;
+		animation: streak var(--dur) linear var(--delay) infinite;
+		will-change: transform, opacity;
+	}
+	.speed i.ember {
+		background: linear-gradient(90deg, transparent, var(--rn-ember));
+		height: 1px;
+	}
+	@keyframes streak {
+		0% {
+			transform: translate3d(-40vw, 0, 0);
+			opacity: 0;
+		}
+		15% {
+			opacity: 0.85;
+		}
+		85% {
+			opacity: 0.85;
+		}
+		100% {
+			transform: translate3d(120vw, 0, 0);
+			opacity: 0;
+		}
+	}
+	.scrim {
+		/* keeps the text ≥ 4.5:1 over any frame, footage included */
+		background:
+			linear-gradient(90deg, rgb(11 13 16 / 0.92) 0%, rgb(11 13 16 / 0.7) 45%, rgb(11 13 16 / 0.15) 100%),
+			linear-gradient(0deg, var(--rn-asphalt) 0%, transparent 30%);
+	}
+	.hud-frame {
+		inset: clamp(0.75rem, 3vw, 2rem);
+		pointer-events: none;
+	}
+	.corner {
+		position: absolute;
+		width: 28px;
+		height: 28px;
+		border: 2px solid rgb(25 227 255 / 0.6);
+	}
+	.tl {
+		top: 0;
+		left: 0;
+		border-right: 0;
+		border-bottom: 0;
+	}
+	.tr {
+		top: 0;
+		right: 0;
+		border-left: 0;
+		border-bottom: 0;
+	}
+	.bl {
+		bottom: 0;
+		left: 0;
+		border-right: 0;
+		border-top: 0;
+	}
+	.br {
+		bottom: 0;
+		right: 0;
+		border-left: 0;
+		border-top: 0;
+	}
+	.tach {
+		position: absolute;
+		right: 2.5rem;
+		bottom: 2.5rem;
+		width: clamp(7rem, 14vw, 11rem);
+		display: none;
+	}
+	@media (min-width: 52rem) {
+		.tach {
+			display: block;
+		}
+	}
+	.tach text {
+		font-family: var(--rn-font-display);
+		font-weight: 700;
+		font-size: 30px;
+		fill: var(--rn-text);
+	}
+	.tach .unit {
+		font-size: 9px;
+		letter-spacing: 0.2em;
+		fill: var(--rn-muted);
+	}
+	.tach-fill {
+		stroke-dasharray: 100;
+		stroke-dashoffset: 25;
+		animation: rev 6s var(--rn-ease) infinite alternate;
+	}
+	@keyframes rev {
+		from {
+			stroke-dashoffset: 60;
+		}
+		to {
+			stroke-dashoffset: 12;
+		}
+	}
+
+	.content {
+		position: relative;
+		padding-block: 5rem 6rem;
+	}
+	.wordmark {
+		font-size: clamp(3.4rem, 13vw, 9rem);
+		background: linear-gradient(100deg, #fff 30%, var(--rn-neon-soft) 60%, var(--rn-neon));
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+		filter: drop-shadow(0 4px 24px rgb(25 227 255 / 0.25));
+	}
+	.wordmark .re {
+		color: var(--rn-ember);
+		-webkit-text-fill-color: var(--rn-ember);
+	}
+	.tagline {
+		margin: 0.5rem 0 0;
+		font-family: var(--rn-font-display);
+		font-size: clamp(1.15rem, 2.6vw, 1.6rem);
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--rn-text);
+	}
+	.lede {
+		max-width: 34rem;
+		margin: 1rem 0 0;
+		color: #c3cad6;
+		font-size: 1.05rem;
+	}
+	.ctas {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin-top: 2rem;
+	}
+
+	.motion-toggle {
+		position: absolute;
+		left: clamp(1rem, 3vw, 2.25rem);
+		bottom: clamp(1rem, 3vw, 2.25rem);
+		width: 44px;
+		height: 44px;
+		color: var(--rn-text);
+		background: rgb(11 13 16 / 0.6);
+		border: 1px solid rgb(233 238 245 / 0.3);
+		border-radius: 50%;
+		cursor: pointer;
+	}
+	.motion-toggle .ico-play,
+	.hero.paused .motion-toggle .ico-pause {
+		display: none;
+	}
+	.hero.paused .motion-toggle .ico-play {
+		display: inline;
+	}
+	.hero.paused :is(.sweep, .speed i, .tach-fill) {
+		animation-play-state: paused;
+	}
+
+	.trailer {
+		width: min(100% - 2rem, 70rem);
+		padding: 0;
+		background: #000;
+		border: 1px solid var(--rn-graphite);
+	}
+	.trailer::backdrop {
+		background: rgb(0 0 0 / 0.8);
+	}
+	.trailer video {
+		display: block;
+		width: 100%;
+	}
+	.trailer .close {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+		z-index: 1;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.sweep,
+		.speed i,
+		.tach-fill {
+			animation: none;
+		}
+		.speed i {
+			opacity: 0.35;
+			transform: translate3d(calc(var(--top) * 0.6vw), 0, 0);
+		}
+		.motion-toggle {
+			display: none;
+		}
+	}
+</style>
+
+<script>
+	const hero = document.querySelector<HTMLElement>('[data-hero]');
+	if (hero) {
+		const toggle = hero.querySelector<HTMLButtonElement>('[data-motion-toggle]')!;
+		let video: HTMLVideoElement | null = null;
+		let visible = true;
+		const paused = () => hero.classList.contains('paused');
+		const sync = () => {
+			if (!video) return;
+			if (visible && !paused() && !document.hidden) video.play().catch(() => {});
+			else video.pause();
+		};
+		toggle.addEventListener('click', () => {
+			hero.classList.toggle('paused');
+			const p = paused();
+			toggle.setAttribute('aria-pressed', String(p));
+			toggle.setAttribute('aria-label', p ? 'Play background animation' : 'Pause background animation');
+			sync();
+		});
+
+		// The loop, only when it's welcome (PLAN §5.4 gating).
+		const config = hero.dataset.video ? JSON.parse(hero.dataset.video) : null;
+		const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+		const welcome =
+			config &&
+			!matchMedia('(prefers-reduced-motion: reduce)').matches &&
+			!conn?.saveData &&
+			!['slow-2g', '2g', '3g'].includes(conn?.effectiveType ?? '');
+		if (welcome) {
+			addEventListener('load', () => {
+				video = document.createElement('video');
+				Object.assign(video, { muted: true, loop: true, playsInline: true, autoplay: true, preload: 'none', poster: config.poster });
+				video.setAttribute('aria-hidden', 'true');
+				for (const s of config.sources) {
+					const source = document.createElement('source');
+					source.src = s.src;
+					source.type = s.type;
+					if (s.media) source.media = s.media;
+					video.append(source);
+				}
+				hero.querySelector('.backdrop')!.prepend(video);
+				new IntersectionObserver(([e]) => {
+					visible = e.isIntersecting;
+					sync();
+				}).observe(hero);
+				document.addEventListener('visibilitychange', sync);
+				sync();
+			});
+		}
+
+		// The trailer, loaded on demand (D5).
+		const dialog = hero.querySelector<HTMLDialogElement>('[data-trailer]');
+		hero.querySelector('[data-trailer-open]')?.addEventListener('click', () => {
+			if (!dialog) return;
+			const v = dialog.querySelector('video')!;
+			if (!v.src) {
+				v.src = v.dataset.src!;
+			}
+			dialog.showModal();
+			v.play().catch(() => {});
+		});
+		dialog?.addEventListener('close', () => dialog.querySelector('video')!.pause());
+	}
+</script>
