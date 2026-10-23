@@ -1,5 +1,5 @@
 {
-	"$comment": "Hand-written overlay on controls.generated.json (docs/PLAN.md §2): what each Xbox control does in the game, per mode, with a status and its evidence. Ids must exist in the generated file; the build fails otherwise. Never upgrade a status here without the evidence that does it. An action with no label is shown as 'to verify' and never named.",
+	"$comment": "Player-facing labels use the site's racing terms in Title Case (Throttle, Brake / Reverse, Steering...); they rename, never re-map. Hand-written overlay on controls.generated.json (docs/PLAN.md §2): what each Xbox control does in the game, per mode, with a status and its evidence. Ids must exist in the generated file; the build fails otherwise. Never upgrade a status here without the evidence that does it. An action with no label is shown as 'to verify' and never named.",
 	"testedControllers": [],
 	"binding": {
 		"keyboard": {
@@ -25,24 +25,24 @@
 	},
 	"actions": {
 		"RightTrigger": {
-			"driving": { "label": "Gas", "status": "pending", "evidence": "Option text in settings.cpp: \"Gas in the game's default layout.\" Per-control check: M7 hand test 5, not yet run." }
+			"driving": { "label": "Throttle", "status": "pending", "evidence": "Option text in settings.cpp: \"Gas in the game's default layout.\" Per-control check: M7 hand test 5, not yet run." }
 		},
 		"LeftTrigger": {
-			"driving": { "label": "Brake / reverse", "status": "pending", "evidence": "Option text in settings.cpp: \"Brake and reverse in the game's default layout.\" Per-control check: M7 hand test 5, not yet run." }
+			"driving": { "label": "Brake / Reverse", "status": "pending", "evidence": "Option text in settings.cpp: \"Brake and reverse in the game's default layout.\" Per-control check: M7 hand test 5, not yet run." }
 		},
 		"LeftStickLeft": {
-			"driving": { "label": "Steer left", "status": "pending", "evidence": "Option text in settings.cpp: \"Steer left.\" Per-control check: M7 hand test 5, not yet run." }
+			"driving": { "label": "Steering", "status": "pending", "evidence": "Option text in settings.cpp: \"Steer left.\" Per-control check: M7 hand test 5, not yet run." }
 		},
 		"LeftStickRight": {
-			"driving": { "label": "Steer right", "status": "pending", "evidence": "Option text in settings.cpp: \"Steer right.\" Per-control check: M7 hand test 5, not yet run." }
+			"driving": { "label": "Steering", "status": "pending", "evidence": "Option text in settings.cpp: \"Steer right.\" Per-control check: M7 hand test 5, not yet run." }
 		},
 		"LeftStickUp": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of what the stick's up axis does in a race (M7 hand test 5)." },
-			"menu": { "label": "Move up", "status": "source", "evidence": "Option text in settings.cpp: \"The left stick pushed up (menus).\"" }
+			"menu": { "label": "Navigate", "status": "source", "evidence": "Option text in settings.cpp: \"The left stick pushed up (menus).\"" }
 		},
 		"LeftStickDown": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of what the stick's down axis does in a race (M7 hand test 5)." },
-			"menu": { "label": "Move down", "status": "source", "evidence": "The stick's down axis, paired with \"The left stick pushed up (menus).\" in settings.cpp." }
+			"menu": { "label": "Navigate", "status": "source", "evidence": "The stick's down axis, paired with \"The left stick pushed up (menus).\" in settings.cpp." }
 		},
 		"A": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of A's action in a race (M7 hand test 5)." },
@@ -66,19 +66,19 @@
 		},
 		"DpadUp": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of the D-pad's action in a race (M7 hand test 5)." },
-			"menu": { "label": "Move up", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard." }
+			"menu": { "label": "Navigate", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard." }
 		},
 		"DpadDown": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of the D-pad's action in a race (M7 hand test 5)." },
-			"menu": { "label": "Move down", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard." }
+			"menu": { "label": "Navigate", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard." }
 		},
 		"DpadLeft": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of the D-pad's action in a race (M7 hand test 5)." },
-			"menu": { "label": "Move left", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard." }
+			"menu": { "label": "Navigate", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard." }
 		},
 		"DpadRight": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of the D-pad's action in a race (M7 hand test 5)." },
-			"menu": { "label": "Move right", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard." }
+			"menu": { "label": "Navigate", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard." }
 		},
 		"Start": {
 			"driving": { "label": "Pause", "status": "pending", "evidence": "Option text in settings.cpp: \"Start: pause.\" Per-control check: M7 hand test 5, not yet run." },
@@ -108,12 +108,12 @@
 		}
 	},
 	"settings": {
-		"open": { "label": "Open / close Settings", "status": "source", "detail": "Any time, in game or in menus. On a Mac keyboard F1 is the brightness key: press Fn+F1, or Cmd+,." },
-		"pages": { "label": "Previous / next tab", "status": "source", "detail": "Display, Graphics, Audio, Input, Controls, Advanced." },
-		"navigate": { "label": "Choose a row, change its value", "status": "source", "detail": "On the Controls page, left and right pick the key slot (first or second key)." },
-		"activate": { "label": "Activate / set key", "status": "source", "detail": "Dear ImGui's keyboard navigation: Space activates. On the Controls page it waits for the new key.", "keys": ["space"], "pad": ["SOUTH"], "evidence": "runtime/ui/ui.cpp ImGuiConfigFlags_NavEnableKeyboard; the footer legend \"A: set key\"" },
-		"clearSlot": { "label": "Clear the key slot (Controls page)", "status": "source", "detail": "Sets the chosen slot to none." },
-		"resetControl": { "label": "Reset the control to default (Controls page)", "status": "source", "detail": "Both slots go back to their defaults." },
-		"close": { "label": "Close / back", "status": "source", "detail": "Also cancels the Quit Game confirmation." }
+		"open": { "label": "Open / Close Settings", "status": "source", "detail": "Any time, in game or in menus. On a Mac keyboard F1 is the brightness key: press Fn+F1, or Cmd+,." },
+		"pages": { "label": "Previous / Next Tab", "status": "source", "detail": "Display, Graphics, Audio, Input, Controls, Advanced." },
+		"navigate": { "label": "Navigate / Change Value", "status": "source", "detail": "Choose a row and change its value. On the Controls page, left and right pick the key slot (first or second key)." },
+		"activate": { "label": "Activate / Set Key", "status": "source", "detail": "Dear ImGui's keyboard navigation: Space activates. On the Controls page it waits for the new key.", "keys": ["space"], "pad": ["SOUTH"], "evidence": "runtime/ui/ui.cpp ImGuiConfigFlags_NavEnableKeyboard; the footer legend \"A: set key\"" },
+		"clearSlot": { "label": "Clear Key Slot", "status": "source", "detail": "On the Controls page: sets the chosen slot to none." },
+		"resetControl": { "label": "Reset Control", "status": "source", "detail": "On the Controls page: both slots go back to their defaults." },
+		"close": { "label": "Close / Back", "status": "source", "detail": "Also cancels the Quit Game confirmation." }
 	}
 }

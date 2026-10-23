@@ -28,22 +28,16 @@ export const TOP: Slot[] = [
 	{ slot: 'START', els: ['START'], ax: 575, ay: 196, chip: ['≡', '≡'] },
 ];
 
-// Short names for ReCarbon's own Settings keys, per slot where they differ.
+// Shorter names beside the drawing for ReCarbon's own Settings keys, where
+// the list's name is too long or the two buttons of one key differ.
 const SETTINGS_SHORT: Record<string, Record<string, string>> = {
-	open: { BACK: 'Hold both', START: 'Settings' },
-	pages: { LB: 'Previous tab', RB: 'Next tab' },
-	navigate: { default: 'Choose / change' },
-	activate: { default: 'Set key / select' },
-	clearSlot: { default: 'Clear key slot' },
-	resetControl: { default: 'Reset control' },
-	close: { default: 'Close / back' },
+	open: { BACK: 'Hold Both', START: 'Settings' },
+	pages: { LB: 'Previous Tab', RB: 'Next Tab' },
+	navigate: { default: 'Navigate' },
+	activate: { default: 'Set Key' },
 };
 const QUALIFIER: Record<string, string> = { lsx: '← →', lsy: '↑ ↓', lsc: 'press', rsc: 'press' };
 const VERIFIED = new Set(['tested', 'automated', 'hand-verified']);
-
-// "Steer left / right" reads as "Steer" beside a stick: the drawing shows the
-// directions. The list and the detail panel keep the full name.
-const brief = (action: string) => action.replace(/^(\w+) (?:up|down|left|right)(?: \/ (?:up|down|left|right))+$/, '$1');
 
 type Entry = { id: string; text: string; status: Callout['status']; qual: string };
 function entries(mode: Mode, slot: Slot): Entry[] {
@@ -54,7 +48,7 @@ function entries(mode: Mode, slot: Slot): Entry[] {
 			const short = mode === 'settings' ? (SETTINGS_SHORT[key]?.[slot.slot] ?? SETTINGS_SHORT[key]?.default) : undefined;
 			return {
 				id: c.id,
-				text: short ?? (c.status === 'unverified' ? 'to verify' : brief(c.action)),
+				text: short ?? (c.status === 'unverified' ? 'to verify' : c.action),
 				status: c.status,
 				qual: QUALIFIER[c.cluster ?? ''] ?? '',
 			};

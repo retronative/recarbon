@@ -202,14 +202,7 @@ function controlCallouts(mode: 'driving' | 'menu'): Callout[] {
 			return { control: id, label: c.label, action: acts[i]?.label, keys: c.keys, setting: c.setting, setting2: c.setting2 };
 		});
 		const labels = [...new Set(lines.map((l) => l.action).filter((l): l is string => !!l))];
-		const verbs = new Set(labels.map((l) => l.split(' ')[0]));
-		// "Steer left" + "Steer right" read as "Steer left / right".
-		const action =
-			labels.length === 0
-				? 'Action to verify'
-				: verbs.size === 1 && labels.length > 1
-					? `${[...verbs][0]} ${labels.map((l) => l.split(' ').slice(1).join(' ')).join(' / ')}`
-					: labels.join(' / ');
+		const action = labels.length === 0 ? 'Action to verify' : labels.join(' / ');
 		const keys = [...new Set(lines.flatMap((l) => l.keys).filter((k): k is string => !!k))];
 		out.push({
 			id: `${mode}-${cluster.id}`,

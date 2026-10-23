@@ -208,6 +208,8 @@ const groups = (mode: Mode) => {
 									<p class="group-note">
 										These keys and buttons are bound to Xbox controls (that part is tested), but what each does in a race
 										isn't known yet.
+										{m.id === 'driving' &&
+											' Handbrake, Nitrous, Speedbreaker, Change Camera and Look Back are expected among them; which is which waits for the M7 controls test.'}
 									</p>
 								)}
 								<ul>
@@ -227,20 +229,14 @@ const groups = (mode: Mode) => {
 													<span class="ps">{c.glyphPs}</span>
 												</span>
 												<span class="what">
-													{g.tbd ? (
-														<span class="act">
+													{/* The Xbox input's name is in the detail panel; screen readers get it here. */}
+													{c.lines.length > 0 && (
+														<span class="sr-only">
 															<span class="xb">{c.title}</span>
-															<span class="ps">{c.titlePs}</span>
-														</span>
-													) : (
-														<span class="act">{c.action}</span>
-													)}
-													{!g.tbd && c.lines.length > 0 && (
-														<span class="ctl">
-															<span class="xb">{c.title}</span>
-															<span class="ps">{c.titlePs}</span>
+															<span class="ps">{c.titlePs}</span>:{' '}
 														</span>
 													)}
+													<span class:list={['act', { tbd: g.tbd }]}>{c.action}</span>
 												</span>
 												<span class="inputs inputs--keyboard">
 													{keyText(c.keyGroups).map((k) => (
@@ -573,6 +569,15 @@ const groups = (mode: Mode) => {
 		border: 1px solid color-mix(in srgb, var(--mode-color) 45%, transparent);
 		border-radius: 3px;
 	}
+	.garage[data-device='keyboard'] .callout {
+		grid-template-columns: minmax(0, 1fr) auto auto;
+	}
+	.garage[data-device='keyboard'] .group--tbd .callout {
+		grid-template-columns: minmax(0, 1fr) auto;
+	}
+	.garage[data-device='keyboard'] .glyph {
+		display: none;
+	}
 	.glyph:empty {
 		visibility: hidden;
 	}
@@ -590,10 +595,6 @@ const groups = (mode: Mode) => {
 		font-size: 0.92rem;
 		overflow: hidden;
 		text-overflow: ellipsis;
-	}
-	.ctl {
-		font-size: 0.72rem;
-		color: var(--text-muted);
 	}
 	.tbd {
 		font-style: italic;
@@ -937,7 +938,9 @@ const groups = (mode: Mode) => {
 			placeDetail(b);
 			if (b) {
 				const status = b.querySelector('.badge .text')?.textContent ?? 'Action to verify';
-				live.textContent = `${b.querySelector('.what')!.textContent!.replace(/\s+/g, ' ').trim()}. ${status}`;
+				const ps = root.dataset.labels === 'ps' && root.dataset.device === 'controller';
+				const name = b.querySelector(ps ? '.what .sr-only .ps' : '.what .sr-only .xb')?.textContent;
+				live.textContent = `${name ? `${name}: ` : ''}${b.querySelector('.act')!.textContent}. ${status}`;
 				if (narrow.matches) zoomTo(b.dataset.keys!.split(' ')[0]);
 			}
 		}
