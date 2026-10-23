@@ -73,6 +73,9 @@ recarbon_test(shader_gradients_test SOURCES ${RT}/gpu/shader_translator.cpp ${RT
 # Returning freed guest pages to zero touches no byte outside the range on a
 # 16 KB host (kernel/vmem.h ResetHostRange, header only; from SpeedBreaker v0.1.8).
 recarbon_test(vmem_host_pages_test)
+# The keys Settings > Controls may bind, by the name the keyboard layout gives
+# them: ASCII only (user/key_names.h Bindable, header only; ReCarbon M5.15).
+recarbon_test(key_bindable_test)
 # scripts/frame_times.py (M7 frame pacing) on synthetic frame logs with known
 # answers, and the runtime's log and CSV formats it reads. Python 3.9+.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)

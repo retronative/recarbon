@@ -106,4 +106,28 @@ namespace settings::keynames
     {
         return code == kNone || Token(code) != nullptr;
     }
+
+    // ReCarbon (M5.15): the name the keyboard layout gives a key, as Settings >
+    // Controls shows it, must be printable ASCII for the menu to bind the key:
+    // "W", "Left Shift", "F5", "Keypad 1". A layout in another script names
+    // letter keys in it (Myanmar: U+1010 for W; Thai), which the menu's font
+    // can't show, and such a key is refused with kUnsupportedCharacter: no
+    // binding is saved for it. Bindings stay scancodes either way, and the
+    // game's input never looks at names. An empty name (the layout has none
+    // for the key) passes: the cell shows the key's position instead.
+    constexpr const char* kUnsupportedCharacter = "Unsupported key character. Switch to an English keyboard layout.";
+
+    constexpr bool AsciiName(std::string_view name)
+    {
+        for (char c : name)
+            if (static_cast<unsigned char>(c) < 0x20 || static_cast<unsigned char>(c) > 0x7E)
+                return false;
+        return true;
+    }
+
+    // May the menu bind this key (a code of the table, not "none"), named so?
+    constexpr bool Bindable(uint16_t code, std::string_view layoutName)
+    {
+        return code != kNone && Known(code) && AsciiName(layoutName);
+    }
 }
