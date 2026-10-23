@@ -37,6 +37,10 @@ remote() { ssh -o BatchMode=yes "$HOST" "bash -s" -- "$DIR" "$@"; }
 PRELUDE='set -euo pipefail
 W="$HOME/$1"; shift
 export PATH="/opt/homebrew/bin:/opt/homebrew/opt/llvm/bin:$PATH"
+# The Command Line Tools SDK, named: without it Homebrew clang picks an SDK of
+# its own, and on a Mac whose tools have no SDK for its macOS it took an older
+# one (MacOSX15.4.sdk, whose libc++ lacks std::__hash_memory).
+export SDKROOT="$(xcrun --show-sdk-path)"
 lock() { mkdir "$W/locks/$1" 2>/dev/null || { echo "locked: $1 ($(cat "$W/locks/$1/owner" 2>/dev/null))" >&2; exit 75; }
          echo "pid $$ sha ${2:-} since $(date "+%F %T")" > "$W/locks/$1/owner"; }
 unlock() { rm -rf "$W/locks/$1"; }
@@ -98,19 +102,25 @@ cd "\$src"; clean_tree .
 [ "\$(git rev-parse HEAD)" = "\$sha" ] || { echo "HEAD is not \$sha" >&2; exit 1; }
 missing=""
 for t in cmake ninja /opt/homebrew/opt/llvm/bin/clang++; do command -v "\$t" >/dev/null || missing="\$missing \$t"; done
-/opt/homebrew/bin/python3 -c 'import tomllib' 2>/dev/null || missing="\$missing python3.11+"
+# The newest Python 3.11+, as survey.sh picks it (Homebrew links python@3.12 as python3.12 only).
+PY="\$(command -v python3.15 || command -v python3.13 || command -v python3.12 || command -v python3.11 || command -v python3 || true)"
+[ -n "\$PY" ] && "\$PY" -c 'import tomllib' 2>/dev/null || missing="\$missing python3.11+"
+# The instruction tests link with LLD (Homebrew's lld, apart from llvm).
+[ "\$what" = test ] && ! command -v ld.lld >/dev/null && missing="\$missing ld.lld"
 [ -z "\$missing" ] || { echo "missing on the worker:\$missing (not installed by this script)" >&2; exit 69; }
 rc=0
 if [ "\$what" = build ]; then
-  { scripts/setup_tools.sh && scripts/survey.sh \
+  { echo "SDK: \$SDKROOT (\$(xcrun --show-sdk-version)), \$(clang++ --version | head -1)"; scripts/setup_tools.sh && scripts/survey.sh \
     && cmake -S . -B build/main -G Ninja -DCMAKE_BUILD_TYPE=Release \
          -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ \
     && ninja -C build/main -j4; } > "\$out/build.log" 2>&1 || rc=\$?
   echo "build exit=\$rc log=\$out/build.log"
-  shasum -a 256 config/*.toml > "\$out/config.sha256"
-  find ppc -type f -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | sed 's/ .*/  ppc (all files)/' >> "\$out/config.sha256"
+  if [ \$rc = 0 ]; then
+    shasum -a 256 config/*.toml > "\$out/config.sha256"
+    find ppc -type f -print0 | LC_ALL=C sort -z | xargs -0 shasum -a 256 | shasum -a 256 | sed 's/ .*/  ppc (all files)/' >> "\$out/config.sha256"
+  fi
 else
-  { /opt/homebrew/bin/python3 survey/validate_recomp.py game/survey/recomp.log \
+  { "\$PY" survey/validate_recomp.py game/survey/recomp.log \
     && cmake -S . -B build/tests -G Ninja -DCMAKE_BUILD_TYPE=Release -DRECARBON_TESTS=ON \
          -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ \
     && ninja -C build/tests -j4 && ctest --test-dir build/tests \
