@@ -5,6 +5,7 @@
 
 #include <kernel/xam.h>
 #include <report/report.h>
+#include <user/profiles.h>
 #include <user/settings.h>
 #include <video/swapchain_policy.h>
 
@@ -1028,6 +1029,10 @@ namespace ui
 #if defined(__APPLE__) && TARGET_OS_IOS
         DragToScroll();
 #endif
+        // ReCarbon (M8): what the Key options' changes amount to for the
+        // keyboard profiles (one write for a whole page reset), every frame:
+        // the menu may close in the frame of the change.
+        profiles::Poll();
         if (s_modal)
         {
             auto modal = s_modal;  // it may clear itself

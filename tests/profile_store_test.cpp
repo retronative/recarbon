@@ -95,6 +95,8 @@ int main()
     Check(s.write && s.store.active == "Custom (settings.toml)" && s.store.custom.size() == 2 && s.store.custom[1].keys == mine &&
             s.store.custom[0] == onFile.custom[0],
         "a [keys] the profiles didn't know of is kept as a profile, and the others stay");
+    s = DecideKeyboard(FileState::Parsed, onFile, defaults, defaults, false);
+    Check(s.apply && !s.write && s.store == onFile, "settings.toml not loaded: the active profile restores the keys");
     s = DecideKeyboard(FileState::Unreadable, {}, mine, defaults);
     Check(s.disabled && !s.write, "an unusable keyboard.toml: profiles off, nothing written");
 
@@ -119,7 +121,7 @@ int main()
     std::filesystem::remove_all(dir);
     std::filesystem::create_directories(dir / "profiles");
     settings::Load(dir / "settings.toml");
-    Init(dir / "profiles");
+    Init(true, dir / "profiles");
     Check(ActiveKeyboard() == "Default" && ReadFile(dir / "profiles/keyboard.toml").find("active = \"Default\"") != std::string::npos,
         "a fresh folder: Default, and keyboard.toml written");
     Check(std::filesystem::exists(dir / "profiles/controller.toml"), "controller.toml written");

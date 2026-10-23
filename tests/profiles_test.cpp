@@ -106,6 +106,40 @@ int main()
         bound += c != 0;
     Check(bound == 22, "Arrows binds 22 keys, got " + std::to_string(bound));
 
+    printf("---- what one key does in each preset (the input code's resolution) ----\n");
+    // As hid/input.cpp does: a control is pressed when either of its keys is
+    // held, then keymap::Resolve. So the D-pad keys reach the game as D-pad
+    // buttons only, and the driving keys as the triggers and steering only.
+    auto press = [](const KeyboardMapping& m, const char* key) {
+        bool pressed[hid::keymap::kControls] = {};
+        for (size_t i = 0; i < hid::keymap::kControls; i++)
+            pressed[i] = m[2 * i] == Code(key) || m[2 * i + 1] == Code(key);
+        return hid::keymap::Resolve(pressed);
+    };
+    namespace btn = hid::keymap::button;
+    constexpr size_t LX = size_t(hid::keymap::Axis::LX), LY = size_t(hid::keymap::Axis::LY);
+    auto onlyButton = [](const hid::keymap::Resolved& r, uint16_t b) {
+        return r.buttons == b && !r.leftTrigger && !r.rightTrigger && !r.axisSet[0] && !r.axisSet[1] && !r.axisSet[2] && !r.axisSet[3];
+    };
+    Check(onlyButton(press(arrows, "w"), btn::DpadUp) && onlyButton(press(arrows, "s"), btn::DpadDown) &&
+            onlyButton(press(arrows, "a"), btn::DpadLeft) && onlyButton(press(arrows, "d"), btn::DpadRight),
+        "Arrows: W A S D are the D-pad only");
+    Check(onlyButton(press(wasd, "up"), btn::DpadUp) && onlyButton(press(wasd, "down"), btn::DpadDown) &&
+            onlyButton(press(wasd, "left"), btn::DpadLeft) && onlyButton(press(wasd, "right"), btn::DpadRight),
+        "WASD: the arrows are the D-pad only");
+    auto r = press(arrows, "up");
+    Check(r.rightTrigger && !r.leftTrigger && r.buttons == 0 && !r.axisSet[LY], "Arrows: Up is the throttle only (no D-pad, no stick)");
+    r = press(arrows, "down");
+    Check(r.leftTrigger && !r.rightTrigger && r.buttons == 0 && !r.axisSet[LY], "Arrows: Down is the brake only");
+    r = press(arrows, "left");
+    Check(r.axisSet[LX] && r.axis[LX] < 0 && r.buttons == 0 && !r.leftTrigger, "Arrows: Left is steering only");
+    r = press(wasd, "w");
+    Check(r.rightTrigger && r.buttons == 0 && !r.axisSet[LY], "WASD: W is the throttle only");
+    r = press(wasd, "d");
+    Check(r.axisSet[LX] && r.axis[LX] > 0 && r.buttons == 0, "WASD: D is steering only");
+    r = press(defaults, "up");
+    Check(r.buttons == btn::DpadUp && r.axisSet[LY], "Default (unchanged): Up is the D-pad and the left stick, as in M5");
+
     printf("---- validity ----\n");
     Check(Valid(defaults) && Valid(wasd) && Valid(arrows), "the three are valid");
     KeyboardMapping bad = defaults;

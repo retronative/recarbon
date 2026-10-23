@@ -17,6 +17,7 @@
 #include <user/settings.h>
 #include <hid/key_map.h>     // the Controls page: one row per control, two keys each
 #include <user/key_names.h>  // a key's name in the file, when SDL has none
+#include <user/profiles.h>   // ReCarbon (M8): the keyboard profile row
 #include <video/frame_rate.h>
 #include <video/presenter.h>
 
@@ -41,6 +42,7 @@ namespace ui
         Id s_described = Id::Count;  // the row the help line describes
         bool s_describedBugReport = false;  // ...or Save Bug Report's
         bool s_describedUpdate = false;     // ...or Check for Updates'
+        bool s_describedProfile = false;    // ...or the profile row's (ReCarbon, M8)
         bool s_opened = true;        // just opened: take focus
         // The Controls page (KeyRow). A row's two keys are cells; the chosen
         // cell is the focused row's, and a wait is for one option of one
@@ -492,6 +494,66 @@ namespace ui
             return activated;
         }
 
+        // ReCarbon (M8): the active keyboard profile (user/profiles.h), chosen
+        // with left/right or A, or the arrows, and in effect at once.
+        void ProfileRow(float valueWidth, bool focus)
+        {
+            const float rowHeight = RowHeight();
+            const std::vector<std::string> names = profiles::KeyboardNames();
+            const std::string active = profiles::ActiveKeyboard();
+            const bool enabled = profiles::KeyboardEnabled();
+            ImGui::PushID("keyboard-profile");
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+            ImGui::TableNextColumn();
+            if (focus)
+                ImGui::SetKeyboardFocusHere();
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + LabelInset());
+            ImVec2 labelPos = ImGui::GetCursorScreenPos();
+            bool activated = ImGui::Selectable("##row", false,
+                ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap, ImVec2(0, rowHeight));
+            bool focused = ImGui::IsItemFocused();
+            if (focused || (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlappedByItem) && s_described == Id::Count))
+                s_describedProfile = true;
+            const float mid = RowLabel(labelPos, "Keyboard Profile");
+            int delta = 0;
+            if (focused)
+            {
+                if (Pressed(ImGuiKey_GamepadDpadLeft) || Pressed(ImGuiKey_GamepadLStickLeft) || Pressed(ImGuiKey_LeftArrow))
+                    delta = -1;
+                if (Pressed(ImGuiKey_GamepadDpadRight) || Pressed(ImGuiKey_GamepadLStickRight) || Pressed(ImGuiKey_RightArrow))
+                    delta = 1;
+            }
+            if (activated && !ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+                delta = 1;
+            ImGui::TableNextColumn();
+            float arrow = ImGui::GetFrameHeight();
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + (rowHeight - arrow) * 0.5f);
+            ImGui::PushItemFlag(ImGuiItemFlags_NoNav, true);
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+            if (ImGui::ArrowButton("##less", ImGuiDir_Left))
+                delta = -1;
+            ImGui::SameLine(0, 0);
+            ImVec2 valueMin = ImGui::GetCursorScreenPos();
+            ImGui::Dummy(ImVec2(valueWidth, arrow));
+            ImGui::SameLine(0, 0);
+            if (ImGui::ArrowButton("##more", ImGuiDir_Right))
+                delta = 1;
+            ImGui::PopStyleColor();
+            ImGui::PopItemFlag();
+            const std::string value = enabled ? active : "Off";
+            ImVec2 size = ImGui::CalcTextSize(value.c_str());
+            ImGui::GetWindowDrawList()->AddText(ImVec2(valueMin.x + (valueWidth - size.x) * 0.5f, CentredTextTop(mid)),
+                ImGui::GetColorU32(!enabled ? ImGuiCol_TextDisabled : focused ? ImGuiCol_PlotLines : ImGuiCol_Text), value.c_str());
+            if (delta && enabled && !names.empty())
+            {
+                size_t i = std::find(names.begin(), names.end(), active) - names.begin();
+                const size_t n = names.size();
+                const size_t next = i >= n ? 0 : (i + n + size_t(delta + int(n))) % n;
+                profiles::SwitchKeyboard(names[next]);
+            }
+            ImGui::PopID();
+        }
+
         // A (or a click) saves the report.
         void BugReportRow(float valueWidth)
         {
@@ -589,6 +651,21 @@ namespace ui
             if (s_describedUpdate)
             {
                 UpdateRowHelp();
+                return;
+            }
+            if (s_describedProfile)
+            {
+                ImGui::TextWrapped("Left and right switch the keyboard profile, in effect at once. Default, WASD and Arrows are "
+                                   "built in: changing a key while one is active saves your keys as a copy, \"<name> (custom)\".");
+                if (!profiles::KeyboardEnabled() || !profiles::LastError().empty())
+                {
+                    PushAccentText();
+                    ImGui::TextWrapped("%s", profiles::KeyboardEnabled() ? profiles::LastError().c_str()
+                        : ("Profiles are off: " + profiles::LastError() + ". Your keys still work.").c_str());
+                    PopAccentText();
+                }
+                else
+                    ImGui::TextDisabled("Saved in profiles/keyboard.toml, in the game's data folder.");
                 return;
             }
             if (s_describedBugReport)
@@ -752,6 +829,7 @@ namespace ui
         s_described = Id::Count;
         s_describedBugReport = false;
         s_describedUpdate = false;
+        s_describedProfile = false;
         if (s_waiting != Id::Count && settings::Info(s_waiting).category != s_category)
             EndWait();
         // For the B check at the end: B's nav cancel (in ImGui's NewFrame,
@@ -816,6 +894,11 @@ namespace ui
                     {
                         ImGui::TableSetupColumn("label", ImGuiTableColumnFlags_WidthStretch);
                         ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthFixed, valueWidth + arrow * 2 + ValueInset());
+                        if (category == Category::Controls)
+                        {
+                            ProfileRow(valueWidth, focusFirst);
+                            focusFirst = false;
+                        }
                         if (category == Category::Controls)
                             for (const auto& e : hid::keymap::kEntries)
                             {
@@ -911,12 +994,17 @@ namespace ui
             ImGui::Spacing();
             if (ImGui::Button("Reset"))
             {
-                for (const auto& o : settings::Options())
-                    if (o.category == s_category && !o.hidden)
-                    {
-                        double from = settings::GetStoredValue(o.id);
-                        LogChange(o, from, settings::Reset(o.id));
-                    }
+                // ReCarbon (M8): on the Controls page, with profiles in use, the
+                // reset is the switch to Default, so a custom profile keeps its keys.
+                if (s_category == Category::Controls && profiles::KeyboardEnabled())
+                    profiles::SwitchKeyboard("Default");
+                else
+                    for (const auto& o : settings::Options())
+                        if (o.category == s_category && !o.hidden)
+                        {
+                            double from = settings::GetStoredValue(o.id);
+                            LogChange(o, from, settings::Reset(o.id));
+                        }
                 ImGui::CloseCurrentPopup();
             }
             ImGui::SameLine();

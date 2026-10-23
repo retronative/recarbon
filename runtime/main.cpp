@@ -30,6 +30,7 @@
 #include <ui/installer_screen.h>
 #include <ui/ui.h>
 #include <user/paths.h>
+#include <user/profiles.h>
 #include <user/settings.h>
 #include <user/version_check.h>
 
@@ -404,6 +405,9 @@ int main(int argc, char** argv)
     }
 #endif
     bool settingsLoaded = settings::Load();
+    // ReCarbon (M8): the input profiles, after the settings (they read and
+    // never change [keys] at startup, unless settings.toml wasn't loaded).
+    profiles::Init(settingsLoaded && settings::FileFound());
     // Which version ran last: a line in the log (so a bug report shows when a
     // problem began), the "What's new" note below, and this version recorded
     // as the last (user/version_check.h).

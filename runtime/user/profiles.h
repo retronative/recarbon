@@ -91,10 +91,16 @@ namespace profiles
     {
         KeyboardStore store;
         bool write = false;     // store the result
+        bool apply = false;     // set the Key options to the active profile's keys
         bool disabled = false;  // the file can't be used: run on [keys], write nothing
         std::string log;        // what was decided, for the log
     };
-    Startup DecideKeyboard(FileState state, const KeyboardStore& parsed, const KeyboardMapping& keys, const KeyboardMapping& defaults);
+    // `keysFromFile`: settings.toml was found and loaded, so the Key options
+    // are the player's [keys]. Without it (no settings.toml, or one that
+    // didn't parse and was set aside) they are only the defaults, and a
+    // usable keyboard.toml's active profile restores them.
+    Startup DecideKeyboard(FileState state, const KeyboardStore& parsed, const KeyboardMapping& keys, const KeyboardMapping& defaults,
+        bool keysFromFile = true);
 
     // After the bindings in effect changed to `keys`: the active custom
     // profile takes them; with a built-in active, a custom copy named
@@ -106,7 +112,8 @@ namespace profiles
 
     // After settings::Load: reads or creates the files (GetUserPath()/profiles,
     // or `folder`), and follows the Key options from then on.
-    void Init(const std::filesystem::path& folder = {});
+    // `keysFromFile` as for DecideKeyboard.
+    void Init(bool keysFromFile, const std::filesystem::path& folder = {});
     // Once a frame: writes what the Key options' changes since the last
     // call amount to (one write for a whole Reset page).
     void Poll();

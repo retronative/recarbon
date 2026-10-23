@@ -308,7 +308,8 @@ namespace profiles
         return std::nullopt;
     }
 
-    Startup DecideKeyboard(FileState state, const KeyboardStore& parsed, const KeyboardMapping& keys, const KeyboardMapping& defaults)
+    Startup DecideKeyboard(FileState state, const KeyboardStore& parsed, const KeyboardMapping& keys, const KeyboardMapping& defaults,
+        bool keysFromFile)
     {
         Startup s;
         if (state == FileState::Unreadable)
@@ -333,6 +334,12 @@ namespace profiles
             return s;
         }
         s.store = parsed;
+        if (!keysFromFile)
+        {
+            s.apply = Find(parsed, parsed.active, defaults) != keys;
+            s.log = std::format("settings.toml's [keys] wasn't loaded: keyboard profile \"{}\" restores the keys", parsed.active);
+            return s;
+        }
         if (Find(parsed, parsed.active, defaults) == keys)
         {
             s.log = std::format("keyboard profile \"{}\"", parsed.active);
@@ -443,7 +450,7 @@ namespace profiles
         }
     }
 
-    void Init(const std::filesystem::path& folder)
+    void Init(bool keysFromFile, const std::filesystem::path& folder)
     {
         s_folder = folder.empty() ? GetUserPath() / "profiles" : folder;
         for (size_t i = 0; i < s_defaults.size(); i++)
@@ -463,7 +470,7 @@ namespace profiles
             for (const std::string& s : parsed.skipped)
                 fprintf(stderr, "[profiles] keyboard.toml: skipped %s\n", s.c_str());
         }
-        Startup start = DecideKeyboard(state, parsed.store, KeysInEffect(), s_defaults);
+        Startup start = DecideKeyboard(state, parsed.store, KeysInEffect(), s_defaults, keysFromFile);
         fprintf(stderr, "[profiles] %s%s%s\n", start.log.c_str(), error.empty() ? "" : ": ", error.c_str());
         s_keyboardEnabled = !start.disabled;
         if (start.disabled)
@@ -471,6 +478,14 @@ namespace profiles
         s_keyboard = start.store;
         if (start.write && !WriteKeyboard(start.store))
             fprintf(stderr, "[profiles] keyboard profiles not saved this time; [keys] is unchanged\n");
+        if (start.apply)
+            if (std::optional<KeyboardMapping> m = Find(s_keyboard, s_keyboard.active, s_defaults))
+            {
+                s_applying = true;
+                for (size_t i = 0; i < m->size(); i++)
+                    settings::Set(hp::IdOf(i), double((*m)[i]));
+                s_applying = false;
+            }
 
         text.clear();
         error.clear();
