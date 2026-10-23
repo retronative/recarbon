@@ -578,7 +578,7 @@ a session).
   or 3. That's MW's judder before SpeedBreaker's pacing hooks (7–10% there). Carbon has no
   pacing hooks. The probe flushes the GPU and reads back every frame, which may inflate the
   number. Smoothing is deferred to polish unless it causes gameplay issues.
-- Lip-sync isn't checked by eye and ear yet.
+- Lip-sync passes by eye and ear (hand test 2, below).
 
 ### See-through road in gameplay: root-caused and fixed (commit 557d9b5)
 - **Symptom** (hand test): in gameplay the road was see-through, with buildings, terrain and
@@ -607,7 +607,34 @@ a session).
 - **Input:** the controller's default button mapping moved unchanged to `hid/pad_map.h` and is
   pinned by `pad_map_test` (commit af3aeea). An SDL virtual controller reaches the main menu.
   Keyboard rebinding is unchanged, and `settings_keys_test` and `key_map_test` pass.
-- **Pending, by hand:** keyboard, physical controller, audio quality and lip-sync.
+- **Pending, by hand:** a physical controller (expected about 2026-10-30).
+
+### Hand test 2 (2026-10-23, keyboard, by the user)
+Two sessions in the player's own user folder (`scripts/run_attempt.sh` with
+`RECARBON_REAL_HOME=1 RECARBON_MUTE=0`), 426 s and 1,226 s. The user reports all five checks
+passed:
+- movie lip-sync;
+- menu navigation with the keyboard;
+- rebinding in Settings > Controls: `right_trigger_2` and `left_trigger_2` set to Up and Down,
+  saved to `settings.toml`, and still bound and working after a restart;
+- audio quality (music, effects, engine);
+- audio latency on the built-in speakers.
+
+The logs show no crash, hang report or stub. Audio had 1 device-empty frame at start-up in
+each session and one gap of 258 ms in the second, at 457 s. Both sessions opened the output
+on the WH-CH720N headphones; the default output was the built-in speakers afterwards. The
+output follows the system default device, so the gap is consistent with a switch of device
+there, which the log doesn't record.
+
+Keyboard players can't see that Q and E turn the settings pages: the footer named only LB
+and RB. It now shows "LB RB / Q E: page" (commit 4f6e0f5).
+
+**Open, not root-caused:** in 2 of 2 automated screenshots (fresh user folder), the Controls
+page drew the default letter keys W, S, A and D as the replacement glyph (U+FFFD). Named keys
+(Up, Space) drew correctly. A probe showed that SDL names the keys correctly, and that the font
+has the glyphs at the size drawn with valid atlas coordinates. With that probe in the build,
+the letters drew correctly (1 of 1 run). So the failure depends on timing in Dear ImGui's
+on-demand glyph loading or atlas upload. It isn't fixed: there is no confirmed cause yet.
 
 ## 6b. M6 progress: profile, saves, stability (in progress, 2026-10-23)
 

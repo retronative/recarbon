@@ -158,8 +158,11 @@ Diagnosing a failure is progress. It does not pass a criterion.
     smooth. 20–28% of movie frames show for 1 or 3 vblanks instead of 2 (measured with a probe
     that may inflate it). Smoothing is deferred to polish unless it causes gameplay issues.
   - XMA decodes without errors (3,749 frames, 0 skipped). XMA1 against XMA2 isn't settled.
-  - **Pending, by hand:** keyboard navigation and `[keys]` rebinding in game, a physical
-    controller (expected in about a week), and audio quality and movie lip-sync by ear and eye.
+  - Hand test 2 (2026-10-23, by the user): keyboard navigation, `[keys]` rebinding in game
+    surviving a restart, audio quality, movie lip-sync and audio latency on the built-in
+    speakers all pass (FEASIBILITY §6a).
+  - **Pending, by hand:** a physical controller (expected in about a week). M5 stays open
+    until it passes.
 - **Do:**
   - Enable XMA → FFmpeg → SDL3.
   - Movies: verified from the extracted files' headers (2026-10-22). All 65 are ASF (`.wmv`):
