@@ -965,6 +965,7 @@ namespace settings
         case Category::Audio: return "Audio";
         case Category::Input: return "Input";
         case Category::Controls: return "Controls";
+        case Category::Controller: return "Controller";
         case Category::Advanced: return "Advanced";
         default: return "";
         }

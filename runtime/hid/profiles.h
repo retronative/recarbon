@@ -154,6 +154,18 @@ namespace hid::profiles
         return nullptr;
     }
 
+    // XInput button `index` driven by `button`. The XInput button that had
+    // `button` takes `index`'s old one: a swap, so each controller button
+    // still drives one XInput button (binding A to East moves B to South).
+    inline PadMapping Rebind(PadMapping m, size_t index, SDL_GamepadButton button)
+    {
+        for (SDL_GamepadButton& b : m)
+            if (b == button)
+                b = m[index];
+        m[index] = button;
+        return m;
+    }
+
     // Every XInput button is driven by a bindable SDL button.
     inline bool ValidPad(const PadMapping& m)
     {

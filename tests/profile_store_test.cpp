@@ -148,8 +148,9 @@ int main()
     Check(ReadFile(dir / "profiles/keyboard.toml") == before && !LastError().empty(), "...the file too, and LastError says why: " + LastError());
     Check(SwitchKeyboard("Arrows") && ActiveKeyboard() == "Arrows", "once writable again, the switch works");
 
-    Check(SetPadButton(0, SDL_GAMEPAD_BUTTON_EAST) && ActivePad() == "Default (custom)" && CurrentPad()[0] == SDL_GAMEPAD_BUTTON_EAST,
-        "a controller button rebound: a custom copy, in effect at once");
+    Check(SetPadButton(0, SDL_GAMEPAD_BUTTON_EAST) && ActivePad() == "Default (custom)" && CurrentPad()[0] == SDL_GAMEPAD_BUTTON_EAST &&
+            CurrentPad()[1] == SDL_GAMEPAD_BUTTON_SOUTH,
+        "a controller button rebound: a custom copy (A and B swapped), in effect at once");
     Check(!SetPadButton(0, SDL_GAMEPAD_BUTTON_LEFT_PADDLE1), "a paddle can't be bound in v1");
     Check(SwitchPad("Default") && CurrentPad() == hp::DefaultPad(), "back to the controller's Default");
     std::filesystem::remove_all(dir);

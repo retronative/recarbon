@@ -141,6 +141,9 @@ namespace ui
     // cancelled it, or this is a repeat or the release of a key it took or
     // refused, so ImGui must not see it.
     bool SettingsMenuTakesKey(const SDL_KeyboardEvent& key);
+    // ReCarbon (M8): the same for a controller button while a Settings >
+    // Controller row waits for one (before the Back + Start chord sees it).
+    bool SettingsMenuTakesPadButton(const SDL_GamepadButtonEvent& button);
     void DrawPerfOverlay();
 
     // Settings > Advanced > Check for Updates (update_dialog.cpp, the check

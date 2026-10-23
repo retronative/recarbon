@@ -683,6 +683,8 @@ namespace ui
         case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
         case SDL_EVENT_GAMEPAD_BUTTON_UP:
         {
+            if (s_settingsOpen && SettingsMenuTakesPadButton(e.gbutton))
+                return;  // a Controller row took it (Back and Start can be bound too)
             bool down = e.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN;
             Chord& chord = s_chords[e.gbutton.which];
             if (e.gbutton.button == SDL_GAMEPAD_BUTTON_BACK)

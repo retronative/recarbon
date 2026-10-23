@@ -151,6 +151,11 @@ int main()
     for (size_t i = 0; i < kPadButtons; i++)
         Check(pad[i] == hid::padmap::kDefault[i].sdl, "the default pad's button " + std::to_string(i));
     Check(ValidPad(pad), "the default pad is valid");
+    const PadMapping rebound = Rebind(pad, 0, SDL_GAMEPAD_BUTTON_EAST);
+    Check(rebound[0] == SDL_GAMEPAD_BUTTON_EAST && rebound[1] == SDL_GAMEPAD_BUTTON_SOUTH, "A on East: B swaps to South");
+    for (size_t i = 2; i < kPadButtons; i++)
+        Check(rebound[i] == pad[i], "a swap leaves the other buttons, " + std::to_string(i));
+    Check(Rebind(pad, 3, pad[3]) == pad, "binding a button to its own button changes nothing");
     PadMapping paddle = pad;
     paddle[0] = SDL_GAMEPAD_BUTTON_RIGHT_PADDLE1;
     Check(!ValidPad(paddle), "a paddle isn't bindable in v1");

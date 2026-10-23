@@ -494,15 +494,21 @@ namespace ui
             return activated;
         }
 
-        // ReCarbon (M8): the active keyboard profile (user/profiles.h), chosen
+        // ReCarbon (M8): an active input profile (user/profiles.h), chosen
         // with left/right or A, or the arrows, and in effect at once.
-        void ProfileRow(float valueWidth, bool focus)
+        struct ProfileChoice
+        {
+            const char* id;
+            const char* label;
+            std::vector<std::string> names;
+            std::string active;
+            bool enabled;
+            bool (*choose)(std::string_view);
+        };
+        void ProfileRow(const ProfileChoice& c, float valueWidth, bool focus, bool& described)
         {
             const float rowHeight = RowHeight();
-            const std::vector<std::string> names = profiles::KeyboardNames();
-            const std::string active = profiles::ActiveKeyboard();
-            const bool enabled = profiles::KeyboardEnabled();
-            ImGui::PushID("keyboard-profile");
+            ImGui::PushID(c.id);
             ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
             ImGui::TableNextColumn();
             if (focus)
@@ -513,8 +519,8 @@ namespace ui
                 ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap, ImVec2(0, rowHeight));
             bool focused = ImGui::IsItemFocused();
             if (focused || (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlappedByItem) && s_described == Id::Count))
-                s_describedProfile = true;
-            const float mid = RowLabel(labelPos, "Keyboard Profile");
+                described = true;
+            const float mid = RowLabel(labelPos, c.label);
             int delta = 0;
             if (focused)
             {
@@ -540,17 +546,98 @@ namespace ui
                 delta = 1;
             ImGui::PopStyleColor();
             ImGui::PopItemFlag();
-            const std::string value = enabled ? active : "Off";
+            const std::string value = c.enabled ? c.active : "Off";
             ImVec2 size = ImGui::CalcTextSize(value.c_str());
             ImGui::GetWindowDrawList()->AddText(ImVec2(valueMin.x + (valueWidth - size.x) * 0.5f, CentredTextTop(mid)),
-                ImGui::GetColorU32(!enabled ? ImGuiCol_TextDisabled : focused ? ImGuiCol_PlotLines : ImGuiCol_Text), value.c_str());
-            if (delta && enabled && !names.empty())
+                ImGui::GetColorU32(!c.enabled ? ImGuiCol_TextDisabled : focused ? ImGuiCol_PlotLines : ImGuiCol_Text), value.c_str());
+            if (delta && c.enabled && !c.names.empty())
             {
-                size_t i = std::find(names.begin(), names.end(), active) - names.begin();
-                const size_t n = names.size();
-                const size_t next = i >= n ? 0 : (i + n + size_t(delta + int(n))) % n;
-                profiles::SwitchKeyboard(names[next]);
+                const size_t n = c.names.size();
+                const size_t i = size_t(std::find(c.names.begin(), c.names.end(), c.active) - c.names.begin());
+                c.choose(c.names[i >= n ? 0 : (i + n + size_t(delta + int(n))) % n]);
             }
+            ImGui::PopID();
+        }
+
+        ProfileChoice KeyboardChoice()
+        {
+            return { "keyboard-profile", "Keyboard Profile", profiles::KeyboardNames(), profiles::ActiveKeyboard(),
+                profiles::KeyboardEnabled(), profiles::SwitchKeyboard };
+        }
+        ProfileChoice PadChoice()
+        {
+            return { "controller-profile", "Controller Profile", profiles::PadNames(), profiles::ActivePad(), true, profiles::SwitchPad };
+        }
+
+        // ReCarbon (M8): Settings > Controller, one row per Xbox button
+        // (hid/pad_map.h's order) and the controller button driving it. A
+        // (or Enter, or a click) waits for the next controller button; Esc or
+        // 5 s cancels. Buttons only: the sticks and triggers aren't remapped.
+        constexpr const char* kPadRowLabels[] = { "A", "B", "X", "Y", "Back", "Start", "Left Stick Click", "Right Stick Click", "LB", "RB",
+            "D-pad Up", "D-pad Down", "D-pad Left", "D-pad Right" };
+        static_assert(std::size(kPadRowLabels) == hid::profiles::kPadButtons);
+        int s_padWaiting = -1;           // the row waiting for a button; -1: none
+        int64_t s_padWaitSince = 0;      // ImGui time, ms
+        int s_described_pad = -1;        // the row the help line describes
+        int s_padTaken = -1;             // the button the wait took, until its release
+        bool s_padRefused = false;
+
+        std::string PadButtonName(SDL_GamepadButton b)
+        {
+            static const std::pair<SDL_GamepadButton, const char*> names[] = {
+                { SDL_GAMEPAD_BUTTON_SOUTH, "South (A)" }, { SDL_GAMEPAD_BUTTON_EAST, "East (B)" },
+                { SDL_GAMEPAD_BUTTON_WEST, "West (X)" }, { SDL_GAMEPAD_BUTTON_NORTH, "North (Y)" },
+                { SDL_GAMEPAD_BUTTON_BACK, "Back" }, { SDL_GAMEPAD_BUTTON_START, "Start" },
+                { SDL_GAMEPAD_BUTTON_LEFT_STICK, "Left Stick" }, { SDL_GAMEPAD_BUTTON_RIGHT_STICK, "Right Stick" },
+                { SDL_GAMEPAD_BUTTON_LEFT_SHOULDER, "Left Shoulder" }, { SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER, "Right Shoulder" },
+                { SDL_GAMEPAD_BUTTON_DPAD_UP, "D-pad Up" }, { SDL_GAMEPAD_BUTTON_DPAD_DOWN, "D-pad Down" },
+                { SDL_GAMEPAD_BUTTON_DPAD_LEFT, "D-pad Left" }, { SDL_GAMEPAD_BUTTON_DPAD_RIGHT, "D-pad Right" },
+            };
+            for (auto& [button, name] : names)
+                if (button == b)
+                    return name;
+            return "?";
+        }
+
+        void PadRow(int index, float valueWidth)
+        {
+            const float rowHeight = RowHeight();
+            ImGui::PushID(1000 + index);
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+            ImGui::TableNextColumn();
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + LabelInset());
+            ImVec2 labelPos = ImGui::GetCursorScreenPos();
+            bool activated = ImGui::Selectable("##row", false,
+                ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap, ImVec2(0, rowHeight));
+            bool focused = ImGui::IsItemFocused();
+            if (focused || (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlappedByItem) && s_described == Id::Count))
+                s_described_pad = index;
+            const float mid = RowLabel(labelPos, kPadRowLabels[index]);
+            if (s_padWaiting == index && !focused)
+                s_padWaiting = -1;
+            else if (activated && s_padWaiting < 0)
+            {
+                s_padWaiting = index;
+                s_padWaitSince = int64_t(ImGui::GetTime() * 1000.0);
+                s_padRefused = false;
+            }
+            ImGui::TableNextColumn();
+            float arrow = ImGui::GetFrameHeight();
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + (rowHeight - arrow) * 0.5f);
+            ImVec2 min = ImGui::GetCursorScreenPos();
+            ImGui::Dummy(ImVec2(valueWidth + arrow * 2, arrow));
+            const std::string value = s_padWaiting == index ? "Press a button" : PadButtonName(profiles::CurrentPad()[size_t(index)]);
+            ImVec2 size = ImGui::CalcTextSize(value.c_str());
+            ImU32 color;
+            if (s_padWaiting == index)
+            {
+                PushAccentText();
+                color = ImGui::GetColorU32(ImGuiCol_Text);
+                PopAccentText();
+            }
+            else
+                color = ImGui::GetColorU32(focused ? ImGuiCol_PlotLines : ImGuiCol_Text);
+            ImGui::GetWindowDrawList()->AddText(ImVec2(min.x + arrow + (valueWidth - size.x) * 0.5f, CentredTextTop(mid)), color, value.c_str());
             ImGui::PopID();
         }
 
@@ -651,6 +738,38 @@ namespace ui
             if (s_describedUpdate)
             {
                 UpdateRowHelp();
+                return;
+            }
+            if (s_describedProfile && s_category == Category::Controller)
+            {
+                ImGui::TextWrapped("Left and right switch the controller profile, in effect at once. Default is built in: "
+                                   "changing a button while it's active saves the mapping as a copy, \"Default (custom)\".");
+                if (!profiles::LastError().empty())
+                {
+                    PushAccentText();
+                    ImGui::TextWrapped("%s", profiles::LastError().c_str());
+                    PopAccentText();
+                }
+                else
+                    ImGui::TextDisabled("Saved in profiles/controller.toml. Buttons only: the sticks and triggers stay as they are.");
+                return;
+            }
+            if (s_described_pad >= 0)
+            {
+                if (s_padWaiting == s_described_pad)
+                {
+                    PushAccentText();
+                    ImGui::Text(s_padRefused ? "That button can't be used. Press another; Esc cancels."
+                                             : "Press the controller button for %s. Esc cancels.", kPadRowLabels[s_described_pad]);
+                    PopAccentText();
+                    ImGui::TextDisabled(" ");
+                }
+                else
+                {
+                    ImGui::TextWrapped("The Xbox %s button, driven by the controller button shown (by position: South is A on an "
+                                       "Xbox pad, Cross on a PlayStation one).", kPadRowLabels[s_described_pad]);
+                    ImGui::TextDisabled("A or Enter sets the button. Back + Start always opens and closes this menu.");
+                }
                 return;
             }
             if (s_describedProfile)
@@ -830,6 +949,12 @@ namespace ui
         s_describedBugReport = false;
         s_describedUpdate = false;
         s_describedProfile = false;
+        s_described_pad = -1;
+        if (s_padWaiting >= 0 && (s_category != Category::Controller || int64_t(ImGui::GetTime() * 1000.0) - s_padWaitSince > 5000))
+        {
+            fprintf(stderr, "[settings] menu: controller %s: no new button\n", kPadRowLabels[s_padWaiting]);
+            s_padWaiting = -1;
+        }
         if (s_waiting != Id::Count && settings::Info(s_waiting).category != s_category)
             EndWait();
         // For the B check at the end: B's nav cancel (in ImGui's NewFrame,
@@ -880,6 +1005,8 @@ namespace ui
                     float valueWidth = 0.0f;
                     if (category == Category::Controls)
                         valueWidth = 2 * KeyCellWidth() + KeyCellGap();
+                    else if (category == Category::Controller)
+                        valueWidth = ImGui::CalcTextSize("Right Shoulder").x;
                     else
                         for (const auto& o : settings::Options())
                             if (o.category == category && !o.hidden)
@@ -894,11 +1021,14 @@ namespace ui
                     {
                         ImGui::TableSetupColumn("label", ImGuiTableColumnFlags_WidthStretch);
                         ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthFixed, valueWidth + arrow * 2 + ValueInset());
-                        if (category == Category::Controls)
+                        if (category == Category::Controls || category == Category::Controller)
                         {
-                            ProfileRow(valueWidth, focusFirst);
+                            ProfileRow(category == Category::Controls ? KeyboardChoice() : PadChoice(), valueWidth, focusFirst, s_describedProfile);
                             focusFirst = false;
                         }
+                        if (category == Category::Controller)
+                            for (int i = 0; i < int(hid::profiles::kPadButtons); i++)
+                                PadRow(i, valueWidth);
                         if (category == Category::Controls)
                             for (const auto& e : hid::keymap::kEntries)
                             {
@@ -953,7 +1083,7 @@ namespace ui
 
         // Buttons (the help above runs to one, two or three lines).
         ButtonRowAtBottom();
-        bool anyChanged = false;
+        bool anyChanged = s_category == Category::Controller && profiles::ActivePad() != "Default";
         for (const auto& o : settings::Options())
             if (o.category == s_category && !o.hidden && !settings::IsDefault(o.id))
                 anyChanged = true;
@@ -998,6 +1128,8 @@ namespace ui
                 // reset is the switch to Default, so a custom profile keeps its keys.
                 if (s_category == Category::Controls && profiles::KeyboardEnabled())
                     profiles::SwitchKeyboard("Default");
+                else if (s_category == Category::Controller)
+                    profiles::SwitchPad("Default");
                 else
                     for (const auto& o : settings::Options())
                         if (o.category == s_category && !o.hidden)
@@ -1049,8 +1181,38 @@ namespace ui
         ForgetUpdateDialog();
     }
 
+    bool SettingsMenuTakesPadButton(const SDL_GamepadButtonEvent& e)
+    {
+        if (s_padTaken >= 0 && e.button == s_padTaken)
+        {
+            if (!e.down)
+                s_padTaken = -1;
+            return true;  // the release of the button a wait took
+        }
+        if (s_padWaiting < 0 || !e.down)
+            return false;
+        const SDL_GamepadButton button = SDL_GamepadButton(e.button);
+        s_padTaken = e.button;
+        if (!hid::profiles::FindSdlButton(button))
+        {
+            s_padRefused = true;  // a paddle, Guide, the touchpad: not in v1
+            fprintf(stderr, "[settings] menu: controller %s: that button can't be used (v1: no paddles)\n", kPadRowLabels[s_padWaiting]);
+            return true;
+        }
+        profiles::SetPadButton(size_t(s_padWaiting), button);
+        s_padWaiting = -1;
+        return true;
+    }
+
     bool SettingsMenuTakesKey(const SDL_KeyboardEvent& key)
     {
+        if (s_padWaiting >= 0 && key.down && key.scancode == SDL_SCANCODE_ESCAPE)
+        {
+            fprintf(stderr, "[settings] menu: controller %s: no new button (Esc)\n", kPadRowLabels[s_padWaiting]);
+            s_padWaiting = -1;
+            s_takenKey = key.scancode;
+            return true;
+        }
         // The key a wait took or refused stays down a moment longer. ImGui never saw
         // it go down, so its OS repeats would read as fresh presses (Enter
         // would start a new wait, an arrow would move the cursor): they and

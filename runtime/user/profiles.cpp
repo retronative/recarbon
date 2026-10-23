@@ -604,8 +604,7 @@ namespace profiles
     {
         if (!s_padEnabled || index >= hp::kPadButtons || !hp::FindSdlButton(button))
             return false;
-        PadMapping m = Find(s_pad, s_pad.active).value_or(hp::DefaultPad());
-        m[index] = button;
+        const PadMapping m = hp::Rebind(Find(s_pad, s_pad.active).value_or(hp::DefaultPad()), index, button);
         PadStore next = AfterEdit(s_pad, m);
         if (next == s_pad)
             return true;

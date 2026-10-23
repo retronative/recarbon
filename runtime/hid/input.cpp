@@ -8,6 +8,7 @@
 #include <ui/ui.h>
 #include <user/settings.h>
 #include <user/key_names.h>
+#include <user/profiles.h>  // ReCarbon (M8): the active controller profile
 
 #include <SDL3/SDL.h>
 
@@ -643,11 +644,21 @@ namespace hid
         const float triggerDeadzone = settings::GetFloat(settings::Id::TriggerDeadzone);
         if (s_gamepad)
         {
-            // The default mapping (hid/pad_map.h); Back is handled below.
-            for (const padmap::Entry& e : padmap::kDefault)
-                if (e.xinput != XAMINPUT_GAMEPAD_BACK && SDL_GetGamepadButton(s_gamepad, e.sdl))
-                    p.buttons |= e.xinput;
-            padBack = SDL_GetGamepadButton(s_gamepad, SDL_GAMEPAD_BUTTON_BACK);
+            // The active controller profile's buttons (user/profiles.h; the
+            // default is hid/pad_map.h's). Back is handled below: the game's
+            // Back is the button the profile maps to it, while the menu's
+            // Back + Start chord (ui.cpp) is always the real Back and Start.
+            const hid::profiles::PadMapping pad = ::profiles::CurrentPad();
+            size_t backIndex = 0;
+            for (size_t i = 0; i < pad.size(); i++)
+            {
+                const uint16_t xinput = padmap::kDefault[i].xinput;
+                if (xinput == XAMINPUT_GAMEPAD_BACK)
+                    backIndex = i;
+                else if (SDL_GetGamepadButton(s_gamepad, pad[i]))
+                    p.buttons |= xinput;
+            }
+            padBack = SDL_GetGamepadButton(s_gamepad, pad[backIndex]);
             if (PadBackForGame(padBack, SDL_GetGamepadButton(s_gamepad, SDL_GAMEPAD_BUTTON_START)))
                 p.buttons |= XAMINPUT_GAMEPAD_BACK;
             auto axis = [](SDL_Gamepad* g, SDL_GamepadAxis a) { return float(SDL_GetGamepadAxis(g, a)) / 32767.0f; };
@@ -699,9 +710,9 @@ namespace hid
             LogStick(rawX, rawY, lx, ly, rawLt, rawRt, p.leftTrigger, p.rightTrigger);
         if (!padSteps.empty())
             fprintf(stderr, "[input] virtual pad %s: left stick raw (%+.4f, %+.4f) -> game (%d, %d), right (%d, %d); "
-                            "triggers raw (%.3f, %.3f) -> game (%u, %u); deadzones: stick %.2f, trigger %.2f%s\n",
+                            "triggers raw (%.3f, %.3f) -> game (%u, %u); buttons -> game 0x%04X; deadzones: stick %.2f, trigger %.2f%s\n",
                 padSteps.c_str(), rawX, rawY, int(p.lx), int(p.ly), int(p.rx), int(p.ry), rawLt, rawRt,
-                unsigned(p.leftTrigger), unsigned(p.rightTrigger), deadzone, triggerDeadzone,
+                unsigned(p.leftTrigger), unsigned(p.rightTrigger), unsigned(p.buttons), deadzone, triggerDeadzone,
                 s_blocked.load(std::memory_order_relaxed) ? " (a menu is open: the game sees an idle pad)" : "");
 
         // The last time anything was pressed or moved, the script's taps
