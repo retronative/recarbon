@@ -114,6 +114,12 @@ recarbon_test(swapchain_policy_test SOURCES ${RT}/video/swapchain_policy.cpp)
 # Escape cancelling, the quit taking the window close's way out. From SpeedBreaker
 # v0.1.8's (ReCarbon M8 tests).
 recarbon_test(quit_game_test ARGS ${RT})
+# A requested termination (SIGTERM, SIGINT, SIGHUP) quits cleanly, and only a
+# session that didn't end cleanly leaves its crash marker (platform/quit_signals.h,
+# report/crash_marker.h): signals in child processes, markers in a scratch folder
+# in the build tree; main.cpp, presenter.cpp and crash.cpp are read. From
+# SpeedBreaker v0.1.8's (ReCarbon M8 tests).
+recarbon_test(clean_exit_test ARGS ${CMAKE_CURRENT_BINARY_DIR}/clean_exit_scratch ${RT})
 # scripts/frame_times.py (M7 frame pacing) on synthetic frame logs with known
 # answers, and the runtime's log and CSV formats it reads. Python 3.9+.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
@@ -134,7 +140,7 @@ add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOUR
 # launcher_prime_test.sh: needs scripts/steamos/bundle/speedbreaker.sh, which ReCarbon doesn't have.
 # depth24_pack_test, depth_only_test,
 #   display_tone_test, swapchain_use_test, fullscreen_policy_test,
-#   cursor_idle_test, clean_exit_test: grep runtime sources
+#   cursor_idle_test: grep runtime sources
 #   for SpeedBreaker's code; deferred to keep this first set small.
 # memory_plan_test, zpd_report_test, pipeline_cache_header_test,
 #   gpu_choice_test, present_schedule_test, audio_cadence_test,
