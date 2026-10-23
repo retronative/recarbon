@@ -1,0 +1,61 @@
+# GitHub Pages deployment for the ReCarbon website. A TEMPLATE, NOT ENABLED:
+# it lives outside .github/workflows/, so GitHub never runs it from here.
+#
+# To enable it (only once publishing is approved; see docs/DEPLOY.md):
+#   copy it to .github/workflows/website.yml in retronative/recarbon, with this
+#   site in website/, and set Settings > Pages > Source to "GitHub Actions".
+#
+# It runs only by hand (workflow_dispatch) until a push trigger is added.
+name: Website
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+  #   paths: ['website/**', 'runtime/**', 'tests/pad_map_test.cpp', 'LICENSES/**', 'NOTICE']
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - run: npm ci
+      # The drift checks read ReCarbon's source from the repository root
+      # (website/..); --strict makes a missing source fail instead of warn.
+      - run: node scripts/gen-controls.mjs --check --strict
+      - run: node scripts/sync-licenses.mjs --check --strict
+      - run: npx astro build
+        env:
+          SITE_URL: https://retronative.github.io
+          BASE_PATH: /recarbon/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: website/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

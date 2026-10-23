@@ -10,7 +10,7 @@ are in [`docs/PLAN.md`](docs/PLAN.md).
 npm install
 npm run dev        # http://localhost:4321, live reload
 npm run build      # checks the generated data against ReCarbon's source, then builds dist/
-npm run preview    # serves dist/ on http://127.0.0.1:4321
+npm run preview    # serves dist/ on http://127.0.0.1:4321/recarbon/
 npm run check      # type-checks the .astro and .ts files
 ```
 
@@ -36,13 +36,13 @@ a status and its evidence for every action. The build fails on a control id the 
 doesn't have, or on an unverified action that names a game action. Never upgrade a status there
 without the evidence that does it.
 
-## Open decisions (docs/PLAN.md §10)
+## Decisions (docs/PLAN.md §10)
 
 Each is one switch, so settling it later is a small change:
 
 | Decision | Where |
 |---|---|
-| D1 hosting, D2 domain | `SITE_URL` and `BASE_PATH` at build time (`astro.config.mjs`); `site.repoUrl` in `src/site.config.ts` shows the GitHub links |
+| D1 hosting, D2 domain | **Decided:** https://retronative.github.io/recarbon/, from the public `retronative/recarbon` repository (website in `website/`). Defaults in `astro.config.mjs`, overridable with `SITE_URL` / `BASE_PATH`. Deployment is prepared, not enabled: [`docs/DEPLOY.md`](docs/DEPLOY.md) |
 | D4 unverified mappings | `site.showUnverifiedActions` (shown as "to verify" today) |
 | D5 audio | `site.trailer`: null means no sound-on video |
 | D8 footage | `site.heroVideo`: null keeps the abstract placeholder hero |

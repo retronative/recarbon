@@ -2,12 +2,12 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
-// Hosting (D1) and domain (D2) are open decisions: the site's URL and base
-// path come from the environment so either choice needs no code change.
-//   custom domain:     SITE_URL=https://recarbon.example        (no BASE_PATH)
-//   GitHub Pages:      SITE_URL=https://<org>.github.io BASE_PATH=/recarbon-site
-const site = process.env.SITE_URL || 'http://localhost:4321';
-const base = process.env.BASE_PATH || '/';
+// Hosting (D1) and domain (D2): GitHub Pages of the public retronative/recarbon
+// repository, which will hold the runtime and this site (in website/):
+// https://retronative.github.io/recarbon/. SITE_URL and BASE_PATH override
+// both, e.g. BASE_PATH=/ for a custom domain. See docs/DEPLOY.md.
+const site = process.env.SITE_URL || 'https://retronative.github.io';
+const base = process.env.BASE_PATH || '/recarbon/';
 
 export default defineConfig({
 	site,
@@ -17,7 +17,7 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: 'ReCarbon',
-			description: 'ReCarbon: a native Apple Silicon recompilation of an Xbox 360 racing classic. Unofficial fan project.',
+			description: 'ReCarbon: an unofficial native port of Need for Speed: Carbon (Xbox 360) to Apple Silicon Macs. Unofficial fan project.',
 			logo: { src: './src/assets/recarbon-mark.svg', alt: 'ReCarbon' },
 			favicon: '/favicon.svg',
 			customCss: ['./src/styles/fonts.css', './src/styles/tokens.css', './src/styles/starlight.css'],
