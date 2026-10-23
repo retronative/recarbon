@@ -123,10 +123,10 @@ const particles = [...studs, ...dust].map((p) => {
 							<stop offset="0" stop-color="#ff2b3a" stop-opacity="0.55" />
 							<stop offset="1" stop-color="#ff2b3a" stop-opacity="0" />
 						</linearGradient>
-						<linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
-							<stop offset="0" stop-color="#e9f6ff" stop-opacity="0.55" />
-							<stop offset="1" stop-color="#e9f6ff" stop-opacity="0" />
-						</linearGradient>
+						<radialGradient id="lamp-reflection" r="0.5">
+							<stop offset="0" stop-color="#d9f3ff" stop-opacity="0.22" />
+							<stop offset="1" stop-color="#d9f3ff" stop-opacity="0" />
+						</radialGradient>
 						<linearGradient id="wet" x1="0" y1="0" x2="0" y2="1">
 							<stop offset="0" stop-color="#7cf0ff" stop-opacity="0.22" />
 							<stop offset="1" stop-color="#7cf0ff" stop-opacity="0" />
@@ -191,9 +191,9 @@ const particles = [...studs, ...dust].map((p) => {
 						))}
 					</g>
 
-					{/* An oncoming car's headlights far down the road, lighting its own lane; no car is drawn. */}
+					{/* An oncoming car's headlights far down the road, with a faint reflection below them; no car is drawn. */}
 					<g class="oncoming">
-						<path d={`M ${VP.x - 18} ${VP.y + 18} L ${VP.x + 6} ${VP.y + 18} L 985 700 L 800 700 Z`} fill="url(#beam)" opacity="0.35" />
+						<ellipse cx={VP.x} cy={VP.y + 32} rx="34" ry="9" fill="url(#lamp-reflection)" />
 						<circle cx={VP.x - 11} cy={VP.y + 16} r="16" fill="url(#lamp)" />
 						<circle cx={VP.x + 11} cy={VP.y + 16} r="16" fill="url(#lamp)" />
 					</g>
