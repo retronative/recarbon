@@ -1,3 +1,7 @@
+// The release flag for the source repository: true once
+// github.com/retronative/recarbon is public.
+const REPO_PUBLIC = false;
+
 // Site-wide switches. Each open decision in docs/PLAN.md §10 is one value
 // here, so settling it later is a one-line change.
 
@@ -10,9 +14,14 @@ export const site = {
 	// release, then starlight-versions (docs/RELEASING.md).
 	docsVersion: 'alpha',
 
-	// D1 hosting: the public repository's URL once it exists. Null hides every
-	// GitHub link.
-	repoUrl: null as string | null,
+	// The source repository (D1: the runtime and this site, published together).
+	// Its links stay hidden or disabled until REPO_PUBLIC (above) is true; nothing
+	// asks GitHub at run time. RECARBON_REPO_PUBLIC=1 at build time previews
+	// the public state without changing the flag.
+	repo: {
+		url: 'https://github.com/retronative/recarbon',
+		public: REPO_PUBLIC || process.env.RECARBON_REPO_PUBLIC === '1',
+	},
 
 	// D4 unverified mappings: true shows game actions not yet hand-tested as
 	// "to verify"; false hides them until hand test 5 and the controller test.

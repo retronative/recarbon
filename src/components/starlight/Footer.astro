@@ -1,10 +1,12 @@
 ---
 import Default from '@astrojs/starlight/components/Footer.astro';
 import Disclaimer from '../Disclaimer.astro';
+import RepoLinks from '../RepoLinks.astro';
 ---
 
 <Default />
 <div class="legal">
+	<RepoLinks />
 	<Disclaimer />
 </div>
 
@@ -13,5 +15,7 @@ import Disclaimer from '../Disclaimer.astro';
 		margin-top: 2rem;
 		padding-top: 1.25rem;
 		border-top: 1px solid var(--sl-color-gray-5);
+		display: grid;
+		gap: 1rem;
 	}
 </style>

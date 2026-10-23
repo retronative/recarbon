@@ -7,6 +7,7 @@ import '../styles/race.css';
 import SiteNav from '../components/SiteNav.astro';
 import VersionChip from '../components/VersionChip.astro';
 import Disclaimer from '../components/Disclaimer.astro';
+import RepoLinks from '../components/RepoLinks.astro';
 import mark from '../assets/recarbon-mark.svg?url';
 import { site } from '../site.config';
 import { url } from '../lib/url';
@@ -64,6 +65,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 					<a href={url('docs/credits/')}>Credits</a>
 					<a href={url('docs/licenses/notice/')}>Licenses</a>
 				</nav>
+				<RepoLinks />
 				<p class="gpl">ReCarbon is free software under the GNU GPL, version 3 or later.</p>
 				<Disclaimer />
 			</div>

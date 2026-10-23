@@ -1,0 +1,63 @@
+---
+// "View source on GitHub": a link once the repository is public (site.repo),
+// a disabled-looking label with a note until then.
+import GitHubIcon from './GitHubIcon.astro';
+import { repo } from '../lib/repo';
+---
+
+<div class="view-source not-content">
+	{
+		repo ? (
+			<a class="vs-btn" href={repo.url}>
+				<GitHubIcon /> View source on GitHub
+			</a>
+		) : (
+			<>
+				<span class="vs-btn is-off" aria-disabled="true">
+					<GitHubIcon /> View source on GitHub
+				</span>
+				<span class="vs-note">The repository opens with the first public release.</span>
+			</>
+		)
+	}
+</div>
+
+<style>
+	.view-source {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.6rem 1rem;
+		margin-block: 1.25rem;
+	}
+	.vs-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.55rem;
+		min-height: 44px;
+		padding: 0.5rem 1.4rem;
+		font-family: var(--rn-font-display);
+		font-weight: 700;
+		font-size: 0.9rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		text-decoration: none;
+		color: var(--rn-asphalt);
+		background: var(--rn-neon);
+		clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+	}
+	a.vs-btn:hover {
+		background: #fff;
+	}
+	.vs-btn.is-off {
+		color: var(--sl-color-gray-3);
+		background: transparent;
+		box-shadow: inset 0 0 0 1px var(--sl-color-gray-4);
+		clip-path: none;
+		cursor: not-allowed;
+	}
+	.vs-note {
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-3);
+	}
+</style>

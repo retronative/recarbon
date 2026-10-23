@@ -1,6 +1,7 @@
 ---
 // The race HUD's main links, shared by the custom pages and the docs header.
-import { site } from '../site.config';
+import GitHubIcon from './GitHubIcon.astro';
+import { repo } from '../lib/repo';
 import { url } from '../lib/url';
 
 interface Props {
@@ -12,7 +13,6 @@ const links = [
 	{ label: 'Garage', href: url('garage/'), hint: 'Controls' },
 	{ label: 'Docs', href: url('docs/'), hint: 'Guides' },
 	{ label: 'Known issues', href: url('docs/known-issues/') },
-	...(site.repoUrl ? [{ label: 'GitHub', href: site.repoUrl }] : []),
 ];
 const isCurrent = (href: string) => {
 	const path = href.replace(/\/$/, '');
@@ -29,6 +29,16 @@ const isCurrent = (href: string) => {
 				</a>
 			</li>
 		))
+	}
+	{
+		repo && (
+			<li>
+				<a class="gh" href={repo.url} aria-label="ReCarbon on GitHub" title="Source code on GitHub">
+					<GitHubIcon />
+					<span class="gh-label">GitHub</span>
+				</a>
+			</li>
+		)
 	}
 </ul>
 
@@ -58,6 +68,20 @@ const isCurrent = (href: string) => {
 	a:focus-visible {
 		color: var(--sl-color-white, #fff);
 		border-bottom-color: var(--rn-ember);
+	}
+	.gh {
+		display: flex;
+		align-items: center;
+		gap: 0.45rem;
+	}
+	/* In the bar the mark alone; in the stacked menus, the mark and its name. */
+	.site-nav:not(.stacked) .gh-label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
 	}
 	a[aria-current='page'] {
 		color: var(--sl-color-accent-high, var(--rn-neon));

@@ -30,7 +30,10 @@ No other public repository is created, and no repository is renamed.
    Settings > Pages choose "GitHub Actions" as the source.
 4. Once publishing is approved, run the workflow by hand from the Actions tab. Enable its `push`
    trigger only after that first run is checked.
-5. Set `site.repoUrl` in `src/site.config.ts` to `https://github.com/retronative/recarbon`, so the
-   header and footer link to the source, once the repository is public.
+5. When the repository is public, set `REPO_PUBLIC = true` in `src/site.config.ts` (the release
+   flag). The GitHub link in the header, the repository, issues and releases links in the footer,
+   and "View source on GitHub" in the Developers docs then appear. While it is false they are
+   hidden or shown disabled. `RECARBON_REPO_PUBLIC=1 npm run build` previews the public state
+   without changing the flag.
 
 The repository must be public for Pages on GitHub's free plan; the site is public either way.

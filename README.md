@@ -42,7 +42,7 @@ Each is one switch, so settling it later is a small change:
 
 | Decision | Where |
 |---|---|
-| D1 hosting, D2 domain | **Decided:** https://retronative.github.io/recarbon/, from the public `retronative/recarbon` repository (website in `website/`). Defaults in `astro.config.mjs`, overridable with `SITE_URL` / `BASE_PATH`. Deployment is prepared, not enabled: [`docs/DEPLOY.md`](docs/DEPLOY.md) |
+| D1 hosting, D2 domain | **Decided:** https://retronative.github.io/recarbon/, from the public `retronative/recarbon` repository (website in `website/`). Defaults in `astro.config.mjs`, overridable with `SITE_URL` / `BASE_PATH`. GitHub links: `site.repo` and the `REPO_PUBLIC` release flag in `src/site.config.ts`. Deployment is prepared, not enabled: [`docs/DEPLOY.md`](docs/DEPLOY.md) |
 | D4 unverified mappings | `site.showUnverifiedActions` (shown as "to verify" today) |
 | D5 audio | `site.trailer`: null means no sound-on video |
 | D8 footage | `site.heroVideo`: null keeps the abstract placeholder hero |
