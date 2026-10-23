@@ -890,8 +890,9 @@ namespace ui
         {
             // (The Controls page leaves out "D-pad: choose": with Quit Game in the
             // footer its legend was wider than the window and lost "B: close".)
-            const char* legend = s_category == Category::Controls ? "A: set key   Y: clear   X: default   LB RB: page   B: close"
-                                                                 : "D-pad: choose, change   LB RB: page   B: close";
+            // ReCarbon: Q E too, PageDelta()'s fixed keys, for keyboard players.
+            const char* legend = s_category == Category::Controls ? "A: set key   Y: clear   X: default   LB RB / Q E: page   B: close"
+                                                                 : "D-pad: choose, change   LB RB / Q E: page   B: close";
             float w = ImGui::CalcTextSize(legend).x;
             ImGui::SetCursorPosX(std::max(ImGui::GetCursorPosX(), ImGui::GetWindowContentRegionMax().x - w));
             ImGui::TextDisabled("%s", legend);
