@@ -613,6 +613,14 @@ a session).
   game never sees an unplug, because the keyboard stays controller 0. They don't show that a
   physical controller works.
 
+- **M5 closed as accepted** (user decision, 2026-10-23), with three open, non-blocking
+  limitations, none recorded as passed:
+  - the physical controller (deferred, above);
+  - movie judder (pacing hooks deferred to polish);
+  - the intermittent '?' glyph on the Controls page (open, cause unknown).
+
+  M6 stays open until M6.6, M7 is the current milestone, and M8 is Pending, not started (ROADMAP).
+
 ### Hand test 2 (2026-10-23, keyboard, by the user)
 Two sessions in the player's own user folder (`scripts/run_attempt.sh` with
 `RECARBON_REAL_HOME=1 RECARBON_MUTE=0`), 426 s and 1,226 s. The user reports all five checks

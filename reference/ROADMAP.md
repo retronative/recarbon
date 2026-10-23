@@ -146,7 +146,14 @@ Diagnosing a failure is progress. It does not pass a criterion.
 - **Verify:** `scripts/run_attempt.sh` windowed, three times. Each log shows a presented frame,
   and the screenshot matches.
 
-## M5 — Audio, movies, input *(In progress)*
+## M5 — Audio, movies, input *(Accepted 2026-10-23, by the user's decision, with open non-blocking limitations)*
+- **Status decision** (user, 2026-10-23): M5 is closed as accepted. These stay open and are **not**
+  recorded as passed:
+  - the physical controller: Deferred — not verified;
+  - movie judder (Carbon's pacing hooks): deferred to polish;
+  - the intermittent '?' glyph on the Controls page: open, cause unknown.
+
+  The acceptance criteria below are unchanged.
 - **Evidence so far** (FEASIBILITY §6a). M5 stays open until the user closes it:
   - Front-end music: over 5 minutes with no underruns or gaps, in 3/3 runs, after guest thread
     priorities were mapped to macOS QoS (commit 79573bb).
@@ -196,7 +203,7 @@ Diagnosing a failure is progress. It does not pass a criterion.
   in the front end, and the intro movie's frame times in the log. Navigate by hand with a pad (deferred)
   and with the keyboard, scripted with `RECARBON_INPUT_SCRIPT` where possible.
 
-## M6 — First boot to free-roam / race load
+## M6 — First boot to free-roam / race load *(Open until M6.6 is done)*
 Input as in M5: SpeedBreaker's keyboard rebinding and `[keys]` keep working. No new
 customization.
 - **Do:**
@@ -222,7 +229,7 @@ customization.
     soaks ran clean.
   - Each criterion now has evidence. Closing M6 is left to the user.
 
-## M7 — Playable racing
+## M7 — Playable racing *(In progress: the current milestone, user decision 2026-10-23)*
 Input as in M5: SpeedBreaker's keyboard rebinding and `[keys]` keep working. No new
 customization. The controls criterion is judged on the default mappings.
 - **Accept** (each verified separately):
@@ -275,7 +282,11 @@ customization. The controls criterion is judged on the default mappings.
     - audio and picture;
     - the written route repeated 3 times.
 
-## M8 — Polish and distribution
+## M8 — Polish and distribution *(Pending: not started)*
+- **Status decision** (user, 2026-10-23): M8 has not started and needs the user's approval. The
+  groundwork done for the alpha packaging check is kept as evidence: `make_app.py` and
+  `check_app.py` ported (eda0ab1), the second-Mac bundle check (417e0b8), and check 3 measured
+  (3507f5b).
 - **Do:**
   - Parametrize the installer: Carbon manifest, title ID, ReCarbon names.
   - Package `ReCarbon.app` (bundle ID `org.retronative.recarbon`, via `make_app.py`) with license notices and LGPL sources.

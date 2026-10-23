@@ -25,11 +25,13 @@ Native recompilation of Need for Speed: Carbon (Xbox 360) for Apple Silicon.
   `ReCarbon`.
 - **M3–M4:** it boots and renders: kernel and CRT init, data loading, the GPU, movies and the
   front end.
-- **M5 (in progress):** audio, movies and keyboard input work. A physical controller is deferred:
-  not verified, and not an alpha gate.
+- **M5 (accepted, with open limitations):** audio, movies and keyboard input work. Still open:
+  - a physical controller, deferred and not verified;
+  - movie judder, deferred to polish;
+  - an intermittent '?' on the Controls page.
 - **M6 (open):** it boots to free-roam and loads races. Free-roam held 15 minutes without a
   crash in a hand test. The new-profile route test is still pending.
-- **M7 (in progress):** a full career race finishes against AI, and progress survives a restart
+- **M7 (in progress, current):** a full career race finishes against AI, and progress survives a restart
   (hand test 4). Still pending:
   - the driving controls on the keyboard (a physical controller is deferred, not verified);
   - physics;
