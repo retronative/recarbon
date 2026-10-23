@@ -250,6 +250,11 @@ customization. The controls criterion is judged on the default mappings.
       for the Vulkan queue lock while the presenter, holding it, waits in MoltenVK for a free
       CAMetalLayer drawable. Why no drawable is free isn't known.
     - The second kind's cause isn't known either. Neither has been fixed.
+    - **Measurement for the 10 minutes:** `RECARBON_FRAME_LOG=<csv>` logs every present without
+      changing how frames are shown. `scripts/frame_times.py` reports fps, frame-time
+      percentiles, missed-30-fps frames and the thermal state over a racing window, given as
+      session seconds or wall-clock start and finish times. Both have only been checked on
+      menu runs (they agree with `[perf]`), not yet on a race.
 - **Known issues for the alpha** (each still open, not acceptance criteria):
   - Occasional stalls of about 1 s: the presenter waits for a drawable while holding the queue
     lock (FEASIBILITY §6c). To revisit before a public release, or sooner if they become

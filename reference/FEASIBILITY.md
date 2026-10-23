@@ -684,6 +684,16 @@ capture the screen. The condition isn't known, and neither is the cause. It isn'
     `/opt/homebrew/share` and `/opt/homebrew/etc`. The app points the loader at its own
     MoltenVK either way. On a Mac that has Homebrew, Vulkan layers installed there could still
     be picked up.
+    - **Measured** (`VK_LOADER_DEBUG=layer,driver`, 2026-10-23): the loader looks for implicit
+      layers in `/opt/homebrew/etc/xdg`, `/opt/homebrew/etc` and `/opt/homebrew/share` (each
+      `/vulkan/implicit_layer.d`), next to the standard `/etc`, `/usr/local/share`,
+      `/usr/share` and the user's `~/.config` and `~/.local/share`. It found no layer files.
+      So the strings don't make the app load anything from Homebrew. Their one effect is that
+      an implicit layer installed under Homebrew's prefix would load into the game, as one
+      under `/usr/local/share` would. Without Homebrew those folders don't exist.
+    - The options are M8's: build the loader from source with the standard folders only
+      (`build_deps.sh`), or accept the folders and change check 3. Either is a decision for the
+      user. Nothing has been changed.
   - **On a second Mac:** the MacBook Air (M1, macOS 27.0.1) has Homebrew's copies of the same
     libraries installed. The app ran there for 60 s with `DYLD_PRINT_LIBRARIES=1` and a
     cleared environment.
