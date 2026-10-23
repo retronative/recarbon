@@ -290,11 +290,18 @@ customization. The controls criterion is judged on the default mappings.
     - audio and picture;
     - the written route repeated 3 times.
 
-## M8 — Polish and distribution *(Pending: not started)*
-- **Status decision** (user, 2026-10-23): M8 has not started and needs the user's approval. The
-  groundwork done for the alpha packaging check is kept as evidence: `make_app.py` and
-  `check_app.py` ported (eda0ab1), the second-Mac bundle check (417e0b8), and check 3 measured
-  (3507f5b).
+## M8 — Polish and distribution *(In progress: started 2026-10-23 by the user's approval, B1 packaging first)*
+- **Status decision** (user, 2026-10-23): M8 started, packaging (B1) first. Input profiles (B2)
+  wait for the user's approval of the revised preset tables. Decisions are in
+  `reference/M8_PLAN.md`:
+  - macOS 27+;
+  - Vulkan SDK 1.4.363, SDL3 3.4.18 and glslang 16.6.0, built from SHA-256-checked upstream
+    sources;
+  - Homebrew's MoltenVK 1.4.2, pinned by its binary SHA-256;
+  - `check_app.py` kept strict;
+  - the app verified on both Macs.
+- **Groundwork kept as evidence:** `make_app.py` and `check_app.py` ported (eda0ab1), the
+  second-Mac bundle check (417e0b8), and check 3 measured (3507f5b).
 - **Do:**
   - Parametrize the installer: Carbon manifest, title ID, ReCarbon names.
   - Package `ReCarbon.app` (bundle ID `org.retronative.recarbon`, via `make_app.py`) with license notices and LGPL sources.
