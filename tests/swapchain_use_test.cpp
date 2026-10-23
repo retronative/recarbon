@@ -1,5 +1,6 @@
 // From SpeedBreaker v0.1.8's tests/swapchain_use_test.cpp (GPL-3.0-or-later),
-// unchanged: ReCarbon's present waiter is SpeedBreaker's. It reads the
+// with one change: the waiter's work is counted over up to 5 stress runs
+// (see Stress). ReCarbon's present waiter is SpeedBreaker's. It reads the
 // driver's reports only on a 120 Hz Mac with VK_GOOGLE_display_timing, which
 // the M5 and M1 aren't (see present_schedule_test.cpp).
 //
@@ -207,9 +208,21 @@ namespace
     {
         printf("the waiter against swapchains destroyed and made again:\n");
         constexpr int kCycles = 20000;
-        const StressCounts c = RunStress(false, kCycles);
-        CHECK(c.unsound == 0, "%llu uses reached a destroyed swapchain, or another than their present's", (unsigned long long)c.unsound);
-        CHECK(c.destroyedInUse == 0, "%llu swapchains destroyed while in use", (unsigned long long)c.destroyedInUse);
+        // ReCarbon: how much the waiter thread gets to do depends on the
+        // scheduler (539 uses in one ctest run on the M5 against upstream's
+        // 1000), so its work is counted over up to 5 runs; every run must be
+        // sound.
+        StressCounts c{};
+        for (int run = 0; run < 5 && !(c.used > 1000 && c.refused > 0); run++)
+        {
+            const StressCounts r = RunStress(false, kCycles);
+            CHECK(r.unsound == 0, "%llu uses reached a destroyed swapchain, or another than their present's", (unsigned long long)r.unsound);
+            CHECK(r.destroyedInUse == 0, "%llu swapchains destroyed while in use", (unsigned long long)r.destroyedInUse);
+            c.unsound += r.unsound;
+            c.destroyedInUse += r.destroyedInUse;
+            c.used += r.used;
+            c.refused += r.refused;
+        }
         CHECK(c.used > 1000 && c.refused > 0, "the waiter both used swapchains (%llu) and was refused stale ones (%llu)",
             (unsigned long long)c.used, (unsigned long long)c.refused);
         printf("  %d recreations: %llu uses, %llu refused, %llu unsound\n", kCycles, (unsigned long long)c.used,
