@@ -1,5 +1,14 @@
 # M8 plan: packaging (B1) and input profiles (B2)
 
+**Status (2026-10-23):**
+- **M8 started** by the user's approval.
+- **B1 done:**
+  - `build_deps.sh` (825ae48);
+  - the MoltenVK pin (74fa6e1);
+  - the release app passes `check_app` on both Macs (ROADMAP M8 evidence).
+- **B2 waits** for the user's approval of the revised preset tables (D-B2a below). The other B2
+  decisions are approved.
+
 Planning only (2026-10-23). M8 is **Pending**: nothing here starts until the user approves it,
 and no milestone scope or criterion changes. ROADMAP M8 is the scope; this says how.
 
@@ -172,33 +181,36 @@ and no milestone scope or criterion changes. ROADMAP M8 is the scope; this says 
 
 ### Proposals for approval (exact)
 
-#### D-B2a, preset tables
-- **Rows and names:** each row is a `keymap::Control` with its two keys (slot 1, slot 2), named by
-  the `settings.toml` tokens of `user/key_names.h`.
-- **Default:** today's table (`settings.cpp`), pinned by `settings_keys_test`. Rows not listed
-  below are the same as Default in both presets:
+#### D-B2a, preset tables (revised 2026-10-23, for approval)
+- **The rule:** within a preset no key drives two controls, so gas/brake, steering and the D-pad
+  never share a key. Nothing here assumes what Carbon does with the D-pad or the left stick's
+  up/down while driving (unverified until hand test 5).
+- **Default** stays today's table (`settings.cpp`, pinned by `settings_keys_test`), unchanged:
+  it is M5's baseline, and in it Up/Down and Left/Right drive two controls each.
+- **Notation:** each cell is slot 1. Slot 2 is "none" in both presets.
+- **Same in all three tables:**
   - A space, B backspace, X left_shift, Y left_ctrl, LB q, RB e, Start return, Back escape;
-  - the right stick o, l, k, semicolon;
-  - the stick clicks z, c.
+  - the right stick: up o, down l, left k, right semicolon;
+  - the stick clicks: left z, right c.
 
 | Control | Default (today) | WASD | Arrows |
 |---|---|---|---|
-| Right Trigger | w, none | w, none | up, none |
-| Left Trigger | s, none | s, none | down, none |
-| Left Stick Left | a, left | a, none | left, none |
-| Left Stick Right | d, right | d, none | right, none |
-| Left Stick Up | up, none | up, none | up, none |
-| Left Stick Down | down, none | down, none | down, none |
-| D-pad Up / Down / Left / Right | up / down / left / right | up / down / left / right | up / down / left / right |
+| Right Trigger (gas) | w | w | up |
+| Left Trigger (brake/reverse) | s | s | down |
+| Left Stick Left (steer) | a, left | a | left |
+| Left Stick Right (steer) | d, right | d | right |
+| Left Stick Up | up | none | none |
+| Left Stick Down | down | none | none |
+| D-pad Up | up | up | w |
+| D-pad Down | down | down | s |
+| D-pad Left | left | left | a |
+| D-pad Right | right | right | d |
 
-- **WASD:** Default with the arrows taken off steering. Arrows are then menu and D-pad keys only.
-- **Arrows:** gas and brake on Up and Down, steering on Left and Right; W, A, S and D are free.
-  - Up and Down still move the left stick and the D-pad too, as Left and Right already do in
-    Default (several controls on one key are allowed, and the help line says which).
-  - **Unverified:** what Carbon does with D-pad Up or Down, or a pushed left stick, while
-    driving. Hand test 5 maps the game's actions. The Arrows preset can't be called verified
-    before that.
-- Both presets are fixed tables, pinned by a test like `settings_keys_test`.
+- **Checked mechanically:** each preset binds 22 keys to 24 controls, and no key twice.
+- **Menus:** in both presets the menus answer the D-pad (WASD: the arrows; Arrows: W A S D) and,
+  sideways, the steering keys. The left stick's up/down is unbound; whether some Carbon screen
+  needs it is to be seen in testing.
+- **Tests:** pinned by a test like `settings_keys_test`, including the no-duplicate rule.
 
 #### D-B2b, profile storage
 - **Files:** two TOML files in the user folder, next to `settings.toml`:
@@ -262,6 +274,25 @@ and no milestone scope or criterion changes. ROADMAP M8 is the scope; this says 
   buttons whatever the mapping, so no profile can lock the player out.
 - **Testing:** by the virtual pad only, while the physical controller is Deferred — not
   verified. Nothing about controller rebinding is called verified on hardware.
+
+### UI design reference (user, 2026-10-23; a reference, not an implementation gate)
+- **Website reference:** the website's Garage keyboard and controller layouts are the visual
+  reference for the profile and rebinding UI. Reuse the concepts:
+  - a generic controller diagram;
+  - clear button labels and short callouts;
+  - the keyboard mapping layout.
+
+  The website repository (on the M1) is only read, never changed.
+- **Style:**
+  - Dear ImGui drawing only: no web technology embedded.
+  - The website's racing look, kept consistent with the in-game menu.
+  - Controller artwork brand-neutral: no 8BitDo branding.
+  - Xbox/PlayStation label switching is optional polish, not a compatibility claim.
+- **Source of truth:** the runtime's mapping definitions (`settings.cpp`, `pad_map.h`,
+  `key_map.h`), with no duplicated mapping logic. No runtime mapping changes to match the
+  website.
+- **Order:** B2's function, migration safety, presets and tests come before any visual polish.
+  This adds no M8 acceptance criterion.
 
 ### Order and size (if approved)
 1. **B1:** about a day, mostly build-script porting and verification.

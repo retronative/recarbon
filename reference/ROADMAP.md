@@ -277,8 +277,9 @@ customization. The controls criterion is judged on the default mappings.
   - GPU-idle stalls of 250–600 ms, with no lock wait: cause unknown (FEASIBILITY §6c).
   - Physical controller: Deferred — not verified (not an alpha gate, user decision 2026-10-23). The
     virtual-controller and hot-unplug tests pass, but they don't show physical compatibility.
-  - Release packaging still links Homebrew's libraries from `/opt/homebrew` (`check_app`
-    check 3; M8).
+  - Release packaging: resolved for a build against `scripts/macos/build_deps.sh`'s libraries,
+    which `check_app` passes (M8, 74fa6e1). Development builds still link Homebrew's libraries,
+    and no release is published (the LGPL source obligations apply to any binary).
   - Key labels on a non-English keyboard layout: under Myanmar (or another non-Latin layout)
     Settings > Controls draws letter keys as '?' (U+FFFD), because the menu's font lacks the
     script. Binding such a key is refused safely and nothing is saved (verified, 33bf340), but
@@ -302,6 +303,24 @@ customization. The controls criterion is judged on the default mappings.
   - the app verified on both Macs.
 - **Groundwork kept as evidence:** `make_app.py` and `check_app.py` ported (eda0ab1), the
   second-Mac bundle check (417e0b8), and check 3 measured (3507f5b).
+- **Evidence so far (B1, 2026-10-23):**
+  - **Libraries:** `scripts/macos/build_deps.sh` (825ae48, from SpeedBreaker v0.1.8) builds
+    Vulkan SDK 1.4.363, SDL3 3.4.18, glslang 16.6.0 and FFmpeg 7.1.1 from 7 SHA-256-checked
+    archives. Every library is arm64, macOS 27.0, and the loader names no `/opt/homebrew`.
+  - **MoltenVK:** `make_app.py` pins Homebrew's MoltenVK 1.4.2 by its SHA-256 and records its
+    bottle (74fa6e1).
+  - **The release app (74fa6e1) passes `check_app.py`** (checks 1–6, the checks unchanged).
+    - **M5:** the installer check 21/21 with the app's binary. A launch with a cleared
+      environment loaded all 8 libraries from the app, with 0 `/opt/homebrew` mentions and no
+      stubs.
+    - **M1:** the signature verified, the same loads, and the installer folder cases 9/9.
+  - **Mutants caught:** a MoltenVK with other bytes is refused, the Homebrew-linked app still
+    fails check 3, and a wrong archive SHA-256 is refused.
+  - **Not done:**
+    - M8.4, the clean install on a new macOS account (the user creates it);
+    - the LGPL source offer for binaries.
+  - **The availability gate is untested for target 27.0:** its control API is macOS 15.2, and
+    with SDK 27.0 equal to the target there's nothing newer to catch.
 - **Do:**
   - Parametrize the installer: Carbon manifest, title ID, ReCarbon names.
   - Package `ReCarbon.app` (bundle ID `org.retronative.recarbon`, via `make_app.py`) with license notices and LGPL sources.

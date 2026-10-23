@@ -21,8 +21,8 @@ cmake_minimum_required(VERSION 3.20)
 # folder keeps the target it was first configured with.
 # Packaging: scripts/macos/make_app.py (from SpeedBreaker's) bundles this
 # build as is. SpeedBreaker's release targets macOS 15.0 with the libraries
-# built from source (its scripts/macos/build_deps.sh, not ported yet, passed
-# with -DCMAKE_PREFIX_PATH=<prefix> -DFFMPEG_XMA=<prefix>/ffmpeg-xma). The
+# built from source (scripts/macos/build_deps.sh, ported for ReCarbon's macOS 27
+# release in M8, passed with -DCMAKE_PREFIX_PATH=<prefix> -DFFMPEG_XMA=<prefix>/ffmpeg-xma). The
 # target sets only which macOS APIs and libc++ features the code may use, not
 # the CPU code. Before project(): it picks the SDK's settings.
 if(CMAKE_HOST_APPLE AND NOT CMAKE_SYSTEM_NAME STREQUAL "iOS" AND NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET)

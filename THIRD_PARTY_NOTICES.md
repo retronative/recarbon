@@ -45,10 +45,13 @@ ReCarbon release must carry them too.
 | **Vulkan-Headers** and **SPIRV-Headers**: The Khronos Group Inc. | Headers the game, the Vulkan Loader, glslang and SPIRV-Tools are built with. | Apache-2.0 or MIT (Vulkan-Headers); MIT (SPIRV-Headers) | [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt) or [`LICENSES/Vulkan-Headers-MIT.txt`](LICENSES/Vulkan-Headers-MIT.txt); [`LICENSES/SPIRV-Headers.txt`](LICENSES/SPIRV-Headers.txt) |
 | **GNU C Library** (glibc) and **GCC's runtime libraries** (libstdc++, libgcc_s) | **Not shipped by ReCarbon.** SpeedBreaker's SteamOS downloads carry them; ReCarbon builds only for macOS, where the app uses the system's own C and C++ libraries. Listed for completeness. | glibc: LGPL-2.1-or-later. GCC's runtime: GPL-3.0 with the GCC Runtime Library Exception | in SpeedBreaker's SteamOS downloads |
 
-The Mac app's libraries are currently Homebrew's builds, copied into the app by `make_app.py`; the
-app's `Contents/Resources/licenses/README.txt` names each one's project, version and origin
-(Homebrew), next to its license files. Building them from their projects' own source releases (SpeedBreaker's
-`scripts/macos/build_deps.sh`) isn't ported yet (ROADMAP M8).
+A release build of the Mac app takes its libraries from
+[`scripts/macos/build_deps.sh`](scripts/macos/build_deps.sh): SDL3, the Vulkan loader, glslang,
+SPIRV-Tools and FFmpeg, built from their projects' own source releases (checked by SHA-256) for
+macOS 27. MoltenVK is Homebrew's 1.4.2, pinned by its SHA-256. The app's
+`Contents/Resources/licenses/README.txt` names each library's project, version, source and
+SHA-256 (or, for MoltenVK, its Homebrew bottle), next to its license files. A development build
+bundles Homebrew's libraries instead, and its README says so.
 
 ## Source code of the LGPL and GPL parts
 

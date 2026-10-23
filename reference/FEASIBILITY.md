@@ -725,7 +725,7 @@ and RB. It now shows "LB RB / Q E: page" (commit 4f6e0f5).
       an implicit layer installed under Homebrew's prefix would load into the game, as one
       under `/usr/local/share` would. Without Homebrew those folders don't exist.
     - The options are M8's: build the loader from source with the standard folders only
-      (`build_deps.sh`), or accept the folders and change check 3. Either is a decision for the
+      (`build_deps.sh`, done in M8: 825ae48, 74fa6e1), or accept the folders and change check 3. Either is a decision for the
       user. Nothing has been changed.
   - **On a second Mac:** the MacBook Air (M1, macOS 27.0.1) has Homebrew's copies of the same
     libraries installed. The app ran there for 60 s with `DYLD_PRINT_LIBRARIES=1` and a
@@ -742,7 +742,8 @@ and RB. It now shows "LB RB / Q E: page" (commit 4f6e0f5).
   - **Limits:**
     - The app needs macOS 27 or newer, because Homebrew's bottles are built for 27.0.
     - It wasn't tried on a Mac without Homebrew, or under a new macOS user account.
-    - The release build of the libraries (`build_deps.sh`, M8) isn't ported yet.
+    - The release build of the libraries was ported later (M8, `build_deps.sh` 825ae48). A
+      build against them passes `check_app` on all checks (74fa6e1, ROADMAP M8).
 - The 16 KB host-page release fix is ported from SpeedBreaker v0.1.8 with ReCarbon's own test
   and a mutation check (commit 84df8f3). It was latent: never observed in play.
 

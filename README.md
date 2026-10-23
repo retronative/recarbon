@@ -48,7 +48,7 @@ See [reference/FEASIBILITY.md](reference/FEASIBILITY.md) and
 | Item | Value |
 |---|---|
 | Target | Apple Silicon Macs (primary test device: MacBook Air M5). Current builds need macOS 27, because the Homebrew libraries they bundle do |
-| App / executable | `ReCarbon.app` (`scripts/macos/make_app.py`, development builds; `check_app` check 3 still fails) / `ReCarbon` |
+| App / executable | `ReCarbon.app` (`scripts/macos/make_app.py`; a build against `scripts/macos/build_deps.sh`'s libraries passes `check_app`; no release published) / `ReCarbon` |
 | Bundle ID | `org.retronative.recarbon` |
 
 ## How it will work
@@ -102,10 +102,11 @@ choose another target, set `MACOSX_DEPLOYMENT_TARGET` for both `setup_tools.sh` 
 `cmake` run, or pass `-DCMAKE_OSX_DEPLOYMENT_TARGET=<version>` to `cmake`. A build folder keeps
 the target it was first configured with.
 
-Packaging, not done yet: a release for older macOS versions (SpeedBreaker's targets macOS 15.0)
-needs the libraries built from source for that target (SpeedBreaker's
-`scripts/macos/build_deps.sh`, passed with `-DCMAKE_PREFIX_PATH=<prefix>
--DFFMPEG_XMA=<prefix>/ffmpeg-xma`).
+Packaging (M8): the app's libraries are built from SHA-256-checked sources for macOS 27 with
+`scripts/macos/build_deps.sh <prefix>`, about 6 minutes and about 60 MB of downloads. A build
+configured with `-DCMAKE_PREFIX_PATH=<prefix> -DFFMPEG_XMA=<prefix>/ffmpeg-xma` in its own build
+folder is what `scripts/macos/make_app.py` packages and `scripts/macos/check_app.py` passes.
+MoltenVK is Homebrew's 1.4.2, pinned by its SHA-256 in `make_app.py`. No release is published.
 
 `tools/`, `game/`, `ppc/` and `build/` are git-ignored. Never commit or share them.
 
