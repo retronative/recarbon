@@ -90,6 +90,10 @@ const lines = Array.from({ length: 10 }, (_, i) => ({
 							<stop offset="0" stop-color="#2b6bff" stop-opacity="0.9" />
 							<stop offset="1" stop-color="#2b6bff" stop-opacity="0" />
 						</radialGradient>
+						<linearGradient id="trail" x1="0" y1="0" x2="0" y2="1">
+							<stop offset="0" stop-color="#ff2b3a" stop-opacity="0.55" />
+							<stop offset="1" stop-color="#ff2b3a" stop-opacity="0" />
+						</linearGradient>
 						<linearGradient id="wet" x1="0" y1="0" x2="0" y2="1">
 							<stop offset="0" stop-color="#7cf0ff" stop-opacity="0.22" />
 							<stop offset="1" stop-color="#7cf0ff" stop-opacity="0" />
@@ -150,6 +154,28 @@ const lines = Array.from({ length: 10 }, (_, i) => ({
 						<circle cx={VP.x - 11} cy={VP.y + 16} r="16" fill="url(#lamp)" />
 						<circle cx={VP.x + 11} cy={VP.y + 16} r="16" fill="url(#lamp)" />
 					</g>
+
+					{/* A stylized car seen from behind, pulling away: generic shapes, no real model. */}
+					<g class="car">
+						<path class="trail" d="M 992 752 L 1052 752 L 1004 900 L 900 900 Z" fill="url(#trail)" />
+						<path class="trail" d="M 1192 752 L 1252 752 L 1352 900 L 1248 900 Z" fill="url(#trail)" />
+						<ellipse cx="1122" cy="802" rx="170" ry="14" fill="#000" opacity="0.55" />
+						<rect x="988" y="782" width="46" height="20" rx="4" fill="#050608" />
+						<rect x="1210" y="782" width="46" height="20" rx="4" fill="#050608" />
+						<path
+							class="body"
+							d="M 976 788 L 980 748 Q 984 732 1004 728 L 1046 722 Q 1066 692 1096 686 L 1148 686 Q 1178 692 1198 722 L 1240 728 Q 1260 732 1264 748 L 1268 788 Q 1268 798 1258 798 L 986 798 Q 976 798 976 788 Z"
+						/>
+						<path class="glass" d="M 1066 720 Q 1080 698 1100 694 L 1144 694 Q 1164 698 1178 720 Z" />
+						<rect class="wing" x="994" y="711" width="256" height="6" rx="3" />
+						<rect x="1036" y="716" width="5" height="10" fill="#0b0d12" />
+						<rect x="1203" y="716" width="5" height="10" fill="#0b0d12" />
+						<ellipse cx="1022" cy="748" rx="70" ry="26" fill="url(#siren-red)" opacity="0.7" />
+						<ellipse cx="1222" cy="748" rx="70" ry="26" fill="url(#siren-red)" opacity="0.7" />
+						<rect class="tail" x="990" y="744" width="64" height="8" rx="4" />
+						<rect class="tail" x="1190" y="744" width="64" height="8" rx="4" />
+						<rect x="1084" y="758" width="76" height="16" rx="2" fill="#0b0d12" stroke="#2a303a" />
+					</g>
 				</svg>
 			)
 		}
@@ -175,8 +201,21 @@ const lines = Array.from({ length: 10 }, (_, i) => ({
 		<p class="platform">The Xbox 360 game, running natively on Apple Silicon Macs.</p>
 		<p class="status"><span class="dot" aria-hidden="true"></span>Early development — playable in parts, not released.</p>
 		<div class="ctas">
-			<a class="btn" href={url('docs/download/')}>Download</a>
-			<a class="btn btn--ghost" href={url('docs/installation/')}>Get started</a>
+			{
+				site.downloadUrl ? (
+					<>
+						<a class="btn" href={site.downloadUrl}>Download</a>
+						<a class="btn btn--ghost" href={url('docs/installation/')}>Get started</a>
+					</>
+				) : (
+					<>
+						<a class="btn" href={url('docs/installation/')}>Get started</a>
+						<p class="soon">
+							<span class="soon-label">Download</span> Coming soon
+						</p>
+					</>
+				)
+			}
 			{
 				trailer && (
 					<button class="btn btn--ghost" type="button" data-trailer-open>
@@ -308,6 +347,34 @@ const lines = Array.from({ length: 10 }, (_, i) => ({
 		100% {
 			transform: scale(1.35);
 			opacity: 0;
+		}
+	}
+
+	.car .body {
+		fill: #0b0d13;
+		stroke: rgb(124 240 255 / 0.35);
+		stroke-width: 1.5;
+	}
+	.car .glass {
+		fill: #141a26;
+		stroke: rgb(124 240 255 / 0.25);
+	}
+	.car .wing {
+		fill: #0b0d13;
+		stroke: rgb(124 240 255 / 0.3);
+	}
+	.car .tail {
+		fill: #ff4757;
+	}
+	.trail {
+		animation: trail 2.4s ease-in-out infinite alternate;
+	}
+	@keyframes trail {
+		from {
+			opacity: 0.55;
+		}
+		to {
+			opacity: 1;
 		}
 	}
 
@@ -475,6 +542,28 @@ const lines = Array.from({ length: 10 }, (_, i) => ({
 		gap: 0.75rem;
 		margin-top: 1.75rem;
 	}
+	.soon {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+		min-height: 48px;
+		margin: 0;
+		padding: 0 1.2rem;
+		font-family: var(--rn-font-display);
+		font-weight: 700;
+		font-size: 0.95rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: #d3d9e3;
+		border: 1px dashed rgb(233 238 245 / 0.4);
+		clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+	}
+	.soon-label {
+		color: var(--rn-muted);
+	}
+	.soon-label::after {
+		content: ' ·';
+	}
 	.reqs {
 		display: flex;
 		flex-wrap: wrap;
@@ -532,7 +621,7 @@ const lines = Array.from({ length: 10 }, (_, i) => ({
 	.hero.paused .motion-toggle .ico-play {
 		display: inline;
 	}
-	.hero.paused :is(.siren, .oncoming, .speed i) {
+	.hero.paused :is(.siren, .oncoming, .trail, .speed i) {
 		animation-play-state: paused;
 	}
 
@@ -567,6 +656,7 @@ const lines = Array.from({ length: 10 }, (_, i) => ({
 	@media (prefers-reduced-motion: reduce) {
 		.siren,
 		.oncoming,
+		.trail,
 		.speed i {
 			animation: none;
 		}

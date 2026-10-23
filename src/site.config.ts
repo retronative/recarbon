@@ -26,6 +26,10 @@ export const site = {
 		caption: string; // e.g. "Captured in ReCarbon 0.1, MacBook Air M5"
 	},
 
+	// Release: null until there is a public download. The hero then shows
+	// "Download: coming soon" instead of a Download button.
+	downloadUrl: null as string | null,
+
 	// D5 audio: the optional full video with sound. Null: no "Watch trailer"
 	// button. Only set once its audio is licensed or original.
 	trailer: null as null | { src: string; type: string; captions?: string },
