@@ -246,6 +246,18 @@ customization. The controls criterion is judged on the default mappings.
     felt one brief stutter while driving. The log has spikes of two kinds, neither explained:
     about 1 s spent in GPU submission (5 frames during the race), and one where the command
     processor sat idle, like hand test 3's stall (FEASIBILITY §6c).
+    - The first kind was reproduced in isolated runs and measured. The command processor waits
+      for the Vulkan queue lock while the presenter, holding it, waits in MoltenVK for a free
+      CAMetalLayer drawable. Why no drawable is free isn't known.
+    - The second kind's cause isn't known either. Neither has been fixed.
+- **Known issues for the alpha** (each still open, not acceptance criteria):
+  - Occasional stalls of about 1 s: the presenter waits for a drawable while holding the queue
+    lock (FEASIBILITY §6c). To revisit before a public release, or sooner if they become
+    frequent.
+  - GPU-idle stalls of 250–600 ms, with no lock wait: cause unknown (FEASIBILITY §6c).
+  - The physical controller hasn't been tested yet (M5).
+  - Release packaging still links Homebrew's libraries from `/opt/homebrew` (`check_app`
+    check 3; M8).
   - **Still pending:**
     - controls on a controller and on the keyboard;
     - physics;

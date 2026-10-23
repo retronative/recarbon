@@ -856,6 +856,42 @@ hand03 3600` with `RECARBON_REAL_HOME=1 RECARBON_MUTE=0`), on the keyboard, at b
     - `vkQueueSubmit` itself (MoltenVK encodes at submit) took 300–390 ms per second during the
       race. That cost is spread across frames and isn't the cause of a spike.
     - No runtime change was made.
+  - **MoltenVK diagnostics, and an A/B on them (2026-10-23).**
+    - **Setting it up:**
+      - `MVK_CONFIG_PERFORMANCE_TRACKING=1` with
+        `MVK_CONFIG_ACTIVITY_PERFORMANCE_LOGGING_STYLE=1` logs nothing by itself. Its lines are
+        info level, so `MVK_CONFIG_LOG_LEVEL=3` is needed too.
+      - With all three set, MoltenVK writes a "Retrieve a CAMetalDrawable" line for every fetch,
+        about 760 lines a second in all. That fills the session log's 16 MB cap in about 20 s.
+      - `…_LOGGING_STYLE=0` with `MVK_CONFIG_PERFORMANCE_LOGGING_FRAME_COUNT=60` writes about 10
+        lines a second, with cumulative averages and counts.
+      - MoltenVK confirms 3 swapchain images (2560×1440).
+    - **Each configuration was checked in the running process's environment**, all on the same
+      route, build, display and isolated user folder:
+
+      | MoltenVK | Runs with a ~1 s lock stall |
+      |---|---|
+      | Tracking off (lat01b–e, ab_log1 with info logging) | 5 of 5 |
+      | Tracking on (lat02 and lat02b logging per event or every 60 frames; ab_trk1 and ab_trk2 logging off) | 1 of 3 |
+
+      - ab_trk2, with tracking on, had 10 seconds with at least 500 ms of lock wait, and
+        29.3 s of lock wait in all.
+      - Total lock wait varied from 0.35 s to 33.7 s on identical settings.
+    - **What that shows:**
+      - Neither tracking nor logging prevents the stall, so MoltenVK tracking is no fix.
+      - That the runs without a stall all had tracking on is a weak association; with 9 runs
+        it can't be told apart from chance, and tracking overhead can't be separated from
+        logging overhead either.
+      - MoltenVK's timing of each fetch was never captured during a stall. Across about 67,000
+        fetches with tracking on, none took over 44.4 ms.
+    - **A logging gap:** the slow-frame log has holes; lat01e has no line for its 1,084 ms frame
+      at 378–383 s. Stalls are therefore counted from the latency log, the gaps between
+      presents and each interval's worst frame.
+  - **Still open, and on the alpha's known-issues list (ROADMAP M7):**
+    - why no drawable is free for about a second;
+    - the GPU-idle stalls, which happen in every configuration and are a separate issue.
+
+    Both are to be revisited before a public release, or sooner if they become frequent.
 
 ### EA audio CPU budget (SpeedBreaker v0.1.8's fix for MW)
 - Carbon's sound engine is RenderWare Audio Core (`rw::audio::core::System`, `Snd9Service`,
