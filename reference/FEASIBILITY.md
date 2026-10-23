@@ -863,7 +863,7 @@ hand03 3600` with `RECARBON_REAL_HOME=1 RECARBON_MUTE=0`), on the keyboard, at b
       - The latency log's lock waits for the run total 2.78 s.
       - So MoltenVK takes the drawable when the command buffer first uses the swapchain image,
         inside `vkQueueSubmit`, not in `vkQueuePresentKHR` as the comment in `presenter.cpp`
-        says.
+        said (since corrected).
     - **What this establishes:** kind 1 is the presenter waiting for a free CAMetalLayer
       drawable while holding the queue lock, with the command processor queued behind it.
       `sample` only gives totals, so the match is between totals; individual spikes weren't

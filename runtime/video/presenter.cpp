@@ -719,8 +719,10 @@ namespace video
             VkSwapchainCreateInfoKHR info{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
             info.surface = s_surface;
 #ifdef __APPLE__
-            // MoltenVK takes the CAMetalLayer drawable inside vkQueuePresentKHR,
-            // which holds the queue mutex: with 2 drawables (its minimum) that
+            // MoltenVK takes the CAMetalLayer drawable when a command buffer
+            // first uses the swapchain image, inside RunFrame's vkQueueSubmit
+            // (ReCarbon: measured with MoltenVK 1.4.2, FEASIBILITY §6c; not in
+            // vkQueuePresentKHR), which holds the queue mutex: with 2 drawables (its minimum) that
             // waited for the display to free one, and the command processor
             // waited behind it (on an iPhone 86% of its time, "queue lock" in
             // RECARBON_LOG_LATENCY). Linux drivers ask for 3 themselves.
