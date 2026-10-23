@@ -378,6 +378,13 @@ customization. The controls criterion is judged on the default mappings.
       it: `launch_quits` fails, all four are killed after 10 s, and none is left.
     - **The script interrupted during the launch** by SIGINT and by SIGTERM: exit 130, nothing
       left.
+  - **Unit tests ported from SpeedBreaker v0.1.8** (f159fff..b5993d0, 2026-10-24): 25 tests
+    and FSR 1's 3 SPIR-V compiles, adapted to Carbon where the cases stood for MW. Each was
+    checked with planted bugs. ctest grows from 20 to 48 entries, and the same commit passes
+    48/48 on the M5 (10 repeats) and on the M1. Provenance, mutation results and the
+    remaining gaps are in `reference/TEST_COVERAGE.md`. A read-only proposal of what could go
+    upstream is in `reference/UPSTREAM_TEST_PROPOSAL.md` (nothing sent). No acceptance
+    criterion changed.
 - **Do:**
   - Parametrize the installer: Carbon manifest, title ID, ReCarbon names.
   - Package `ReCarbon.app` (bundle ID `org.retronative.recarbon`, via `make_app.py`) with license notices and LGPL sources.
