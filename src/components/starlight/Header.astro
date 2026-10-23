@@ -61,7 +61,8 @@ import VersionChip from '../VersionChip.astro';
 	.right {
 		display: none;
 	}
-	@media (min-width: 72rem) {
+	/* From 50rem the mobile menu (and its nav) is gone, so the nav shows here. */
+	@media (min-width: 50rem) {
 		.main-nav {
 			display: block;
 		}
@@ -69,9 +70,13 @@ import VersionChip from '../VersionChip.astro';
 			display: flex;
 		}
 	}
-	@media (min-width: 50rem) {
-		.right {
-			display: flex;
+	@media (min-width: 50rem) and (max-width: 72rem) {
+		.title-wrapper :global(.version-chip),
+		.title-wrapper :global(.site-title span) {
+			display: none;
+		}
+		.main-nav :global(a) {
+			padding-inline: 0.5rem;
 		}
 	}
 </style>

@@ -293,5 +293,3 @@ export function controlsOfKey(id: string): { label: string; setting: string; slo
 export const BINDING = overlay.binding as Record<string, { status: Status; evidence: string }>;
 export const SOURCE = generated.source;
 export const UI = generated.ui;
-export const PAD = generated.pad;
-export const ALL_CONTROLS = generated.controls;
