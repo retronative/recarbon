@@ -13,23 +13,35 @@ Native recompilation of Need for Speed: Carbon (Xbox 360) for Apple Silicon.
 
 ## Status
 
-**Early development. Nothing runs yet.**
+**Early development: playable in parts, not released.** Statuses come from
+[reference/ROADMAP.md](reference/ROADMAP.md). A milestone passes only when every criterion is met.
 
-- **M0:** the Xbox 360 executable (title 0x454107EC) is verified as compatible with the
-  SpeedBreaker/XenonRecomp pipeline.
-- **M1:** the whole executable recompiles to C++ with no errors, reproducibly.
-- **M2:** all of it compiles for arm64 and links with the adapted SpeedBreaker runtime into a
-  native `ReCarbon` executable. It hasn't been run yet.
-- **M3:** it boots Carbon: kernel and CRT init, data loading, GPU bring-up, and the game's own loading screen rendered. Movie video is still black and nothing is playable.
-- **Next, M4:** rendering, not started.
+- **M0–M2:** the Xbox 360 executable (title 0x454107EC) is verified, recompiles to C++ with no
+  errors, reproducibly, and links with the adapted SpeedBreaker runtime into a native arm64
+  `ReCarbon`.
+- **M3–M4:** it boots and renders: kernel and CRT init, data loading, the GPU, movies and the
+  front end.
+- **M5 (in progress):** audio, movies and input work. The physical controller test is still
+  pending.
+- **M6 (open):** it boots to free-roam and loads races. Free-roam held 15 minutes without a
+  crash in a hand test. The new-profile route test is still pending.
+- **M7 (in progress):** a full career race finishes against AI, and progress survives a restart
+  (hand test 4). Still pending:
+  - the driving controls, on a controller and on the keyboard;
+  - physics;
+  - frame pacing over 10 minutes of racing;
+  - audio and picture;
+  - the repeated route.
+- **Known issues:** occasional stalls of about 1 s while racing, and shorter GPU-idle stalls
+  (both unexplained). See ROADMAP M7.
 
 See [reference/FEASIBILITY.md](reference/FEASIBILITY.md) and
 [reference/ROADMAP.md](reference/ROADMAP.md).
 
 | Item | Value |
 |---|---|
-| Target | Apple Silicon Macs, macOS 15 or later (primary test device: MacBook Air M5) |
-| App / executable | `ReCarbon.app` / `ReCarbon` (planned) |
+| Target | Apple Silicon Macs (primary test device: MacBook Air M5). Current builds need macOS 27, because the Homebrew libraries they bundle do |
+| App / executable | `ReCarbon.app` (`scripts/macos/make_app.py`, development builds; `check_app` check 3 still fails) / `ReCarbon` |
 | Bundle ID | `org.retronative.recarbon` |
 
 ## How it will work
