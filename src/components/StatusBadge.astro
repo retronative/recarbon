@@ -1,0 +1,61 @@
+---
+import { STATUS, type Status } from '../lib/controls';
+
+interface Props {
+	status: Status;
+	compact?: boolean;
+}
+const { status, compact = false } = Astro.props;
+const info = STATUS[status];
+---
+
+<span class:list={['badge', `badge--${status}`, { compact }]} title={info.meaning}>
+	<span class="icon" aria-hidden="true">{info.icon}</span>
+	<span class="text">{info.label}</span>
+</span>
+
+<style>
+	.badge {
+		--c: var(--rn-status-source);
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35em;
+		padding: 0.1em 0.55em 0.1em 0.45em;
+		font-family: var(--rn-font-mono);
+		font-size: 0.72rem;
+		line-height: 1.6;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+		white-space: nowrap;
+		color: var(--c);
+		border: 1px solid color-mix(in srgb, var(--c) 70%, transparent);
+		background: color-mix(in srgb, var(--c) 12%, transparent);
+		border-radius: 2px;
+	}
+	.icon {
+		font-weight: 700;
+	}
+	.compact .text {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+	}
+	.badge--tested { --c: var(--rn-status-tested); }
+	.badge--automated { --c: var(--rn-status-automated); }
+	.badge--hand-verified { --c: var(--rn-status-hand-verified); }
+	.badge--source { --c: var(--rn-status-source); }
+	.badge--pending { --c: var(--rn-status-pending); }
+	.badge--unverified {
+		--c: var(--rn-status-unverified);
+		border-style: dashed;
+		background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--c) 18%, transparent) 0 4px, transparent 4px 8px);
+	}
+	.badge--not-mapped { --c: var(--rn-status-not-mapped); border-style: dotted; }
+
+	:global([data-theme='light']) .badge {
+		color: color-mix(in srgb, var(--c) 45%, #000);
+		border-color: color-mix(in srgb, var(--c) 60%, #000);
+	}
+</style>

@@ -1,0 +1,136 @@
+/* Starlight restyled as ReCarbon's pit wall: night asphalt, neon accents, track-map sidebar. */
+:root,
+::backdrop {
+	--sl-font: var(--rn-font-body);
+	--sl-font-mono: var(--rn-font-mono);
+	--sl-nav-height: var(--rn-header-h);
+	--sl-content-width: 48rem;
+
+	--sl-color-accent-low: #072a33;
+	--sl-color-accent: #0fb8d0;
+	--sl-color-accent-high: var(--rn-neon-soft);
+	--sl-color-white: #ffffff;
+	--sl-color-gray-1: var(--rn-text);
+	--sl-color-gray-2: #c3cad6;
+	--sl-color-gray-3: var(--rn-muted);
+	--sl-color-gray-4: #4a5262;
+	--sl-color-gray-5: var(--rn-graphite);
+	--sl-color-gray-6: var(--rn-carbon);
+	--sl-color-black: var(--rn-asphalt);
+	--sl-color-bg-nav: rgb(11 13 16 / 0.92);
+	--sl-color-hairline-shade: #000;
+}
+
+:root[data-theme='light'],
+[data-theme='light'] ::backdrop {
+	--sl-color-accent-low: #c9f3fa;
+	--sl-color-accent: #007a8c;
+	--sl-color-accent-high: #00424c;
+	--sl-color-white: var(--rn-asphalt);
+	--sl-color-gray-1: var(--rn-carbon);
+	--sl-color-gray-2: #2b313b;
+	--sl-color-gray-3: #4c5566;
+	--sl-color-gray-4: #7c8597;
+	--sl-color-gray-5: #c3cad6;
+	--sl-color-gray-6: #e6eaf0;
+	--sl-color-gray-7: #f4f6f9;
+	--sl-color-black: #ffffff;
+	--sl-color-bg-nav: rgb(255 255 255 / 0.94);
+}
+
+/* Display type: Chakra Petch, upright letters on a slanted rhythm. */
+.sl-markdown-content :is(h1, h2, h3),
+h1#_top {
+	font-family: var(--rn-font-display);
+	font-weight: 700;
+	letter-spacing: 0.01em;
+}
+h1#_top {
+	text-transform: uppercase;
+	font-style: italic;
+}
+.sl-markdown-content h2 {
+	position: relative;
+	padding-block-start: 0.75rem;
+	border-top: 1px solid var(--sl-color-gray-5);
+}
+.sl-markdown-content h2::before {
+	content: '';
+	position: absolute;
+	inset-block-start: -1px;
+	inset-inline-start: 0;
+	width: 3rem;
+	height: 2px;
+	background: var(--sl-color-accent);
+}
+
+/* Header: a race HUD bar with a speed-line underline. */
+header.header {
+	backdrop-filter: blur(8px);
+	border-bottom-color: transparent;
+	background-image: linear-gradient(90deg, transparent, var(--sl-color-accent) 20%, var(--rn-ember) 60%, transparent) !important;
+	background-size: 100% 1px !important;
+	background-repeat: no-repeat !important;
+	background-position: bottom !important;
+	background-color: var(--sl-color-bg-nav) !important;
+}
+
+/* Sidebar as a track map: numbered sectors joined by a racing line. */
+nav.sidebar .top-level > li > details > summary .group-label,
+nav.sidebar .top-level > li > details > summary {
+	font-family: var(--rn-font-display);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+nav.sidebar .top-level {
+	counter-reset: sector;
+}
+nav.sidebar .top-level > li > details > summary .group-label::before {
+	counter-increment: sector;
+	content: 'S' counter(sector) ' ';
+	color: var(--sl-color-accent);
+	font-size: 0.8em;
+	margin-inline-end: 0.25rem;
+}
+nav.sidebar ul ul {
+	border-inline-start: 2px solid var(--sl-color-gray-5);
+}
+nav.sidebar a[aria-current='page'] {
+	background: linear-gradient(90deg, var(--sl-color-accent-low), transparent);
+	color: var(--sl-color-accent-high);
+	border-inline-start: 2px solid var(--sl-color-accent);
+	margin-inline-start: -2px;
+	font-weight: 600;
+}
+
+/* Cards and asides: diagonal cut corners. */
+.sl-markdown-content .card,
+.starlight-aside {
+	clip-path: polygon(0 0, calc(100% - var(--rn-cut)) 0, 100% var(--rn-cut), 100% 100%, var(--rn-cut) 100%, 0 calc(100% - var(--rn-cut)));
+}
+
+.sl-markdown-content table {
+	display: table;
+	width: 100%;
+	font-size: var(--sl-text-sm);
+}
+.sl-markdown-content :is(th, td) {
+	vertical-align: top;
+}
+.sl-markdown-content kbd {
+	font-family: var(--rn-font-mono);
+	font-size: 0.85em;
+	padding: 0.1em 0.4em;
+	border: 1px solid var(--sl-color-gray-4);
+	border-bottom-width: 2px;
+	border-radius: 3px;
+	background: var(--sl-color-gray-6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		scroll-behavior: auto !important;
+	}
+}

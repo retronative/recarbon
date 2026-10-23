@@ -1,0 +1,42 @@
+/* ReCarbon design tokens (docs/PLAN.md §4). Shared by the custom pages and the docs. */
+:root {
+	--rn-asphalt: #0b0d10;
+	--rn-carbon: #15181d;
+	--rn-graphite: #232831;
+	--rn-steel: #3a4250;
+	--rn-neon: #19e3ff;
+	--rn-neon-soft: #7cf0ff;
+	--rn-ember: #ff4d2e;
+	--rn-amber: #ffb02e;
+	--rn-volt: #c6ff3d;
+	--rn-text: #e9eef5;
+	--rn-muted: #8a94a6;
+
+	--rn-font-display: 'Chakra Petch', 'Avenir Next Condensed', system-ui, sans-serif;
+	--rn-font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+	--rn-font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+	--rn-radius: 4px;
+	--rn-cut: 14px; /* diagonal corner cut on cards */
+	--rn-skew: -8deg;
+	--rn-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+	--rn-fast: 160ms;
+	--rn-slow: 280ms;
+	--rn-header-h: 4rem;
+
+	/* Status badges: each has an icon and text too, never colour alone. */
+	--rn-status-tested: var(--rn-volt);
+	--rn-status-automated: #8be08b;
+	--rn-status-hand-verified: var(--rn-neon);
+	--rn-status-source: #b6c2d6;
+	--rn-status-pending: var(--rn-amber);
+	--rn-status-unverified: var(--rn-ember);
+	--rn-status-not-mapped: var(--rn-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:root {
+		--rn-fast: 0ms;
+		--rn-slow: 0ms;
+	}
+}

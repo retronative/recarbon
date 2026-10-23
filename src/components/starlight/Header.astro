@@ -1,0 +1,72 @@
+---
+// The docs header as the race HUD bar: logo, the site's links, search, theme.
+import Search from '@astrojs/starlight/components/Search.astro';
+import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
+import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro';
+import SiteNav from '../SiteNav.astro';
+import VersionChip from '../VersionChip.astro';
+---
+
+<div class="hud">
+	<div class="title-wrapper">
+		<SiteTitle />
+		<VersionChip />
+	</div>
+	<nav aria-label="Main" class="main-nav">
+		<SiteNav />
+	</nav>
+	<div class="search print:hidden">
+		<Search />
+	</div>
+	<div class="right print:hidden">
+		<ThemeSelect />
+	</div>
+</div>
+
+<style>
+	.hud {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		height: 100%;
+	}
+	.title-wrapper {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		min-width: 0;
+		overflow: clip;
+		padding: 0.25rem;
+		margin: -0.25rem;
+	}
+	.title-wrapper :global(.site-title span) {
+		font-family: var(--rn-font-display);
+		font-style: italic;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--sl-color-white);
+	}
+	.main-nav {
+		display: none;
+	}
+	.search {
+		margin-inline-start: auto;
+	}
+	.right {
+		display: none;
+	}
+	@media (min-width: 72rem) {
+		.main-nav {
+			display: block;
+		}
+		.right {
+			display: flex;
+		}
+	}
+	@media (min-width: 50rem) {
+		.right {
+			display: flex;
+		}
+	}
+</style>

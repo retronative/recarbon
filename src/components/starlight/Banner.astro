@@ -1,0 +1,36 @@
+---
+// Every docs page carries the version banner until the first tagged release
+// (then starlight-versions takes over: docs/RELEASING.md). A page's own
+// `banner` frontmatter is shown instead when it has one.
+import { site } from '../../site.config';
+import { url } from '../../lib/url';
+const { banner } = Astro.locals.starlightRoute.entry.data;
+---
+
+<div class="sl-banner" data-pagefind-ignore>
+	{
+		banner ? (
+			<Fragment set:html={banner.content} />
+		) : (
+			<>
+				<strong>{site.docsVersion.toUpperCase()} docs.</strong> ReCarbon has no public release yet: these pages
+				describe the current development build. <a href={url('docs/known-issues/')}>Known issues</a>
+			</>
+		)
+	}
+</div>
+
+<style>
+	.sl-banner {
+		padding: 0.5rem var(--sl-nav-pad-x);
+		font-size: var(--sl-text-sm);
+		text-align: center;
+		text-wrap: balance;
+		color: var(--rn-asphalt);
+		background: repeating-linear-gradient(-45deg, var(--rn-amber) 0 18px, #f5a623 18px 36px);
+	}
+	.sl-banner a {
+		color: inherit;
+		font-weight: 600;
+	}
+</style>
