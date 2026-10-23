@@ -96,6 +96,11 @@ recarbon_test(update_check_test SOURCES ${RT}/update/check.cpp)
 # renderer.cpp's shaders splice the shared code. From SpeedBreaker v0.1.8's,
 # with generic resolve pieces instead of MW's scene (ReCarbon M8 tests).
 recarbon_test(render_scale_test ARGS ${RT}/gpu/renderer.cpp)
+# Where the picture goes on a screen of any shape, letterboxed (Carbon has no
+# view-scaling hooks: game/title_hooks.cpp is linked to check), and Auto
+# internal resolution at a Mac's budgets (video/picture_fit.cpp). From
+# SpeedBreaker v0.1.8's, without its Hor+/Vert+ cases (ReCarbon M8 tests).
+recarbon_test(picture_fit_test SOURCES ${RT}/video/picture_fit.cpp ${RT}/game/title_hooks.cpp)
 # scripts/frame_times.py (M7 frame pacing) on synthetic frame logs with known
 # answers, and the runtime's log and CSV formats it reads. Python 3.9+.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
@@ -120,7 +125,7 @@ add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOUR
 #   for SpeedBreaker's code; deferred to keep this first set small.
 # memory_plan_test, zpd_report_test, pipeline_cache_header_test,
 #   gpu_choice_test, present_schedule_test, audio_cadence_test,
-#   picture_fit_test, band_filter_test, scale_budget_test, refresh_fit_test,
+#   band_filter_test, scale_budget_test, refresh_fit_test,
 #   refresh_notice_test, frame_rate_policy_test, swapchain_policy_test,
 #   code_signature_test, memory_status_test, report_zip_test,
 #   settings_scaling_test, fsr1_test: not checked against ReCarbon's runtime yet;
