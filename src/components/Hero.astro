@@ -40,13 +40,35 @@ const dashes = Array.from({ length: 9 }, (_, i) => {
 	const at = (t: number) => ({ x: VP.x + (930 - VP.x) * t * t, y: VP.y + (900 - VP.y) * t * t });
 	return { a: at(t0), b: at(t1), w: 1 + 9 * t1 };
 });
-const lines = Array.from({ length: 10 }, (_, i) => ({
-	top: 56 + ((i * 29) % 40),
-	delay: -((i * 1.7) % 6).toFixed(2),
-	dur: (2.6 + ((i * 0.9) % 2.4)).toFixed(2),
-	w: 14 + ((i * 13) % 26),
-	hue: i % 3 === 0 ? 'ember' : 'neon',
-}));
+// Motion toward the viewer: short pieces on rays from the vanishing point,
+// scaled about it (see .flow in the styles). Scaling about the VP moves a
+// piece out along its ray and lengthens it, which is perspective. Each ray
+// runs from the VP to E; a piece starts at T0..T1 of the way there.
+const T0 = 0.035;
+const T1 = 0.06;
+const along = (e: { x: number; y: number }, t: number) => ({ x: VP.x + (e.x - VP.x) * t, y: VP.y + (e.y - VP.y) * t });
+const DASH_DUR = 1.4;
+const flowDashes = Array.from({ length: 6 }, (_, i) => {
+	const e = { x: 930, y: 900 };
+	const a = along(e, T0);
+	const b = along(e, T0 + 0.022);
+	const len = Math.hypot(e.x - VP.x, e.y - VP.y);
+	const n = { x: ((e.y - VP.y) / len) * 0.45, y: (-(e.x - VP.x) / len) * 0.45 };
+	return {
+		points: `${a.x - n.x},${a.y - n.y} ${a.x + n.x},${a.y + n.y} ${b.x + n.x},${b.y + n.y} ${b.x - n.x},${b.y - n.y}`,
+		delay: (-(i * DASH_DUR) / 6).toFixed(2),
+	};
+});
+const streaks = [
+	{ e: { x: 170, y: 900 }, c: 'white', dur: 2.3, d: 0.2 },
+	{ e: { x: 1720, y: 900 }, c: 'white', dur: 2.1, d: 1.3 },
+	{ e: { x: 680, y: 900 }, c: 'white', dur: 2.9, d: 0.9 },
+	{ e: { x: 1280, y: 900 }, c: 'white', dur: 2.6, d: 2.0 },
+	{ e: { x: -240, y: 400 }, c: 'amber', dur: 3.2, d: 0.5 },
+	{ e: { x: -240, y: 470 }, c: 'amber', dur: 2.7, d: 2.2 },
+	{ e: { x: 1840, y: 330 }, c: 'amber', dur: 3.0, d: 1.6 },
+	{ e: { x: 1840, y: 430 }, c: 'white', dur: 3.4, d: 0.1 },
+].map((r) => ({ a: along(r.e, T0), b: along(r.e, T1), c: r.c, style: `--dur:${r.dur}s;--delay:-${r.d}s` }));
 ---
 
 <section class="hero" aria-labelledby="hero-title" data-hero data-video={video ? JSON.stringify(video) : undefined}>
@@ -142,9 +164,19 @@ const lines = Array.from({ length: 10 }, (_, i) => ({
 					<rect x="560" y={HORIZON + 20} width="26" height="380" fill="url(#wet)" transform={`skewX(-20)`} />
 					<rect x="760" y={HORIZON + 10} width="18" height="390" fill="url(#wet-amber)" transform={`skewX(-10)`} />
 					<path class="edge" d={`M ${VP.x - 14} ${VP.y} L 220 900 M ${VP.x + 14} ${VP.y} L 1640 900`} />
-					<g class="dashes">
+					<g class="dashes static">
 						{dashes.map((d) => (
 							<line x1={d.a.x} y1={d.a.y} x2={d.b.x} y2={d.b.y} stroke-width={d.w} />
+						))}
+					</g>
+
+					{/* Forward motion: lane dashes and passing lights flowing out of the VP. */}
+					<g class="motion">
+						{flowDashes.map((d) => (
+							<polygon class="flow dash" points={d.points} style={`--dur:${DASH_DUR}s;--delay:${d.delay}s`} />
+						))}
+						{streaks.map((l) => (
+							<line class={`flow streak ${l.c}`} x1={l.a.x} y1={l.a.y} x2={l.b.x} y2={l.b.y} style={l.style} vector-effect="non-scaling-stroke" />
 						))}
 					</g>
 
@@ -179,9 +211,6 @@ const lines = Array.from({ length: 10 }, (_, i) => ({
 				</svg>
 			)
 		}
-		<div class="speed">
-			{lines.map((l) => <i class={l.hue} style={`--top:${l.top}%;--delay:${l.delay}s;--dur:${l.dur}s;--w:${l.w}vw`} />)}
-		</div>
 		<div class="scrim"></div>
 		<div class="hud-frame">
 			<span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
@@ -378,36 +407,61 @@ const lines = Array.from({ length: 10 }, (_, i) => ({
 		}
 	}
 
-	.speed i {
-		position: absolute;
-		top: var(--top);
-		left: 0;
-		width: var(--w);
-		height: 2px;
-		background: linear-gradient(90deg, transparent, var(--rn-neon));
+	/* Perspective flow: scale about the vanishing point on a 1/distance
+	   curve, so pieces creep out of the horizon and rush past at the edges. */
+	.flow {
+		transform-box: view-box;
+		transform-origin: 1060px 520px;
 		opacity: 0;
-		animation: streak var(--dur) linear var(--delay) infinite;
+		animation: approach-flow var(--dur) linear var(--delay) infinite;
 		will-change: transform, opacity;
 	}
-	.speed i.ember {
-		background: linear-gradient(90deg, transparent, var(--rn-ember));
-		height: 1px;
+	.dash {
+		fill: rgb(255 210 122 / 0.8);
+		--peak: 0.85;
 	}
-	@keyframes streak {
+	.streak {
+		stroke-linecap: round;
+		stroke-width: 1.4;
+		--peak: 0.32;
+	}
+	.streak.white {
+		stroke: #e9eef5;
+	}
+	.streak.amber {
+		stroke: #ffc46b;
+		--peak: 0.4;
+	}
+	@keyframes approach-flow {
 		0% {
-			transform: translate3d(-40vw, 0, 0);
+			transform: scale(1);
 			opacity: 0;
 		}
-		15% {
-			opacity: 0.7;
+		20% {
+			transform: scale(1.24);
+			opacity: var(--peak);
+		}
+		45% {
+			transform: scale(1.77);
+		}
+		70% {
+			transform: scale(3.07);
 		}
 		85% {
-			opacity: 0.7;
+			transform: scale(5.5);
+			opacity: var(--peak);
+		}
+		94% {
+			transform: scale(11.8);
 		}
 		100% {
-			transform: translate3d(120vw, 0, 0);
+			transform: scale(27);
 			opacity: 0;
 		}
+	}
+	/* The motion replaces the painted dashes; with reduced motion, those stay. */
+	.dashes.static {
+		display: none;
 	}
 	.scrim {
 		/* keeps the text ≥ 4.5:1 over any frame, footage included */
@@ -621,7 +675,7 @@ const lines = Array.from({ length: 10 }, (_, i) => ({
 	.hero.paused .motion-toggle .ico-play {
 		display: inline;
 	}
-	.hero.paused :is(.siren, .oncoming, .trail, .speed i) {
+	.hero.paused :is(.siren, .oncoming, .trail, .flow) {
 		animation-play-state: paused;
 	}
 
@@ -656,16 +710,17 @@ const lines = Array.from({ length: 10 }, (_, i) => ({
 	@media (prefers-reduced-motion: reduce) {
 		.siren,
 		.oncoming,
-		.trail,
-		.speed i {
+		.trail {
 			animation: none;
 		}
 		.siren {
 			opacity: 0.45;
 		}
-		.speed i {
-			opacity: 0.3;
-			transform: translate3d(calc(var(--top) * 0.6vw), 0, 0);
+		.motion {
+			display: none;
+		}
+		.dashes.static {
+			display: inline;
 		}
 		.motion-toggle {
 			display: none;
