@@ -175,13 +175,17 @@ recarbon_test(write_watch_test SOURCES ${RT}/kernel/write_watch.cpp ${RT}/cpu/gu
 target_include_directories(write_watch_test PRIVATE ${RT}/kernel ${RT}/thirdparty/o1heap ${ROOT}/ppc
     ${ROOT}/tools/XenonRecomp/XenonUtils ${ROOT}/tools/XenonRecomp/thirdparty/simde)
 set_tests_properties(write_watch_test PROPERTIES TIMEOUT 60)
+# Carbon's jump tables (config/switch_tables*.toml) keep their labels and
+# default inside the leaf functions config/recarbon.toml bounds. From
+# SpeedBreaker v0.1.8's, without its Most Wanted dispatches (ReCarbon M8 tests).
+recarbon_test(switch_tables_test ARGS ${ROOT}/config/switch_tables.toml ${ROOT}/config/switch_tables_inline.toml
+    ${ROOT}/config/recarbon.toml)
 # scripts/frame_times.py (M7 frame pacing) on synthetic frame logs with known
 # answers, and the runtime's log and CSV formats it reads. Python 3.9+.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
 add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/frame_times_test.py)
 
 # Not ported from SpeedBreaker (one line each: why).
-# switch_tables_test: reads config/nfsmw.toml, MW's leaf functions and switch tables.
 # edge_bars_test: MW's police vid-cam bars, intro frames and results backdrop.
 # menu_borders_test: MW's Showcase vignette and Blacklist bio panel (GitHub #19).
 # glare_fit_test: game/glare.h, removed with MW's game layer.
