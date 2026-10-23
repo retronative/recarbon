@@ -111,8 +111,17 @@ if [ "$IMAGE" != - ]; then
   expect reinstall_over_install 0 - --install "$IMAGE" --dest "$S/game"
   if [ "${NO_LAUNCH:-0}" != 1 ]; then
     # The game from the install, started outside the repository, for 30 s.
-    (cd "$S" && RECARBON_GAME_DIR="$S/game" RECARBON_MUTE=1 RECARBON_RESOLUTION=1x "$BIN" > "$S/launch.log" 2>&1 &
-     pid=$!; sleep 30; kill -TERM $pid; wait $pid 2>/dev/null)  # SIGTERM: the game quits as its window's close button does
+    # (Started on its own, not as "cd && game &": then $! is a subshell's and
+    # the signal never reaches the game, which went on running.)
+    RECARBON_GAME_DIR="$S/game" RECARBON_MUTE=1 RECARBON_RESOLUTION=1x "$BIN" > "$S/launch.log" 2>&1 &
+    pid=$!
+    sleep 30
+    kill -TERM $pid 2>/dev/null  # SIGTERM: the game quits as its window's close button does
+    for i in $(seq 20); do kill -0 $pid 2>/dev/null || break; sleep 0.5; done
+    if kill -0 $pid 2>/dev/null; then kill -KILL $pid; bad launch_quits "still running 10 s after SIGTERM (killed)"
+    elif ! grep -q '^\[runtime\] SIGTERM' "$S/launch.log"; then bad launch_quits "the game never logged the SIGTERM (was another process signalled?)"
+    else ok launch_quits; fi
+    wait $pid 2>/dev/null
     if grep -q '\[perf\]' "$S/launch.log" && ! grep -q -i -E 'not a recompiled function|strict stub' "$S/launch.log" &&
        grep -q "$S/game" "$S/launch.log"; then ok launch_from_install
     else bad launch_from_install "see $S/launch.log"; fi
