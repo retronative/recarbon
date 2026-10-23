@@ -148,6 +148,10 @@ recarbon_test(cursor_idle_test ARGS ${RT}/ui/ui.cpp)
 # stops taking audio included (apu/audio_cadence.h, header only). From
 # SpeedBreaker v0.1.8's (ReCarbon M8 tests).
 recarbon_test(audio_cadence_test)
+# Where guest memory and the upload ring go on Apple silicon (gpu/memory_plan.h,
+# header only), checked against the M5's and M1's logged plans. The Mac's part
+# of SpeedBreaker v0.1.8's (ReCarbon M8 tests).
+recarbon_test(memory_plan_test)
 # scripts/frame_times.py (M7 frame pacing) on synthetic frame logs with known
 # answers, and the runtime's log and CSV formats it reads. Python 3.9+.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
@@ -166,8 +170,7 @@ add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOUR
 # install_folder_test: asserts MW install names (.nfsmw-install*, SpeedBreaker folders) ~20 times; ReCarbon uses .recarbon-install-*; adapt separately.
 # portable_test: asserts the same MW install and folder names ~40 times; adapt separately.
 # launcher_prime_test.sh: needs scripts/steamos/bundle/speedbreaker.sh, which ReCarbon doesn't have.
-# memory_plan_test,
-#   gpu_choice_test,
+# gpu_choice_test,
 #   band_filter_test, scale_budget_test, refresh_fit_test,
 #   refresh_notice_test,
 #   code_signature_test, memory_status_test, report_zip_test,
