@@ -11,12 +11,12 @@ import VersionChip from '../VersionChip.astro';
 		<SiteTitle />
 		<VersionChip />
 	</div>
-	<div class="search print:hidden">
-		<Search />
-	</div>
 	<nav aria-label="Main" class="main-nav">
 		<SiteNav />
 	</nav>
+	<div class="search print:hidden">
+		<Search />
+	</div>
 </div>
 
 <style>
@@ -64,22 +64,14 @@ import VersionChip from '../VersionChip.astro';
 		margin-inline-start: auto;
 	}
 	/* From 50rem the mobile menu (and its nav) is gone, so the nav shows here:
-	   title left, search in the centre, links right. */
+	   title left; links, then search, on the right. */
 	@media (min-width: 50rem) {
-		.hud {
-			display: grid;
-			grid-template-columns: 1fr auto 1fr;
-		}
-		.title-wrapper {
-			justify-self: start;
-		}
-		.search {
-			justify-self: center;
-			margin-inline-start: 0;
-		}
 		.main-nav {
 			display: block;
-			justify-self: end;
+			margin-inline-start: auto;
+		}
+		.search {
+			margin-inline-start: 0;
 		}
 	}
 	@media (min-width: 50rem) and (max-width: 72rem) {
