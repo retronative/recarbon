@@ -262,17 +262,45 @@ namespace
     // device path; this goes through it, so the deadzones and Vibration
     // reach it as they would a real controller, for tests without one. Each
     // step logs what the game then gets; the rumble the game asks for and
-    // the rumble the pad receives are logged.
+    // the rumble the pad receives are logged. "40:DETACH" unplugs the pad
+    // (SDL removes it, as a real one going) and "50:ATTACH" plugs it in again
+    // (a new SDL id); steps due while it is out pass. ReCarbon: SpeedBreaker
+    // v0.1.8's hotplug steps, for one pad.
     struct PadStep { double time; SDL_GamepadAxis axis; float value; std::string text; int button = -1; bool down = false; };
-    constexpr int kShotStep = -2;  // PadStep::button: a capture, not a button
+    constexpr int kShotStep = -2;    // PadStep::button: a capture, not a button
+    constexpr int kDetachStep = -3;  // unplug
+    constexpr int kAttachStep = -4;  // plug in again
     std::vector<PadStep> s_padSteps;
     size_t s_padNext = 0;
-    SDL_JoystickID s_virtualPadId = 0;
+    SDL_JoystickID s_virtualPadId = 0;  // 0: not attached
     SDL_Joystick* s_virtualPad = nullptr;
+    bool s_virtualOnly = false;  // a virtual pad was asked for: real controllers are left alone
 
     bool SDLCALL VirtualPadRumble(void*, Uint16 low, Uint16 high)
     {
         fprintf(stderr, "[input] virtual pad: rumble low %u, high %u\n", unsigned(low), unsigned(high));
+        return true;
+    }
+
+    bool PlugVirtualPad()
+    {
+        SDL_VirtualJoystickDesc desc;
+        SDL_INIT_INTERFACE(&desc);
+        desc.type = SDL_JOYSTICK_TYPE_GAMEPAD;
+        desc.naxes = SDL_GAMEPAD_AXIS_COUNT;
+        desc.nbuttons = SDL_GAMEPAD_BUTTON_COUNT;
+        desc.name = "ReCarbon virtual pad";
+        desc.Rumble = VirtualPadRumble;
+        s_virtualPadId = SDL_AttachVirtualJoystick(&desc);
+        s_virtualPad = s_virtualPadId ? SDL_OpenJoystick(s_virtualPadId) : nullptr;
+        if (!s_virtualPad)
+        {
+            fprintf(stderr, "[input] RECARBON_VIRTUAL_PAD: no virtual controller: %s\n", SDL_GetError());
+            if (s_virtualPadId)
+                SDL_DetachVirtualJoystick(s_virtualPadId);
+            s_virtualPadId = 0;
+            return false;
+        }
         return true;
     }
 
@@ -311,6 +339,11 @@ namespace
                 s_padSteps.push_back({ std::atof(item.c_str()), SDL_GAMEPAD_AXIS_INVALID, 0.0f, name, kShotStep, false });
                 continue;
             }
+            if (name == "DETACH" || name == "ATTACH")
+            {
+                s_padSteps.push_back({ std::atof(item.c_str()), SDL_GAMEPAD_AXIS_INVALID, 0.0f, name, name == "DETACH" ? kDetachStep : kAttachStep, false });
+                continue;
+            }
             bool found = false;
             for (auto& [n, button] : buttons)
                 if (name == n)
@@ -346,27 +379,16 @@ namespace
                 fprintf(stderr, "[input] RECARBON_VIRTUAL_PAD: unknown axis in \"%s\"\n", item.c_str());
         }
         std::stable_sort(s_padSteps.begin(), s_padSteps.end(), [](const PadStep& a, const PadStep& b) { return a.time < b.time; });
-        SDL_VirtualJoystickDesc desc;
-        SDL_INIT_INTERFACE(&desc);
-        desc.type = SDL_JOYSTICK_TYPE_GAMEPAD;
-        desc.naxes = SDL_GAMEPAD_AXIS_COUNT;
-        desc.nbuttons = SDL_GAMEPAD_BUTTON_COUNT;
-        desc.name = "ReCarbon virtual pad";
-        desc.Rumble = VirtualPadRumble;
-        s_virtualPadId = SDL_AttachVirtualJoystick(&desc);
-        s_virtualPad = s_virtualPadId ? SDL_OpenJoystick(s_virtualPadId) : nullptr;
-        if (!s_virtualPad)
-        {
-            fprintf(stderr, "[input] RECARBON_VIRTUAL_PAD: no virtual controller: %s\n", SDL_GetError());
+        if (!PlugVirtualPad())
             return;
-        }
+        s_virtualOnly = true;
         fprintf(stderr, "[input] virtual pad attached, %zu steps\n", s_padSteps.size());
     }
 
     // Moves the virtual pad's axes due by now. Returns the steps taken ("" if none).
     std::string StepVirtualPad()
     {
-        if (!s_virtualPad || s_padNext >= s_padSteps.size())
+        if (!s_virtualOnly || s_padNext >= s_padSteps.size())
             return {};
         double t = SecondsSinceLaunch();
         std::string taken;
@@ -380,6 +402,22 @@ namespace
                 taken += (taken.empty() ? "" : " ") + step.text;
                 continue;
             }
+            if (step.button == kDetachStep || step.button == kAttachStep)
+            {
+                if (step.button == kDetachStep && s_virtualPad)
+                {
+                    SDL_CloseJoystick(s_virtualPad);
+                    s_virtualPad = nullptr;
+                    SDL_DetachVirtualJoystick(s_virtualPadId);
+                    s_virtualPadId = 0;
+                }
+                else if (step.button == kAttachStep && !s_virtualPad)
+                    PlugVirtualPad();
+                taken += (taken.empty() ? "" : " ") + step.text;
+                continue;
+            }
+            if (!s_virtualPad)
+                continue;  // unplugged: its steps pass
             if (step.button >= 0)
             {
                 if (changed & (1u << step.button))
@@ -407,10 +445,11 @@ namespace
     {
         if (s_gamepad)
             return;
-        if (s_virtualPad)
+        if (s_virtualOnly)
         {
             // Only the test's pad: a real controller nearby must not rumble.
-            s_gamepad = SDL_OpenGamepad(s_virtualPadId);
+            if (s_virtualPadId)
+                s_gamepad = SDL_OpenGamepad(s_virtualPadId);
             if (s_gamepad)
                 fprintf(stderr, "[input] gamepad: %s\n", SDL_GetGamepadName(s_gamepad));
             return;
@@ -711,7 +750,7 @@ namespace hid
             vibration = on;
             rumble = true;  // stop (or restart) a rumble under way
         }
-        if (rumble && s_virtualPad)
+        if (rumble && s_virtualOnly)
         {
             // What the game asked for and what the controller gets, on
             // change. Only with the test's pad: while driving the game

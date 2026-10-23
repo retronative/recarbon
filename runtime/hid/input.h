@@ -24,6 +24,7 @@
 //     whose rumble is logged with what the game asked for (tests of the
 //     Input settings without a person). Buttons too ("5:BACK=1", "5.2:BACK=0",
 //     "6:DOWN" for a tap), which reach the menus as a real controller's do.
+//     "40:DETACH" and "50:ATTACH" unplug it and plug it in again.
 //     Both count seconds of guest time (cpu/guest_time.h): a suspension
 //     doesn't count, so what falls due during one happens after it.
 //   - RECARBON_INPUT_LOG=1: the left stick and triggers once a second, raw and
