@@ -281,15 +281,15 @@ const groups = (mode: Mode) => {
 
 <style>
 	.garage {
-		--mode-color: var(--rn-neon);
+		--mode-color: var(--mode-drive);
 		position: relative;
-		color: var(--rn-text);
+		color: var(--text);
 	}
 	.garage[data-mode='menu'] {
-		--mode-color: var(--rn-volt);
+		--mode-color: var(--mode-menu);
 	}
 	.garage[data-mode='settings'] {
-		--mode-color: #ff8a3d;
+		--mode-color: var(--mode-settings);
 	}
 
 	/* Switches: a device toggle and a gear selector. */
@@ -306,8 +306,8 @@ const groups = (mode: Mode) => {
 		max-width: 100%;
 		padding: 4px;
 		gap: 4px;
-		background: #0e1115;
-		border: 1px solid var(--rn-graphite);
+		background: var(--surface-2);
+		border: 1px solid var(--line);
 		clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
 	}
 	.sw,
@@ -323,20 +323,20 @@ const groups = (mode: Mode) => {
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		text-decoration: none;
-		color: var(--rn-muted);
+		color: var(--text-muted);
 		clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
 		transition: color var(--rn-fast), background var(--rn-fast);
 	}
 	.sw:hover,
 	.gear:hover {
-		color: var(--rn-text);
+		color: var(--text);
 	}
 	.sw[aria-pressed='true'] {
-		color: var(--rn-asphalt);
-		background: var(--rn-text);
+		color: var(--page-bg);
+		background: var(--text);
 	}
 	.gear[aria-pressed='true'] {
-		color: var(--rn-asphalt);
+		color: var(--page-bg);
 		background: var(--mode-color);
 	}
 	@media (max-width: 30rem) {
@@ -365,7 +365,7 @@ const groups = (mode: Mode) => {
 	.gear:focus-visible,
 	.callout:focus-visible,
 	.cluster:focus-visible {
-		outline: 2px solid var(--rn-text);
+		outline: 2px solid var(--text);
 		outline-offset: 2px;
 	}
 
@@ -386,8 +386,8 @@ const groups = (mode: Mode) => {
 		padding: clamp(0.75rem, 2vw, 1.5rem);
 		background:
 			radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--mode-color) 10%, transparent), transparent 60%),
-			linear-gradient(180deg, #12151a, #0b0d10);
-		border: 1px solid var(--rn-graphite);
+			linear-gradient(180deg, var(--surface-2), var(--page-bg));
+		border: 1px solid var(--line);
 		clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
 	}
 	@media (min-width: 64rem) {
@@ -413,8 +413,8 @@ const groups = (mode: Mode) => {
 			top: var(--rn-header-h);
 			z-index: 2;
 			padding: 0.6rem;
-			background: #0b0d10;
-			border: 1px solid var(--rn-graphite);
+			background: var(--page-bg);
+			border: 1px solid var(--line);
 			box-shadow: 0 10px 18px -12px #000;
 		}
 		.pad-note,
@@ -432,7 +432,7 @@ const groups = (mode: Mode) => {
 		margin: 1rem 0 0;
 		font-size: 0.8rem;
 		line-height: 2;
-		color: var(--rn-muted);
+		color: var(--text-muted);
 	}
 
 	.leaders {
@@ -473,7 +473,7 @@ const groups = (mode: Mode) => {
 		font-size: 0.8rem;
 		letter-spacing: 0;
 		text-transform: none;
-		color: var(--rn-muted);
+		color: var(--text-muted);
 	}
 	.group + .group {
 		margin-top: 1.25rem;
@@ -488,13 +488,13 @@ const groups = (mode: Mode) => {
 		font-size: 0.75rem;
 		letter-spacing: 0.12em;
 		text-transform: uppercase;
-		color: var(--rn-muted);
+		color: var(--text-muted);
 	}
 	.group-note {
 		margin: 0 0 0.5rem;
 		font-size: 0.8rem;
 		line-height: 1.45;
-		color: var(--rn-muted);
+		color: var(--text-muted);
 	}
 	.callouts ul {
 		display: grid;
@@ -514,7 +514,7 @@ const groups = (mode: Mode) => {
 		font: inherit;
 		text-align: start;
 		color: inherit;
-		background: #12151a;
+		background: var(--surface-2);
 		border: 1px solid transparent;
 		border-inline-start: 3px solid var(--mode-color);
 		cursor: pointer;
@@ -524,15 +524,15 @@ const groups = (mode: Mode) => {
 		grid-template-columns: 2.1rem minmax(0, 1fr) auto;
 		background: transparent;
 		border-inline-start: 3px dashed color-mix(in srgb, var(--rn-ember) 70%, transparent);
-		color: #c3cad6;
+		color: var(--text-2);
 	}
 	.callout:hover,
 	.callout.is-hot {
-		background: color-mix(in srgb, var(--mode-color) 14%, #12151a);
+		background: color-mix(in srgb, var(--mode-color) 14%, var(--surface-2));
 		transform: translateX(-3px);
 	}
 	.callout[aria-pressed='true'] {
-		background: color-mix(in srgb, var(--mode-color) 22%, #12151a);
+		background: color-mix(in srgb, var(--mode-color) 22%, var(--surface-2));
 		border-color: var(--mode-color);
 	}
 	.glyph {
@@ -550,8 +550,8 @@ const groups = (mode: Mode) => {
 		visibility: hidden;
 	}
 	.group--tbd .glyph {
-		color: #c3cad6;
-		border-color: #3a4250;
+		color: var(--text-2);
+		border-color: var(--line-strong);
 	}
 	.what {
 		display: grid;
@@ -566,12 +566,12 @@ const groups = (mode: Mode) => {
 	}
 	.ctl {
 		font-size: 0.72rem;
-		color: var(--rn-muted);
+		color: var(--text-muted);
 	}
 	.tbd {
 		font-style: italic;
 		font-weight: 500;
-		color: #ff9a85;
+		color: color-mix(in srgb, var(--rn-ember) 65%, var(--text));
 	}
 	.inputs {
 		display: flex;
@@ -586,9 +586,9 @@ const groups = (mode: Mode) => {
 		font-family: var(--rn-font-mono);
 		font-size: 0.72rem;
 		line-height: 1.5;
-		color: var(--rn-text);
-		background: #1c2129;
-		border: 1px solid #3a4250;
+		color: var(--text);
+		background: var(--kbd-bg);
+		border: 1px solid var(--line-strong);
 		border-bottom-width: 2px;
 		border-radius: 3px;
 	}
@@ -634,7 +634,7 @@ const groups = (mode: Mode) => {
 	.label-note {
 		margin: 0;
 		font-size: 0.75rem;
-		color: var(--rn-muted);
+		color: var(--text-muted);
 	}
 	.garage[data-device='keyboard'] .inputs--controller,
 	.garage[data-device='controller'] .inputs--keyboard {
@@ -656,14 +656,14 @@ const groups = (mode: Mode) => {
 		min-height: 40px;
 		padding: 0.2rem 0.3rem;
 		font: 600 0.72rem/1.1 var(--rn-font-body);
-		color: var(--rn-muted);
-		background: #12151a;
-		border: 1px solid var(--rn-graphite);
+		color: var(--text-muted);
+		background: var(--surface-2);
+		border: 1px solid var(--line);
 		border-radius: 3px;
 		cursor: pointer;
 	}
 	.cluster[aria-pressed='true'] {
-		color: var(--rn-asphalt);
+		color: var(--page-bg);
 		background: var(--mode-color);
 		border-color: var(--mode-color);
 	}
@@ -672,7 +672,7 @@ const groups = (mode: Mode) => {
 		height: auto;
 	}
 	.minimap rect {
-		fill: #2a303a;
+		fill: var(--line-strong);
 	}
 	.minimap .viewport {
 		fill: none;
@@ -685,13 +685,13 @@ const groups = (mode: Mode) => {
 		margin-top: 1rem;
 		padding: 0.85rem 1rem;
 		min-height: 4rem;
-		background: #0f1216;
-		border: 1px solid var(--rn-graphite);
+		background: var(--surface);
+		border: 1px solid var(--line);
 		border-top: 2px solid var(--mode-color);
 	}
 	.detail-empty {
 		margin: 0;
-		color: var(--rn-muted);
+		color: var(--text-muted);
 	}
 	.sheet header {
 		display: flex;
@@ -709,7 +709,7 @@ const groups = (mode: Mode) => {
 		font-size: 0.9rem;
 	}
 	.evidence {
-		color: var(--rn-muted);
+		color: var(--text-muted);
 	}
 	.sheet table {
 		width: 100%;
@@ -721,27 +721,27 @@ const groups = (mode: Mode) => {
 		padding: 0.4rem 0.5rem;
 		text-align: start;
 		vertical-align: top;
-		border-bottom: 1px solid var(--rn-graphite);
+		border-bottom: 1px solid var(--line);
 	}
 	.sheet thead th {
 		font-size: 0.72rem;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
-		color: var(--rn-muted);
+		color: var(--text-muted);
 	}
 	.sheet code {
 		display: block;
 		margin-top: 0.2rem;
 		font-family: var(--rn-font-mono);
 		font-size: 0.72rem;
-		color: var(--rn-muted);
+		color: var(--text-muted);
 		overflow-wrap: anywhere;
 	}
 	.line-act {
 		display: block;
 		font-weight: 400;
 		font-size: 0.8rem;
-		color: var(--rn-muted);
+		color: var(--text-muted);
 	}
 	.binding {
 		line-height: 2.1;
@@ -757,7 +757,7 @@ const groups = (mode: Mode) => {
 		}
 		.sheet tr {
 			padding: 0.5rem 0;
-			border-bottom: 1px solid var(--rn-graphite);
+			border-bottom: 1px solid var(--line);
 		}
 	}
 

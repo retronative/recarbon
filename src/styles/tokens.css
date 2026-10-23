@@ -40,3 +40,104 @@
 		--rn-slow: 0ms;
 	}
 }
+
+/* Surfaces, text and diagram colours for the custom pages (landing, Garage),
+   dark by default and light when the visitor picks it (data-theme, shared
+   with the docs). The brand colours above stay as they are; the hero keeps
+   its night palette in both themes. */
+:root {
+	--page-bg: #0b0d10;
+	--page-bg-deep: #08090c;
+	--surface: #15181d;
+	--surface-2: #12151a;
+	--line: #232831;
+	--line-strong: #3a4250;
+	--text: #e9eef5;
+	--text-2: #c3cad6;
+	--text-muted: #8a94a6;
+	--kbd-bg: #1c2129;
+	--mix-base: #161a20; /* what mode colours are tinted into */
+	--mode-drive: #19e3ff;
+	--mode-menu: #c6ff3d;
+	--mode-settings: #ff8a3d;
+	--link: #7cf0ff;
+
+	--kb-case: #0e1115;
+	--kb-case-line: #2a303a;
+	--kb-cap-top: #262c36;
+	--kb-cap-bot: #191d24;
+	--kb-cap-line: #313845;
+	--kb-legend: #d3d9e3;
+	--kb-legend-strong: #fff;
+	--kb-dim-unused: 0.25;
+	--kb-dim-bound: 0.5;
+
+	--pad-body-top: #2a303b;
+	--pad-body-bot: #181c23;
+	--pad-line: #4a5363;
+	--pad-part: #2b313c;
+	--pad-part-line: #48505e;
+	--pad-stick: #20252d;
+	--pad-well: #12151a;
+	--pad-well-line: #353c48;
+	--pad-label: #c9d1dc;
+	--pad-off: #1a1e24;
+	--guide-line: #6b7486;
+	--guide-chip: #0f1216;
+	--guide-chip-line: #5a6377;
+	--guide-text: #e9eef5;
+	--guide-muted: #8a94a6;
+}
+
+:root[data-theme='light'] {
+	--page-bg: #f4f6f9;
+	--page-bg-deep: #e9edf2;
+	--surface: #ffffff;
+	--surface-2: #eef1f5;
+	--line: #d5dbe3;
+	--line-strong: #aab3c0;
+	--text: #15181d;
+	--text-2: #2b313b;
+	--text-muted: #4c5566;
+	--kbd-bg: #ffffff;
+	--mix-base: #ffffff;
+	--mode-drive: #00788a;
+	--mode-menu: #4d7a00;
+	--mode-settings: #b8500c;
+	--link: #00606f;
+
+	--kb-case: #e3e8ee;
+	--kb-case-line: #c3cad6;
+	--kb-cap-top: #ffffff;
+	--kb-cap-bot: #f0f3f7;
+	--kb-cap-line: #b9c1cd;
+	--kb-legend: #2b313b;
+	--kb-legend-strong: #05070b;
+	--kb-dim-unused: 0.45;
+	--kb-dim-bound: 0.7;
+
+	--pad-body-top: #f3f5f8;
+	--pad-body-bot: #dfe4ea;
+	--pad-line: #8d97a6;
+	--pad-part: #ffffff;
+	--pad-part-line: #8d97a6;
+	--pad-stick: #f7f8fa;
+	--pad-well: #e3e8ee;
+	--pad-well-line: #b9c1cd;
+	--pad-label: #2b313b;
+	--pad-off: #eef1f5;
+	--guide-line: #8d97a6;
+	--guide-chip: #ffffff;
+	--guide-chip-line: #8d97a6;
+	--guide-text: #15181d;
+	--guide-muted: #5c6577;
+}
+
+:root {
+	--ink-amber: #ffb02e;
+	color-scheme: dark;
+}
+:root[data-theme='light'] {
+	--ink-amber: #8a5a00;
+	color-scheme: light;
+}

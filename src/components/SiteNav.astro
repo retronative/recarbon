@@ -60,13 +60,13 @@ const isCurrent = (href: string) => {
 		text-transform: uppercase;
 		text-decoration: none;
 		white-space: nowrap;
-		color: var(--sl-color-gray-2, var(--rn-text));
+		color: var(--sl-color-gray-2, var(--text-2));
 		border-bottom: 2px solid transparent;
 		transition: color var(--rn-fast) var(--rn-ease), border-color var(--rn-fast) var(--rn-ease);
 	}
 	a:hover,
 	a:focus-visible {
-		color: var(--sl-color-white, #fff);
+		color: var(--sl-color-white, var(--text));
 		border-bottom-color: var(--rn-ember);
 	}
 	.gh {
@@ -84,7 +84,7 @@ const isCurrent = (href: string) => {
 		white-space: nowrap;
 	}
 	a[aria-current='page'] {
-		color: var(--sl-color-accent-high, var(--rn-neon));
+		color: var(--sl-color-accent-high, var(--link));
 		border-bottom-color: var(--rn-neon);
 	}
 </style>

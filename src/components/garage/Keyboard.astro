@@ -29,8 +29,8 @@ const calloutsOf = (id: string) =>
 	<title id="kb-title">A 75% Mac keyboard. ReCarbon's default keys are lit for the selected mode; the list beside it names each one.</title>
 	<defs>
 		<linearGradient id="kb-cap" x1="0" y1="0" x2="0" y2="1">
-			<stop offset="0" stop-color="#262c36"></stop>
-			<stop offset="1" stop-color="#191d24"></stop>
+			<stop offset="0" style="stop-color: var(--kb-cap-top)"></stop>
+			<stop offset="1" style="stop-color: var(--kb-cap-bot)"></stop>
 		</linearGradient>
 	</defs>
 	<rect class="kb-case" x="-14" y="-14" width={KEYBOARD_WIDTH * U + 28} height={KEYBOARD_HEIGHT * U + 28} rx="16"></rect>
@@ -78,13 +78,13 @@ const calloutsOf = (id: string) =>
 		touch-action: manipulation;
 	}
 	.kb-case {
-		fill: #0e1115;
-		stroke: #2a303a;
+		fill: var(--kb-case);
+		stroke: var(--kb-case-line);
 		stroke-width: 2;
 	}
 	.cap {
 		fill: url(#kb-cap);
-		stroke: #313845;
+		stroke: var(--kb-cap-line);
 		stroke-width: 1.5;
 		transition: fill var(--rn-fast) var(--rn-ease), stroke var(--rn-fast) var(--rn-ease), opacity var(--rn-fast);
 	}
@@ -92,7 +92,7 @@ const calloutsOf = (id: string) =>
 		font-family: var(--rn-font-display);
 		font-weight: 700;
 		font-size: 23px;
-		fill: #d3d9e3;
+		fill: var(--kb-legend);
 		pointer-events: none;
 	}
 	.legend.small {
@@ -112,24 +112,24 @@ const calloutsOf = (id: string) =>
 	:global([data-mode='driving']) .key[data-driving='unused'],
 	:global([data-mode='menu']) .key[data-menu='unused'],
 	:global([data-mode='settings']) .key[data-settings='unused'] {
-		opacity: 0.25;
+		opacity: var(--kb-dim-unused);
 	}
 	:global([data-mode='driving']) .key[data-driving='bound'],
 	:global([data-mode='menu']) .key[data-menu='bound'],
 	:global([data-mode='settings']) .key[data-settings='bound'] {
-		opacity: 0.5;
+		opacity: var(--kb-dim-bound);
 	}
 	:global([data-mode='driving']) .key[data-driving='active'] .cap,
 	:global([data-mode='menu']) .key[data-menu='active'] .cap,
 	:global([data-mode='settings']) .key[data-settings='active'] .cap {
-		fill: color-mix(in srgb, var(--mode-color) 18%, #161a20);
+		fill: color-mix(in srgb, var(--mode-color) 18%, var(--mix-base));
 		stroke: var(--mode-color);
 		stroke-width: 2;
 	}
 	:global([data-mode='driving']) .key[data-driving='active'] .legend,
 	:global([data-mode='menu']) .key[data-menu='active'] .legend,
 	:global([data-mode='settings']) .key[data-settings='active'] .legend {
-		fill: #fff;
+		fill: var(--kb-legend-strong);
 	}
 	:global([data-mode='driving']) .key[data-driving='unverified'] .cap,
 	:global([data-mode='menu']) .key[data-menu='unverified'] .cap {
@@ -147,13 +147,13 @@ const calloutsOf = (id: string) =>
 	}
 	/* Picked: a muted tint of the mode colour and a thin light outline. */
 	:global([data-mode]) .key.is-hot[data-key] .cap {
-		fill: color-mix(in srgb, var(--mode-color) 38%, #161a20);
-		stroke: color-mix(in srgb, var(--mode-color) 45%, #e9eef5);
+		fill: color-mix(in srgb, var(--mode-color) 38%, var(--mix-base));
+		stroke: color-mix(in srgb, var(--mode-color) 45%, var(--text));
 		stroke-width: 1.5;
 		stroke-dasharray: none;
 	}
 	:global([data-mode]) .key.is-hot[data-key] .legend {
-		fill: #fff;
+		fill: var(--kb-legend-strong);
 		font-weight: 700;
 	}
 </style>

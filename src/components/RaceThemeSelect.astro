@@ -1,0 +1,64 @@
+---
+// Dark / Light / Auto for the custom pages. It reads and writes the same
+// stored choice as the docs' theme menu (Starlight's "starlight-theme"
+// key, empty for Auto), so both always agree.
+---
+
+<label class="theme-select">
+	<span class="sr-only">Theme</span>
+	<select data-race-theme aria-label="Select theme">
+		<option value="dark">Dark</option>
+		<option value="light">Light</option>
+		<option value="auto">Auto</option>
+	</select>
+</label>
+
+<style>
+	.theme-select select {
+		min-height: 36px;
+		padding: 0 0.5rem;
+		font: 600 0.8rem var(--rn-font-body);
+		color: var(--text);
+		background: var(--surface-2);
+		border: 1px solid var(--line);
+		border-radius: 3px;
+		cursor: pointer;
+	}
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
+</style>
+
+<script>
+	const KEY = 'starlight-theme';
+	const light = matchMedia('(prefers-color-scheme: light)');
+	const stored = () => {
+		try {
+			return localStorage.getItem(KEY) || 'auto';
+		} catch {
+			return 'auto';
+		}
+	};
+	const apply = (choice: string) => {
+		document.documentElement.dataset.theme = choice === 'auto' ? (light.matches ? 'light' : 'dark') : choice;
+	};
+	for (const select of document.querySelectorAll<HTMLSelectElement>('[data-race-theme]')) {
+		select.value = stored();
+		select.addEventListener('change', () => {
+			try {
+				localStorage.setItem(KEY, select.value === 'auto' ? '' : select.value);
+			} catch {
+				// storage blocked: the choice lasts for this page only
+			}
+			apply(select.value);
+		});
+	}
+	light.addEventListener('change', () => {
+		if (stored() === 'auto') apply('auto');
+	});
+</script>

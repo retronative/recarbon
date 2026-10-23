@@ -8,6 +8,7 @@ import SiteNav from '../components/SiteNav.astro';
 import VersionChip from '../components/VersionChip.astro';
 import Disclaimer from '../components/Disclaimer.astro';
 import RepoLinks from '../components/RepoLinks.astro';
+import RaceThemeSelect from '../components/RaceThemeSelect.astro';
 import mark from '../assets/recarbon-mark.svg?url';
 import { site } from '../site.config';
 import { url } from '../lib/url';
@@ -27,7 +28,18 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>{title}</title>
 		<meta name="description" content={description} />
-		<meta name="color-scheme" content="dark" />
+		<meta name="color-scheme" content="dark light" />
+		<script is:inline>
+			// Before first paint: the theme the docs use (Starlight's stored choice, or the system's).
+			(() => {
+				let t;
+				try {
+					t = localStorage.getItem('starlight-theme');
+				} catch {}
+				document.documentElement.dataset.theme =
+					t === 'light' || t === 'dark' ? t : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+			})();
+		</script>
 		<meta name="theme-color" content="#0b0d10" />
 		<link rel="canonical" href={canonical} />
 		<link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
@@ -47,6 +59,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 			<nav aria-label="Main" class="hud-nav">
 				<SiteNav />
 			</nav>
+			<RaceThemeSelect />
 			<details class="hud-menu">
 				<summary aria-label="Menu"><span aria-hidden="true">☰</span> Menu</summary>
 				<nav aria-label="Main (mobile)">

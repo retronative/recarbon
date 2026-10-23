@@ -69,14 +69,14 @@ const pad = (els: string[], chord?: boolean) => els.map((e) => PAD_NAMES[e] ?? e
 		padding: 0.5rem 0.6rem;
 		text-align: start;
 		vertical-align: top;
-		border-bottom: 1px solid var(--sl-color-gray-5, var(--rn-graphite));
+		border-bottom: 1px solid var(--sl-color-gray-5, var(--line));
 	}
 	thead th {
 		font-family: var(--rn-font-display);
 		font-size: 0.75rem;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		color: var(--sl-color-gray-3, var(--rn-muted));
+		color: var(--sl-color-gray-3, var(--text-muted));
 	}
 	.kbd-list {
 		display: block;
@@ -86,7 +86,7 @@ const pad = (els: string[], chord?: boolean) => els.map((e) => PAD_NAMES[e] ?? e
 		display: block;
 		margin-top: 0.25rem;
 		font-size: 0.75rem;
-		color: var(--sl-color-gray-3, var(--rn-muted));
+		color: var(--sl-color-gray-3, var(--text-muted));
 		background: none;
 		padding: 0;
 		overflow-wrap: anywhere;

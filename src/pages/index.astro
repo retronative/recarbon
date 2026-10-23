@@ -183,7 +183,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	}
 	.more {
 		margin: 1.5rem 0 0;
-		color: var(--rn-muted);
+		color: var(--text-muted);
 	}
 	.more a {
 		font-weight: 600;
@@ -199,7 +199,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	}
 	.how-item {
 		padding: 1.25rem;
-		background: var(--rn-carbon);
+		background: var(--surface);
 		border-top: 2px solid var(--rn-ember);
 	}
 	.how-item h3 {
@@ -210,7 +210,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	}
 	.how-item p {
 		margin: 0;
-		color: #c3cad6;
+		color: var(--text-2);
 		font-size: 0.95rem;
 	}
 
@@ -224,8 +224,8 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	}
 	.stat {
 		padding: 1.25rem 1.25rem 1rem;
-		background: linear-gradient(160deg, #161a20, #0f1216);
-		border-top: 2px solid var(--rn-neon);
+		background: var(--surface);
+		border-top: 2px solid var(--mode-drive);
 	}
 	.lap {
 		display: flex;
@@ -243,7 +243,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	}
 	.unit {
 		font-size: 0.9rem;
-		color: var(--rn-neon);
+		color: var(--mode-drive);
 		text-transform: uppercase;
 	}
 	.stat-label {
@@ -253,7 +253,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	.stat-note {
 		margin: 0.4rem 0 0;
 		font-size: 0.78rem;
-		color: var(--rn-muted);
+		color: var(--text-muted);
 	}
 
 	.cards {
@@ -265,19 +265,19 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 		list-style: none;
 	}
 	.card {
-		--c: var(--rn-muted);
+		--c: var(--text-muted);
 		padding: 1.25rem;
-		background: var(--rn-carbon);
+		background: var(--surface);
 		border-inline-start: 3px solid var(--c);
 	}
 	.state-done {
-		--c: var(--rn-volt);
+		--c: var(--mode-menu);
 	}
 	.state-evidence {
-		--c: var(--rn-neon);
+		--c: var(--mode-drive);
 	}
 	.state-progress {
-		--c: var(--rn-amber);
+		--c: var(--ink-amber);
 	}
 	.card-top {
 		display: flex;
@@ -303,7 +303,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	}
 	.card p:last-child {
 		margin: 0;
-		color: #c3cad6;
+		color: var(--text-2);
 		font-size: 0.92rem;
 	}
 
@@ -318,15 +318,15 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 		}
 	}
 	.teaser-grid p {
-		color: #c3cad6;
+		color: var(--text-2);
 		margin: 0 0 1.5rem;
 	}
 	.teaser-board {
-		--mode-color: var(--rn-neon);
+		--mode-color: var(--mode-drive);
 		display: block;
 		padding: 1.25rem;
-		background: radial-gradient(ellipse at 50% 0%, rgb(25 227 255 / 0.1), transparent 60%), #0e1115;
-		border: 1px solid var(--rn-graphite);
+		background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--mode-drive) 10%, transparent), transparent 60%), var(--surface-2);
+		border: 1px solid var(--line);
 		transition: transform var(--rn-slow) var(--rn-ease);
 	}
 	.teaser-board:hover {
@@ -345,7 +345,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	.step {
 		position: relative;
 		padding: 1.25rem;
-		background: var(--rn-carbon);
+		background: var(--surface);
 		counter-increment: step;
 	}
 	.step::after {
@@ -357,7 +357,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 		font-style: italic;
 		font-weight: 700;
 		font-size: 2.5rem;
-		color: rgb(233 238 245 / 0.08);
+		color: color-mix(in srgb, var(--text) 8%, transparent);
 	}
 	.arc {
 		width: 3.5rem;
@@ -366,7 +366,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 		stroke-linecap: round;
 	}
 	.arc path {
-		stroke: var(--rn-neon);
+		stroke: var(--mode-drive);
 		stroke-dasharray: 3;
 	}
 	.arc-1 {
@@ -387,7 +387,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	}
 	.step p {
 		margin: 0;
-		color: #c3cad6;
+		color: var(--text-2);
 	}
 	.step code {
 		display: block;
@@ -395,15 +395,15 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 		padding: 0.5rem 0.75rem;
 		font-family: var(--rn-font-mono);
 		font-size: 0.82rem;
-		background: #0b0d10;
-		border: 1px solid var(--rn-graphite);
+		background: var(--page-bg);
+		border: 1px solid var(--line);
 		overflow-wrap: anywhere;
 	}
 	.step kbd {
 		font-family: var(--rn-font-mono);
 		font-size: 0.8em;
 		padding: 0 0.35em;
-		border: 1px solid #3a4250;
+		border: 1px solid var(--line-strong);
 		border-bottom-width: 2px;
 		border-radius: 3px;
 	}
@@ -417,7 +417,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	}
 	.issue-list li {
 		padding: 0.75rem 1rem;
-		background: repeating-linear-gradient(-45deg, rgb(255 176 46 / 0.06) 0 10px, transparent 10px 20px), var(--rn-carbon);
+		background: repeating-linear-gradient(-45deg, rgb(255 176 46 / 0.06) 0 10px, transparent 10px 20px), var(--surface);
 		border-inline-start: 3px solid var(--rn-amber);
 	}
 
@@ -429,10 +429,10 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 		font-family: var(--rn-font-display);
 		font-size: clamp(1rem, 2.2vw, 1.3rem);
 		letter-spacing: 0.04em;
-		color: #c3cad6;
+		color: var(--text-2);
 	}
 	.credit-strip a {
-		color: var(--rn-text);
+		color: var(--text);
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.teaser-board:hover {
