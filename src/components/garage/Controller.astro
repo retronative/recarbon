@@ -44,9 +44,6 @@ const dpad = [
 			<stop offset="0" stop-color="#232832"></stop>
 			<stop offset="1" stop-color="#14171c"></stop>
 		</linearGradient>
-		<pattern id="pad-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-			<line x1="0" y1="0" x2="0" y2="8" stroke="var(--rn-ember)" stroke-width="3" opacity="0.4"></line>
-		</pattern>
 	</defs>
 
 	<!-- Triggers and bumpers, seen from above the top edge. -->
@@ -208,18 +205,28 @@ const dpad = [
 	}
 	:global([data-mode='driving']) .pad-el[data-driving='unverified'] .part,
 	:global([data-mode='menu']) .pad-el[data-menu='unverified'] .part {
-		stroke: var(--rn-ember);
+		fill: #222730;
+		stroke: color-mix(in srgb, var(--rn-ember) 75%, transparent);
+		stroke-width: 1.5;
 		stroke-dasharray: 5 3;
-		fill: url(#pad-hatch);
+	}
+
+	/* The hovered, focused or picked control: filled, and the rest dims. */
+	:global(.has-hot) .pad-el:not(.is-hot) {
+		filter: brightness(0.6);
 	}
 	.pad-el.is-hot {
 		opacity: 1 !important;
 	}
-	.pad-el.is-hot .part {
+	:global([data-mode]) .pad-el.is-hot[data-el] .part {
+		fill: var(--mode-color);
 		stroke: #fff;
 		stroke-width: 2.5;
-		fill: color-mix(in srgb, var(--mode-color) 40%, #1b2027);
-		filter: drop-shadow(0 0 8px var(--mode-color));
+		stroke-dasharray: none;
+		filter: drop-shadow(0 0 10px var(--mode-color));
+	}
+	:global([data-mode]) .pad-el.is-hot[data-el] .lbl {
+		fill: #05070b;
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.pad-el.is-hot .part {

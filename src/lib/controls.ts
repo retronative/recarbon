@@ -260,30 +260,6 @@ export function padStates(element: string): Record<Mode, KeyState> {
 	return { driving: state('driving'), menu: state('menu'), settings: state('settings') };
 }
 
-// The Xbox controls a key drives by default, as short glyphs for its keycap.
-const GLYPH: Record<string, string> = {
-	RightTrigger: 'RT',
-	LeftTrigger: 'LT',
-	LeftStickLeft: 'LS←',
-	LeftStickRight: 'LS→',
-	LeftStickUp: 'LS↑',
-	LeftStickDown: 'LS↓',
-	DpadUp: 'D↑',
-	DpadDown: 'D↓',
-	DpadLeft: 'D←',
-	DpadRight: 'D→',
-	Start: 'Start',
-	Back: 'Back',
-	RightStickUp: 'RS↑',
-	RightStickDown: 'RS↓',
-	RightStickLeft: 'RS←',
-	RightStickRight: 'RS→',
-	LeftStickClick: 'L3',
-	RightStickClick: 'R3',
-};
-export function keyGlyphs(id: string): string[] {
-	return generated.controls.filter((c) => c.keys.includes(id)).map((c) => GLYPH[c.id] ?? c.id);
-}
 export function controlsOfKey(id: string): { label: string; setting: string; slot: 1 | 2 }[] {
 	return generated.controls
 		.filter((c) => c.keys.includes(id))

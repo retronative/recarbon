@@ -4,7 +4,7 @@
 // mode, so the drawing is right without JS too. The SVG is an image to
 // assistive tech: the callout list beside it is the accessible equivalent.
 import { KEYBOARD, KEYBOARD_HEIGHT, KEYBOARD_WIDTH } from '../../data/keyboard-75';
-import { CALLOUTS, keyGlyphs, keyStates, type Mode } from '../../lib/controls';
+import { CALLOUTS, keyStates, type Mode } from '../../lib/controls';
 
 const U = 60;
 const GAP = 5;
@@ -28,10 +28,6 @@ const calloutsOf = (id: string) =>
 >
 	<title id="kb-title">A 75% Mac keyboard. ReCarbon's default keys are lit for the selected mode; the list beside it names each one.</title>
 	<defs>
-		<pattern id="kb-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-			<rect width="8" height="8" fill="transparent"></rect>
-			<line x1="0" y1="0" x2="0" y2="8" stroke="var(--rn-ember)" stroke-width="3" opacity="0.35"></line>
-		</pattern>
 		<linearGradient id="kb-cap" x1="0" y1="0" x2="0" y2="1">
 			<stop offset="0" stop-color="#262c36"></stop>
 			<stop offset="1" stop-color="#191d24"></stop>
@@ -45,7 +41,6 @@ const calloutsOf = (id: string) =>
 			const x = k.x * U + GAP / 2;
 			const y = k.y * U + GAP / 2;
 			const s = keyStates(k.id);
-			const glyphs = keyGlyphs(k.id);
 			return (
 				<g
 					class="key"
@@ -57,13 +52,13 @@ const calloutsOf = (id: string) =>
 					data-callouts={calloutsOf(k.id)}
 				>
 					<rect class="cap" x={x} y={y} width={w} height={h} rx="7" />
-					<rect class="hatch" x={x} y={y} width={w} height={h} rx="7" fill="url(#kb-hatch)" />
-					<text class:list={['legend', { small: k.small }]} x={x + 9} y={y + (k.small ? 20 : 25)}>
-						{k.label}
-					</text>
-					{glyphs.length > 0 && (
-						<text class="glyph" x={x + w - 7} y={y + h - 9} text-anchor="end">
-							{glyphs.join(' ')}
+					{k.small ? (
+						<text class="legend small" x={x + 9} y={y + 21}>
+							{k.label}
+						</text>
+					) : (
+						<text class="legend" x={x + w / 2} y={y + h / 2 + 8} text-anchor="middle">
+							{k.label}
 						</text>
 					)}
 				</g>
@@ -93,15 +88,11 @@ const calloutsOf = (id: string) =>
 		stroke-width: 1.5;
 		transition: fill var(--rn-fast) var(--rn-ease), stroke var(--rn-fast) var(--rn-ease), opacity var(--rn-fast);
 	}
-	.hatch {
-		display: none;
-		pointer-events: none;
-	}
 	.legend {
 		font-family: var(--rn-font-display);
 		font-weight: 700;
-		font-size: 21px;
-		fill: #c9d1dc;
+		font-size: 23px;
+		fill: #d3d9e3;
 		pointer-events: none;
 	}
 	.legend.small {
@@ -110,19 +101,14 @@ const calloutsOf = (id: string) =>
 		font-weight: 500;
 		letter-spacing: 0.02em;
 	}
-	.glyph {
-		font-family: var(--rn-font-mono);
-		font-size: 11.5px;
-		fill: var(--rn-muted);
-		pointer-events: none;
-	}
 	.key {
 		cursor: pointer;
 		transition: opacity var(--rn-fast);
 	}
 
 	/* Per-mode states: unused keys dim to 25%; bound keys with no action in
-	   this mode to 50%; active keys glow in the mode colour. */
+	   this mode to 50%; mapped keys take the mode colour; keys whose game
+	   action is still to verify get a quiet dashed outline. */
 	:global([data-mode='driving']) .key[data-driving='unused'],
 	:global([data-mode='menu']) .key[data-menu='unused'],
 	:global([data-mode='settings']) .key[data-settings='unused'] {
@@ -133,41 +119,42 @@ const calloutsOf = (id: string) =>
 	:global([data-mode='settings']) .key[data-settings='bound'] {
 		opacity: 0.5;
 	}
-	:global([data-mode='driving']) .key:is([data-driving='active'], [data-driving='unverified']) .cap,
-	:global([data-mode='menu']) .key:is([data-menu='active'], [data-menu='unverified']) .cap,
-	:global([data-mode='settings']) .key:is([data-settings='active'], [data-settings='unverified']) .cap {
-		fill: color-mix(in srgb, var(--mode-color) 16%, #161a20);
+	:global([data-mode='driving']) .key[data-driving='active'] .cap,
+	:global([data-mode='menu']) .key[data-menu='active'] .cap,
+	:global([data-mode='settings']) .key[data-settings='active'] .cap {
+		fill: color-mix(in srgb, var(--mode-color) 18%, #161a20);
 		stroke: var(--mode-color);
 		stroke-width: 2;
 	}
-	:global([data-mode='driving']) .key:is([data-driving='active'], [data-driving='unverified']) .glyph,
-	:global([data-mode='menu']) .key:is([data-menu='active'], [data-menu='unverified']) .glyph,
-	:global([data-mode='settings']) .key:is([data-settings='active'], [data-settings='unverified']) .glyph {
-		fill: var(--mode-color);
+	:global([data-mode='driving']) .key[data-driving='active'] .legend,
+	:global([data-mode='menu']) .key[data-menu='active'] .legend,
+	:global([data-mode='settings']) .key[data-settings='active'] .legend {
+		fill: #fff;
 	}
 	:global([data-mode='driving']) .key[data-driving='unverified'] .cap,
 	:global([data-mode='menu']) .key[data-menu='unverified'] .cap {
-		stroke: var(--rn-ember);
-		stroke-dasharray: 6 4;
-	}
-	:global([data-mode='driving']) .key[data-driving='unverified'] .hatch,
-	:global([data-mode='menu']) .key[data-menu='unverified'] .hatch {
-		display: block;
+		stroke: color-mix(in srgb, var(--rn-ember) 75%, transparent);
+		stroke-width: 1.5;
+		stroke-dasharray: 5 4;
 	}
 
-	/* The hovered, focused or pinned callout's keys. */
-	.key.is-hot .cap {
-		fill: color-mix(in srgb, var(--mode-color) 38%, #161a20);
-		stroke: #fff;
-		stroke-width: 2.5;
-		filter: drop-shadow(0 0 8px var(--mode-color));
+	/* The hovered, focused or picked control: filled, and the rest dims. */
+	:global(.has-hot) .key:not(.is-hot) :is(.cap, .legend) {
+		opacity: 0.45;
 	}
 	.key.is-hot {
 		opacity: 1 !important;
 	}
-	.key.is-picked .cap {
+	:global([data-mode]) .key.is-hot[data-key] .cap {
+		fill: var(--mode-color);
 		stroke: #fff;
 		stroke-width: 2.5;
+		stroke-dasharray: none;
+		filter: drop-shadow(0 0 10px var(--mode-color));
+	}
+	:global([data-mode]) .key.is-hot[data-key] .legend {
+		fill: #05070b;
+		font-weight: 700;
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.key.is-hot .cap {
