@@ -1,5 +1,5 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: ReCarbon <recarbon@users.noreply.github.com>
+From: Soe Thura <6492082+thixpin@users.noreply.github.com>
 Date: Thu, 22 Oct 2026 21:49:06 +0700
 Subject: [PATCH] XRTL_CRITICAL_SECTION: big-endian LockCount, RecursionCount,
  OwningThread
