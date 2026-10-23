@@ -30,8 +30,11 @@ fi
 # without an "ended without quitting" notice), then SIGKILL 5 s later.
 perl -e '
   my ($t, $log) = (shift, shift);
+  # Emptied here, appended to by both: a game writing at its own offset would
+  # write over the deadline line.
+  open(my $f, ">", $log) or die "$log: $!"; close $f;
   my $pid = fork() // die "fork: $!";
-  if (!$pid) { open(STDOUT, ">", $log); open(STDERR, ">&STDOUT"); exec @ARGV or die "exec: $!" }
+  if (!$pid) { open(STDOUT, ">>", $log); open(STDERR, ">&STDOUT"); exec @ARGV or die "exec: $!" }
   $SIG{ALRM} = sub { open(my $f, ">>", $log); print $f "[run_attempt] deadline: SIGTERM\n"; close $f;
                      kill "TERM", $pid; sleep 5; kill "KILL", $pid };
   alarm $t; waitpid($pid, 0);
