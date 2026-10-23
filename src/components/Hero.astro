@@ -1,74 +1,179 @@
 ---
 // The landing hero (PLAN §5). Until real ReCarbon footage is approved (D8),
-// it is the abstract placeholder of §5.5: speed lines and a neon sweep over
-// carbon weave, no invented gameplay. With `site.heroVideo` set, the muted
-// loop is attached by JS after load, and only when the visitor hasn't asked
-// for reduced motion or Save-Data and isn't on a slow connection; it pauses
-// offscreen and in background tabs. `site.trailer` (D5) adds the sound-on
-// video in a dialog, loaded only on demand.
+// the backdrop is an original illustration, labelled as one: a night city,
+// canyon ridges, a wet road with oncoming headlights and distant pursuit
+// lights. No gameplay, HUD or car is invented. With `site.heroVideo` set, the
+// poster shows first and the muted loop is attached by JS after load, only
+// when the visitor hasn't asked for reduced motion or Save-Data and isn't on
+// a slow connection; it pauses offscreen and in background tabs.
+// `site.trailer` (D5) adds the sound-on video in a dialog, loaded on demand.
 import { site } from '../site.config';
 import { url } from '../lib/url';
 
 const video = site.heroVideo;
 const trailer = site.trailer;
-const lines = Array.from({ length: 14 }, (_, i) => ({
-	top: 8 + ((i * 37) % 84),
+
+// The illustration's skyline and road, laid out once at build time from a
+// fixed seed (the same every build).
+let seed = 7;
+const rand = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+const HORIZON = 520;
+const VP = { x: 1060, y: HORIZON };
+const buildings: { x: number; w: number; h: number }[] = [];
+for (let x = -20; x < 860; ) {
+	const w = 38 + Math.round(rand() * 70);
+	const h = 90 + Math.round(rand() * (x < 520 ? 260 : 140));
+	buildings.push({ x, w, h });
+	x += w + Math.round(rand() * 6);
+}
+const windows = buildings.flatMap((b) => {
+	const out: { x: number; y: number; c: string; o: number }[] = [];
+	for (let y = HORIZON - b.h + 12; y < HORIZON - 10; y += 14)
+		for (let x = b.x + 6; x < b.x + b.w - 8; x += 11)
+			if (rand() < 0.22) out.push({ x, y, c: rand() < 0.75 ? '#ffd27a' : '#7cf0ff', o: 0.35 + rand() * 0.55 });
+	return out;
+});
+// Centre-line dashes, closer together and shorter towards the horizon.
+const dashes = Array.from({ length: 9 }, (_, i) => {
+	const t0 = (i + 0.15) / 9;
+	const t1 = (i + 0.55) / 9;
+	const at = (t: number) => ({ x: VP.x + (930 - VP.x) * t * t, y: VP.y + (900 - VP.y) * t * t });
+	return { a: at(t0), b: at(t1), w: 1 + 9 * t1 };
+});
+const lines = Array.from({ length: 10 }, (_, i) => ({
+	top: 56 + ((i * 29) % 40),
 	delay: -((i * 1.7) % 6).toFixed(2),
-	dur: (3.2 + ((i * 0.9) % 3)).toFixed(2),
-	w: 18 + ((i * 13) % 30),
-	hue: i % 4 === 0 ? 'ember' : 'neon',
+	dur: (2.6 + ((i * 0.9) % 2.4)).toFixed(2),
+	w: 14 + ((i * 13) % 26),
+	hue: i % 3 === 0 ? 'ember' : 'neon',
 }));
 ---
 
 <section class="hero" aria-labelledby="hero-title" data-hero data-video={video ? JSON.stringify(video) : undefined}>
 	<div class="backdrop" aria-hidden="true">
 		{video && <img class="poster" src={video.poster} alt="" fetchpriority="high" decoding="async" />}
-		<svg class="weave" width="100%" height="100%">
-			<defs>
-				<pattern id="carbon" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-					<rect width="16" height="16" fill="#0d1014"></rect>
-					<rect width="8" height="8" fill="#161a20"></rect>
-					<rect x="8" y="8" width="8" height="8" fill="#161a20"></rect>
-					<rect width="8" height="2" fill="#1d222a"></rect>
-					<rect x="8" y="8" width="2" height="8" fill="#1d222a"></rect>
-				</pattern>
-			</defs>
-			<rect width="100%" height="100%" fill="url(#carbon)"></rect>
-		</svg>
-		<div class="sweep"></div>
-		<div class="road"></div>
+		{
+			!video && (
+				<svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice">
+					<defs>
+						<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+							<stop offset="0" stop-color="#04060a" />
+							<stop offset="0.45" stop-color="#0b1020" />
+							<stop offset="0.58" stop-color="#2a1428" />
+						</linearGradient>
+						<radialGradient id="city-glow" cx="0.5" cy="1" r="0.6">
+							<stop offset="0" stop-color="#ff9a3d" stop-opacity="0.35" />
+							<stop offset="1" stop-color="#ff9a3d" stop-opacity="0" />
+						</radialGradient>
+						<linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+							<stop offset="0" stop-color="#140d16" />
+							<stop offset="0.3" stop-color="#07080c" />
+						</linearGradient>
+						<linearGradient id="road" x1="0" y1="0" x2="0" y2="1">
+							<stop offset="0" stop-color="#151922" />
+							<stop offset="1" stop-color="#06070a" />
+						</linearGradient>
+						<linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+							<stop offset="0" stop-color="#e9f6ff" stop-opacity="0.55" />
+							<stop offset="1" stop-color="#e9f6ff" stop-opacity="0" />
+						</linearGradient>
+						<radialGradient id="lamp" r="0.5">
+							<stop offset="0" stop-color="#ffffff" />
+							<stop offset="0.25" stop-color="#d9f3ff" stop-opacity="0.9" />
+							<stop offset="1" stop-color="#7cf0ff" stop-opacity="0" />
+						</radialGradient>
+						<radialGradient id="siren-red" r="0.5">
+							<stop offset="0" stop-color="#ff2b3a" stop-opacity="0.9" />
+							<stop offset="1" stop-color="#ff2b3a" stop-opacity="0" />
+						</radialGradient>
+						<radialGradient id="siren-blue" r="0.5">
+							<stop offset="0" stop-color="#2b6bff" stop-opacity="0.9" />
+							<stop offset="1" stop-color="#2b6bff" stop-opacity="0" />
+						</radialGradient>
+						<linearGradient id="wet" x1="0" y1="0" x2="0" y2="1">
+							<stop offset="0" stop-color="#7cf0ff" stop-opacity="0.22" />
+							<stop offset="1" stop-color="#7cf0ff" stop-opacity="0" />
+						</linearGradient>
+						<linearGradient id="wet-amber" x1="0" y1="0" x2="0" y2="1">
+							<stop offset="0" stop-color="#ffb02e" stop-opacity="0.2" />
+							<stop offset="1" stop-color="#ffb02e" stop-opacity="0" />
+						</linearGradient>
+					</defs>
+
+					<rect width="1600" height="900" fill="url(#sky)" />
+					<rect y={HORIZON} width="1600" height={900 - HORIZON} fill="url(#ground)" />
+					<ellipse cx="380" cy={HORIZON} rx="560" ry="260" fill="url(#city-glow)" />
+
+					{/* Canyon ridges, rim-lit by the city. */}
+					<path
+						class="ridge far"
+						d={`M 700 ${HORIZON} L 820 410 L 905 445 L 1010 330 L 1110 390 L 1215 300 L 1330 372 L 1450 318 L 1600 360 L 1600 ${HORIZON} Z`}
+					/>
+					<path
+						class="ridge near"
+						d={`M 980 ${HORIZON} L 1120 455 L 1240 470 L 1360 400 L 1480 438 L 1600 410 L 1600 ${HORIZON} Z`}
+					/>
+
+					{/* Night city. */}
+					<g class="city">
+						{buildings.map((b) => (
+							<rect x={b.x} y={HORIZON - b.h} width={b.w} height={b.h} />
+						))}
+					</g>
+					<g class="windows">
+						{windows.map((w) => (
+							<rect x={w.x} y={w.y} width="5" height="7" fill={w.c} opacity={w.o.toFixed(2)} />
+						))}
+					</g>
+
+					{/* Pursuit lights far down the road: a slow alternating glow. */}
+					<g class="pursuit">
+						<ellipse class="siren red" cx={VP.x - 52} cy={VP.y - 6} rx="110" ry="46" fill="url(#siren-red)" />
+						<ellipse class="siren blue" cx={VP.x + 52} cy={VP.y - 6} rx="110" ry="46" fill="url(#siren-blue)" />
+					</g>
+
+					{/* The road, wet, vanishing between the city and the canyon. */}
+					<path d={`M ${VP.x - 14} ${VP.y} L ${VP.x + 14} ${VP.y} L 1640 900 L 220 900 Z`} fill="url(#road)" />
+					<rect x="300" y={HORIZON + 30} width="40" height="370" fill="url(#wet-amber)" transform={`skewX(-28)`} opacity="0.7" />
+					<rect x="560" y={HORIZON + 20} width="26" height="380" fill="url(#wet)" transform={`skewX(-20)`} />
+					<rect x="760" y={HORIZON + 10} width="18" height="390" fill="url(#wet-amber)" transform={`skewX(-10)`} />
+					<path class="edge" d={`M ${VP.x - 14} ${VP.y} L 220 900 M ${VP.x + 14} ${VP.y} L 1640 900`} />
+					<g class="dashes">
+						{dashes.map((d) => (
+							<line x1={d.a.x} y1={d.a.y} x2={d.b.x} y2={d.b.y} stroke-width={d.w} />
+						))}
+					</g>
+
+					{/* Oncoming headlights, light only: no car is drawn. */}
+					<g class="oncoming">
+						<path d={`M ${VP.x - 18} ${VP.y + 18} L ${VP.x + 18} ${VP.y + 18} L ${VP.x + 220} 900 L ${VP.x - 260} 900 Z`} fill="url(#beam)" opacity="0.35" />
+						<circle cx={VP.x - 11} cy={VP.y + 16} r="16" fill="url(#lamp)" />
+						<circle cx={VP.x + 11} cy={VP.y + 16} r="16" fill="url(#lamp)" />
+					</g>
+				</svg>
+			)
+		}
 		<div class="speed">
 			{lines.map((l) => <i class={l.hue} style={`--top:${l.top}%;--delay:${l.delay}s;--dur:${l.dur}s;--w:${l.w}vw`} />)}
 		</div>
 		<div class="scrim"></div>
 		<div class="hud-frame">
 			<span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
-			<svg class="tach" viewBox="0 0 200 120">
-				<path d="M 20 110 A 80 80 0 0 1 180 110" fill="none" stroke="#2a303a" stroke-width="10"></path>
-				<path class="tach-fill" d="M 20 110 A 80 80 0 0 1 180 110" fill="none" stroke="url(#tach-g)" stroke-width="10" pathLength="100"></path>
-				<defs>
-					<linearGradient id="tach-g" x1="0" x2="1">
-						<stop offset="0" stop-color="#19e3ff"></stop>
-						<stop offset="0.75" stop-color="#19e3ff"></stop>
-						<stop offset="1" stop-color="#ff4d2e"></stop>
-					</linearGradient>
-				</defs>
-				<text x="100" y="98" text-anchor="middle">60</text>
-				<text x="100" y="114" text-anchor="middle" class="unit">FPS · DEFAULT</text>
-			</svg>
 		</div>
 	</div>
 
 	<div class="content wrap">
-		<p class="eyebrow">Unofficial fan project · Native on Apple Silicon</p>
-		<h1 id="hero-title" class="display wordmark">
-			<span class="re">Re</span>Carbon
-		</h1>
-		<p class="tagline">{site.tagline}</p>
-		<p class="lede">
-			A static recompilation of the Xbox 360 racing classic: native arm64 code, Metal through MoltenVK, no emulator.
-			Bring your own disc.
+		<p class="chips">
+			<span class="chip chip--fan">Unofficial fan port</span>
+			<span class="chip">{site.org}</span>
 		</p>
+		<h1 id="hero-title" class="title">
+			<span class="wordmark display"><span class="re">Re</span>Carbon</span>
+			<span class="sr-only">: an unofficial native port of </span>
+			<span class="game">Need for Speed: Carbon</span>
+		</h1>
+		<p class="platform">The Xbox 360 game, running natively on Apple Silicon Macs.</p>
+		<p class="status"><span class="dot" aria-hidden="true"></span>Early development — playable in parts, not released.</p>
 		<div class="ctas">
 			<a class="btn" href={url('docs/download/')}>Download</a>
 			<a class="btn btn--ghost" href={url('docs/installation/')}>Get started</a>
@@ -80,7 +185,23 @@ const lines = Array.from({ length: 14 }, (_, i) => ({
 				)
 			}
 		</div>
+		<ul class="reqs" aria-label="Requirements">
+			<li>
+				<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"></rect><path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"></path></svg>
+				Apple Silicon Mac
+			</li>
+			<li>
+				<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"></rect><path d="M8 21h8M12 17v4"></path></svg>
+				macOS 27 or newer
+			</li>
+			<li>
+				<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="2.5"></circle></svg>
+				Your own Xbox 360 disc
+			</li>
+		</ul>
 	</div>
+
+	<p class="caption">{video ? video.caption : 'Illustration — not gameplay'}</p>
 
 	<button class="motion-toggle" type="button" data-motion-toggle aria-pressed="false" aria-label="Pause background animation">
 		<span aria-hidden="true" class="ico-pause">❚❚</span><span aria-hidden="true" class="ico-play">▶</span>
@@ -107,10 +228,11 @@ const lines = Array.from({ length: 14 }, (_, i) => ({
 		position: relative;
 		display: grid;
 		align-items: center;
-		min-height: min(88vh, 54rem);
-		min-height: min(88svh, 54rem);
+		min-height: min(92vh, 56rem);
+		min-height: min(92svh, 56rem);
 		overflow: hidden;
 		isolation: isolate;
+		background: #05070b;
 	}
 	.backdrop,
 	.backdrop > * {
@@ -121,42 +243,74 @@ const lines = Array.from({ length: 14 }, (_, i) => ({
 		z-index: -1;
 	}
 	.poster,
-	.backdrop :global(video) {
+	.backdrop :global(video),
+	.scene {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
 	}
-	.weave {
-		opacity: 0.9;
+
+	/* The illustration. */
+	.ridge.far {
+		fill: #0d0f18;
+		stroke: rgb(255 120 70 / 0.35);
+		stroke-width: 2;
 	}
-	.sweep {
-		inset: -40% -20%;
-		background:
-			radial-gradient(40% 35% at 30% 40%, rgb(25 227 255 / 0.22), transparent 70%),
-			radial-gradient(30% 25% at 75% 65%, rgb(255 77 46 / 0.16), transparent 70%);
-		animation: sweep 18s var(--rn-ease) infinite alternate;
-		will-change: transform;
+	.ridge.near {
+		fill: #090b11;
+		stroke: rgb(255 120 70 / 0.2);
+		stroke-width: 1.5;
 	}
-	@keyframes sweep {
-		from {
-			transform: translate3d(-6%, -2%, 0) rotate(-4deg);
+	.city rect {
+		fill: #080a10;
+	}
+	.edge {
+		stroke: rgb(233 238 245 / 0.35);
+		stroke-width: 3;
+		fill: none;
+	}
+	.dashes line {
+		stroke: rgb(255 210 122 / 0.75);
+		stroke-linecap: butt;
+	}
+	.siren {
+		mix-blend-mode: screen;
+		animation: siren 3.2s ease-in-out infinite;
+	}
+	.siren.blue {
+		animation-delay: -1.6s;
+	}
+	@keyframes siren {
+		0%,
+		100% {
+			opacity: 0.15;
 		}
-		to {
-			transform: translate3d(6%, 3%, 0) rotate(3deg);
+		50% {
+			opacity: 0.85;
 		}
 	}
-	.road {
-		top: 55%;
-		inset-inline: -50%;
-		bottom: -30%;
-		background:
-			linear-gradient(90deg, transparent 49.6%, rgb(233 238 245 / 0.25) 49.6% 50.4%, transparent 50.4%),
-			repeating-linear-gradient(90deg, transparent 0 11.9%, rgb(25 227 255 / 0.18) 11.9% 12.1%);
-		transform: perspective(600px) rotateX(72deg);
-		transform-origin: 50% 0;
-		mask-image: linear-gradient(180deg, transparent, #000 40%);
-		opacity: 0.6;
+	.oncoming {
+		transform-box: view-box;
+		transform-origin: 1060px 536px;
+		animation: approach 7s cubic-bezier(0.5, 0, 0.9, 0.6) infinite;
 	}
+	@keyframes approach {
+		0% {
+			transform: scale(0.6);
+			opacity: 0;
+		}
+		20% {
+			opacity: 1;
+		}
+		90% {
+			opacity: 1;
+		}
+		100% {
+			transform: scale(1.35);
+			opacity: 0;
+		}
+	}
+
 	.speed i {
 		position: absolute;
 		top: var(--top);
@@ -178,10 +332,10 @@ const lines = Array.from({ length: 14 }, (_, i) => ({
 			opacity: 0;
 		}
 		15% {
-			opacity: 0.85;
+			opacity: 0.7;
 		}
 		85% {
-			opacity: 0.85;
+			opacity: 0.7;
 		}
 		100% {
 			transform: translate3d(120vw, 0, 0);
@@ -191,8 +345,13 @@ const lines = Array.from({ length: 14 }, (_, i) => ({
 	.scrim {
 		/* keeps the text ≥ 4.5:1 over any frame, footage included */
 		background:
-			linear-gradient(90deg, rgb(11 13 16 / 0.92) 0%, rgb(11 13 16 / 0.7) 45%, rgb(11 13 16 / 0.15) 100%),
-			linear-gradient(0deg, var(--rn-asphalt) 0%, transparent 30%);
+			linear-gradient(90deg, rgb(5 7 11 / 0.94) 0%, rgb(5 7 11 / 0.78) 40%, rgb(5 7 11 / 0.1) 75%, transparent 100%),
+			linear-gradient(0deg, var(--rn-asphalt) 0%, transparent 25%);
+	}
+	@media (max-width: 52rem) {
+		.scrim {
+			background: linear-gradient(180deg, rgb(5 7 11 / 0.55) 0%, rgb(5 7 11 / 0.85) 45%, var(--rn-asphalt) 100%);
+		}
 	}
 	.hud-frame {
 		inset: clamp(0.75rem, 3vw, 2rem);
@@ -228,49 +387,41 @@ const lines = Array.from({ length: 14 }, (_, i) => ({
 		border-left: 0;
 		border-top: 0;
 	}
-	.tach {
-		position: absolute;
-		right: 2.5rem;
-		bottom: 2.5rem;
-		width: clamp(7rem, 14vw, 11rem);
-		display: none;
-	}
-	@media (min-width: 52rem) {
-		.tach {
-			display: block;
-		}
-	}
-	.tach text {
-		font-family: var(--rn-font-display);
-		font-weight: 700;
-		font-size: 30px;
-		fill: var(--rn-text);
-	}
-	.tach .unit {
-		font-size: 9px;
-		letter-spacing: 0.2em;
-		fill: var(--rn-muted);
-	}
-	.tach-fill {
-		stroke-dasharray: 100;
-		stroke-dashoffset: 25;
-		animation: rev 6s var(--rn-ease) infinite alternate;
-	}
-	@keyframes rev {
-		from {
-			stroke-dashoffset: 60;
-		}
-		to {
-			stroke-dashoffset: 12;
-		}
-	}
 
+	/* Copy. */
 	.content {
 		position: relative;
-		padding-block: 5rem 6rem;
+		padding-block: 4.5rem 6.5rem;
+	}
+	.chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin: 0 0 1.25rem;
+	}
+	.chip {
+		padding: 0.2rem 0.75rem;
+		font-family: var(--rn-font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--rn-text);
+		border: 1px solid rgb(233 238 245 / 0.35);
+		background: rgb(11 13 16 / 0.6);
+	}
+	.chip--fan {
+		color: var(--rn-asphalt);
+		background: var(--rn-amber);
+		border-color: var(--rn-amber);
+		font-weight: 700;
+	}
+	.title {
+		display: grid;
+		gap: 0.4rem;
+		margin: 0;
 	}
 	.wordmark {
-		font-size: clamp(3.4rem, 13vw, 9rem);
+		font-size: clamp(3.2rem, 12vw, 8.5rem);
 		background: linear-gradient(100deg, #fff 30%, var(--rn-neon-soft) 60%, var(--rn-neon));
 		-webkit-background-clip: text;
 		background-clip: text;
@@ -281,26 +432,85 @@ const lines = Array.from({ length: 14 }, (_, i) => ({
 		color: var(--rn-ember);
 		-webkit-text-fill-color: var(--rn-ember);
 	}
-	.tagline {
-		margin: 0.5rem 0 0;
+	/* The game's name in the site's own type: upright, plain, no logo treatment. */
+	.game {
+		justify-self: start;
+		padding-bottom: 0.35rem;
 		font-family: var(--rn-font-display);
-		font-size: clamp(1.15rem, 2.6vw, 1.6rem);
 		font-weight: 700;
-		letter-spacing: 0.12em;
+		font-size: clamp(1.5rem, 4.2vw, 2.75rem);
+		line-height: 1.1;
+		letter-spacing: 0.04em;
 		text-transform: uppercase;
 		color: var(--rn-text);
+		border-bottom: 3px solid var(--rn-neon);
 	}
-	.lede {
-		max-width: 34rem;
+	.platform {
 		margin: 1rem 0 0;
-		color: #c3cad6;
-		font-size: 1.05rem;
+		font-size: clamp(1.05rem, 2vw, 1.25rem);
+		color: #d3d9e3;
+	}
+	.status {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+		margin: 1.25rem 0 0;
+		padding: 0.45rem 0.9rem;
+		font-weight: 600;
+		font-size: 0.95rem;
+		color: var(--rn-text);
+		background: rgb(255 176 46 / 0.12);
+		border: 1px solid rgb(255 176 46 / 0.55);
+	}
+	.dot {
+		width: 0.6rem;
+		height: 0.6rem;
+		border-radius: 50%;
+		background: var(--rn-amber);
+		box-shadow: 0 0 10px var(--rn-amber);
 	}
 	.ctas {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.75rem;
-		margin-top: 2rem;
+		margin-top: 1.75rem;
+	}
+	.reqs {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.5rem;
+		margin: 1.75rem 0 0;
+		padding: 0;
+		list-style: none;
+		font-size: 0.92rem;
+		color: #d3d9e3;
+	}
+	.reqs li {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	.reqs svg {
+		width: 1.15rem;
+		height: 1.15rem;
+		fill: none;
+		stroke: var(--rn-neon);
+		stroke-width: 1.8;
+		stroke-linecap: round;
+	}
+
+	.caption {
+		position: absolute;
+		right: clamp(1rem, 3vw, 2.25rem);
+		bottom: clamp(1rem, 3vw, 2.25rem);
+		margin: 0;
+		padding: 0.25rem 0.7rem;
+		font-family: var(--rn-font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.06em;
+		color: var(--rn-text);
+		background: rgb(5 7 11 / 0.75);
+		border: 1px solid rgb(233 238 245 / 0.3);
 	}
 
 	.motion-toggle {
@@ -322,7 +532,7 @@ const lines = Array.from({ length: 14 }, (_, i) => ({
 	.hero.paused .motion-toggle .ico-play {
 		display: inline;
 	}
-	.hero.paused :is(.sweep, .speed i, .tach-fill) {
+	.hero.paused :is(.siren, .oncoming, .speed i) {
 		animation-play-state: paused;
 	}
 
@@ -345,15 +555,26 @@ const lines = Array.from({ length: 14 }, (_, i) => ({
 		right: 0.5rem;
 		z-index: 1;
 	}
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.sweep,
-		.speed i,
-		.tach-fill {
+		.siren,
+		.oncoming,
+		.speed i {
 			animation: none;
 		}
+		.siren {
+			opacity: 0.45;
+		}
 		.speed i {
-			opacity: 0.35;
+			opacity: 0.3;
 			transform: translate3d(calc(var(--top) * 0.6vw), 0, 0);
 		}
 		.motion-toggle {

@@ -26,10 +26,40 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 ---
 
 <RaceLayout
-	title={`${site.name}: ${site.tagline}`}
-	description="ReCarbon is a native Apple Silicon recompilation of an Xbox 360 racing classic: no emulator, bring your own disc. Unofficial fan project."
+	title={`${site.name}: Need for Speed: Carbon, native on Apple Silicon (unofficial fan port)`}
+	description="ReCarbon is an unofficial native port of Need for Speed: Carbon (Xbox 360) to Apple Silicon Macs. Early development: playable in parts, not released. Bring your own disc."
 >
 	<Hero />
+
+	<section class="section how" aria-labelledby="how-title">
+		<div class="wrap">
+			<p class="eyebrow">Under the hood</p>
+			<h2 id="how-title" class="display h2">How it works</h2>
+			<ol class="how-grid">
+				<li class="how-item cut">
+					<h3>Static recompilation</h3>
+					<p>
+						XenonRecomp translates the game's PowerPC code into C++ ahead of time. That C++ compiles to native arm64:
+						there is no emulator, no Wine or CrossOver, and no CPU emulation while you play.
+					</p>
+				</li>
+				<li class="how-item cut">
+					<h3>A native runtime</h3>
+					<p>
+						A runtime adapted from SpeedBreaker stands in for the Xbox 360: its kernel, the Xenos GPU on Vulkan (Metal
+						through MoltenVK), XMA audio through FFmpeg, and controllers and keyboard through SDL3.
+					</p>
+				</li>
+				<li class="how-item cut">
+					<h3>Your disc, your files</h3>
+					<p>
+						ReCarbon ships no game code or assets. Its installer copies the game from an image of your own Xbox 360 disc
+						and checks every file against a manifest.
+					</p>
+				</li>
+			</ol>
+		</div>
+	</section>
 
 	<section class="section stats" aria-labelledby="stats-title">
 		<div class="wrap">
@@ -157,6 +187,31 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	}
 	.more a {
 		font-weight: 600;
+	}
+
+	.how-grid {
+		display: grid;
+		gap: 1rem;
+		grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.how-item {
+		padding: 1.25rem;
+		background: var(--rn-carbon);
+		border-top: 2px solid var(--rn-ember);
+	}
+	.how-item h3 {
+		margin: 0 0 0.4rem;
+		font-family: var(--rn-font-display);
+		font-size: 1.2rem;
+		text-transform: uppercase;
+	}
+	.how-item p {
+		margin: 0;
+		color: #c3cad6;
+		font-size: 0.95rem;
 	}
 
 	.stat-grid {
