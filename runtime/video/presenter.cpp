@@ -306,7 +306,11 @@ namespace video
         // generation (main thread; 0: none).
         SwapchainUse<VkSwapchainKHR>& s_swapchainUse = *new SwapchainUse<VkSwapchainKHR>;
         uint64_t s_swapchainGeneration = 0;
-        FILE* s_timingLog = nullptr;          // RECARBON_VBLANK_LOG=<file>: one CSV line per present
+        // RECARBON_VBLANK_LOG=<file>: one CSV line per present. ReCarbon:
+        // RECARBON_FRAME_LOG=<file> writes the same lines and nothing else (no
+        // display timing, no .actual.csv), so presents stay as a player's are:
+        // frame times for acceptance runs.
+        FILE* s_timingLog = nullptr;
         // Display refreshes per 60 Hz guest vblank the fit should expect: the
         // display mode's rate over 60 where that is 2-4 (video/refresh_multiple.h),
         // else 1. Set by the main thread (UpdateRefreshMultiple), read by the
@@ -2586,12 +2590,13 @@ void main()
 #endif
         if (s_presentTiming)
         {
-            if (const char* path = std::getenv("RECARBON_VBLANK_LOG"))
+            const char* vblankLog = std::getenv("RECARBON_VBLANK_LOG");
+            if (const char* path = vblankLog ? vblankLog : std::getenv("RECARBON_FRAME_LOG"))
                 if ((s_timingLog = fopen(path, "w")))
                 {
                     fprintf(s_timingLog, "id,vblank,presented,on_screen,timed,fit_valid,period_ns,grid_ns,rms_ns,ready,multiple\n");
 #if defined(__APPLE__) && !TARGET_OS_IOS
-                    if (s_pastTiming && (s_actualLog = fopen((std::string(path) + ".actual.csv").c_str(), "w")))
+                    if (vblankLog && s_pastTiming && (s_actualLog = fopen((std::string(path) + ".actual.csv").c_str(), "w")))
                         fprintf(s_actualLog, "# steady_ns %lld uptime_raw_ns %llu\nid,actual_ns\n", (long long)NowNs(),
                             (unsigned long long)clock_gettime_nsec_np(CLOCK_UPTIME_RAW));
 #endif
