@@ -87,6 +87,10 @@ set_target_properties(profiles_test PROPERTIES SKIP_BUILD_RPATH OFF)
 recarbon_test(profile_store_test SOURCES ${RT}/user/profiles.cpp ${RT}/user/settings.cpp ${RT}/user/atomic_file.cpp)
 target_link_libraries(profile_store_test PRIVATE SDL3::SDL3)
 set_target_properties(profile_store_test PROPERTIES SKIP_BUILD_RPATH OFF)
+# Check for Updates' logic (update/check.cpp): versions, the strict JSON reader,
+# the HTTP answer, release notes and every outcome. From SpeedBreaker's, with
+# ReCarbon's repository (ReCarbon M8).
+recarbon_test(update_check_test SOURCES ${RT}/update/check.cpp)
 # scripts/frame_times.py (M7 frame pacing) on synthetic frame logs with known
 # answers, and the runtime's log and CSV formats it reads. Python 3.9+.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
@@ -113,7 +117,7 @@ add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOUR
 #   gpu_choice_test, present_schedule_test, audio_cadence_test,
 #   picture_fit_test, band_filter_test, scale_budget_test, refresh_fit_test,
 #   refresh_notice_test, frame_rate_policy_test, swapchain_policy_test,
-#   code_signature_test, memory_status_test, update_check_test, report_zip_test,
+#   code_signature_test, memory_status_test, report_zip_test,
 #   settings_scaling_test, fsr1_test: not checked against ReCarbon's runtime yet;
 #   deferred to keep this first set small.
 # vblank_timer_test, vblank_lock_sim: timing-sensitive (scheduler latency); deferred.

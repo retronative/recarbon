@@ -973,6 +973,74 @@ namespace update
         return true;
     }
 
+    bool ParseReleases(std::string_view json, std::vector<Release>& out, std::string& error)
+    {
+        JsonReader reader;
+        reader.s = json;
+        std::vector<Release> releases;
+        reader.Space();
+        if (reader.i >= json.size())
+            reader.error = "an empty answer";
+        else if (!reader.Peek('['))
+            reader.Fail("not a JSON array");
+        else
+        {
+            reader.i++;
+            reader.Space();
+            if (reader.Peek(']'))
+                reader.i++;
+            else
+                while (reader.error.empty())
+                {
+                    reader.Space();
+                    if (!reader.Peek('{'))
+                    {
+                        reader.Fail("a release that isn't an object");
+                        break;
+                    }
+                    if (releases.size() >= 100)
+                    {
+                        reader.Fail("more than 100 releases");
+                        break;
+                    }
+                    Release release;
+                    if (!reader.Object(2, &release))
+                        break;
+                    releases.push_back(std::move(release));
+                    reader.Space();
+                    if (reader.Peek(','))
+                    {
+                        reader.i++;
+                        continue;
+                    }
+                    if (reader.Peek(']'))
+                    {
+                        reader.i++;
+                        break;
+                    }
+                    reader.Fail("a missing ',' or ']'");
+                }
+            if (reader.error.empty())
+            {
+                reader.Space();
+                if (reader.i != json.size())
+                    reader.Fail("more after the JSON");
+            }
+        }
+        if (!reader.error.empty())
+        {
+            error = std::move(reader.error);
+            return false;
+        }
+        out = std::move(releases);
+        return true;
+    }
+
+    bool OffersPrerelease(const Semver& running)
+    {
+        return !running.pre.empty() || running.major == 0;
+    }
+
     // --- HTTP ---
 
     bool ParseHttpResponse(std::string_view raw, HttpResponse& out)
@@ -1278,46 +1346,77 @@ namespace update
                     std::format("rate-limited (HTTP {}, try again {})", response.status, when));
             }
         }
+        // ReCarbon: a private repository, or one with no release yet, answers
+        // 404 (or an empty list): no public release to offer, not a failure.
+        constexpr const char* kNoReleases = "ReCarbon has no public releases yet.";
+        if (response.status == 404)
+        {
+            r.outcome = Outcome::Unavailable;
+            r.headline = "No releases yet";
+            r.message = kNoReleases;
+            r.log = "no public releases (HTTP 404)";
+            return r;
+        }
         if (response.status != 200)
         {
             Release answer;
             std::string ignored;
             ParseRelease(response.body, answer, ignored);
             std::string said = answer.message.empty() ? "" : ": " + CleanLine(answer.message, 160);
-            return fail(Outcome::ServerError,
-                response.status == 404 ? "GitHub found no release of ReCarbon (HTTP 404)."
-                                       : std::format("GitHub answered with an error (HTTP {}). Try again later.", response.status),
+            return fail(Outcome::ServerError, std::format("GitHub answered with an error (HTTP {}). Try again later.", response.status),
                 std::format("HTTP {}{}", response.status, said));
         }
 
-        Release release;
+        std::vector<Release> releases;
         std::string error;
         constexpr const char* kUnreadable = "GitHub's answer couldn't be read. Try again later.";
-        if (!ParseRelease(response.body, release, error))
+        if (!ParseReleases(response.body, releases, error))
             return fail(Outcome::Unreadable, kUnreadable, "unreadable answer: " + error);
-        if (!release.hasTag)
-            return fail(Outcome::Unreadable, kUnreadable, "unreadable answer: no tag_name");
-        Semver latest;
-        if (!ParseSemver(release.tag, latest))
-            return fail(Outcome::Unreadable, kUnreadable, "unreadable answer: the tag \"" + CleanLine(release.tag, 40) + "\" isn't a version");
         if (!runningOk)
             return fail(Outcome::Unreadable, std::format("This build's version ({}) can't be compared with releases.", r.current),
                 "this build's version \"" + r.current + "\" isn't a version");
-
-        // Drafts and pre-releases are never offered (the "latest" release is
-        // neither, but the answer is checked rather than trusted).
-        const bool ignored = release.draft || release.prerelease || !latest.pre.empty();
-        const int newer = CompareSemver(latest, running);
-        if (ignored || newer <= 0)
+        if (releases.empty())
+        {
+            r.outcome = Outcome::Unavailable;
+            r.headline = "No releases yet";
+            r.message = kNoReleases;
+            r.log = "no public releases (an empty list)";
+            return r;
+        }
+        // The newest by version of those this build may be offered: never a
+        // draft, a pre-release only per OffersPrerelease. A release whose tag
+        // isn't a version is skipped (and counted in the log).
+        const Release* best = nullptr;
+        Semver latest;
+        int skipped = 0;
+        for (const Release& candidate : releases)
+        {
+            Semver v;
+            if (!candidate.hasTag || !ParseSemver(candidate.tag, v))
+            {
+                skipped++;
+                continue;
+            }
+            const bool pre = candidate.prerelease || !v.pre.empty();
+            if (candidate.draft || (pre && !OffersPrerelease(running)))
+                continue;
+            if (!best || CompareSemver(v, latest) > 0)
+                best = &candidate, latest = v;
+        }
+        if (!best && skipped == int(releases.size()))
+            return fail(Outcome::Unreadable, kUnreadable, std::format("unreadable answer: none of {} releases has a version tag", skipped));
+        const Release& release = best ? *best : releases.front();
+        const int newer = best ? CompareSemver(latest, running) : -1;
+        if (!best || newer <= 0)
         {
             r.outcome = Outcome::UpToDate;
-            r.latest = ignored ? "" : FormatSemver(latest);
+            r.latest = best ? FormatSemver(latest) : "";
             r.headline = std::format("You're up to date (v{})", r.current);
-            r.message = !ignored && newer < 0 ? std::format("The newest release is v{}; this build is newer.", r.latest)
-                                               : "This is the newest release of ReCarbon.";
-            r.log = ignored ? std::format("up to date: running v{}; the latest, {}, is a draft or pre-release (ignored)", r.current,
-                                  CleanLine(release.tag, 40))
-                            : std::format("up to date: running v{}, the latest release is v{}", r.current, r.latest);
+            r.message = best && newer < 0 ? std::format("The newest release is v{}; this build is newer.", r.latest)
+                                          : "This is the newest release of ReCarbon.";
+            r.log = best ? std::format("up to date: running v{}, the newest release offered is v{}", r.current, r.latest)
+                         : std::format("up to date: running v{}; no release offered to this build ({} drafts or pre-releases)", r.current,
+                               releases.size());
             return r;
         }
         r.outcome = Outcome::Available;

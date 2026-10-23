@@ -2,7 +2,8 @@
 //
 // Check for Updates (Settings > Advanced): what the game makes of GitHub's
 // answer. The only time the game goes online, and only when the player
-// presses it: one GET of the releases API's "latest" release, with a
+// presses it: one GET of the releases API's list (ReCarbon: not "latest",
+// which leaves pre-releases out, and ReCarbon's alphas are pre-releases), with a
 // User-Agent and an Accept header, nothing else (update/updater.h runs it,
 // update/fetch.h is each platform's transport).
 //
@@ -28,11 +29,12 @@ namespace update
     // must exist, with exactly this case (release pages that don't start with
     // kPagePrefix fall back to kReleasesPage), before a release ships.
 #define RECARBON_UPDATE_REPOSITORY "retronative/recarbon"
-    // GitHub's newest release that is neither a draft nor a pre-release.
-    inline constexpr const char kApiUrl[] = "https://api.github.com/repos/" RECARBON_UPDATE_REPOSITORY "/releases/latest";
+    // ReCarbon: the newest releases, drafts and pre-releases included (the
+    // list is newest first; Evaluate picks by version, see OffersPrerelease).
+    inline constexpr const char kApiUrl[] = "https://api.github.com/repos/" RECARBON_UPDATE_REPOSITORY "/releases?per_page=30";
     // Where "Open download page" goes when the answer names no page of this
-    // project's releases.
-    inline constexpr const char kReleasesPage[] = "https://github.com/" RECARBON_UPDATE_REPOSITORY "/releases/latest";
+    // project's releases (ReCarbon: the list, as /releases/latest skips pre-releases).
+    inline constexpr const char kReleasesPage[] = "https://github.com/" RECARBON_UPDATE_REPOSITORY "/releases";
     inline constexpr const char kPagePrefix[] = "https://github.com/" RECARBON_UPDATE_REPOSITORY "/releases/";
     // The whole exchange, connecting included.
     inline constexpr double kTimeoutSeconds = 10.0;
@@ -74,6 +76,13 @@ namespace update
     // deep) with nothing after it, and each member read must have the right
     // type, once. False, with what was wrong and where, otherwise.
     bool ParseRelease(std::string_view json, Release& out, std::string& error);
+    // ReCarbon: the same for the list endpoint's answer, a JSON array of
+    // release objects (at most 100); each element must be an object.
+    bool ParseReleases(std::string_view json, std::vector<Release>& out, std::string& error);
+    // ReCarbon: a pre-release is offered to a pre-release build ("0.2.0-alpha.1")
+    // and, while ReCarbon is in alpha, to any 0.x build; a 1.x release build
+    // is offered releases only. Drafts never.
+    bool OffersPrerelease(const Semver& running);
 
     // --- The HTTP answer ---
 
