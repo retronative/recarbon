@@ -6,8 +6,11 @@
   - `build_deps.sh` (825ae48);
   - the MoltenVK pin (74fa6e1);
   - the release app passes `check_app` on both Macs (ROADMAP M8 evidence).
-- **B2 waits** for the user's approval of the revised preset tables (D-B2a below). The other B2
-  decisions are approved.
+- **B2 implemented** (2026-10-24) with the approved tables: 6db91be, bb7f74c, 3c41ef9, b65e127,
+  3e4ad4e (ROADMAP M8 evidence).
+  - **Refinement 1:** with `settings.toml` missing or unreadable, the active profile restores the
+    keys (otherwise its keys would be replaced by the defaults).
+  - **Refinement 2:** rebinding a controller button swaps it with the button that had it.
 
 Planning only (2026-10-23). M8 is **Pending**: nothing here starts until the user approves it,
 and no milestone scope or criterion changes. ROADMAP M8 is the scope; this says how.
@@ -274,6 +277,46 @@ and no milestone scope or criterion changes. ROADMAP M8 is the scope; this says 
   buttons whatever the mapping, so no profile can lock the player out.
 - **Testing:** by the virtual pad only, while the physical controller is Deferred — not
   verified. Nothing about controller rebinding is called verified on hardware.
+
+### Control actions: evidence and labels (audit, 2026-10-24)
+ReCarbon's input layer maps keys and buttons to the Xbox 360 controls. What the game does with
+each control is Carbon's own code, so an action counts as known only with evidence from play.
+
+| Player action | Xbox control (`[keys]` row) | Default keys | Evidence | Label in Settings |
+|---|---|---|---|---|
+| Throttle | Right Trigger (`right_trigger`) | W | Driven by the user on the keyboard (hand test 1), and in free-roam and a won career race (hand tests 3, 4) | **Throttle** |
+| Brake | Left Trigger (`left_trigger`) | S | As above, for braking. Reversing isn't recorded. | **Brake** (not "Brake / Reverse" until reversing is seen) |
+| Steering | Left Stick left/right (`left_stick_left`, `left_stick_right`) | A / D, ← / → | As above | **Steering Left**, **Steering Right** |
+| Handbrake, Nitrous, Speedbreaker, Change Camera, Look Back | not known | — | None: no source, test or play evidence ties them to a control. SpeedBreaker's or NFSU2's layouts aren't evidence for Carbon. | Not used; the rows keep their Xbox names |
+
+- **Changed** (2fa0886): only the labels, with the Xbox name and config key moved to the
+  detail line. No binding changed, and the M5 key defaults in `settings_keys_test` are
+  unchanged; only its label column was updated.
+- **Website (Garage):** its `controls.actions.json` should follow the same rule:
+  - "Gas" becomes "Throttle";
+  - "Brake / reverse" becomes "Brake";
+  - "Steer left/right" becomes "Steering Left/Right";
+  - every other action stays unverified until hand test 5 maps them.
+
+  The website repository isn't changed from here; its session applies this.
+
+### Check for Updates (optional polish, not a release gate; 1ff2c82)
+- **When it runs:** only when the player presses Settings > Advanced > Check for Updates
+  (`update_dialog.cpp`). No polling, no download, no install.
+- **What it sends:** one GET to GitHub's release list
+  (`/repos/retronative/recarbon/releases?per_page=30`), with a User-Agent and an Accept header,
+  and nothing about the player or the device.
+- **What it offers:** the newest non-draft release by semver. A pre-release (ReCarbon's alphas)
+  is offered only to a pre-release or 0.x build, so a 1.x build gets releases only.
+  `/releases/latest` was dropped because it never lists a pre-release.
+- **What it shows:** the version, the release notes, and a link to the release's page on GitHub
+  (checked to be this project's).
+- **Errors:** offline, a timeout, TLS failures, rate limits (with the reset time) and API errors
+  each give one line.
+  - A 404 (the repository is private) or an empty list says "ReCarbon has no public releases
+    yet." rather than reporting a failure.
+- **Tests:** SpeedBreaker's `update_check_test`, ported and extended (list parsing, the
+  pre-release rule, no releases). Both mutants of the rule are caught.
 
 ### UI design reference (user, 2026-10-23; a reference, not an implementation gate)
 - **Website reference:** the website's Garage keyboard and controller layouts are the visual

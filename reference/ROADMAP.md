@@ -321,6 +321,36 @@ customization. The controls criterion is judged on the default mappings.
     - the LGPL source offer for binaries.
   - **The availability gate is untested for target 27.0:** its control API is macOS 15.2, and
     with SDK 27.0 equal to the target there's nothing newer to catch.
+- **Evidence so far (B2, 2026-10-24):** input profiles, as approved in `reference/M8_PLAN.md`.
+  - **Mappings and presets** (bb7f74c): the WASD and Arrows tables, exactly as approved; no key
+    on two controls (`profiles_test`, mutant caught). Default is the settings' defaults, M5's
+    baseline.
+  - **Profile files** (3c41ef9): `profiles/keyboard.toml` and `controller.toml`, written
+    atomically (the shared writer, 6db91be) and validated by parsing the text back before
+    writing. A failed write changes nothing.
+    - Startup never changes `[keys]`. Migration keeps a customized `[keys]` as "Custom", and a
+      `[keys]` the profiles didn't know of is kept as "Custom (settings.toml)".
+    - An unreadable file is left untouched, and profiles are off for that session.
+    - Built-ins are never edited: an edit makes "<name> (custom)".
+    - `profile_store_test` covers it; three safety mutants are caught.
+  - **In game** (b65e127, 3e4ad4e):
+    - Settings > Controls has a Keyboard Profile row, in effect at once, and Reset page picks
+      Default.
+    - Settings > Controller rebinds buttons only. A button already in use swaps, and the Back +
+      Start chord stays physical.
+    - Scripted runs in isolated homes:
+      - migration;
+      - switching, and persistence after a restart;
+      - an edit with WASD active making "WASD (custom)";
+      - a corrupt `keyboard.toml` left byte-identical;
+      - with no `settings.toml`, the profile restoring the keys;
+      - controller rebinding with the virtual pad (east then drives A, south drives B),
+        persisting after a restart.
+  - **Presets in menus:** `profiles_test` shows each preset's D-pad keys resolve to D-pad
+    buttons only, through the input code's own `keymap::Resolve`. Carbon's menus answer D-pad
+    buttons (the M6/M7 scripted routes navigate with them). A real key moving a menu under each
+    preset is left for a hand test: the scripted menu route didn't reach the main menu here.
+  - **Not verified:** the physical controller (deferred), and controller rebinding on hardware.
 - **Do:**
   - Parametrize the installer: Carbon manifest, title ID, ReCarbon names.
   - Package `ReCarbon.app` (bundle ID `org.retronative.recarbon`, via `make_app.py`) with license notices and LGPL sources.
