@@ -167,13 +167,20 @@ recarbon_test(install_folder_test SOURCES ${INSTALL_SOURCES} ARGS ${CMAKE_BINARY
 recarbon_test(portable_test SOURCES ${RT}/install/portable_switch.cpp ${INSTALL_SOURCES} ARGS ${CMAKE_BINARY_DIR}/portable_scratch)
 target_link_libraries(install_folder_test PRIVATE "-framework CoreFoundation")  # placement.cpp's iCloud check
 target_link_libraries(portable_test PRIVATE "-framework CoreFoundation")
+# The write watch around CPU write faults on 16 KB host pages, on physical
+# memory mapped as the runtime maps it (kernel/write_watch.cpp), with ppc/'s
+# ppc_config.h for the guest base. From SpeedBreaker v0.1.8's (ReCarbon M8
+# tests). A bug here can loop on faults: hence the timeout.
+recarbon_test(write_watch_test SOURCES ${RT}/kernel/write_watch.cpp ${RT}/cpu/guest_time.cpp)
+target_include_directories(write_watch_test PRIVATE ${RT}/kernel ${RT}/thirdparty/o1heap ${ROOT}/ppc
+    ${ROOT}/tools/XenonRecomp/XenonUtils ${ROOT}/tools/XenonRecomp/thirdparty/simde)
+set_tests_properties(write_watch_test PROPERTIES TIMEOUT 60)
 # scripts/frame_times.py (M7 frame pacing) on synthetic frame logs with known
 # answers, and the runtime's log and CSV formats it reads. Python 3.9+.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
 add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/frame_times_test.py)
 
 # Not ported from SpeedBreaker (one line each: why).
-# write_watch_test: needs ppc/ (ppc_config.h, generated from the XEX) and XenonUtils.
 # switch_tables_test: reads config/nfsmw.toml, MW's leaf functions and switch tables.
 # edge_bars_test: MW's police vid-cam bars, intro frames and results backdrop.
 # menu_borders_test: MW's Showcase vignette and Blacklist bio panel (GitHub #19).
