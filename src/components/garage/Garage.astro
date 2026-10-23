@@ -89,6 +89,81 @@ const U = 60;
 					and extra buttons: <StatusBadge status="not-mapped" />
 				</p>
 			</div>
+			{
+				!compact && (
+					<div class="detail" id="garage-detail" aria-live="polite">
+						<p class="detail-empty">Hover, tap or focus a control to see its keys, its settings.toml name and how it was verified.</p>
+						{MODES.flatMap((m) => CALLOUTS[m.id]).map((c) => (
+							<article class="sheet" data-sheet={c.id} hidden>
+								<header>
+									<h3>
+										{c.lines.length > 0 ? `${c.title}: ` : ''}
+										<span class:list={{ tbd: c.status === 'unverified' }}>{c.action}</span>
+									</h3>
+									<StatusBadge status={c.status} />
+								</header>
+								{c.detail && <p>{c.detail}</p>}
+								<p class="evidence">
+									<strong>Evidence:</strong> {c.evidence}
+								</p>
+								{c.lines.length > 0 ? (
+									<table>
+										<thead>
+											<tr>
+												<th scope="col">Control</th>
+												<th scope="col">Key 1</th>
+												<th scope="col">Key 2</th>
+												<th scope="col">Controller</th>
+											</tr>
+										</thead>
+										<tbody>
+											{c.lines.map((l) => (
+												<tr>
+													<th scope="row">
+														{l.label}
+														{l.action && <span class="line-act">{l.action}</span>}
+													</th>
+													<td>
+														{l.keys[0] ? <kbd>{keyLabel(l.keys[0])}</kbd> : '–'}
+														<code>
+															{l.setting} = "{l.keys[0] ?? 'none'}"
+														</code>
+													</td>
+													<td>
+														{l.keys[1] ? <kbd>{keyLabel(l.keys[1])}</kbd> : '–'}
+														<code>
+															{l.setting2} = "{l.keys[1] ?? 'none'}"
+														</code>
+													</td>
+													<td>{c.pad.map((p) => PAD_NAMES[p]).join(', ')}</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								) : (
+									<p>
+										Keyboard: {keyText(c.keyGroups).join(', ')}. Controller: {padText(c.pad, c.padChord).join(', ')}. These are
+										ReCarbon's own Settings keys, not rebindable.
+									</p>
+								)}
+								{c.lines.length > 0 && (
+									<p class="binding">
+										Key binding <StatusBadge status={BINDING.keyboard.status} /> · Controller mapping{' '}
+										<StatusBadge status={BINDING.controller.status} /> · Physical controller{' '}
+										<StatusBadge status={BINDING.physicalController.status} />
+									</p>
+								)}
+							</article>
+						))}
+						<article class="sheet" data-sheet="key" hidden>
+							<header>
+								<h3 data-fill="title" />
+							</header>
+							<p data-fill="body" />
+						</article>
+					</div>
+				)
+			}
 		</div>
 
 		<div class="callouts">
@@ -129,7 +204,7 @@ const U = 60;
 												))}
 											</span>
 										</span>
-										<StatusBadge status={c.status} compact />
+										<StatusBadge status={c.status} />
 									</button>
 								</li>
 							))}
@@ -147,81 +222,6 @@ const U = 60;
 		</svg>
 	</div>
 
-	{
-		!compact && (
-			<div class="detail" id="garage-detail" aria-live="polite">
-				<p class="detail-empty">Hover, tap or focus a control to see its keys, its settings.toml name and how it was verified.</p>
-				{MODES.flatMap((m) => CALLOUTS[m.id]).map((c) => (
-					<article class="sheet" data-sheet={c.id} hidden>
-						<header>
-							<h3>
-								{c.lines.length > 0 ? `${c.title}: ` : ''}
-								<span class:list={{ tbd: c.status === 'unverified' }}>{c.action}</span>
-							</h3>
-							<StatusBadge status={c.status} />
-						</header>
-						{c.detail && <p>{c.detail}</p>}
-						<p class="evidence">
-							<strong>Evidence:</strong> {c.evidence}
-						</p>
-						{c.lines.length > 0 ? (
-							<table>
-								<thead>
-									<tr>
-										<th scope="col">Control</th>
-										<th scope="col">Key 1</th>
-										<th scope="col">Key 2</th>
-										<th scope="col">Controller</th>
-									</tr>
-								</thead>
-								<tbody>
-									{c.lines.map((l) => (
-										<tr>
-											<th scope="row">
-												{l.label}
-												{l.action && <span class="line-act">{l.action}</span>}
-											</th>
-											<td>
-												{l.keys[0] ? <kbd>{keyLabel(l.keys[0])}</kbd> : '–'}
-												<code>
-													{l.setting} = "{l.keys[0] ?? 'none'}"
-												</code>
-											</td>
-											<td>
-												{l.keys[1] ? <kbd>{keyLabel(l.keys[1])}</kbd> : '–'}
-												<code>
-													{l.setting2} = "{l.keys[1] ?? 'none'}"
-												</code>
-											</td>
-											<td>{c.pad.map((p) => PAD_NAMES[p]).join(', ')}</td>
-										</tr>
-									))}
-								</tbody>
-							</table>
-						) : (
-							<p>
-								Keyboard: {keyText(c.keyGroups).join(', ')}. Controller: {padText(c.pad, c.padChord).join(', ')}. These are
-								ReCarbon's own Settings keys, not rebindable.
-							</p>
-						)}
-						{c.lines.length > 0 && (
-							<p class="binding">
-								Key binding <StatusBadge status={BINDING.keyboard.status} /> · Controller mapping{' '}
-								<StatusBadge status={BINDING.controller.status} /> · Physical controller{' '}
-								<StatusBadge status={BINDING.physicalController.status} />
-							</p>
-						)}
-					</article>
-				))}
-				<article class="sheet" data-sheet="key" hidden>
-					<header>
-						<h3 data-fill="title" />
-					</header>
-					<p data-fill="body" />
-				</article>
-			</div>
-		)
-	}
 	<p class="sr-only" data-live aria-live="polite"></p>
 
 	<script type="application/json" data-garage-facts set:html={JSON.stringify({ keys: keyFacts, pad: padFacts, f1: UI.open.note })} />
@@ -251,6 +251,7 @@ const U = 60;
 	}
 	.switch {
 		display: inline-flex;
+		max-width: 100%;
 		padding: 4px;
 		gap: 4px;
 		background: #0e1115;
@@ -285,6 +286,19 @@ const U = 60;
 	.gear[aria-pressed='true'] {
 		color: var(--rn-asphalt);
 		background: var(--mode-color);
+	}
+	@media (max-width: 30rem) {
+		.bar,
+		.switch {
+			width: 100%;
+		}
+		.sw,
+		.gear {
+			flex: 1;
+			justify-content: center;
+			padding-inline: 0.5rem;
+			letter-spacing: 0.04em;
+		}
 	}
 	.gear-letter {
 		display: inline-grid;
@@ -716,7 +730,8 @@ const U = 60;
 			sheet(id);
 			const b = callout(id);
 			if (b) {
-				live.textContent = b.innerText.replace(/\s+/g, ' ').trim();
+				const status = b.querySelector('.badge .text')?.textContent ?? '';
+				live.textContent = `${b.querySelector('.plate')!.textContent!.replace(/\s+/g, ' ').trim()}. ${status}`;
 				if (narrow.matches) zoomTo(b.dataset.keys!.split(' ')[0]);
 			}
 		}
@@ -769,7 +784,11 @@ const U = 60;
 		// Mobile: zoom the keyboard to one cluster.
 		function zoom(cluster: HTMLButtonElement | null) {
 			const full = kb.dataset.fullViewbox!;
-			kb.setAttribute('viewBox', cluster ? cluster.dataset.box! : full);
+			const box = cluster ? cluster.dataset.box! : full;
+			kb.setAttribute('viewBox', box);
+			const [, , bw, bh] = box.split(' ').map(Number);
+			kb.style.aspectRatio = cluster ? `${bw} / ${bh}` : '';
+			kb.style.overflow = cluster ? 'hidden' : '';
 			setPressed('.cluster', 'data-cluster', cluster?.dataset.cluster ?? '');
 			const vp = root.querySelector<SVGRectElement>('.minimap .viewport');
 			if (vp) {
@@ -804,7 +823,7 @@ const U = 60;
 				root.dataset.device = dev.dataset.setDevice!;
 				show();
 				if (!clusters.hidden) zoom(root.querySelector('.cluster'));
-				live.textContent = `${dev.textContent!.trim()} shown`;
+				live.textContent = `${dev.dataset.setDevice === 'keyboard' ? 'Keyboard' : 'Controller'} shown`;
 			} else if (mode) {
 				e.preventDefault();
 				root.dataset.mode = mode.dataset.setMode!;
@@ -842,6 +861,7 @@ const U = 60;
 		});
 		const redraw = () => draw(pinned);
 		addEventListener('resize', redraw);
+		addEventListener('scroll', redraw, { passive: true });
 		narrow.addEventListener('change', show);
 		wide.addEventListener('change', redraw);
 

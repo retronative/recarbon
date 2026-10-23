@@ -4,7 +4,7 @@ import { url } from '../lib/url';
 ---
 
 <a class="version-chip" href={url('docs/known-issues/')} title="Documentation version">
-	<span aria-hidden="true">v</span>{site.docsVersion}
+	{/^\d/.test(site.docsVersion) ? `v${site.docsVersion}` : site.docsVersion}
 </a>
 
 <style>

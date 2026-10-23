@@ -50,6 +50,11 @@ import VersionChip from '../VersionChip.astro';
 	.main-nav {
 		display: none;
 	}
+	@media (max-width: 30rem) {
+		.title-wrapper :global(.version-chip) {
+			display: none;
+		}
+	}
 	.search {
 		margin-inline-start: auto;
 	}

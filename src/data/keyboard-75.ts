@@ -68,9 +68,9 @@ export const KEYBOARD: KeyCap[] = [
 	named('end', 'end', 'End', 15, R4),
 
 	named('fn', 'fn', 'Fn (globe)', 0, R5),
-	named('left_ctrl', 'control ⌃', 'Left Control', 1, R5),
-	named('left_alt', 'option ⌥', 'Left Option (Alt)', 2, R5),
-	named('left_gui', 'command ⌘', 'Left Command', 3, R5, 1.25),
+	named('left_ctrl', '⌃ ctrl', 'Left Control', 1, R5),
+	named('left_alt', '⌥ opt', 'Left Option (Alt)', 2, R5),
+	named('left_gui', '⌘ cmd', 'Left Command', 3, R5, 1.25),
 	named('space', 'space', 'Space', 4.25, R5, 6.25),
 	named('right_gui', '⌘', 'Right Command', 10.5, R5),
 	named('right_alt', '⌥', 'Right Option (Alt)', 11.5, R5),
