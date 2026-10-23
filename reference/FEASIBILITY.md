@@ -677,6 +677,29 @@ capture the screen. The condition isn't known, and neither is the cause. It isn'
   bundle ID `org.retronative.recarbon`, signs ad hoc and runs from its bundle. `check_app` check
   3 fails: Homebrew's Vulkan loader names `/opt/homebrew`, so a release needs libraries built
   from source.
+- **Alpha packaging check (2026-10-23, build 184d87f):**
+  - **Build and checks:** `make_app.py` built a 72 MB app for macOS 27.0+, bundling 7 libraries
+    and MoltenVK 1.4.2. `check_app` passed checks 1, 2, 4 and 5. Check 3 failed only because
+    the bundled Vulkan loader has three search folders compiled in: `/opt/homebrew/etc/xdg`,
+    `/opt/homebrew/share` and `/opt/homebrew/etc`. The app points the loader at its own
+    MoltenVK either way. On a Mac that has Homebrew, Vulkan layers installed there could still
+    be picked up.
+  - **On a second Mac:** the MacBook Air (M1, macOS 27.0.1) has Homebrew's copies of the same
+    libraries installed. The app ran there for 60 s with `DYLD_PRINT_LIBRARIES=1` and a
+    cleared environment.
+    - Every library outside the system loaded from inside `ReCarbon.app`, and nothing named
+      `/opt/homebrew`.
+    - The signature verified. It reached frame 900, exited cleanly, and hit no strict stubs.
+  - **Installing from the disc image:** `ReCarbon --install <the user's .iso> --dest <folder>`
+    copied and verified the 78 manifest files (5.3 GB) in 4 s, in an isolated user folder.
+    - The install was then moved to the default `~/Library/Application Support/ReCarbon/game`,
+      and the app launched from outside the repository with a cleared environment.
+    - The app reported that the recorded install folder had gone, found the game in the
+      default folder, and reached frame 900. It exited cleanly.
+  - **Limits:**
+    - The app needs macOS 27 or newer, because Homebrew's bottles are built for 27.0.
+    - It wasn't tried on a Mac without Homebrew, or under a new macOS user account.
+    - The release build of the libraries (`build_deps.sh`, M8) isn't ported yet.
 - The 16 KB host-page release fix is ported from SpeedBreaker v0.1.8 with ReCarbon's own test
   and a mutation check (commit 84df8f3). It was latent: never observed in play.
 
