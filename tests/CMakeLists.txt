@@ -155,6 +155,18 @@ recarbon_test(memory_plan_test)
 # The bug report's own deflate, PNG and zip writers (report/zip.cpp), against
 # published checksums and Python's zlib. From SpeedBreaker v0.1.8's (ReCarbon M8 tests).
 recarbon_test(report_zip_test SOURCES ${RT}/report/zip.cpp ARGS ${CMAKE_CURRENT_BINARY_DIR}/report_zip_out)
+# The installer's folder rules and messages (install/placement.cpp and the
+# installer it calls), and portable mode with --portable on|off
+# (user/portable.cpp, install/portable_switch.cpp), in scratch folders at the
+# build tree's top (not beside the test: that is its own folder, refused).
+# From SpeedBreaker v0.1.8's, with ReCarbon's names (ReCarbon M8 tests).
+set(INSTALL_SOURCES ${RT}/install/placement.cpp ${RT}/install/installer.cpp ${RT}/install/locate.cpp
+    ${RT}/install/manifest.cpp ${RT}/install/result.cpp ${RT}/install/disc_source.cpp ${RT}/install/sha256.cpp
+    ${RT}/user/portable.cpp)
+recarbon_test(install_folder_test SOURCES ${INSTALL_SOURCES} ARGS ${CMAKE_BINARY_DIR}/install_folder_scratch)
+recarbon_test(portable_test SOURCES ${RT}/install/portable_switch.cpp ${INSTALL_SOURCES} ARGS ${CMAKE_BINARY_DIR}/portable_scratch)
+target_link_libraries(install_folder_test PRIVATE "-framework CoreFoundation")  # placement.cpp's iCloud check
+target_link_libraries(portable_test PRIVATE "-framework CoreFoundation")
 # scripts/frame_times.py (M7 frame pacing) on synthetic frame logs with known
 # answers, and the runtime's log and CSV formats it reads. Python 3.9+.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
@@ -170,8 +182,6 @@ add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOUR
 # whole_vblanks_test: game/whole_vblanks.h, removed (MW's game time).
 # light_trails_test: game/light_trails.h, removed (MW's nitrous trails, GitHub #10).
 # movie_cadence_sim.py: MW's movie cadence (not a ctest in SpeedBreaker either).
-# install_folder_test: asserts MW install names (.nfsmw-install*, SpeedBreaker folders) ~20 times; ReCarbon uses .recarbon-install-*; adapt separately.
-# portable_test: asserts the same MW install and folder names ~40 times; adapt separately.
 # launcher_prime_test.sh: needs scripts/steamos/bundle/speedbreaker.sh, which ReCarbon doesn't have.
 # gpu_choice_test,
 #   band_filter_test, scale_budget_test, refresh_fit_test,
