@@ -61,15 +61,48 @@ and no milestone scope or criterion changes. ROADMAP M8 is the scope; this says 
   - Take each tarball from its project's official release URL.
   - Check its SHA-256 against Homebrew's formula, as a second source.
 
-### Decisions needed
-- **D-B1a, deployment target:** 27.0 (provisional alpha target, the user's decision).
-  `build_deps.sh` makes a lower one possible later, but it can't be tested here: both Macs run
-  macOS 27.
-- **D-B1b, versions:** current (recommended) or SpeedBreaker's pins.
-- **D-B1c, MoltenVK:** keep Homebrew's (already macOS 12, as SpeedBreaker does) or build it from
-  source.
-- **D-B1d, network:** `build_deps.sh` downloads about 60 MB of source tarballs.
-- **Approval to start M8** with B1 first.
+### Decisions (provisional, the user's, 2026-10-23)
+- **D-B1a, deployment target:** macOS 27 or later.
+- **D-B1b, versions:** Vulkan SDK 1.4.363 (Loader, Headers, SPIRV-Tools, SPIRV-Headers),
+  SDL3 3.4.18 and glslang 16.6.0, the ones every ReCarbon test ran against.
+- **D-B1d, sources:** release dependencies are built from source and checksum-verified where
+  possible. About 60 MB of downloads is approved, from the verified upstream release URLs only.
+- **Still open:**
+  - **D-B1c, MoltenVK** (below);
+  - **approval to start M8**, with B1 first.
+
+### D-B1c: is a source-built MoltenVK needed? (checked 2026-10-23)
+- **The bundled MoltenVK is already self-contained:**
+  - `libMoltenVK.dylib` 1.4.2 is arm64 only, 5.3 MB, minos 12.0.
+  - It links only system frameworks and libraries: Metal, QuartzCore, AppKit, Foundation,
+    CoreGraphics, IOSurface, IOKit, CoreFoundation, libc++, libSystem, libobjc.
+  - Nothing comes from Homebrew, so `check_app` has nothing to flag in it: check 3's failure is
+    the Vulkan loader's alone.
+- **Where Homebrew's comes from:**
+  - The `molten-vk` formula builds the v1.4.2 tag with Xcode's `xcodebuild`, plus six
+    dependencies at pinned git revisions: SPIRV-Cross, SPIRV-Headers, SPIRV-Tools,
+    Vulkan-Headers, Vulkan-Tools and cereal.
+  - The bottle (`arm64_golden_gate`, SHA-256 `0de19dbda466d4da…`) comes from Homebrew's CI.
+- **What a source build would take:**
+  - **Full Xcode:** neither Mac has it, only the Command Line Tools. Installing it is a large
+    download and is the user's action.
+  - **Git sources:** six repositories fetched at pinned revisions, not release tarballs. That's
+    more than the approved 60 MB, and verified by commit rather than by a tarball SHA-256.
+  - **Time:** about 10–20 minutes of `xcodebuild`.
+  - **Not bit-for-bit reproducible:** the output also depends on the Xcode version.
+- **What it would gain:** source provenance for one more library, and the deployment target set
+  to 27 like the others. Neither is needed for a self-contained app or for `check_app`.
+  - SpeedBreaker v0.1.8 makes the same choice: MoltenVK is the one library it takes from
+    Homebrew.
+  - Its license (Apache-2.0, cereal BSD-3-Clause) needs only the notices the app already
+    carries; there's no source obligation.
+- **Recommendation:** keep Homebrew's MoltenVK for the alpha.
+  - `make_app.py` records the bottle's SHA-256 and the formula's version and dependency
+    revisions in `Contents/Resources/licenses/README.txt`.
+  - It refuses a MoltenVK whose SHA-256 differs from the recorded one, until the pin is updated
+    on purpose.
+  - Build it from source later, if the deployment target changes or Xcode becomes part of the
+    toolchain.
 
 ## B2. Input profiles: design note
 
@@ -137,19 +170,98 @@ and no milestone scope or criterion changes. ROADMAP M8 is the scope; this says 
   - a restart shows persistence, in isolated homes;
   - the virtual pad covers controller rebinding.
 
-### Decisions needed
-- **D-B2a, preset tables:**
-  - **WASD:** W gas, S brake/reverse, A/D steer, arrows on the D-pad.
-  - **Arrows:** Up gas, Down brake, Left/Right steer, W/A/S/D free. The action keys stay as
-    today (Space A, Backspace B, Left Shift X, Left Ctrl Y, Q/E LB/RB, Return Start, Esc Back).
+### Proposals for approval (exact)
 
-  Which game actions sit on which Xbox controls (handbrake, nitrous, camera) is still
-  unverified: hand test 5.
-- **D-B2b, storage:** separate `profiles/*.toml` files (proposed), or tables inside
-  `settings.toml`.
-- **D-B2c, controller rebinding scope in v1:** buttons only (proposed), or axes too.
-- **D-B2d, `[keys]` after migration:** a mirror of the active profile (proposed, safe to
-  downgrade), or frozen.
+#### D-B2a, preset tables
+- **Rows and names:** each row is a `keymap::Control` with its two keys (slot 1, slot 2), named by
+  the `settings.toml` tokens of `user/key_names.h`.
+- **Default:** today's table (`settings.cpp`), pinned by `settings_keys_test`. Rows not listed
+  below are the same as Default in both presets:
+  - A space, B backspace, X left_shift, Y left_ctrl, LB q, RB e, Start return, Back escape;
+  - the right stick o, l, k, semicolon;
+  - the stick clicks z, c.
+
+| Control | Default (today) | WASD | Arrows |
+|---|---|---|---|
+| Right Trigger | w, none | w, none | up, none |
+| Left Trigger | s, none | s, none | down, none |
+| Left Stick Left | a, left | a, none | left, none |
+| Left Stick Right | d, right | d, none | right, none |
+| Left Stick Up | up, none | up, none | up, none |
+| Left Stick Down | down, none | down, none | down, none |
+| D-pad Up / Down / Left / Right | up / down / left / right | up / down / left / right | up / down / left / right |
+
+- **WASD:** Default with the arrows taken off steering. Arrows are then menu and D-pad keys only.
+- **Arrows:** gas and brake on Up and Down, steering on Left and Right; W, A, S and D are free.
+  - Up and Down still move the left stick and the D-pad too, as Left and Right already do in
+    Default (several controls on one key are allowed, and the help line says which).
+  - **Unverified:** what Carbon does with D-pad Up or Down, or a pushed left stick, while
+    driving. Hand test 5 maps the game's actions. The Arrows preset can't be called verified
+    before that.
+- Both presets are fixed tables, pinned by a test like `settings_keys_test`.
+
+#### D-B2b, profile storage
+- **Files:** two TOML files in the user folder, next to `settings.toml`:
+  `profiles/keyboard.toml` and `profiles/controller.toml`.
+
+  ```toml
+  # profiles/keyboard.toml: written by ReCarbon. The built-in profiles (Default, WASD,
+  # Arrows) aren't stored.
+  active = "Custom"
+
+  [[profile]]
+  name = "Custom"
+  right_trigger = ["w", "none"]      # [slot 1, slot 2], the [keys] tokens
+  left_stick_left = ["a", "left"]
+  # ... one line per control; a control left out takes Default's keys
+
+  # profiles/controller.toml
+  active = "Default"
+
+  [[profile]]
+  name = "Swapped A/B"
+  a = "east"                         # Xbox control = SDL gamepad button
+  b = "south"
+  ```
+
+- **Names:**
+  - Profile names are 1–32 printable ASCII characters.
+  - "Default", "WASD" and "Arrows" are reserved.
+  - A built-in profile is edited by duplicating it first, as "<name> (custom)".
+- **Bad entries:** unknown keys and malformed entries are named in the log and skipped (Default's
+  keys for that control).
+- **A file that can't be read** at all is left untouched, and the game runs on `[keys]`. The
+  Controls page says so.
+
+#### D-B2d, migration (keeps every existing binding)
+1. **First launch of the M8 build, with no `profiles/keyboard.toml`:**
+   - If `[keys]` equals Default, write `active = "Default"` with no profiles.
+   - Otherwise write one profile, "Custom", holding `[keys]` exactly: both slots of every
+     control, the same scancodes. Then `active = "Custom"`.
+   - Log a line either way.
+2. **`[keys]` is never deleted.** From then on it mirrors the active keyboard profile whenever
+   that changes, so an older build still finds the keys in use. `settings.toml`'s other settings
+   are untouched.
+3. **Once `keyboard.toml` exists it is the source.** A hand edit to `[keys]` is then logged and
+   overwritten by the mirror.
+4. **No controller migration:** there is no controller setting to migrate. `controller.toml`
+   starts with `active = "Default"`.
+5. **Tests:**
+   - a customized `[keys]` gives the same bindings;
+   - the default `[keys]` gives "Default";
+   - a second launch doesn't migrate again;
+   - an unreadable `keyboard.toml` leaves `[keys]` in charge;
+   - every case runs on copies in isolated homes.
+
+#### D-B2c, controller rebinding scope (v1)
+- **Buttons only:** the 14 XInput buttons of `padmap::kDefault` (A, B, X, Y, LB, RB, Back,
+  Start, the stick clicks, the D-pad's four), each bound to one SDL gamepad button.
+- **Fixed in v1:** the triggers, the sticks, the deadzones (Settings > Input) and the paddles,
+  which SDL reads but `pad_map.h` doesn't map.
+- **Menu rules stay physical:** opening the menu (Back + Start) and closing it (B) read the real
+  buttons whatever the mapping, so no profile can lock the player out.
+- **Testing:** by the virtual pad only, while the physical controller is Deferred — not
+  verified. Nothing about controller rebinding is called verified on hardware.
 
 ### Order and size (if approved)
 1. **B1:** about a day, mostly build-script porting and verification.

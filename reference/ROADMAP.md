@@ -279,6 +279,10 @@ customization. The controls criterion is judged on the default mappings.
     virtual-controller and hot-unplug tests pass, but they don't show physical compatibility.
   - Release packaging still links Homebrew's libraries from `/opt/homebrew` (`check_app`
     check 3; M8).
+  - Key labels on a non-English keyboard layout: under Myanmar (or another non-Latin layout)
+    Settings > Controls draws letter keys as '?' (U+FFFD), because the menu's font lacks the
+    script. Binding such a key is refused safely and nothing is saved (verified, 33bf340), but
+    the labels themselves aren't fixed. Gameplay input is unaffected.
   - **Still pending:**
     - the driving controls on the keyboard (the physical controller is deferred);
     - physics;
