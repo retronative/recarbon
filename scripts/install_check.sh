@@ -32,10 +32,75 @@ pass=0 fail=0
 ok() { pass=$((pass + 1)); echo "PASS  $1"; }
 bad() { fail=$((fail + 1)); echo "FAIL  $1: $2"; }
 
+# Every game this script runs, and anything a game starts, are this run's,
+# known three ways: the launch's own process group (GAME_PGID); its group and
+# descendants as seen while it runs (TREE: pid and start time, so a pid used
+# again later is never taken for one of them); and
+# RECARBON_TEST_OWNER=$OWNER in the environment of each game this script
+# starts, the launch's included. Only those are ever signalled, so a player's
+# game, another run's, or the user's session are left alone. On any exit
+# (done, Ctrl-C, SIGTERM to this script) they are stopped (SIGTERM, then
+# SIGKILL after 10 s) and checked gone. (macOS's ps shows environments with
+# -E, its -e meaning every process, and not for Apple's own binaries, such as
+# sleep: hence the tree.)
+OWNER="install_check-$$-$RANDOM"
+GAME_PGID="" TREE=""
+started() { ps -o stat=,lstart= -p "$1" 2>/dev/null | awk '$1 !~ /^Z/ { $1 = ""; print substr($0, 2) }'; }
+snapshot() {
+  [ -n "$GAME_PGID" ] || return 0
+  local p
+  for p in "$GAME_PGID" $(pgrep -g "$GAME_PGID") $(ps -axo pid=,ppid= |
+      awk -v root="$GAME_PGID" '{ up[$1] = $2 } END { for (p in up) { q = p; while (q in up && q != root && q > 1) q = up[q]; if (q == root && p != root) print p } }'); do
+    TREE+="$p $(started "$p")"$'\n'
+  done
+}
+# The match is made here, not by a program whose own arguments would hold it.
+owned() {
+  ps -axww -E -o pid=,command= | while read -r p rest; do
+    case " $rest " in *" RECARBON_TEST_OWNER=$OWNER "*) echo "$p" ;; esac
+  done
+}
+leftovers() {
+  {
+    [ -n "$GAME_PGID" ] && pgrep -g "$GAME_PGID"
+    printf '%s' "$TREE" | while read -r p start; do
+      [ -n "$start" ] && [ "$(started "$p")" = "$start" ] && echo "$p"
+    done
+    owned
+  } | sort -un
+}
+stop_game() {
+  snapshot
+  local left outside; left="$(leftovers)"
+  [ -n "$left" ] || return 0
+  outside="$(comm -23 <(echo "$left" | sort -u) <([ -n "$GAME_PGID" ] && pgrep -g "$GAME_PGID" | sort -u))"
+  [ -n "$outside" ] && echo "note: stopping test-owned processes outside the game's process group: $(echo $outside)" >&2
+  kill -TERM $left 2>/dev/null
+  for _ in $(seq 20); do [ -z "$(leftovers)" ] && break; sleep 0.5; done
+  left="$(leftovers)"
+  if [ -n "$left" ]; then
+    echo "note: still running 10 s after SIGTERM, killed: $(echo $left)" >&2
+    kill -KILL $left 2>/dev/null
+    sleep 0.5
+  fi
+}
+# Stops them; true if none is left after that.
+cleaned() {
+  stop_game
+  local left; left="$(leftovers)"
+  [ -z "$left" ] && return 0
+  kill -KILL $left 2>/dev/null
+  echo "left behind: $(echo $left)" >&2
+  return 1
+}
+on_exit() { cleaned || echo "FAIL  cleanup: test-owned processes were still running at exit" >&2; }
+trap on_exit EXIT
+trap 'echo "interrupted" >&2; exit 130' INT TERM
+
 # expect <case> <exit code> <error name or -> <ReCarbon arguments...>
 expect() {
   local name=$1 code=$2 error=$3; shift 3
-  local out; out="$("$BIN" "$@" 2>&1)"; local got=$?
+  local out; out="$(RECARBON_TEST_OWNER="$OWNER" "$BIN" "$@" 2>&1)"; local got=$?
   echo "$out" > "$S/$name.out"
   if [ "$got" != "$code" ]; then bad "$name" "exit $got, wanted $code ($(tail -1 "$S/$name.out"))"
   elif [ "$error" != - ] && ! grep -q "^error ($error)" "$S/$name.out"; then bad "$name" "no 'error ($error)' ($(tail -1 "$S/$name.out"))"
@@ -92,10 +157,12 @@ if [ "$IMAGE" != - ]; then
     bad dest_no_space "couldn't make a 200 MB volume"
   fi
   # Cancelled part way (Ctrl-C): exit 130, and nothing left at the destination.
-  "$BIN" --install "$IMAGE" --dest "$S/d_cancel" > "$S/cancel.out" 2>&1 &
+  RECARBON_TEST_OWNER="$OWNER" "$BIN" --install "$IMAGE" --dest "$S/d_cancel" > "$S/cancel.out" 2>&1 &
   pid=$!
   sleep 1
   kill -INT $pid 2>/dev/null
+  for _ in $(seq 60); do kill -0 $pid 2>/dev/null || break; sleep 0.5; done
+  kill -0 $pid 2>/dev/null && kill -KILL $pid  # ignored SIGINT: fails below (exit 137)
   wait $pid; got=$?
   if [ $got = 0 ]; then echo "SKIP  cancel: the install finished within 1 s"
   elif [ $got != 130 ]; then bad cancel "exit $got, wanted 130"
@@ -113,14 +180,22 @@ if [ "$IMAGE" != - ]; then
     # The game from the install, started outside the repository, for 30 s.
     # (Started on its own, not as "cd && game &": then $! is a subshell's and
     # the signal never reaches the game, which went on running.)
-    RECARBON_GAME_DIR="$S/game" RECARBON_MUTE=1 RECARBON_RESOLUTION=1x "$BIN" > "$S/launch.log" 2>&1 &
+    # In a process group of its own (perl's setpgrp, then exec: the same pid).
+    RECARBON_TEST_OWNER="$OWNER" RECARBON_GAME_DIR="$S/game" RECARBON_MUTE=1 RECARBON_RESOLUTION=1x \
+      perl -e 'setpgrp(0, 0); exec @ARGV or die "exec: $!"' "$BIN" > "$S/launch.log" 2>&1 &
     pid=$!
-    sleep 30
-    kill -TERM $pid 2>/dev/null  # SIGTERM: the game quits as its window's close button does
-    for i in $(seq 20); do kill -0 $pid 2>/dev/null || break; sleep 0.5; done
-    if kill -0 $pid 2>/dev/null; then kill -KILL $pid; bad launch_quits "still running 10 s after SIGTERM (killed)"
+    GAME_PGID=$pid
+    sleep 30 & wait $!  # (in the background, so a Ctrl-C is handled at once)
+    # SIGTERM: the game quits as its window's close button does.
+    snapshot
+    kill -TERM -- "-$GAME_PGID" 2>/dev/null
+    for _ in $(seq 20); do pgrep -g "$GAME_PGID" > /dev/null || break; sleep 0.5; done
+    if pgrep -g "$GAME_PGID" > /dev/null; then bad launch_quits "still running 10 s after SIGTERM"
     elif ! grep -q '^\[runtime\] SIGTERM' "$S/launch.log"; then bad launch_quits "the game never logged the SIGTERM (was another process signalled?)"
     else ok launch_quits; fi
+    # Stopped (SIGKILL if need be) before the wait, which would otherwise
+    # hang on a game that ignored SIGTERM.
+    if cleaned; then ok launch_cleaned_up; else bad launch_cleaned_up "test-owned processes were left running (killed)"; fi
     wait $pid 2>/dev/null
     if grep -q '\[perf\]' "$S/launch.log" && ! grep -q -i -E 'not a recompiled function|strict stub' "$S/launch.log" &&
        grep -q "$S/game" "$S/launch.log"; then ok launch_from_install

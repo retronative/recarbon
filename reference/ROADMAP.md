@@ -351,6 +351,33 @@ customization. The controls criterion is judged on the default mappings.
     buttons (the M6/M7 scripted routes navigate with them). A real key moving a menu under each
     preset is left for a hand test: the scripted menu route didn't reach the main menu here.
   - **Not verified:** the physical controller (deferred), and controller rebinding on hardware.
+- **Test tooling (2026-10-24):** `scripts/install_check.sh` stops every process it starts.
+  - **The bug:** it launched the game as `(cd … && game &)`, so `$!` was a subshell's pid and
+    SIGTERM never reached the game. Three launches were left running for 1–2.5 hours at 86–91%
+    CPU, during the M5 resolution measurements. 88a8576 launched the game directly, which
+    still had gaps:
+    - a game that ignored SIGTERM hung the script in `wait`;
+    - a descendant outside the game's process group was never looked for.
+  - **Now:** the launch gets its own process group. The script records the group and its
+    descendants while the game runs (pid and start time, so a reused pid is never signalled),
+    and marks every game it starts with `RECARBON_TEST_OWNER`. On any exit (done, Ctrl-C,
+    SIGTERM) it sends SIGTERM, then SIGKILL after 10 s, and checks that nothing is left
+    (`launch_cleaned_up`).
+  - **macOS details found on the way:**
+    - `ps -e` means every process; environments need `-E`.
+    - `ps -E` shows no environment for Apple's own binaries, such as `sleep`, so the marker
+      alone can't find them.
+    - A process whose own arguments contain the marker matches itself.
+    - A copied `/bin/sleep` is killed at launch, so decoys must be built locally.
+  - **Verified on the M5, with two decoy `ReCarbon` processes (one unmarked, one with another
+    run's marker), both alive after every case, and nothing test-owned left after each:**
+    - **Normal run:** 18/18 pass.
+    - **The subshell launch restored (mutant):** `launch_quits` fails ("never logged the
+      SIGTERM"), and the cleanup still stops the shell and the game.
+    - **A launch that ignores SIGTERM**, with two descendants in its group and one that left
+      it: `launch_quits` fails, all four are killed after 10 s, and none is left.
+    - **The script interrupted during the launch** by SIGINT and by SIGTERM: exit 130, nothing
+      left.
 - **Do:**
   - Parametrize the installer: Carbon manifest, title ID, ReCarbon names.
   - Package `ReCarbon.app` (bundle ID `org.retronative.recarbon`, via `make_app.py`) with license notices and LGPL sources.
