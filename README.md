@@ -28,7 +28,8 @@ Native recompilation of Need for Speed: Carbon (Xbox 360) for Apple Silicon.
 - **M5 (accepted, with open limitations):** audio, movies and keyboard input work. Still open:
   - a physical controller, deferred and not verified;
   - movie judder, deferred to polish;
-  - an intermittent '?' on the Controls page.
+  - changing key bindings needs an English keyboard layout: on other layouts the Controls page
+    shows letters as '?' and refuses new keys (gameplay input is unaffected).
 - **M6 (open):** it boots to free-roam and loads races. Free-roam held 15 minutes without a
   crash in a hand test. The new-profile route test is still pending.
 - **M7 (in progress, current):** a full career race finishes against AI, and progress survives a restart

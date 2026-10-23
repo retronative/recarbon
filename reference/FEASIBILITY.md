@@ -617,7 +617,8 @@ a session).
   limitations, none recorded as passed:
   - the physical controller (deferred, above);
   - movie judder (pacing hooks deferred to polish);
-  - the intermittent '?' glyph on the Controls page (open, cause unknown).
+  - the '?' glyph on the Controls page: root-caused (a non-Latin keyboard layout) and handled
+    since (33bf340, below).
 
   M6 stays open until M6.6, M7 is the current milestone, and M8 is Pending, not started (ROADMAP).
 
@@ -649,13 +650,33 @@ device.
 Keyboard players can't see that Q and E turn the settings pages: the footer named only LB
 and RB. It now shows "LB RB / Q E: page" (commit 4f6e0f5).
 
-**Open, not root-caused:** in 2 of 2 automated screenshots (fresh user folder), the Controls
-page drew the default letter keys W, S, A and D as the replacement glyph (U+FFFD). Named keys
-(Up, Space) drew correctly. A probe showed that SDL names the keys correctly, and that the font
-has the glyphs at the size drawn with valid atlas coordinates. With that probe in the build,
-the letters drew correctly (1 of 1 run). In the user's own sessions the letters showed
-correctly. So far it has appeared only in automated runs with a fresh user folder, which
-capture the screen. The condition isn't known, and neither is the cause. It isn't fixed.
+**The '?' glyph on the Controls page: root-caused and handled (2026-10-23, commit 33bf340).**
+- **Symptom:** in automated screenshots the Controls page drew the letter keys W, S, A and D as
+  the replacement glyph (U+FFFD), while named keys (Up, Space) drew correctly.
+- **Cause (verified):** the M5's active keyboard layout was Myanmar. The cell names a key on the
+  active layout, and on Myanmar SDL gives W as U+1010, S U+103B, A U+1031 and D U+102D (logged
+  bytes `E1 80 90` and so on). The menu's font, Roboto, has no Myanmar glyphs.
+  - The earlier "heisenbug" was the user switching between Myanmar and U.S. between runs: probe
+    builds happened to run under U.S.
+  - Separating build from machine showed it: the M1-built binary drew the diamonds on the M5
+    (2 of 2), the unmodified M5 build drew them 3 of 3 under Myanmar, and the M1 (U.S.) drew
+    letters 3 of 3.
+- **Handling** (the user's spec):
+  - ReCarbon supports English layouts for rebinding. When a key's name on the active layout
+    isn't printable ASCII, the Controls page refuses to bind it. The help line says
+    "Unsupported key character. Switch to an English keyboard layout.", nothing is saved, and
+    the wait goes on (Esc or B cancels).
+  - The check runs on capture and again just before the save.
+  - Scancodes stay the binding identity. Gameplay input and saved bindings are unchanged.
+  - Labels aren't substituted: under a non-Latin layout, existing letter bindings still draw as
+    U+FFFD.
+- **Verified:**
+  - **Unit test:** `key_bindable_test` covers ASCII, special keys, Myanmar, Thai, Latin-1 and
+    control characters. Mutating the rule fails it.
+  - **M5, Myanmar active:** W was refused and nothing saved; F5 was saved and still bound after
+    a restart (unchanged `settings.toml`).
+  - **In-game mutant:** with the checks removed, a Myanmar-named T was saved.
+  - **M1, U.S. active:** T was saved and still bound after a restart.
 
 ## 6b. M6 progress: profile, saves, stability (2026-10-23)
 

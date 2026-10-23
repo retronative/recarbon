@@ -151,7 +151,10 @@ Diagnosing a failure is progress. It does not pass a criterion.
   recorded as passed:
   - the physical controller: Deferred — not verified;
   - movie judder (Carbon's pacing hooks): deferred to polish;
-  - the intermittent '?' glyph on the Controls page: open, cause unknown.
+  - the '?' glyph on the Controls page: root-caused since then. A non-Latin keyboard layout
+    (Myanmar) names letter keys in a script the menu's font lacks. Rebinding now refuses such
+    keys and asks for an English layout (33bf340, FEASIBILITY §6a). Existing labels on such a
+    layout still draw as U+FFFD.
 
   The acceptance criteria below are unchanged.
 - **Evidence so far** (FEASIBILITY §6a). M5 stays open until the user closes it:
@@ -227,7 +230,8 @@ customization.
     the prologue chase. The log shows no crash, hang report, strict stub or watchdog report, and
     a clean exit. Before that, the render-queue race was fixed (e40e9ec), and two 16-minute
     soaks ran clean.
-  - Each criterion now has evidence. Closing M6 is left to the user.
+  - Each criterion has evidence. M6 stays open until M6.6, the written new-profile route
+    (user decision, 2026-10-23).
 
 ## M7 — Playable racing *(In progress: the current milestone, user decision 2026-10-23)*
 Input as in M5: SpeedBreaker's keyboard rebinding and `[keys]` keep working. No new
