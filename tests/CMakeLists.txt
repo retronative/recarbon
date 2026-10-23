@@ -39,7 +39,7 @@ set_target_properties(key_names_test PROPERTIES SKIP_BUILD_RPATH OFF)
 # The Key options (Settings > Controls): the table, the [keys] names in the
 # file, and what Set accepts (user/settings.cpp and the toml++ XenonRecomp
 # vendors; no SDL). ReCarbon change: checks RECARBON_* variable names.
-recarbon_test(settings_keys_test SOURCES ${RT}/user/settings.cpp)
+recarbon_test(settings_keys_test SOURCES ${RT}/user/settings.cpp ${RT}/user/atomic_file.cpp)
 target_include_directories(settings_keys_test SYSTEM PRIVATE ${ROOT}/tools/XenonRecomp/thirdparty/tomlplusplus/include)
 # The keyboard's controls and how held keys become a pad (hid/key_map.h), header only.
 recarbon_test(key_map_test)
