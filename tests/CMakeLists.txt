@@ -73,6 +73,10 @@ recarbon_test(shader_gradients_test SOURCES ${RT}/gpu/shader_translator.cpp ${RT
 # Returning freed guest pages to zero touches no byte outside the range on a
 # 16 KB host (kernel/vmem.h ResetHostRange, header only; from SpeedBreaker v0.1.8).
 recarbon_test(vmem_host_pages_test)
+# scripts/frame_times.py (M7 frame pacing) on synthetic frame logs with known
+# answers, and the runtime's log and CSV formats it reads. Python 3.9+.
+find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
+add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/frame_times_test.py)
 
 # Not ported from SpeedBreaker (one line each: why).
 # write_watch_test: needs ppc/ (ppc_config.h, generated from the XEX) and XenonUtils.
