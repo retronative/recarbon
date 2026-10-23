@@ -977,6 +977,72 @@ hand03 3600` with `RECARBON_REAL_HOME=1 RECARBON_MUTE=0`), on the keyboard, at b
   saved, and 10 minutes of racing frame times. The user has already driven the car with the
   keyboard (hand test 1).
 
+## 6d. Display and rendering resolution audit (2026-10-24, no rendering change)
+
+**Method:**
+- Each case is an isolated launch, with its own HOME and the audio muted, running 75 s
+  in the front end. The figures are medians of the `[perf]` samples after the first five.
+- A preflight refused to start while any other ReCarbon, build, test or CPU load was running,
+  and waited for the 1-minute load average to fall under 2.5. Thermal state and power source
+  were recorded.
+- Every game was checked gone after its run.
+
+**Machines:**
+- **MacBook Air M5** (2026-10-24, two repetitions): on AC power, no thermal warning. The
+  first M5 measurements (2026-10-23) were discarded: three orphaned `install_check.sh` games
+  were running at 86–91% CPU (ROADMAP M8, "Test tooling").
+- **M1:** measured 2026-10-23 with no orphans, so its numbers stand.
+
+**Results.** The M5 figures are the two repetitions' medians, each from 13 samples. The
+front end runs at the game's own 30 fps in every case.
+
+| Case | Window / swapchain (pixels) | Internal resolution | M5 GPU busy | Memory | M1 GPU busy |
+|---|---|---|---|---|---|
+| 1x | 2560x1440 | 1280x720 | 2.2 / 2.3 ms | 109 MB | 5.0 ms |
+| 1.5x | 2560x1440 | 1920x1080 | 5.2 / 5.3 ms | 726 MB | — |
+| 2x | 2560x1440 | 2560x1440 | 6.0 / 6.1 ms | 868 MB | 10.6 ms |
+| 3x | 2560x1440 | 3840x2160 | 11.1 / 10.1 ms (9.2–14.5) | 1274 MB | 13.3 ms |
+| Auto | 2560x1440 | 2x2 | 5.9 / 6.0 ms | 868 MB | 9.4 ms |
+| Window request 1920x1080 | 2940x1782 (clamped to the screen) | Auto 2x2 | 5.6 / 5.2 ms | 868 MB | — |
+| Window request 1440x900 | 2880x1782 | Auto 2x2 | 5.7 / 5.7 ms | 868 MB | — |
+| Fullscreen, Auto | 2940x1782, then 2940x1846 (1 rebuild) | Auto 2x2 | 5.6 / 5.2 ms | 868 MB | 10.5 ms (2880x1800) |
+
+**Verified support:**
+- **Internal resolutions 1x, 1.5x, 2x and 3x** all work: no stubs, no Vulkan errors, no
+  fallbacks.
+- **Auto** picks 2x2 on both Macs (budget 4, an integrated GPU), whatever the window or
+  fullscreen size measured.
+- **The swapchain is native Retina pixels.** Windows are clamped to the screen: a 1920x1080
+  request gives a 2940x1782 window on the M5's 1470x956-point panel. Fullscreen is borderless
+  desktop fullscreen: 2940x1846 on the M5, 2880x1800 on the M1.
+- **The 16:9 picture is letterboxed or pillarboxed** on any other shape, a 16:10 panel
+  included. Aspect Ratio's "Fill Screen" can't fill, because Carbon has no view-scaling hooks.
+- **The UI scales with the window's height** (height/720, clamped 0.75–4).
+
+**Corrected from 2026-10-23:**
+- The M5's figures above replace that day's, which were inflated by the orphaned games
+  (1x 3.9 ms then, 2.2 ms now).
+- The 1920x1080 window request's four swapchain rebuilds and 26.3 fps were seen only in the
+  contaminated session. Both clean runs had 0 rebuilds and 30 fps.
+
+**Not verified:**
+- **Ultrawide:** no ultrawide hardware, and a window larger than the screen is clamped.
+- **Scaled 3D:** only the intro movie (720p video) was captured, so the visual correctness of
+  scaled 3D rendering in gameplay is unchecked.
+- **Racing at a higher internal resolution:** every hand test ran at 1x (`run_attempt.sh`
+  forces it), so no racing frame times exist above 1x.
+
+**Proposed enhancements** (none made; they are rendering changes, outside today's scope):
+- **Auto's picture area:** size it for the letterboxed picture (presenter.cpp FrameRegion
+  assumes a filled one). On a Mac this changes nothing at 16:9 or 16:10; it would on
+  ultrawide and 4:3.
+- **Aspect Ratio's description:** it promises a wider view on an ultrawide, which Carbon
+  can't give yet.
+- **The scaled-pitch window** (640–1280, tuned on MW): establish it per Carbon render target.
+- **Racing measurements:** scripted race runs at 2x and Auto, with frame-time logs.
+- **Testability:** move the budget choice and the pitch window into headers, so they can be
+  tested (`reference/TEST_COVERAGE.md`).
+
 ## 7. Feasibility: Xbox 360 Carbon
 
 ### Why it is plausible (evidence from M0)
