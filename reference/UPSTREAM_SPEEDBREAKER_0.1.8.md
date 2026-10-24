@@ -3,7 +3,7 @@
 Research and planning only (2026-10-23). This changes no milestone scope, criterion or code.
 
 - **Upstream range:** v0.1.7 (`31849f5`, ReCarbon's base) to v0.1.8 (`86cfaa4`), one squashed
-  release commit: 60 files, +11,078/−208, read in the local read-only `../speedbreaker`
+  release commit: 60 files, +11,078/−208, read in the local read-only `../NFS/speedbreaker`
   checkout.
 - **"Verified upstream"** means SpeedBreaker's own tests or measurements on NFS: Most Wanted.
   Nothing here is verified for Carbon until ReCarbon reproduces it.

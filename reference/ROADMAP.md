@@ -28,7 +28,7 @@ Diagnosing a failure is progress. It does not pass a criterion.
   - `xexsurvey` built in `tools/survey/`.
 - **Do:**
   - Obtain your own Xbox 360 NFS: Carbon (USA) disc image.
-  - Extract it to `../rom_extracted/` (or `game/files`).
+  - Extract it to `../NFS/rom_extracted/` (or `game/files`).
   - Run XEX inspection, using SpeedBreaker's `survey/xexsurvey.cpp` built against XenonRecomp.
 - **Accept:**
   - `default.xex` is present.

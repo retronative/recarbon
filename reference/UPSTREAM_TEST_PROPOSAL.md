@@ -1,7 +1,7 @@
 # Proposal: test changes ReCarbon could offer SpeedBreaker
 
 A read-only proposal (2026-10-24). Nothing here has been sent to SpeedBreaker or changed in
-`../speedbreaker`; any contribution waits for the user's approval. Each claim about upstream
+`../NFS/speedbreaker`; any contribution waits for the user's approval. Each claim about upstream
 was checked against its v0.1.8 sources. A claim that a test misses a bug was checked by
 building upstream's own test and runtime into a scratch folder with the bug planted.
 

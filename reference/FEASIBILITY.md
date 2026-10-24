@@ -31,7 +31,7 @@ The player stated that this image is a backup of their own disc. An earlier imag
 
 ### Extraction
 - Tool: `XboxDev/extract-xiso` @ `3f5b62c` (`tools/`, git-ignored).
-- Command: `extract-xiso -d ../rom_extracted -x <iso>`.
+- Command: `extract-xiso -d ../NFS/rom_extracted -x <iso>`.
 - Result: "79 files … total 5741677952 bytes".
 - Contents:
   - `default.xex` (4,861,952 B);
@@ -101,7 +101,7 @@ Scripts: `reference/analysis/xexinfo.py` (plaintext header fields, no decryption
 
 ## 2. SpeedBreaker audit (source evidence)
 
-Paths are relative to `../speedbreaker/`.
+Paths are relative to `../NFS/speedbreaker/`.
 
 ### 2.1 Recompilation
 - **Toolchain:** `scripts/setup_tools.sh` pins XenonRecomp `ddd128bc` and applies 8 patches. These patches are generic:

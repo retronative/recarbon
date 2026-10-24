@@ -7,9 +7,9 @@ native arm64 macOS. It is built on SpeedBreaker (the NFS: Most Wanted port), and
 
 | Path | Role | Rules |
 |---|---|---|
-| `../speedbreaker/` | Upstream reference (SpeedBreaker v0.1.7) | **Read-only.** Never run its scripts: they write into it. |
-| `../rom_extracted/` | The player's extracted disc | **Read-only.** |
-| `game/files` | Symlink → `../../rom_extracted` | git-ignored |
+| `../NFS/speedbreaker/` | Upstream reference (SpeedBreaker v0.1.8) | **Read-only.** Never run its scripts: they write into it. |
+| `../NFS/rom_extracted/` | The player's extracted disc | **Read-only.** |
+| `game/files` | Symlink → `../../NFS/rom_extracted` | git-ignored |
 | `game/survey/` | Decrypted image, survey/recompiler logs | git-ignored, proprietary-derived |
 | `ppc/` | XenonRecomp output (generated game code) | git-ignored, never commit |
 | `tools/` | XenonRecomp (pinned + patches), extract-xiso, xexsurvey | git-ignored |
