@@ -1,0 +1,590 @@
+---
+import RaceLayout from '../layouts/RaceLayout.astro';
+import ProgressState from '../components/ProgressState.astro';
+import StatusBadge from '../components/StatusBadge.astro';
+import { ACHIEVEMENTS, CURRENT, FEATURES, HUMAN_TESTS, ISSUES, MILESTONES, PROGRESS_STATES, UPDATED, formatDate, type ProgressState as State } from '../lib/progress';
+import { repo } from '../lib/repo';
+import { url } from '../lib/url';
+
+const count = (s: State) => MILESTONES.filter((m) => m.state === s).length;
+const roadmap = repo ? `${repo.url}/blob/main/reference/ROADMAP.md` : null;
+---
+
+<RaceLayout
+	title="Progress: ReCarbon development"
+	description="Where ReCarbon stands: milestone states from the roadmap, verified features, known gameplay issues, pending hand tests and recent work."
+>
+	<section class="section intro-band">
+		<div class="wrap">
+			<p class="eyebrow">Telemetry · Development progress</p>
+			<h1 class="display title">Race to playable</h1>
+			<p class="intro">
+				Where ReCarbon stands, milestone by milestone. Every state here comes from the{' '}
+				{roadmap ? <a href={roadmap}>roadmap</a> : 'roadmap'} and its recorded evidence: no percentages, no dates promised,
+				and nothing counted as passed before it is observed.
+			</p>
+			<dl class="readout">
+				<div class="cut">
+					<dt>Current stage</dt>
+					<dd><span class="mono">{CURRENT.id}</span> {CURRENT.title}</dd>
+				</div>
+				<div class="cut">
+					<dt>Milestones</dt>
+					<dd>{count('completed')} completed · {count('accepted')} accepted · {count('in-progress')} in progress</dd>
+				</div>
+				<div class="cut">
+					<dt>Record updated</dt>
+					<dd><time datetime={UPDATED}>{formatDate(UPDATED)}</time></dd>
+				</div>
+			</dl>
+
+			<ol class="track" aria-label="Milestones M0 to M8">
+				{
+					MILESTONES.map((m) => (
+						<li class={`sector s-${m.state}`}>
+							<a href={`#${m.id.toLowerCase()}`}>
+								<span class="sector-id">{m.id}</span>
+								<span class="sector-state">
+									<span aria-hidden="true">{PROGRESS_STATES[m.state].icon}</span> {PROGRESS_STATES[m.state].short}
+								</span>
+							</a>
+						</li>
+					))
+				}
+			</ol>
+		</div>
+	</section>
+
+	<section class="section" aria-labelledby="milestones-title">
+		<div class="wrap">
+			<p class="eyebrow">Season</p>
+			<h2 id="milestones-title" class="display h2">Milestones</h2>
+			<ul class="legend" aria-label="States">
+				{(Object.keys(PROGRESS_STATES) as State[]).map((s) => (
+					<li>
+						<ProgressState state={s} /> <span>{PROGRESS_STATES[s].meaning}</span>
+					</li>
+				))}
+			</ul>
+			<ol class="milestones">
+				{
+					MILESTONES.map((m) => (
+						<li id={m.id.toLowerCase()} class:list={['milestone', 'cut', `m-${m.state}`, { wide: m.criteria.length > 0 }]}>
+							<div class="m-head">
+								<span class="m-id">{m.id}</span>
+								<ProgressState state={m.state} />
+								{m.date && (
+									<time class="m-date" datetime={m.date}>
+										{formatDate(m.date)}
+									</time>
+								)}
+							</div>
+							<h3>{m.title}</h3>
+							<p>{m.summary}</p>
+							{m.criteria.length > 0 && (
+								<ul class="criteria" aria-label={`${m.id} criteria`}>
+									{m.criteria.map((c) => (
+										<li>
+											<ProgressState state={c.state} />
+											<span>{c.title}</span>
+										</li>
+									))}
+								</ul>
+							)}
+						</li>
+					))
+				}
+			</ol>
+		</div>
+	</section>
+
+	<section class="section" aria-labelledby="features-title">
+		<div class="wrap">
+			<p class="eyebrow">Dyno sheet</p>
+			<h2 id="features-title" class="display h2">Verified features</h2>
+			<p class="lede">
+				What has been observed, and how: <StatusBadge status="hand-verified" /> by a person in a hand test, or
+				<StatusBadge status="automated" /> in scripted runs and unit tests.
+			</p>
+			<ul class="features">
+				{
+					FEATURES.map((f) => (
+						<li class="feature cut">
+							<p class="f-top">
+								<StatusBadge status={f.evidence} />
+								<span class="mono">
+									{f.milestone} · <time datetime={f.date}>{formatDate(f.date)}</time>
+								</span>
+							</p>
+							<h3>{f.title}</h3>
+							<p>{f.text}</p>
+						</li>
+					))
+				}
+			</ul>
+		</div>
+	</section>
+
+	<section class="section split" aria-label="Open items">
+		<div class="wrap split-grid">
+			<div>
+				<p class="eyebrow ember">Pit board</p>
+				<h2 id="issues-title" class="display h2">Known gameplay issues</h2>
+				<ul class="rows" aria-labelledby="issues-title">
+					{
+						ISSUES.map((i) => (
+							<li>
+								{i.state === 'deferred' ? (
+									<ProgressState state="deferred" />
+								) : (
+									<span class="open-tag">
+										<span aria-hidden="true">●</span> Open
+									</span>
+								)}
+								<h3>{i.title}</h3>
+								<p>{i.text}</p>
+							</li>
+						))
+					}
+				</ul>
+				<p class="more"><a href={url('docs/known-issues/')}>Known issues in the docs →</a></p>
+			</div>
+			<div>
+				<p class="eyebrow amber">Next on track</p>
+				<h2 id="tests-title" class="display h2">Pending hand tests</h2>
+				<ul class="rows" aria-labelledby="tests-title">
+					{
+						HUMAN_TESTS.map((t) => (
+							<li>
+								<ProgressState state={t.state} />
+								<h3>{t.title}</h3>
+								<p>{t.covers}</p>
+							</li>
+						))
+					}
+				</ul>
+				<p class="note">Nothing here counts as passed until a person has run it and the logs agree.</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="section" aria-labelledby="recent-title">
+		<div class="wrap">
+			<p class="eyebrow">Lap times</p>
+			<h2 id="recent-title" class="display h2">Recent achievements</h2>
+			<p class="lede">The latest {ACHIEVEMENTS.length}, newest first.</p>
+			<ol class="laps">
+				{
+					ACHIEVEMENTS.map((a, i) => (
+						<li class="lap">
+							<span class="lap-n mono" aria-hidden="true">
+								{String(i + 1).padStart(2, '0')}
+							</span>
+							<div>
+								<time class="mono" datetime={a.date}>
+									{formatDate(a.date)}
+								</time>
+								<p>{a.text}</p>
+								{a.commits.some((c) => c.url) && (
+									<p class="commits">
+										{a.commits.map((c) =>
+											c.url ? (
+												<a href={c.url} aria-label={`Commit ${c.short} on GitHub`}>
+													{c.short}
+												</a>
+											) : null,
+										)}
+									</p>
+								)}
+							</div>
+						</li>
+					))
+				}
+			</ol>
+			{repo && <p class="more"><a href={`${repo.url}/commits/main/`}>Full history on GitHub →</a></p>}
+		</div>
+	</section>
+</RaceLayout>
+
+<style>
+	.mono {
+		font-family: var(--rn-font-mono);
+	}
+	.title {
+		font-size: clamp(2.4rem, 7vw, 4.6rem);
+	}
+	.h2 {
+		font-size: clamp(1.6rem, 4vw, 2.4rem);
+		margin-bottom: 1rem;
+	}
+	.intro,
+	.lede {
+		max-width: 46rem;
+		color: var(--text-2);
+	}
+	.intro {
+		margin: 1rem 0 2rem;
+	}
+	.lede {
+		margin: 0 0 1.5rem;
+	}
+	.eyebrow.ember {
+		color: var(--rn-ember);
+	}
+	.eyebrow.amber {
+		color: var(--rn-amber);
+	}
+
+	/* The opening band: a night road with speed lines. */
+	.intro-band {
+		overflow: hidden;
+		background:
+			radial-gradient(60rem 22rem at 85% -10%, rgb(25 227 255 / 0.14), transparent 70%),
+			radial-gradient(40rem 18rem at 0% 110%, rgb(255 77 46 / 0.12), transparent 70%),
+			var(--page-bg);
+	}
+	.intro-band::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background: repeating-linear-gradient(100deg, transparent 0 46px, rgb(233 238 245 / 0.025) 46px 47px);
+	}
+	.intro-band .wrap {
+		position: relative;
+		z-index: 1;
+	}
+
+	.readout {
+		display: grid;
+		gap: 0.75rem;
+		margin: 0 0 2.25rem;
+	}
+	.readout div {
+		padding: 0.75rem 1rem;
+		background: color-mix(in srgb, var(--surface) 85%, transparent);
+		border-left: 3px solid var(--rn-neon);
+	}
+	.readout dt {
+		font-family: var(--rn-font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+	.readout dd {
+		margin: 0.2rem 0 0;
+		font-family: var(--rn-font-display);
+		font-weight: 700;
+		font-size: 1.1rem;
+		letter-spacing: 0.03em;
+	}
+	@media (min-width: 48rem) {
+		.readout {
+			grid-template-columns: 1.2fr 1.6fr 1fr;
+		}
+	}
+
+	/* The track: one sector per milestone, coloured by state (with its icon and text). */
+	.track {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 4px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	@media (min-width: 60rem) {
+		.track {
+			grid-template-columns: repeat(9, 1fr);
+		}
+	}
+	.sector {
+		--c: var(--rn-steel);
+	}
+	.sector a {
+		display: grid;
+		gap: 0.15rem;
+		min-height: 44px;
+		padding: 0.6rem 0.7rem 0.5rem;
+		text-decoration: none;
+		color: var(--text);
+		background: linear-gradient(180deg, color-mix(in srgb, var(--c) 22%, var(--mix-base)), var(--mix-base));
+		border-top: 4px solid var(--c);
+		transform: skewX(var(--rn-skew));
+		transition: background var(--rn-fast) var(--rn-ease);
+	}
+	.sector a > * {
+		transform: skewX(calc(var(--rn-skew) * -1));
+	}
+	.sector a:hover,
+	.sector a:focus-visible {
+		background: color-mix(in srgb, var(--c) 34%, var(--mix-base));
+	}
+	.sector-id {
+		font-family: var(--rn-font-display);
+		font-weight: 700;
+		font-style: italic;
+		font-size: 1.15rem;
+	}
+	.sector-state {
+		font-family: var(--rn-font-mono);
+		font-size: 0.66rem;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--c);
+	}
+	.s-completed { --c: var(--rn-volt); }
+	.s-accepted { --c: var(--rn-neon); }
+	.s-in-progress { --c: var(--rn-amber); }
+
+	.legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.5rem;
+		margin: 0 0 1.75rem;
+		padding: 0;
+		list-style: none;
+		font-size: 0.85rem;
+		color: var(--text-muted);
+	}
+	.legend li {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.milestones {
+		display: grid;
+		gap: 1rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	@media (min-width: 44rem) {
+		.milestones {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+	@media (min-width: 68rem) {
+		.milestones {
+			grid-template-columns: repeat(3, 1fr);
+		}
+		.milestone.wide {
+			grid-column: span 3;
+			display: grid;
+			grid-template-columns: 22rem 1fr;
+			column-gap: 2rem;
+			grid-template-rows: auto auto 1fr;
+			align-items: start;
+		}
+		.milestone.wide .criteria {
+			grid-column: 2;
+			grid-row: 1 / span 3;
+			align-self: stretch;
+			margin: 0;
+		}
+	}
+	@media (min-width: 44rem) and (max-width: 68rem) {
+		.milestone.wide {
+			grid-column: span 2;
+		}
+	}
+	.milestone {
+		--c: var(--rn-steel);
+		scroll-margin-top: calc(var(--rn-header-h) + 1rem);
+		padding: 1.1rem 1.25rem 1.25rem;
+		background: linear-gradient(160deg, color-mix(in srgb, var(--c) 9%, var(--surface)), var(--surface) 45%);
+		border-left: 3px solid var(--c);
+	}
+	.m-completed { --c: var(--rn-volt); }
+	.m-accepted { --c: var(--rn-neon); }
+	.m-in-progress { --c: var(--rn-amber); }
+	.m-head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem 0.75rem;
+	}
+	.m-id {
+		font-family: var(--rn-font-display);
+		font-weight: 700;
+		font-style: italic;
+		font-size: 1.5rem;
+		line-height: 1;
+		color: var(--c);
+	}
+	.m-date {
+		font-family: var(--rn-font-mono);
+		font-size: 0.75rem;
+		color: var(--text-muted);
+	}
+	.milestone h3,
+	.feature h3,
+	.rows h3 {
+		margin: 0.6rem 0 0.35rem;
+		font-family: var(--rn-font-display);
+		font-weight: 700;
+		font-size: 1.1rem;
+		letter-spacing: 0.03em;
+		text-transform: uppercase;
+	}
+	.milestone p,
+	.feature p:last-child,
+	.rows p {
+		margin: 0;
+		font-size: 0.92rem;
+		color: var(--text-2);
+	}
+	.criteria {
+		display: grid;
+		gap: 0.45rem;
+		margin: 1rem 0 0;
+		padding: 0;
+		list-style: none;
+		font-size: 0.9rem;
+	}
+	.criteria li {
+		display: grid;
+		grid-template-columns: 9.5rem 1fr;
+		gap: 0.75rem;
+		align-items: baseline;
+		padding-bottom: 0.45rem;
+		border-bottom: 1px solid var(--line);
+	}
+	@media (max-width: 30rem) {
+		.criteria li {
+			grid-template-columns: 1fr;
+			gap: 0.25rem;
+		}
+	}
+
+	.features {
+		display: grid;
+		gap: 1rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	@media (min-width: 44rem) {
+		.features {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+	@media (min-width: 68rem) {
+		.features {
+			grid-template-columns: repeat(3, 1fr);
+		}
+	}
+	.feature {
+		padding: 1rem 1.25rem 1.2rem;
+		background: var(--surface);
+		border: 1px solid var(--line);
+	}
+	.f-top {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		margin: 0;
+		font-size: 0.75rem;
+		color: var(--text-muted);
+	}
+
+	.split-grid {
+		display: grid;
+		gap: 3rem;
+	}
+	@media (min-width: 60rem) {
+		.split-grid {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+	.rows {
+		display: grid;
+		gap: 0;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.rows li {
+		padding: 1rem 0 1rem 1rem;
+		border-left: 2px solid var(--line-strong);
+		border-bottom: 1px solid var(--line);
+	}
+	.open-tag {
+		display: inline-flex;
+		gap: 0.4em;
+		padding: 0.15em 0.7em 0.15em 0.55em;
+		font-family: var(--rn-font-mono);
+		font-size: 0.72rem;
+		line-height: 1.5;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: #ff8a6e;
+		border: 1px solid color-mix(in srgb, #ff8a6e 70%, transparent);
+		clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+	}
+	.more,
+	.note {
+		margin: 1.25rem 0 0;
+		font-size: 0.9rem;
+	}
+	.note {
+		color: var(--text-muted);
+	}
+
+	.laps {
+		display: grid;
+		gap: 0;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		border-top: 1px solid var(--line);
+	}
+	.lap {
+		display: grid;
+		grid-template-columns: 3rem 1fr;
+		gap: 1rem;
+		padding: 1rem 0;
+		border-bottom: 1px solid var(--line);
+	}
+	.lap-n {
+		font-size: 1.4rem;
+		font-weight: 700;
+		color: var(--rn-neon);
+		opacity: 0.8;
+	}
+	.lap time {
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+	.lap p {
+		margin: 0.25rem 0 0;
+		max-width: 52rem;
+		color: var(--text-2);
+	}
+	.commits {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+	.commits a {
+		display: inline-flex;
+		align-items: center;
+		min-height: 24px;
+		padding: 0 0.5rem;
+		font-family: var(--rn-font-mono);
+		font-size: 0.8rem;
+		text-decoration: none;
+		border: 1px solid var(--line-strong);
+		border-radius: 2px;
+	}
+	.commits a:hover,
+	.commits a:focus-visible {
+		border-color: var(--link);
+	}
+</style>

@@ -31,10 +31,18 @@ the site keeps no copies of them.
 | Script | Reads (ReCarbon, read-only) | Writes |
 |---|---|---|
 | `npm run gen:controls` | `runtime/user/settings.cpp`, `runtime/hid/{key_map.h,pad_map.h,input.cpp}`, `runtime/user/key_names.h`, `runtime/ui/{ui.cpp,settings_menu.cpp}`, `runtime/report/internal.h`, `tests/pad_map_test.cpp` | `src/data/controls.generated.json`, `src/data/settings.generated.json` |
+| `npm run gen:progress` | `reference/ROADMAP.md`, and the maintainers' local evidence record (`progress.json`, not in the repository) through the script's allowlist | `src/data/progress.generated.json` |
 
 `npm run build` runs it in `--check` mode first (`prebuild`) and **fails when the committed
 files differ from the source**, or when the source no longer has a pattern the generator reads.
 The generator also fails if `pad_map.h` disagrees with `pad_map_test.cpp`'s baseline.
+
+The Progress page (`/progress/`) shows only what `scripts/gen-progress.mjs` allowlists: each
+milestone's state must match its ROADMAP heading, every sentence is written in the script (none
+is copied from the evidence record), at most 10 achievements are kept, newest first, and commit
+links are kept only for commits on `origin/main`. A deny list (private paths, internal and legal
+topics) fails the run. Without the evidence record, `--check` validates the committed JSON
+against ROADMAP and passes. Regenerate after a push, so new commits get their links.
 
 The source is the ReCarbon repository this site lives in (`website/`'s parent folder), or
 `RECARBON_SRC` for another checkout. Without a source tree (a site-only clone), the check warns

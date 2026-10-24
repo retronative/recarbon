@@ -1,0 +1,452 @@
+{
+	"updated": "2026-10-24",
+	"currentMilestone": "M7",
+	"milestones": [
+		{
+			"id": "M0",
+			"title": "Correct input binary",
+			"state": "completed",
+			"date": "2026-10-22",
+			"summary": "The Xbox 360 executable is verified, decrypted from the player's own disc and surveyed for recompilation.",
+			"criteria": []
+		},
+		{
+			"id": "M1",
+			"title": "Toolchain + recompile-only PoC",
+			"state": "completed",
+			"date": "2026-10-22",
+			"summary": "All 72,864 functions translate to C++ with zero recompiler errors, warnings or unrecognized instructions; 242 instruction tests pass.",
+			"criteria": []
+		},
+		{
+			"id": "M2",
+			"title": "Native compilation and link",
+			"state": "completed",
+			"date": "2026-10-22",
+			"summary": "The translated code compiles and links into a native arm64 app, with every import defined and no unresolved symbols.",
+			"criteria": []
+		},
+		{
+			"id": "M3",
+			"title": "Runtime initialization",
+			"state": "completed",
+			"date": "2026-10-22",
+			"summary": "The runtime boots the game through kernel, file system and GPU bring-up to its first frame swap, in 10 of 10 consecutive launches.",
+			"criteria": []
+		},
+		{
+			"id": "M4",
+			"title": "First frame (rendering)",
+			"state": "completed",
+			"date": "2026-10-22",
+			"summary": "The EA logos and the movies render through MoltenVK on Metal, with no unknown texture formats or dropped draws.",
+			"criteria": []
+		},
+		{
+			"id": "M5",
+			"title": "Audio, movies, input",
+			"state": "accepted",
+			"date": "2026-10-23",
+			"summary": "Music, movies and keyboard menus pass. Accepted with its open limitations, none of them recorded as passed.",
+			"criteria": [
+				{
+					"id": "M5.5",
+					"title": "Front-end music plays 5 minutes with no underruns",
+					"state": "completed"
+				},
+				{
+					"id": "M5.6",
+					"title": "The intro movie plays at the correct speed",
+					"state": "completed"
+				},
+				{
+					"id": "M5.10",
+					"title": "Default keyboard and controller mappings pinned by unit tests",
+					"state": "completed"
+				},
+				{
+					"id": "M5.9",
+					"title": "Keyboard rebinding in Settings > Controls works and persists",
+					"state": "completed"
+				},
+				{
+					"id": "M5.7",
+					"title": "Menus with a physical controller (the keyboard passed by hand)",
+					"state": "deferred"
+				},
+				{
+					"id": "M5.3",
+					"title": "Smoother movie frame pacing",
+					"state": "deferred"
+				}
+			]
+		},
+		{
+			"id": "M6",
+			"title": "First boot to free-roam / race load",
+			"state": "in-progress",
+			"date": null,
+			"summary": "Saves, race loading and free-roam stability each have evidence. Open until the written new-profile route is run.",
+			"criteria": [
+				{
+					"id": "M6.3",
+					"title": "A new profile is created, saved, and reloads intact after a restart",
+					"state": "completed"
+				},
+				{
+					"id": "M6.4",
+					"title": "A race or free-roam loads from the front end to control of the car",
+					"state": "completed"
+				},
+				{
+					"id": "M6.5",
+					"title": "No deadlock or crash in 10 minutes of free-roam",
+					"state": "completed"
+				},
+				{
+					"id": "M6.6",
+					"title": "The written new-profile route, with logs and the save recorded",
+					"state": "unverified"
+				}
+			]
+		},
+		{
+			"id": "M7",
+			"title": "Playable racing",
+			"state": "in-progress",
+			"date": null,
+			"summary": "The current milestone. AI races and a full career race finish; controls, physics and frame pacing are still to verify.",
+			"criteria": [
+				{
+					"id": "M7.3",
+					"title": "AI opponents spawn, race and finish",
+					"state": "completed"
+				},
+				{
+					"id": "M7.4",
+					"title": "A full career race finishes and its progress survives a restart",
+					"state": "completed"
+				},
+				{
+					"id": "M7.1",
+					"title": "Steering, throttle, brake, handbrake, nitrous and camera on the keyboard",
+					"state": "unverified"
+				},
+				{
+					"id": "M7.2",
+					"title": "Vehicle physics consistent with the Xbox 360 version",
+					"state": "unverified"
+				},
+				{
+					"id": "M7.5",
+					"title": "A stable 30 fps or better over 10 minutes of racing",
+					"state": "in-progress"
+				},
+				{
+					"id": "M7.6",
+					"title": "Audio in sync and no world geometry missing",
+					"state": "in-progress"
+				},
+				{
+					"id": "M7.7",
+					"title": "The written test route, repeated 3 times",
+					"state": "unverified"
+				}
+			]
+		},
+		{
+			"id": "M8",
+			"title": "Polish and distribution",
+			"state": "in-progress",
+			"date": null,
+			"summary": "Input profiles are built and tested; the app bundle check passes. A clean install on a fresh account is still to do.",
+			"criteria": [
+				{
+					"id": "M8.7",
+					"title": "Keyboard presets: WASD (the default) and Arrows",
+					"state": "completed"
+				},
+				{
+					"id": "M8.8",
+					"title": "Separate keyboard and controller profiles that persist",
+					"state": "completed"
+				},
+				{
+					"id": "M8.9",
+					"title": "Custom mappings, controller rebinding, switching and reset to default",
+					"state": "completed"
+				},
+				{
+					"id": "M8.10",
+					"title": "Existing key bindings migrated into a profile, never dropped",
+					"state": "completed"
+				},
+				{
+					"id": "M8.12",
+					"title": "Reset to default matches the M5 baseline",
+					"state": "completed"
+				},
+				{
+					"id": "M8.6",
+					"title": "The unit tests run in ctest",
+					"state": "completed"
+				},
+				{
+					"id": "M8.5",
+					"title": "The app bundle check (check_app.py) passes",
+					"state": "completed"
+				},
+				{
+					"id": "M8.11",
+					"title": "Both presets drive the game, by hand",
+					"state": "in-progress"
+				},
+				{
+					"id": "M8.4",
+					"title": "A clean install from a disc image on a fresh macOS account",
+					"state": "unverified"
+				},
+				{
+					"id": "M8.1",
+					"title": "The installer parametrized for Carbon",
+					"state": "unverified"
+				}
+			]
+		}
+	],
+	"features": [
+		{
+			"title": "Recompiled to native code",
+			"text": "72,864 functions from the Xbox 360 executable, translated with 0 recompiler errors and structural validation passing.",
+			"evidence": "automated",
+			"date": "2026-10-22",
+			"milestone": "M1"
+		},
+		{
+			"title": "Boots and renders",
+			"text": "The game boots to its own screens; the EA logos and the movies render through MoltenVK on Metal.",
+			"evidence": "automated",
+			"date": "2026-10-22",
+			"milestone": "M4"
+		},
+		{
+			"title": "Front-end music",
+			"text": "Over 5 minutes with no underruns or gaps, in 3 of 3 runs.",
+			"evidence": "automated",
+			"date": "2026-10-23",
+			"milestone": "M5"
+		},
+		{
+			"title": "Keyboard menus, audio and lip-sync",
+			"text": "Keyboard navigation, rebinding that survives a restart, audio quality and movie lip-sync, checked by a person (hand test 2).",
+			"evidence": "hand-verified",
+			"date": "2026-10-23",
+			"milestone": "M5"
+		},
+		{
+			"title": "Career saves",
+			"text": "A new career save (286,764 B) is written and reloads after a restart with its hash unchanged.",
+			"evidence": "automated",
+			"date": "2026-10-23",
+			"milestone": "M6"
+		},
+		{
+			"title": "15 minutes of free-roam",
+			"text": "Free-roam after the prologue chase, 15 minutes in a row with no crash or hang (hand test 3).",
+			"evidence": "hand-verified",
+			"date": "2026-10-23",
+			"milestone": "M6"
+		},
+		{
+			"title": "A career race, won",
+			"text": "Zone Heat 1 finished in 1st place against AI opponents; the cash and progress were still there after a restart (hand test 4).",
+			"evidence": "hand-verified",
+			"date": "2026-10-23",
+			"milestone": "M7"
+		},
+		{
+			"title": "Keyboard and controller profiles",
+			"text": "WASD and Arrows presets, custom profiles, controller button rebinding and migration of existing bindings, in scripted runs and unit tests.",
+			"evidence": "automated",
+			"date": "2026-10-24",
+			"milestone": "M8"
+		},
+		{
+			"title": "Game actions on a virtual controller",
+			"text": "In a Quick Race: RB changes the camera, LB looks back, the right stick shifts gears, the Left Trigger reverses and Start pauses.",
+			"evidence": "automated",
+			"date": "2026-10-24",
+			"milestone": "M8"
+		},
+		{
+			"title": "48 unit tests",
+			"text": "Every ctest entry passes on a MacBook Air M5 and an M1 Mac.",
+			"evidence": "automated",
+			"date": "2026-10-24",
+			"milestone": "M8"
+		}
+	],
+	"issues": [
+		{
+			"title": "Occasional stalls of about 1 s",
+			"text": "The presenter waits for a free drawable while holding the GPU queue lock. Why no drawable is free isn't known yet.",
+			"state": "open"
+		},
+		{
+			"title": "GPU-idle stalls of 250–600 ms",
+			"text": "No lock wait is involved. The cause is unknown.",
+			"state": "open"
+		},
+		{
+			"title": "Movie frame pacing",
+			"text": "Movies play at the right speed, but 20–28% of frames show for 1 or 3 refreshes instead of 2. Smoothing is deferred to polish.",
+			"state": "deferred"
+		},
+		{
+			"title": "Physical controller not yet tested",
+			"text": "The virtual-controller and hot-unplug tests pass, but they don't show that a physical pad works.",
+			"state": "deferred"
+		},
+		{
+			"title": "Key labels on non-Latin keyboard layouts",
+			"text": "Under a layout such as Myanmar, Settings > Controls draws letter keys as '?'. Binding such a key is refused safely; gameplay input is unaffected.",
+			"state": "open"
+		}
+	],
+	"humanTests": [
+		{
+			"title": "Session 1: a new profile, both presets",
+			"covers": "The new-profile route to a race load (M6.6); WASD and Arrows driving and switching without a restart (M8.11).",
+			"state": "unverified"
+		},
+		{
+			"title": "Session 2: restart and hand test 5",
+			"covers": "The profile reloading intact (M6.6), and which keys give handbrake, nitrous, Speedbreaker, camera and look back.",
+			"state": "unverified"
+		},
+		{
+			"title": "Sessions 3–5: the M7 route, 3 times",
+			"covers": "Controls, physics, 10 minutes of frame times, audio and picture, on a race of at least 10 minutes (M7.1, M7.2, M7.5–M7.7).",
+			"state": "unverified"
+		},
+		{
+			"title": "Clean install on a fresh macOS account",
+			"covers": "Installing from a disc image on a new user account (M8.4).",
+			"state": "unverified"
+		},
+		{
+			"title": "Physical controller",
+			"covers": "Menus and driving on a real pad, once one is available. Never recorded as passed before then.",
+			"state": "deferred"
+		}
+	],
+	"achievements": [
+		{
+			"date": "2026-10-24",
+			"text": "Keyboard presets merged: WASD is now the built-in Default that a new player starts on, beside Arrows. A player on the former WASD preset keeps those keys as a custom profile.",
+			"commits": [
+				{
+					"sha": "935ec96a9b4807c068bf9b232903fdecd9a8f40a",
+					"short": "935ec96"
+				}
+			]
+		},
+		{
+			"date": "2026-10-24",
+			"text": "A reported hang after creating a new profile at boot was rechecked on two Macs and didn't reproduce: the profile is saved and the main menu follows.",
+			"commits": [
+				{
+					"sha": "f990857224b98452fb743579a2c028dc9ed0855b",
+					"short": "f990857"
+				}
+			]
+		},
+		{
+			"date": "2026-10-24",
+			"text": "Change Camera, Look Back, gear shifts, Reverse and Pause seen working in a scripted Quick Race on a virtual controller. Nitrous, Handbrake and Speedbreaker are still to verify.",
+			"commits": [
+				{
+					"sha": "a22d71695ab8fe03ced449077e9071b702011959",
+					"short": "a22d716"
+				},
+				{
+					"sha": "ad04ab8fb40d6b6b09e607261b81dff046099035",
+					"short": "ad04ab8"
+				}
+			]
+		},
+		{
+			"date": "2026-10-24",
+			"text": "ReCarbon's source and this website went public, with every page checked live: no broken links and no accessibility violations found by axe-core.",
+			"commits": []
+		},
+		{
+			"date": "2026-10-24",
+			"text": "A fresh clone from GitHub rebuilds byte-identical generated code, and the instruction tests and the website build pass. A timing test was made reliable under load.",
+			"commits": [
+				{
+					"sha": "f5ea08ccdd52736afad619f75d7e0a0d6b99b0fd",
+					"short": "f5ea08c"
+				},
+				{
+					"sha": "22ba881a189217bddb36e2db3a002f6e973efb04",
+					"short": "22ba881"
+				}
+			]
+		},
+		{
+			"date": "2026-10-24",
+			"text": "Rendering resolution re-measured on the MacBook Air M5: 1x, 1.5x, 2x and 3x frame costs recorded, and Auto picks 2x. Ultrawide and scaled 3D in gameplay are unverified.",
+			"commits": [
+				{
+					"sha": "990c2f6dfcd7ba4111675447fc5d646170d31837",
+					"short": "990c2f6"
+				}
+			]
+		},
+		{
+			"date": "2026-10-24",
+			"text": "25 unit tests ported from SpeedBreaker v0.1.8 and adapted to Carbon, each checked with planted bugs: ctest grows from 20 to 48 entries, all passing on both Macs.",
+			"commits": [
+				{
+					"sha": "bf29f1c9666a9447476170d38efd80f8b6aa9fcf",
+					"short": "bf29f1c"
+				},
+				{
+					"sha": "ae3d97f61ce9380b5fdd396e3d60f402ae107d92",
+					"short": "ae3d97f"
+				}
+			]
+		},
+		{
+			"date": "2026-10-24",
+			"text": "The install check now stops every process it starts, on any exit, verified in five scenarios.",
+			"commits": [
+				{
+					"sha": "7e73197380469e859ba1d3a9fbd648c075d01b0e",
+					"short": "7e73197"
+				}
+			]
+		},
+		{
+			"date": "2026-10-24",
+			"text": "Keyboard and controller mappings became plain data, with the WASD and Arrows presets; no key drives two controls in Arrows.",
+			"commits": [
+				{
+					"sha": "585d8ab3f07fa717eed2b673b0f3afe5173de316",
+					"short": "585d8ab"
+				}
+			]
+		},
+		{
+			"date": "2026-10-24",
+			"text": "One atomic writer now saves both the settings and the input profiles; saving settings is unchanged.",
+			"commits": [
+				{
+					"sha": "265547705fe2369d1813867ef755bee9f0ddf357",
+					"short": "2655477"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,47 @@
+---
+// A development state on the Progress page: an icon and text, never colour alone.
+import { PROGRESS_STATES, type ProgressState } from '../lib/progress';
+
+interface Props {
+	state: ProgressState;
+}
+const { state } = Astro.props;
+const info = PROGRESS_STATES[state];
+---
+
+<span class:list={['pstate', `pstate--${state}`]} title={info.meaning}>
+	<span class="icon" aria-hidden="true">{info.icon}</span>
+	<span>{info.label}</span>
+</span>
+
+<style>
+	.pstate {
+		--c: var(--rn-status-source);
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4em;
+		padding: 0.15em 0.7em 0.15em 0.55em;
+		font-family: var(--rn-font-mono);
+		font-size: 0.72rem;
+		line-height: 1.5;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		white-space: nowrap;
+		color: var(--c);
+		border: 1px solid color-mix(in srgb, var(--c) 70%, transparent);
+		background: color-mix(in srgb, var(--c) 12%, transparent);
+		clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+	}
+	.icon {
+		font-weight: 700;
+	}
+	.pstate--completed { --c: var(--rn-volt); }
+	.pstate--accepted { --c: var(--rn-neon); }
+	.pstate--in-progress { --c: var(--rn-amber); }
+	.pstate--deferred { --c: #b6c2d6; border-style: dotted; }
+	.pstate--unverified {
+		--c: #ff8a6e;
+		border-style: dashed;
+		background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--c) 16%, transparent) 0 4px, transparent 4px 8px);
+	}
+</style>

@@ -36,6 +36,8 @@ const shared = [
 	[`${B}docs?x=1&y=two%20words`, 301, `${B}docs/?x=1&y=two%20words`],
 	[`${B}docs/licenses/gpl-3-0?from=footer`, 301, `${B}docs/licenses/gpl-3-0/?from=footer`],
 	[`${B}garage/`, 200],
+	[`${B}progress`, 301, `${B}progress/`],
+	[`${B}progress/`, 200],
 	[`${B}docs/controls/`, 200],
 	[`${B}favicon.svg`, 200],
 ];
