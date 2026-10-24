@@ -1,6 +1,7 @@
 // ReCarbon's docs (the repository's docs/) are written to read on GitHub: links
 // to other pages are file links ("faq.md"), license links point at the
-// repository's files ("../NOTICE"), links to the published site are absolute,
+// repository's files ("../NOTICE"), links to the published site are absolute
+// (https://retronative.github.io/recarbon/...),
 // and callouts are GitHub alerts ("> [!NOTE]", an optional bold first line
 // being the title). This Sätteri mdast plugin turns them into the site's: page
 // URLs under the base path, the license pages, and Starlight asides (each alert
@@ -39,9 +40,10 @@ function alertToDirective(source) {
 	return `:::${ASIDES[m[1]]}${title}\n${body.join('\n').trimEnd()}\n:::`;
 }
 
-export function docsMarkdownPlugin({ docsDir, base, site }) {
+export function docsMarkdownPlugin({ docsDir, base, published }) {
 	const root = base.replace(/\/?$/, '/');
-	const siteRoot = `${site.replace(/\/$/, '')}${root}`;
+	// Links to the published site become links within this build, whatever its base.
+	const siteRoot = published.replace(/\/?$/, '/');
 	docsDir = resolve(docsDir);
 	return ({ fileURL }) => {
 		const path = fileURL && fileURLToPath(fileURL);

@@ -8,11 +8,16 @@ are in [`docs/PLAN.md`](docs/PLAN.md).
 
 ```sh
 npm install
-npm run dev        # http://localhost:4321, live reload
-npm run build      # checks the generated data against ReCarbon's source, then builds dist/
-npm run preview    # serves dist/ on http://127.0.0.1:4321/recarbon/, as GitHub Pages does
-npm run check:urls # after a build: "/recarbon" and other unslashed URLs redirect (preview and dev)
+npm run dev        # http://localhost:4321/, live reload
+npm run build      # checks the generated data against ReCarbon's source, then builds dist/ for "/"
+npm run preview    # serves that dist/ on http://127.0.0.1:4321/, as GitHub Pages does
+npm run check:urls # after a build: unslashed URLs ("/docs") redirect, in preview and dev
 npm run check      # type-checks the .astro and .ts files
+
+# The GitHub Pages build, for https://retronative.github.io/recarbon/:
+npm run build:pages          # SITE_URL and BASE_PATH=/recarbon/ set
+npm run preview:pages        # http://127.0.0.1:4321/recarbon/
+BASE_PATH=/recarbon/ npm run check:urls
 ```
 
 ## Data from ReCarbon's source

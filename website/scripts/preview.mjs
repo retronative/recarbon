@@ -2,7 +2,7 @@
 // Serves dist/ under the base path the way GitHub Pages serves it: a folder
 // without its trailing slash is redirected (301, query kept) to the slashed
 // URL, a folder serves its index.html, and anything missing gets 404.html.
-// `astro preview` answers 404 to "/recarbon" instead, and has no hook for a
+// `astro preview` answers 404 to "/docs" instead, and has no hook for a
 // static site's redirects.
 //
 //   node scripts/preview.mjs [--port N] [--host H]     (npm run preview)
@@ -14,7 +14,8 @@ import { slashRedirect } from '../src/lib/trailing-slash.mjs';
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const DIST = join(ROOT, 'dist');
-const BASE = (process.env.BASE_PATH || '/recarbon/').replace(/\/?$/, '/');
+// The base the build was made for: "/" locally, BASE_PATH=/recarbon/ for a GitHub Pages build.
+const BASE = (process.env.BASE_PATH || '/').replace(/\/?$/, '/');
 const TYPES = {
 	'.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
 	'.mjs': 'text/javascript; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png',

@@ -15,7 +15,7 @@ Until ReCarbon's first tagged release there is one docs version, labelled by
    Check the Known issues page and the measured figures (landing page, Performance) against the
    release's ROADMAP and FEASIBILITY.
 2. Set `docsVersion` to the release (e.g. `"0.1"`), and update or remove the alpha banner text.
-3. Build and check: `npm run build && npm run preview`.
+3. Build and check the GitHub Pages build: `npm run build:pages && npm run preview:pages`.
 
 ## At the next release (when there is a version to archive)
 

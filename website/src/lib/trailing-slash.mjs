@@ -1,5 +1,5 @@
 // The site's URLs end in "/" (trailingSlash: 'always'). A request for a page
-// without it, "/recarbon" or "/recarbon/docs?x=1", is redirected to the same
+// without it, "/docs?x=1", or "/recarbon" under that base, is redirected to the same
 // URL with the slash, keeping the query, as GitHub Pages does for a folder.
 // Astro's dev and preview servers answer 404 to it instead. Files (a path whose
 // last part has an extension) are left alone.
@@ -18,8 +18,11 @@ export function slashRedirect(url, base, isPage = () => true) {
 }
 
 // Connect middleware sending the redirect (301, the permanent one GitHub Pages sends).
-export function slashRedirectMiddleware(base, isPage) {
+// `pagesOnly`: only for a browser asking for a page (Accept: text/html), as in dev,
+// where the dev server's own requests ("/@vite/client") have no extension either.
+export function slashRedirectMiddleware(base, isPage, pagesOnly = false) {
 	return (req, res, next) => {
+		if (pagesOnly && !req.headers.accept?.includes('text/html')) return next();
 		const to = (req.method === 'GET' || req.method === 'HEAD') && slashRedirect(req.url, base, isPage);
 		if (!to) return next();
 		res.statusCode = 301;
@@ -38,7 +41,7 @@ export function trailingSlashRedirect() {
 		name: 'recarbon-trailing-slash',
 		hooks: {
 			'astro:config:setup': ({ config, updateConfig }) => {
-				const handle = slashRedirectMiddleware(config.base);
+				const handle = slashRedirectMiddleware(config.base, undefined, true);
 				const plugin = {
 					name: 'recarbon-trailing-slash',
 					apply: 'serve',

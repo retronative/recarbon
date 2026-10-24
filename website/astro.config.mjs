@@ -7,12 +7,15 @@ import { satteri } from '@astrojs/markdown-satteri';
 import { docsMarkdownPlugin } from './src/lib/docs-markdown.mjs';
 import { trailingSlashRedirect } from './src/lib/trailing-slash.mjs';
 
-// Hosting (D1) and domain (D2): GitHub Pages of the public retronative/recarbon
-// repository, which will hold the runtime and this site (in website/):
-// https://retronative.github.io/recarbon/. SITE_URL and BASE_PATH override
-// both, e.g. BASE_PATH=/ for a custom domain. See docs/DEPLOY.md.
-const site = process.env.SITE_URL || 'https://retronative.github.io';
-const base = process.env.BASE_PATH || '/recarbon/';
+// Hosting (D1) and domain (D2): GitHub Pages of the retronative/recarbon
+// repository, which holds the runtime and this site (in website/):
+// https://retronative.github.io/recarbon/. The docs link to the site there.
+const PUBLISHED = 'https://retronative.github.io/recarbon/';
+// Where this build is served. Local dev, builds and previews: http://127.0.0.1:4321/.
+// A GitHub Pages build sets both (npm run build:pages, deploy/github-pages.yml);
+// a custom domain would set SITE_URL and BASE_PATH=/. See docs/DEPLOY.md.
+const site = process.env.SITE_URL || 'http://127.0.0.1:4321';
+const base = process.env.BASE_PATH || '/';
 
 export default defineConfig({
 	site,
@@ -20,7 +23,7 @@ export default defineConfig({
 	trailingSlash: 'always',
 	// The docs are the repository's docs/ (src/content.config.ts), written to read on GitHub;
 	// docsMarkdownPlugin turns their file links and alerts into the site's URLs and asides.
-	markdown: { processor: satteri({ mdastPlugins: [docsMarkdownPlugin({ docsDir: fileURLToPath(new URL('../docs/', import.meta.url)), base, site })] }) },
+	markdown: { processor: satteri({ mdastPlugins: [docsMarkdownPlugin({ docsDir: fileURLToPath(new URL('../docs/', import.meta.url)), base, published: PUBLISHED })] }) },
 	vite: {
 		// The docs import the site's components as @site/... (they live outside src/).
 		resolve: { alias: { '@site': fileURLToPath(new URL('./src', import.meta.url)) } },
@@ -28,7 +31,7 @@ export default defineConfig({
 		server: { fs: { allow: ['..'] } },
 	},
 	integrations: [
-		// "/recarbon" -> "/recarbon/" in dev, as GitHub Pages and scripts/preview.mjs do.
+		// "/docs" -> "/docs/" in dev, as GitHub Pages and scripts/preview.mjs do.
 		trailingSlashRedirect(),
 		starlight({
 			title: 'ReCarbon',

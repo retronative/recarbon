@@ -10,7 +10,9 @@
     "check": "astro check",
     "prebuild": "npm run check:controls",
     "build": "astro build",
+    "build:pages": "SITE_URL=https://retronative.github.io BASE_PATH=/recarbon/ npm run build",
     "preview": "node scripts/preview.mjs",
+    "preview:pages": "BASE_PATH=/recarbon/ node scripts/preview.mjs",
     "astro": "astro",
     "check:urls": "node scripts/check-urls.mjs"
   },

@@ -8,10 +8,13 @@ anything waits for explicit approval.
 ## Now
 
 - The website is developed in this independent repository. It has no remote and is never pushed.
-- `astro.config.mjs` builds for the target by default: `site` is `https://retronative.github.io`
-  and `base` is `/recarbon/`. `SITE_URL` and `BASE_PATH` override them (e.g. `BASE_PATH=/` for a
-  custom domain later).
-- The local preview follows the base path: <http://127.0.0.1:4321/recarbon/>.
+- `astro.config.mjs` builds for local use by default: `site` is `http://127.0.0.1:4321` and
+  `base` is `/`. The GitHub Pages build sets `SITE_URL=https://retronative.github.io` and
+  `BASE_PATH=/recarbon/` (`npm run build:pages`, and the workflow below); a custom domain later
+  would set its own `SITE_URL` and `BASE_PATH=/`. The docs' links to
+  <https://retronative.github.io/recarbon/> become links within whichever build it is.
+- The local preview follows the build's base path: <http://127.0.0.1:4321/> for `npm run build`,
+  <http://127.0.0.1:4321/recarbon/> for `npm run build:pages` (`npm run preview:pages`).
 - `deploy/github-pages.yml` is the Pages workflow, kept as a **template outside
   `.github/workflows/`** so it can't run. It is manual-only (`workflow_dispatch`) even once copied.
 
