@@ -31,7 +31,7 @@ host-endian. An audit of `xbox.h` found no other live case (F17).
 |---|---|---|---|
 | CPU | XenonRecomp static recompile, patches 0001–0009, plus 0010 from the pending M4.8 fix | As documented; validated in M1–M3 | Matches |
 | Kernel/XAM | SpeedBreaker HLE, strict stubs | 166 strict stubs (`import_stubs.cpp`) | Matches; stubs are M5–M6 risk |
-| GPU | PM4/Xenos → Vulkan/MoltenVK, 1x, 16:9 | As documented; EDRAM aliasing fixed (487cf65) | Matches |
+| GPU | PM4/Xenos → Vulkan/MoltenVK, 1x, 16:9 | As documented; EDRAM aliasing fixed (113f1ee) | Matches |
 | Audio | XMA → FFmpeg → SDL3; EA ring semantics carry over | Implemented; never run with a device (harness mutes) | Unverified |
 | Movies | Guest XMV decode; host pacing hooks with new addresses | Guest decode confirmed indirectly; no pacing hooks | Partial |
 | Input | Reuse `hid/` with a Carbon key map; three layers (§3.6) | `hid/` as in SpeedBreaker; layers are logical, not separate code | Partial (F12) |

@@ -1,5 +1,8 @@
 # ReCarbon — Feasibility of a Native Apple Silicon Port of Need for Speed: Carbon
 
+> Commit IDs here were updated after the 2026-10-24 history rewrite (author email only; trees
+> unchanged). Logs and build outputs made before it name the old IDs.
+
 Date: 2026-10-22. Host: arm64, macOS 27.0.1. Reference: SpeedBreaker v0.1.7 (`31849f5`).
 
 ## TL;DR
@@ -473,7 +476,7 @@ New tooling:
 
 ## 6. M4 results: rendering (Passed 2026-10-22)
 
-### Black movie video: fixed (commit 487cf65)
+### Black movie video: fixed (commit 113f1ee)
 Evidence chain:
 1. **Decoder:** fine. The Y plane read from guest memory mid-movie (lldb) is a real frame.
 2. **Movie draw:** the YUV→RGB pixel shader is correct. The movie is drawn into EDRAM base 0 as
@@ -496,7 +499,7 @@ Evidence chain:
   - the loading screen, unchanged from M3;
   - frames 60–2760 all have content (all were black before).
 
-### Flaky `guest_time_test`: root-caused and fixed (commit 124cf31)
+### Flaky `guest_time_test`: root-caused and fixed (commit 0074256)
 `guesttime::RawSystem` read macOS `system_clock` on every call. It has 1 µs resolution and
 steps back: by 1 µs when several threads read it close together, and by milliseconds to
 seconds when the host time is adjusted. The guest's system time inherited that through
@@ -517,7 +520,7 @@ a session).
   - committed code without the clock fix: 25/25 clean;
   - with it: 24/25.
 
-### Intermittent movie-teardown hang: root-caused and fixed (commit 7038a47)
+### Intermittent movie-teardown hang: root-caused and fixed (commit 698dd9d)
 - **Symptom (about 1 in 50 launches):** the main thread waits (`KeWaitForSingleObject`) in
   the movie player's teardown (`sub_827C9B30`) on decoder thread 3's done event (0x40084AD4).
 - **Ruled out:** a lost wakeup when a guest event header is re-initialized inline. An event
@@ -548,10 +551,10 @@ a session).
   float, 48 kHz), 0 gaps over 50 ms, sound throughout.
 - Front end reached by script: START on the title, then A on "Create a new alias?" → No.
   Five strict stubs stood in the way. They're implemented from Xenia's `xam_net.cc` (commit
-  752537e): `XNetUnregisterKey`, `WSACleanup`, `XNetCleanup`, `WSASetEvent` and
+  dc97eb5): `XNetUnregisterKey`, `WSACleanup`, `XNetCleanup`, `WSASetEvent` and
   `WSAResetEvent`. The offline path then shows "Cannot connect to Xbox Live!".
 
-### Front-end audio underruns: root-caused and fixed (commit 79573bb)
+### Front-end audio underruns: root-caused and fixed (commit 20dd2ed)
 - **Symptom:** in the menus, device-empty frames and gaps of 50–165 ms; none during boot.
 - **Evidence:**
   - The guest render callback took 15–103 ms, not 5.33 ms. Late wakes were only catch-up.
@@ -580,7 +583,7 @@ a session).
   number. Smoothing is deferred to polish unless it causes gameplay issues.
 - Lip-sync passes by eye and ear (hand test 2, below).
 
-### See-through road in gameplay: root-caused and fixed (commit 557d9b5)
+### See-through road in gameplay: root-caused and fixed (commit 82c3026)
 - **Symptom** (hand test): in gameplay the road was see-through, with buildings, terrain and
   lights visible through it. In game-only frame dumps the road was flat black with no texture
   or headlight light, and city lights showed on it. Road surfaces in the intro cutscene were
@@ -605,11 +608,11 @@ a session).
   effects). The front-end music isn't XMA. XMA1 against XMA2 isn't settled: the decoder's
   synthetic packets work for both.
 - **Input:** the controller's default button mapping moved unchanged to `hid/pad_map.h` and is
-  pinned by `pad_map_test` (commit af3aeea). An SDL virtual controller reaches the main menu.
+  pinned by `pad_map_test` (commit 36b5510). An SDL virtual controller reaches the main menu.
   Keyboard rebinding is unchanged, and `settings_keys_test` and `key_map_test` pass.
 - **Physical controller: Deferred — not verified.** By the user's decision (2026-10-23) it is no longer an
   alpha gate for M5 or M7, and is to be tested once the 8BitDo is available. The virtual-controller
-  tests (menus, hot-unplug: commit 05607a2) are automated evidence for the input path only. The
+  tests (menus, hot-unplug: commit 7d74acf) are automated evidence for the input path only. The
   game never sees an unplug, because the keyboard stays controller 0. They don't show that a
   physical controller works.
 
@@ -618,7 +621,7 @@ a session).
   - the physical controller (deferred, above);
   - movie judder (pacing hooks deferred to polish);
   - the '?' glyph on the Controls page: root-caused (a non-Latin keyboard layout) and handled
-    since (33bf340, below).
+    since (4a68b32, below).
 
   M6 stays open until M6.6, M7 is the current milestone, and M8 is Pending, not started (ROADMAP).
 
@@ -648,9 +651,9 @@ playback. How long the switch itself takes isn't measured: the runtime doesn't l
 device.
 
 Keyboard players can't see that Q and E turn the settings pages: the footer named only LB
-and RB. It now shows "LB RB / Q E: page" (commit 4f6e0f5).
+and RB. It now shows "LB RB / Q E: page" (commit e892169).
 
-**The '?' glyph on the Controls page: root-caused and handled (2026-10-23, commit 33bf340).**
+**The '?' glyph on the Controls page: root-caused and handled (2026-10-23, commit 4a68b32).**
 - **Symptom:** in automated screenshots the Controls page drew the letter keys W, S, A and D as
   the replacement glyph (U+FFFD), while named keys (Up, Space) drew correctly.
 - **Cause (verified):** the M5's active keyboard layout was Myanmar. The cell names a key on the
@@ -687,9 +690,9 @@ and RB. It now shows "LB RB / Q E: page" (commit 4f6e0f5).
   plus a 308 B `.xcontent`.
 - **Reload:** on the next launch, `[xam] found save`. The game opens and reads the save and
   goes straight to the main menu with no alias prompt. The save's SHA-256 is unchanged.
-- Automated runs use an isolated user folder (`scripts/run_attempt.sh`, commit 30e6ebf).
+- Automated runs use an isolated user folder (`scripts/run_attempt.sh`, commit 8d61a29).
 
-### Deferred render-callback queue: root-caused and fixed (commit e40e9ec)
+### Deferred render-callback queue: root-caused and fixed (commit f4cf407)
 - **Symptom:** in a 16-minute soak (alias, career intro, prologue restarts), SIGABRT after
   158 s: `indirect call to 8209B4AC, which is not a recompiled function`, in `sub_824694C0` on
   the main thread. `0x8209B4AC` is in `.rdata`: a bad pointer, not a missed function.
@@ -706,11 +709,11 @@ and RB. It now shows "LB RB / Q E: page" (commit 4f6e0f5).
   in one soak, so the launches are a regression check; the root cause rests on the mechanism.
 
 ### Packaging and memory (M8 work done early)
-- `scripts/macos/make_app.py` and `check_app.py` are ported (commit eda0ab1). The app carries
+- `scripts/macos/make_app.py` and `check_app.py` are ported (commit e3173ce). The app carries
   bundle ID `org.retronative.recarbon`, signs ad hoc and runs from its bundle. `check_app` check
   3 fails: Homebrew's Vulkan loader names `/opt/homebrew`, so a release needs libraries built
   from source.
-- **Alpha packaging check (2026-10-23, build 184d87f):**
+- **Alpha packaging check (2026-10-23, build 7673eee):**
   - **Build and checks:** `make_app.py` built a 72 MB app for macOS 27.0+, bundling 7 libraries
     and MoltenVK 1.4.2. `check_app` passed checks 1, 2, 4 and 5. Check 3 failed only because
     the bundled Vulkan loader has three search folders compiled in: `/opt/homebrew/etc/xdg`,
@@ -725,7 +728,7 @@ and RB. It now shows "LB RB / Q E: page" (commit 4f6e0f5).
       an implicit layer installed under Homebrew's prefix would load into the game, as one
       under `/usr/local/share` would. Without Homebrew those folders don't exist.
     - The options are M8's: build the loader from source with the standard folders only
-      (`build_deps.sh`, done in M8: 825ae48, 74fa6e1), or accept the folders and change check 3. Either is a decision for the
+      (`build_deps.sh`, done in M8: 77c0bcc, d780e34), or accept the folders and change check 3. Either is a decision for the
       user. Nothing has been changed.
   - **On a second Mac:** the MacBook Air (M1, macOS 27.0.1) has Homebrew's copies of the same
     libraries installed. The app ran there for 60 s with `DYLD_PRINT_LIBRARIES=1` and a
@@ -742,15 +745,15 @@ and RB. It now shows "LB RB / Q E: page" (commit 4f6e0f5).
   - **Limits:**
     - The app needs macOS 27 or newer, because Homebrew's bottles are built for 27.0.
     - It wasn't tried on a Mac without Homebrew, or under a new macOS user account.
-    - The release build of the libraries was ported later (M8, `build_deps.sh` 825ae48). A
-      build against them passes `check_app` on all checks (74fa6e1, ROADMAP M8).
+    - The release build of the libraries was ported later (M8, `build_deps.sh` 77c0bcc). A
+      build against them passes `check_app` on all checks (d780e34, ROADMAP M8).
 - The 16 KB host-page release fix is ported from SpeedBreaker v0.1.8 with ReCarbon's own test
-  and a mutation check (commit 84df8f3). It was latent: never observed in play.
+  and a mutation check (commit e815a55). It was latent: never observed in play.
 
 ### Free-roam stability: verified by hand test 3 (2026-10-23)
 Free-roam opens only after a player escapes the prologue chase, which a blind input script can't
 drive, so the user played it. The session ran in the user's own user folder (`scripts/run_attempt.sh
-hand03 3600` with `RECARBON_REAL_HOME=1 RECARBON_MUTE=0`), on the keyboard, at build 184d87f.
+hand03 3600` with `RECARBON_REAL_HOME=1 RECARBON_MUTE=0`), on the keyboard, at build 7673eee.
 - **User's report:** the prologue chase was won at the first attempt. Free-roam ran from 11:45 to
   12:00, 15 minutes in a row, with nothing unusual seen and the Mac at a normal temperature.
 - **Log correlation:** the session started at 11:36:32, so free-roam ran from about 508 s to
@@ -784,7 +787,7 @@ hand03 3600` with `RECARBON_REAL_HOME=1 RECARBON_MUTE=0`), on the keyboard, at b
   add a ~57 ms stall every 60 frames, because the PPM is written synchronously, so they must be
   off for any frame-time measurement.
 - **Open: a stall in free-roam (hand test 3, cause unconfirmed).**
-  - **Timing:** session `2026-10-23_11-36-32` (started 11:36:32, build 184d87f), 1304.6–1305.8 s,
+  - **Timing:** session `2026-10-23_11-36-32` (started 11:36:32, build 7673eee), 1304.6–1305.8 s,
     about 11:58:16–17. The worst frame was 333.2 ms, frame 71043 at 1305.4 s, inside a burst of
     150.2, 151.5 and 125.5 ms frames.
   - **User's observation** (from their recording): a slight stutter around 11:58:17, possibly as
@@ -808,7 +811,7 @@ hand03 3600` with `RECARBON_REAL_HOME=1 RECARBON_MUTE=0`), on the keyboard, at b
     separate these.
 
 ### Hand test 4: a career race, a restart, progress kept (2026-10-23)
-- **The run:** build 184d87f, the real user folder, 720p internal (`RECARBON_RESOLUTION`; the
+- **The run:** build 7673eee, the real user folder, 720p internal (`RECARBON_RESOLUTION`; the
   saved setting is Auto). Both sessions were put in fullscreen by the system.
   - Session 1: `2026-10-23_13-31-57`, 13:31:57–13:47:42.
   - Session 2: `2026-10-23_13-48-17`, 13:48:17–13:56:14.

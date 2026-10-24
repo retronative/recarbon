@@ -3,11 +3,11 @@
 **Status (2026-10-23):**
 - **M8 started** by the user's approval.
 - **B1 done:**
-  - `build_deps.sh` (825ae48);
-  - the MoltenVK pin (74fa6e1);
+  - `build_deps.sh` (77c0bcc);
+  - the MoltenVK pin (d780e34);
   - the release app passes `check_app` on both Macs (ROADMAP M8 evidence).
-- **B2 implemented** (2026-10-24) with the approved tables: 6db91be, bb7f74c, 3c41ef9, b65e127,
-  3e4ad4e (ROADMAP M8 evidence).
+- **B2 implemented** (2026-10-24) with the approved tables: bddd7b3, 16a1f8e, 812c921, ab576ad,
+  577a259 (ROADMAP M8 evidence).
   - **Refinement 1:** with `settings.toml` missing or unreadable, the active profile restores the
     keys (otherwise its keys would be replaced by the defaults).
   - **Refinement 2:** rebinding a controller button swaps it with the button that had it.
@@ -20,10 +20,10 @@ and no milestone scope or criterion changes. ROADMAP M8 is the scope; this says 
 ### Where it stands
 - **Groundwork:**
   - `scripts/macos/make_app.py` builds `ReCarbon.app`, bundling Homebrew's builds of SDL3, the
-    Vulkan loader, glslang, SPIRV-Tools and MoltenVK (eda0ab1).
-  - On a second Mac the app loads only its own libraries (417e0b8).
+    Vulkan loader, glslang, SPIRV-Tools and MoltenVK (e3173ce).
+  - On a second Mac the app loads only its own libraries (b063ffa).
 - **`check_app` check 3 fails** only on the Vulkan loader's compiled-in Homebrew search folders.
-  Measured: they are implicit-layer folders, and nothing loads from them (3507f5b).
+  Measured: they are implicit-layer folders, and nothing loads from them (c0d9604).
 - **Minimum macOS of what the app ships** (`otool -l`, minos): ReCarbon and every Homebrew
   library are 27.0; MoltenVK is 12.0.
 
@@ -289,7 +289,7 @@ each control is Carbon's own code, so an action counts as known only with eviden
 | Steering | Left Stick left/right (`left_stick_left`, `left_stick_right`) | A / D, ← / → | As above | **Steering Left**, **Steering Right** |
 | Handbrake, Nitrous, Speedbreaker, Change Camera, Look Back | not known | — | None: no source, test or play evidence ties them to a control. SpeedBreaker's or NFSU2's layouts aren't evidence for Carbon. | Not used; the rows keep their Xbox names |
 
-- **Changed** (2fa0886): only the labels, with the Xbox name and config key moved to the
+- **Changed** (0dc8bf1): only the labels, with the Xbox name and config key moved to the
   detail line. No binding changed, and the M5 key defaults in `settings_keys_test` are
   unchanged; only its label column was updated.
 - **Website (Garage):** its `controls.actions.json` should follow the same rule:
@@ -300,7 +300,7 @@ each control is Carbon's own code, so an action counts as known only with eviden
 
   The website repository isn't changed from here; its session applies this.
 
-### Check for Updates (optional polish, not a release gate; 1ff2c82)
+### Check for Updates (optional polish, not a release gate; 73b4c26)
 - **When it runs:** only when the player presses Settings > Advanced > Check for Updates
   (`update_dialog.cpp`). No polling, no download, no install.
 - **What it sends:** one GET to GitHub's release list

@@ -6,14 +6,14 @@ code-coverage percentage is claimed anywhere.
 
 ## The suites
 
-| Suite | Runs with | Count (2026-10-24, b5993d0) |
+| Suite | Runs with | Count (2026-10-24, 8ad356e) |
 |---|---|---|
 | Unit tests | `ctest` in a `-DRECARBON_TESTS=ON` build | 48 CTest entries: 44 C++ programs, 3 SPIR-V compiles of FSR 1's shaders, 1 Python (`frame_times_test.py`) |
 | Instruction tests | `tests/run_instr_tests.sh` | 32 files, 242 test functions, 622 register/memory checks (15 functions are ReCarbon's hand-computed `carbon_*.s`) |
 | Recompiler structure | `survey/validate_recomp.py game/survey/recomp.log` | 0 errors and warnings |
 | Installer, end to end | `scripts/install_check.sh <bin> <iso> [folder]` | 18 cases with an image (21 with a folder too), launch and cleanup included |
 
-Results at b5993d0:
+Results at 8ad356e:
 - **MacBook Air M5:** 48/48. `ctest --repeat until-fail:10`: 480 runs, all passed.
 - **MacBook Air M1** (`scripts/remote_worker.sh`, its own build of the same commit): 48/48,
   0 failed instruction checks, `validate_recomp` clean.
@@ -66,13 +66,13 @@ reason.
 
 ## Fixed in this pass
 
-- **`install_check.sh` left games running** (477c09e; ROADMAP M8 "Test tooling"). It now
+- **`install_check.sh` left games running** (dd00321; ROADMAP M8 "Test tooling"). It now
   tracks the game's process group, its descendants by PID and start time, and an owner
   marker, and stops them on any exit.
   - Verified: normal run, the subshell mutant, a launch that ignores SIGTERM with an escaped
     descendant, and SIGINT and SIGTERM to the script. Two decoy `ReCarbon` processes were
     alive after every case.
-- **swapchain_use_test's work guard** (b5993d0). Upstream requires more than 1000 waiter uses
+- **swapchain_use_test's work guard** (8ad356e). Upstream requires more than 1000 waiter uses
   in one 20,000-cycle run, which depends on the scheduler: it failed one full ctest run
   (539 uses) and 1 of 50 runs alone.
   - Every run is still checked for soundness. Only the work is now counted over up to 5 runs.

@@ -1,5 +1,8 @@
 # ReCarbon — Roadmap (Xbox 360 → Apple Silicon)
 
+> Commit IDs here were updated after the 2026-10-24 history rewrite (author email only; trees
+> unchanged). Logs and build outputs made before it name the old IDs.
+
 Every milestone is gated. Starting each milestone needs the user's **explicit approval**, even
 when the previous one passed. A milestone passes only when its acceptance criteria are met **and
 observed**, not inferred. The "Evidence" line records what was observed. The "Verify" line is how
@@ -129,11 +132,11 @@ Diagnosing a failure is progress. It does not pass a criterion.
 
 ## M4 — First frame (rendering) *(Passed 2026-10-22)*
 - **Evidence** (FEASIBILITY §6):
-  - The EA logos and movies render in frame dumps (commit 487cf65).
+  - The EA logos and movies render in frame dumps (commit 113f1ee).
   - Unknown-format and memexport counts are 0 over 25 runs.
-  - Guest clock fixed (commit 124cf31).
+  - Guest clock fixed (commit 0074256).
   - Movie-teardown hang root-caused and fixed: guest critical-section counters stored
-    host-endian (commit 7038a47). 58/58 launches clean, of 100 planned (stopped by decision),
+    host-endian (commit 698dd9d). 58/58 launches clean, of 100 planned (stopped by decision),
     plus 3/3 unmuted. The bug's code path wasn't observed in 28 instrumented launches, so the
     fix rests on the hang report and `critical_section_test`.
 - **Do:**
@@ -153,15 +156,15 @@ Diagnosing a failure is progress. It does not pass a criterion.
   - movie judder (Carbon's pacing hooks): deferred to polish;
   - the '?' glyph on the Controls page: root-caused since then. A non-Latin keyboard layout
     (Myanmar) names letter keys in a script the menu's font lacks. Rebinding now refuses such
-    keys and asks for an English layout (33bf340, FEASIBILITY §6a). Existing labels on such a
+    keys and asks for an English layout (4a68b32, FEASIBILITY §6a). Existing labels on such a
     layout still draw as U+FFFD.
 
   The acceptance criteria below are unchanged.
 - **Evidence so far** (FEASIBILITY §6a). M5 stays open until the user closes it:
   - Front-end music: over 5 minutes with no underruns or gaps, in 3/3 runs, after guest thread
-    priorities were mapped to macOS QoS (commit 79573bb).
+    priorities were mapped to macOS QoS (commit 20dd2ed).
   - The main menu is reached with scripted keyboard input and with an SDL virtual controller.
-    The default controller mapping is pinned by a test (commit af3aeea); the keyboard defaults
+    The default controller mapping is pinned by a test (commit 36b5510); the keyboard defaults
     by `settings_keys_test`.
   - Movies play at the correct speed (Nikki PSA 11.38 s against 11.40 s in the file), which
     is accepted as the correct cadence for M5. **Known limitation:** frame pacing isn't
@@ -174,7 +177,7 @@ Diagnosing a failure is progress. It does not pass a criterion.
   - **Physical controller: Deferred — not verified.** By the user's decision (2026-10-23) it is no longer an
     alpha gate. It is to be tested by hand once the 8BitDo is available, and never recorded as a
     pass before then. The SDL virtual controller (menus, hot-unplug with `DETACH`/`ATTACH`, commit
-    05607a2) is automated evidence for the input path, not proof that physical controllers work.
+    7d74acf) is automated evidence for the input path, not proof that physical controllers work.
 - **Do:**
   - Enable XMA → FFmpeg → SDL3.
   - Movies: verified from the extracted files' headers (2026-10-22). All 65 are ASF (`.wmv`):
@@ -228,7 +231,7 @@ customization.
     end (§6c).
   - **Stability:** hand test 3 (2026-10-23, by the user): 15 minutes in a row in free-roam after
     the prologue chase. The log shows no crash, hang report, strict stub or watchdog report, and
-    a clean exit. Before that, the render-queue race was fixed (e40e9ec), and two 16-minute
+    a clean exit. Before that, the render-queue race was fixed (f4cf407), and two 16-minute
     soaks ran clean.
   - Each criterion has evidence. M6 stays open until M6.6, the written new-profile route
     (user decision, 2026-10-23).
@@ -278,11 +281,11 @@ customization. The controls criterion is judged on the default mappings.
   - Physical controller: Deferred — not verified (not an alpha gate, user decision 2026-10-23). The
     virtual-controller and hot-unplug tests pass, but they don't show physical compatibility.
   - Release packaging: resolved for a build against `scripts/macos/build_deps.sh`'s libraries,
-    which `check_app` passes (M8, 74fa6e1). Development builds still link Homebrew's libraries,
+    which `check_app` passes (M8, d780e34). Development builds still link Homebrew's libraries,
     and no release is published (the LGPL source obligations apply to any binary).
   - Key labels on a non-English keyboard layout: under Myanmar (or another non-Latin layout)
     Settings > Controls draws letter keys as '?' (U+FFFD), because the menu's font lacks the
-    script. Binding such a key is refused safely and nothing is saved (verified, 33bf340), but
+    script. Binding such a key is refused safely and nothing is saved (verified, 4a68b32), but
     the labels themselves aren't fixed. Gameplay input is unaffected.
   - **Still pending:**
     - the driving controls on the keyboard (the physical controller is deferred);
@@ -301,15 +304,15 @@ customization. The controls criterion is judged on the default mappings.
   - Homebrew's MoltenVK 1.4.2, pinned by its binary SHA-256;
   - `check_app.py` kept strict;
   - the app verified on both Macs.
-- **Groundwork kept as evidence:** `make_app.py` and `check_app.py` ported (eda0ab1), the
-  second-Mac bundle check (417e0b8), and check 3 measured (3507f5b).
+- **Groundwork kept as evidence:** `make_app.py` and `check_app.py` ported (e3173ce), the
+  second-Mac bundle check (b063ffa), and check 3 measured (c0d9604).
 - **Evidence so far (B1, 2026-10-23):**
-  - **Libraries:** `scripts/macos/build_deps.sh` (825ae48, from SpeedBreaker v0.1.8) builds
+  - **Libraries:** `scripts/macos/build_deps.sh` (77c0bcc, from SpeedBreaker v0.1.8) builds
     Vulkan SDK 1.4.363, SDL3 3.4.18, glslang 16.6.0 and FFmpeg 7.1.1 from 7 SHA-256-checked
     archives. Every library is arm64, macOS 27.0, and the loader names no `/opt/homebrew`.
   - **MoltenVK:** `make_app.py` pins Homebrew's MoltenVK 1.4.2 by its SHA-256 and records its
-    bottle (74fa6e1).
-  - **The release app (74fa6e1) passes `check_app.py`** (checks 1–6, the checks unchanged).
+    bottle (d780e34).
+  - **The release app (d780e34) passes `check_app.py`** (checks 1–6, the checks unchanged).
     - **M5:** the installer check 21/21 with the app's binary. A launch with a cleared
       environment loaded all 8 libraries from the app, with 0 `/opt/homebrew` mentions and no
       stubs.
@@ -322,18 +325,18 @@ customization. The controls criterion is judged on the default mappings.
   - **The availability gate is untested for target 27.0:** its control API is macOS 15.2, and
     with SDK 27.0 equal to the target there's nothing newer to catch.
 - **Evidence so far (B2, 2026-10-24):** input profiles, as approved in `reference/M8_PLAN.md`.
-  - **Mappings and presets** (bb7f74c): the WASD and Arrows tables, exactly as approved; no key
+  - **Mappings and presets** (16a1f8e): the WASD and Arrows tables, exactly as approved; no key
     on two controls (`profiles_test`, mutant caught). Default is the settings' defaults, M5's
     baseline.
-  - **Profile files** (3c41ef9): `profiles/keyboard.toml` and `controller.toml`, written
-    atomically (the shared writer, 6db91be) and validated by parsing the text back before
+  - **Profile files** (812c921): `profiles/keyboard.toml` and `controller.toml`, written
+    atomically (the shared writer, bddd7b3) and validated by parsing the text back before
     writing. A failed write changes nothing.
     - Startup never changes `[keys]`. Migration keeps a customized `[keys]` as "Custom", and a
       `[keys]` the profiles didn't know of is kept as "Custom (settings.toml)".
     - An unreadable file is left untouched, and profiles are off for that session.
     - Built-ins are never edited: an edit makes "<name> (custom)".
     - `profile_store_test` covers it; three safety mutants are caught.
-  - **In game** (b65e127, 3e4ad4e):
+  - **In game** (ab576ad, 577a259):
     - Settings > Controls has a Keyboard Profile row, in effect at once, and Reset page picks
       Default.
     - Settings > Controller rebinds buttons only. A button already in use swaps, and the Back +
@@ -354,22 +357,22 @@ customization. The controls criterion is judged on the default mappings.
   - **Reset to default and the M5 baseline (complete, 2026-10-24):** the user approved treating
     label-only changes as compatible with the unchanged baseline, provided key values, expected
     mappings and behavioural assertions are intact. Checked against M5's `settings_keys_test.cpp`
-    (91f0f1c):
-    - The only later change to the file is 2fa0886: 4 rows, where only the label changed
+    (592fda3):
+    - The only later change to the file is 0dc8bf1: 4 rows, where only the label changed
       (Throttle, Brake, Steering Left, Steering Right). The id, config key and both default keys
       are unchanged in each row, and so are `settings.cpp`'s defaults (w/none, s/none,
       a/left, d/right).
-    - M5's file, built unmodified against HEAD (352bdec), fails 4 checks, all of them the label
+    - M5's file, built unmodified against HEAD (d1d914f), fails 4 checks, all of them the label
       check (line 107) on those 4 rows. Every key-default, mapping, row-order, parse and save
       check passes.
     - The other baseline tests are unchanged since they were written and pass:
-      `key_map_test`, `key_names_test` (91f0f1c), and `pad_map_test` (af3aeea, the controller's
-      M5 baseline). The test's CMake entry gained `atomic_file.cpp` (6db91be, a source split, not a
+      `key_map_test`, `key_names_test` (592fda3), and `pad_map_test` (36b5510, the controller's
+      M5 baseline). The test's CMake entry gained `atomic_file.cpp` (bddd7b3, a source split, not a
       test change).
 - **Test tooling (2026-10-24):** `scripts/install_check.sh` stops every process it starts.
   - **The bug:** it launched the game as `(cd … && game &)`, so `$!` was a subshell's pid and
     SIGTERM never reached the game. Three launches were left running for 1–2.5 hours at 86–91%
-    CPU, during the M5 resolution measurements. 88a8576 launched the game directly, which
+    CPU, during the M5 resolution measurements. 5b1c72d launched the game directly, which
     still had gaps:
     - a game that ignored SIGTERM hung the script in `wait`;
     - a descendant outside the game's process group was never looked for.
@@ -393,7 +396,7 @@ customization. The controls criterion is judged on the default mappings.
       it: `launch_quits` fails, all four are killed after 10 s, and none is left.
     - **The script interrupted during the launch** by SIGINT and by SIGTERM: exit 130, nothing
       left.
-  - **Unit tests ported from SpeedBreaker v0.1.8** (f159fff..b5993d0, 2026-10-24): 25 tests
+  - **Unit tests ported from SpeedBreaker v0.1.8** (a544d36..8ad356e, 2026-10-24): 25 tests
     and FSR 1's 3 SPIR-V compiles, adapted to Carbon where the cases stood for MW. Each was
     checked with planted bugs. ctest grows from 20 to 48 entries, and the same commit passes
     48/48 on the M5 (10 repeats) and on the M1. Provenance, mutation results and the
