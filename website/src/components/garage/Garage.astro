@@ -248,18 +248,18 @@ const groups = (mode: Mode) => {
 			{
 				MODES.map((m) => (
 					<div class="mode-list" id={`mode-${m.id}`} data-mode-list={m.id}>
-						<h3 class="mode-title">
+						<h2 class="mode-title">
 							<span class="gear-letter" aria-hidden="true">
 								{m.gear}
 							</span>
 							{m.label} <span class="mode-blurb">{m.blurb}</span>
-						</h3>
+						</h2>
 						{groups(m.id).map((g) => (
 							<section class:list={['group', { 'group--tbd': g.tbd }]} aria-label={g.title}>
-								<h4 class="group-title">
+								<h3 class="group-title">
 									{g.title}
 									{g.tbd && <StatusBadge status="unverified" />}
-								</h4>
+								</h3>
 								{g.tbd && (
 									<p class="group-note">
 										These keys and buttons are bound to Xbox controls (that part is tested), but what each does in a race
@@ -691,7 +691,12 @@ const groups = (mode: Mode) => {
 		display: none;
 	}
 	.garage.js .mode-title {
-		display: none;
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
 	}
 	.garage:not(.js) .device + .device {
 		margin-top: 2rem;

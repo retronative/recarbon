@@ -39,7 +39,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 	<body>
 		<a class="skip" href="#main">Skip to content</a>
 		<header class="hud">
-			<a class="brand" href={url()}>
+			<a class="brand" href={url()} aria-label={site.name}>
 				<img src={mark} alt="" width="48" height="30" />
 				<span>{site.name}</span>
 			</a>

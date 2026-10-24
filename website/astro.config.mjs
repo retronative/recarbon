@@ -18,7 +18,8 @@ export default defineConfig({
 		starlight({
 			title: 'ReCarbon',
 			description: 'ReCarbon: an unofficial native port of Need for Speed: Carbon (Xbox 360) to Apple Silicon Macs. Unofficial fan project.',
-			logo: { src: './src/assets/recarbon-mark.svg', alt: 'ReCarbon' },
+			// The title text next to it names the link (kept for screen readers when hidden), so the mark is decorative.
+			logo: { src: './src/assets/recarbon-mark.svg', alt: '' },
 			favicon: '/favicon.svg',
 			customCss: ['./src/styles/fonts.css', './src/styles/tokens.css', './src/styles/starlight.css'],
 			components: {

@@ -14,7 +14,7 @@ import VersionChip from '../VersionChip.astro';
 	<div class="search print:hidden">
 		<Search />
 	</div>
-	<nav aria-label="Main" class="main-nav">
+	<nav aria-label="Site" class="main-nav">
 		<SiteNav />
 	</nav>
 </div>
@@ -71,9 +71,17 @@ import VersionChip from '../VersionChip.astro';
 		}
 	}
 	@media (min-width: 50rem) and (max-width: 72rem) {
-		.title-wrapper :global(.version-chip),
-		.title-wrapper :global(.site-title span) {
+		.title-wrapper :global(.version-chip) {
 			display: none;
+		}
+		/* Hidden visually only: it is the logo link's name. */
+		.title-wrapper :global(.site-title span) {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip: rect(0 0 0 0);
+			white-space: nowrap;
 		}
 		.main-nav :global(a) {
 			padding-inline: 0.5rem;

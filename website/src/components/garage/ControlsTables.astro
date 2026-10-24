@@ -19,7 +19,7 @@ const pad = (els: string[], chord?: boolean) => els.map((e) => PAD_NAMES[e] ?? e
 			<H id={`table-${m.id}`}>
 				{m.label}: {m.blurb}
 			</H>
-			<div class="ctl-scroll">
+			<div class="ctl-scroll" tabindex="0" role="region" aria-labelledby={`table-${m.id}`}>
 				<table>
 					<thead>
 						<tr>
