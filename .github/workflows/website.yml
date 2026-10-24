@@ -1,18 +1,14 @@
-# GitHub Pages deployment for the ReCarbon website. A TEMPLATE, NOT ENABLED:
-# it lives outside .github/workflows/, so GitHub never runs it from here.
-#
-# To enable it (only once publishing is approved; see docs/DEPLOY.md):
-#   copy it to .github/workflows/website.yml in retronative/recarbon, with this
-#   site in website/, and set Settings > Pages > Source to "GitHub Actions".
-#
-# It runs only by hand (workflow_dispatch) until a push trigger is added.
+# GitHub Pages deployment of the ReCarbon website (website/) to
+# https://retronative.github.io/recarbon/ (Settings > Pages > Source: GitHub Actions).
+# It runs by hand (Actions > Website > Run workflow); the push trigger is enabled
+# once the first deployment has been checked (website/docs/DEPLOY.md).
 name: Website
 
 on:
   workflow_dispatch:
   # push:
   #   branches: [main]
-  #   paths: ['website/**', 'docs/**', 'runtime/**', 'tests/pad_map_test.cpp', 'LICENSES/**', 'NOTICE', 'COPYING', 'THIRD_PARTY_NOTICES.md']
+  #   paths: ['website/**', 'docs/**', 'runtime/**', 'tests/pad_map_test.cpp', 'LICENSES/**', 'NOTICE', 'COPYING', 'THIRD_PARTY_NOTICES.md', '.github/workflows/website.yml']
 
 permissions:
   contents: read
@@ -33,7 +29,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24   # Astro 7.4 needs Node 22.23.4 or later
           cache: npm
           cache-dependency-path: website/package-lock.json
       - run: npm ci

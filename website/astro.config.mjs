@@ -12,7 +12,7 @@ import { trailingSlashRedirect } from './src/lib/trailing-slash.mjs';
 // https://retronative.github.io/recarbon/. The docs link to the site there.
 const PUBLISHED = 'https://retronative.github.io/recarbon/';
 // Where this build is served. Local dev, builds and previews: http://127.0.0.1:4321/.
-// A GitHub Pages build sets both (npm run build:pages, deploy/github-pages.yml);
+// A GitHub Pages build sets both (npm run build:pages, .github/workflows/website.yml);
 // a custom domain would set SITE_URL and BASE_PATH=/. See docs/DEPLOY.md.
 const site = process.env.SITE_URL || 'http://127.0.0.1:4321';
 const base = process.env.BASE_PATH || '/';

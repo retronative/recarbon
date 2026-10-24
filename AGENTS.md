@@ -20,7 +20,7 @@ native arm64 macOS. It is built on SpeedBreaker (the NFS: Most Wanted port), and
 | `tests/` | Instruction tests: SpeedBreaker's `nfsmw_*.s` and ReCarbon's hand-computed `carbon_*.s` | |
 | `reference/` | Feasibility, architecture, roadmap, header parsers | |
 | `docs/` | The player documentation: one source for GitHub and the website's `/docs/` pages | Write it to read on GitHub: file links between pages (`faq.md`), license links to the repository's files (`../NOTICE`), callouts as GitHub alerts (`> [!NOTE]`, an optional bold first line as the title). The site maps them (`website/src/lib/docs-markdown.mjs`). `docs/README.md` is the GitHub index, not a site page. No private material (internal reviews, keys, game data). |
-| `website/` | The project website (Astro + Starlight, base path `/recarbon/`): see `website/README.md` | Controls and settings data are generated from this repo's source (`npm run gen:controls`; the build fails on drift; never edit `*.generated.json`). The license pages are built from `COPYING`, `NOTICE`, `THIRD_PARTY_NOTICES.md` and `LICENSES/` at build time: the site keeps no copies. Its Pages workflow (`website/deploy/github-pages.yml`) is an inactive template: don't move it into `.github/workflows/` without the user's approval. |
+| `website/` | The project website (Astro + Starlight, base path `/recarbon/`): see `website/README.md` | Controls and settings data are generated from this repo's source (`npm run gen:controls`; the build fails on drift; never edit `*.generated.json`). The license pages are built from `COPYING`, `NOTICE`, `THIRD_PARTY_NOTICES.md` and `LICENSES/` at build time: the site keeps no copies. It deploys to GitHub Pages from `.github/workflows/website.yml`. |
 
 ## Commands
 
