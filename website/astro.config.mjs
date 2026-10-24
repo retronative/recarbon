@@ -59,7 +59,7 @@ export default defineConfig({
 					label: 'Start',
 					items: [
 						{ label: 'Overview', slug: 'docs' },
-						{ label: 'Download', slug: 'docs/download' },
+						{ label: 'Release status', slug: 'docs/download' },
 						{ label: 'Installation', slug: 'docs/installation' },
 						{ label: 'Supported hardware', slug: 'docs/hardware' },
 					],

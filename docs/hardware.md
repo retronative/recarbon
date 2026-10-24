@@ -12,7 +12,7 @@ was measured on.
 | MacBook Air, Apple M1 | 27.0.1 | The packaged app ran for 60 s from its bundle, reached frame 900 and exited cleanly (2026-10-23) | FEASIBILITY §6b, packaging check |
 
 **Everything else is untested**: other Apple Silicon Macs, Macs without Homebrew installed, and
-any macOS before 27 (current builds need 27 or newer: see [Download](download.md)).
+any macOS before 27 (current builds need 27 or newer: see [Release status](download.md)).
 
 ## Controllers
 

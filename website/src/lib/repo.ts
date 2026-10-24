@@ -5,6 +5,5 @@ export const repo = site.repo.public
 	? {
 			url: site.repo.url,
 			issues: `${site.repo.url}/issues`,
-			releases: `${site.repo.url}/releases`,
 		}
 	: null;

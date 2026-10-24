@@ -1,5 +1,5 @@
 ---
-title: Download
+title: Release status
 description: ReCarbon has no public release yet. What a release will contain, and what you will need.
 ---
 

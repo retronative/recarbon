@@ -9,7 +9,7 @@ each one against a manifest of hashes. Nothing is downloaded.
 > [!WARNING]
 > **Alpha**
 >
-> There is no public release yet ([Download](download.md)). These steps describe the current
+> There is no public release yet ([Release status](download.md)). These steps describe the current
 > build. A clean install on a fresh macOS user account is still to be tested (M8).
 
 ## 1. Make a disc image

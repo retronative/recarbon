@@ -30,7 +30,7 @@ Source: ReCarbon's `reference/ROADMAP.md`.
 
 ## Start here
 
-- [Download](download.md): what a release will contain, and what you need.
+- [Release status](download.md): no downloads yet; what a release will contain, and what you need.
 - [Installation](installation.md): installing the game from your own disc image.
 - [Controls](controls.mdx) and the interactive [Garage](https://retronative.github.io/recarbon/garage/).
 - [Settings](settings.mdx): every option of the in-game Settings overlay (F1).

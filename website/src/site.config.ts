@@ -8,6 +8,7 @@ const REPO_PUBLIC = true;
 export const site = {
 	name: 'ReCarbon',
 	org: 'RetroNative',
+	orgUrl: 'https://retronative.github.io/',
 	tagline: 'Carbon. Native. Apple Silicon.', // copy to be approved (PLAN §5.4)
 
 	// Release versioning: one "alpha" docs version until the first tagged

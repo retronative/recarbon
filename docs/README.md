@@ -5,7 +5,7 @@ The player documentation for ReCarbon. The same files build the website's docume
 
 **Start**
 - [Overview](index.md)
-- [Download](download.md)
+- [Release status](download.md): no downloads; build from source
 - [Installation](installation.md)
 - [Supported hardware](hardware.md)
 
