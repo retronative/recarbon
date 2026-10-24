@@ -351,6 +351,21 @@ customization. The controls criterion is judged on the default mappings.
     buttons (the M6/M7 scripted routes navigate with them). A real key moving a menu under each
     preset is left for a hand test: the scripted menu route didn't reach the main menu here.
   - **Not verified:** the physical controller (deferred), and controller rebinding on hardware.
+  - **Reset to default and the M5 baseline (complete, 2026-10-24):** the user approved treating
+    label-only changes as compatible with the unchanged baseline, provided key values, expected
+    mappings and behavioural assertions are intact. Checked against M5's `settings_keys_test.cpp`
+    (91f0f1c):
+    - The only later change to the file is 2fa0886: 4 rows, where only the label changed
+      (Throttle, Brake, Steering Left, Steering Right). The id, config key and both default keys
+      are unchanged in each row, and so are `settings.cpp`'s defaults (w/none, s/none,
+      a/left, d/right).
+    - M5's file, built unmodified against HEAD (352bdec), fails 4 checks, all of them the label
+      check (line 107) on those 4 rows. Every key-default, mapping, row-order, parse and save
+      check passes.
+    - The other baseline tests are unchanged since they were written and pass:
+      `key_map_test`, `key_names_test` (91f0f1c), and `pad_map_test` (af3aeea, the controller's
+      M5 baseline). The test's CMake entry gained `atomic_file.cpp` (6db91be, a source split, not a
+      test change).
 - **Test tooling (2026-10-24):** `scripts/install_check.sh` stops every process it starts.
   - **The bug:** it launched the game as `(cd … && game &)`, so `$!` was a subshell's pid and
     SIGTERM never reached the game. Three launches were left running for 1–2.5 hours at 86–91%
