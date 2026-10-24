@@ -17,7 +17,7 @@ Native recompilation of Need for Speed: Carbon (Xbox 360) for Apple Silicon.
 
 ## Status
 
-**Early development: playable in parts, not released.** Statuses come from
+**Early Development — Playable in Parts.** Not released. Statuses come from
 [reference/ROADMAP.md](reference/ROADMAP.md). A milestone passes only when every criterion is met.
 
 - **M0–M2:** the Xbox 360 executable (title 0x454107EC) is verified, recompiles to C++ with no

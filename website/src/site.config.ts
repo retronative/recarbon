@@ -1,6 +1,6 @@
 // The release flag for the source repository: true once
 // github.com/retronative/recarbon is public.
-const REPO_PUBLIC = false;
+const REPO_PUBLIC = true;
 
 // Site-wide switches. Each open decision in docs/PLAN.md §10 is one value
 // here, so settling it later is a one-line change.
