@@ -102,11 +102,11 @@ The site never upgrades a badge without a commit that does it in `controls.json`
 - **Drift check (CI):** the site workflow re-runs the generator and fails if the committed JSON
   differs. A second check asserts the generated defaults equal `tests/pad_map_test.cpp`'s
   baseline, so the C++ tests stay the authority.
-- **Defaults vs customized:** the site shows defaults only. A "Your bindings" panel explains
-  Settings > Controls and the `[keys]` table, with an example snippet using the real names.
-  An optional local-only viewer could read a pasted `[keys]` block in the browser, never
-  uploaded (decision D6). M8's profiles and presets (WASD, Arrows) are labelled "planned (M8)"
-  until M8 ships.
+- **Built-ins vs customized:** the site shows ReCarbon's built-in keyboard presets (Default, WASD,
+  Arrows; generated from `runtime/hid/profiles.h` and checked against `tests/profiles_test.cpp`)
+  and the default controller profile, never a user's. A "Presets and your own profiles" panel
+  says custom profiles are made in game (Settings > Controls, Settings > Controller). An optional
+  local-only viewer could read a pasted profile in the browser, never uploaded (decision D6).
 
 ## 3. Platform
 

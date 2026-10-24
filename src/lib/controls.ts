@@ -10,6 +10,14 @@ import { site } from '../site.config';
 export type Status = 'tested' | 'automated' | 'hand-verified' | 'source' | 'pending' | 'unverified' | 'not-mapped';
 export type Mode = 'driving' | 'menu' | 'settings';
 export type Device = 'keyboard' | 'controller';
+export type PresetId = (typeof generated.presets)[number]['id'];
+
+// ReCarbon's built-in keyboard presets (hid/profiles.h): Default, WASD,
+// Arrows. Custom profiles are made in game and aren't shown.
+export const PRESETS = generated.presets.map(({ id, name, shared }) => ({ id: id as PresetId, name, shared }));
+const presetKeys = (control: string) =>
+	Object.fromEntries(generated.presets.map((p) => [p.id, (p.keys as Record<string, (string | null)[]>)[control]])) as Record<PresetId, (string | null)[]>;
+const samePerPreset = <T>(value: T) => Object.fromEntries(PRESETS.map((p) => [p.id, value])) as Record<PresetId, T>;
 
 export const STATUS: Record<Status, { label: string; icon: string; meaning: string }> = {
 	tested: { label: 'Tested', icon: '✓', meaning: "Pinned by ReCarbon's unit tests." },
@@ -51,7 +59,8 @@ for (const [id, modes] of Object.entries(overlay.actions)) {
 		check(a.status !== 'unverified' || !a.label, `${id}.${mode}: an unverified action must not name a game action`);
 	}
 }
-for (const c of generated.controls) for (const k of c.keys) if (k) check(keyIds.has(k), `default key "${k}" (${c.id}) is not on the keyboard drawing`);
+for (const p of generated.presets)
+	for (const [id, keys] of Object.entries(p.keys)) for (const k of keys) if (k) check(keyIds.has(k), `${p.name} key "${k}" (${id}) is not on the keyboard drawing`);
 for (const [id, s] of Object.entries(overlay.settings)) {
 	const fromSource = (generated.ui as Record<string, unknown>)[id];
 	check(fromSource || ('keys' in s && 'pad' in s), `controls.actions.json settings.${id} is in neither the generated ui block nor has its own keys`);
@@ -162,9 +171,9 @@ check(
 
 export interface Line {
 	control: string;
-	label: string; // the control's own name, from settings.cpp
+	label: string; // the control's row name in ReCarbon's Settings > Controls (settings.cpp)
 	action?: string;
-	keys: (string | null)[];
+	keys: Record<PresetId, (string | null)[]>;
 	setting: string;
 	setting2: string;
 }
@@ -181,11 +190,20 @@ export interface Callout {
 	status: Status;
 	evidence: string;
 	detail?: string;
-	keys: string[]; // keyboard keys to light, by settings.toml name
-	keyGroups: string[][]; // as shown: alternatives, each a key or a chord
+	keys: Record<PresetId, string[]>; // keyboard keys to light, by settings.toml name
+	keyGroups: Record<PresetId, string[][]>; // as shown: alternatives, each a key or a chord
 	pad: string[]; // pad elements to light
 	padChord?: boolean;
 	lines: Line[]; // the controls behind it (empty in Settings mode)
+}
+
+// "Steering Left", "Steering Right" -> "Steering Left / Right".
+function joinLabels(labels: string[]): string {
+	if (labels.length < 2) return labels.join('');
+	const words = labels.map((l) => l.split(' '));
+	let n = 0;
+	while (words.every((w) => w.length > n + 1 && w[n] === words[0][n])) n++;
+	return n ? `${words[0].slice(0, n).join(' ')} ${words.map((w) => w.slice(n).join(' ')).join(' / ')}` : labels.join(' / ');
 }
 
 function controlCallouts(mode: 'driving' | 'menu'): Callout[] {
@@ -199,11 +217,13 @@ function controlCallouts(mode: 'driving' | 'menu'): Callout[] {
 		if (first.status === 'unverified' && !site.showUnverifiedActions) continue;
 		const lines: Line[] = cluster.controls.map((id, i) => {
 			const c = controls.get(id)!;
-			return { control: id, label: c.label, action: acts[i]?.label, keys: c.keys, setting: c.setting, setting2: c.setting2 };
+			return { control: id, label: c.label, action: acts[i]?.label, keys: presetKeys(id), setting: c.setting, setting2: c.setting2 };
 		});
 		const labels = [...new Set(lines.map((l) => l.action).filter((l): l is string => !!l))];
-		const action = labels.length === 0 ? 'Action to verify' : labels.join(' / ');
-		const keys = [...new Set(lines.flatMap((l) => l.keys).filter((k): k is string => !!k))];
+		const action = labels.length === 0 ? 'Action to verify' : joinLabels(labels);
+		const keys = Object.fromEntries(
+			PRESETS.map((p) => [p.id, [...new Set(lines.flatMap((l) => l.keys[p.id]).filter((k): k is string => !!k))]]),
+		) as Record<PresetId, string[]>;
 		out.push({
 			id: `${mode}-${cluster.id}`,
 			mode,
@@ -216,7 +236,7 @@ function controlCallouts(mode: 'driving' | 'menu'): Callout[] {
 			status: first.status,
 			evidence: first.evidence,
 			keys,
-			keyGroups: keys.map((k) => [k]),
+			keyGroups: Object.fromEntries(PRESETS.map((p) => [p.id, keys[p.id].map((k) => [k])])) as Record<PresetId, string[][]>,
 			pad: [...new Set(cluster.controls.flatMap(padElementsOf))],
 			lines,
 		});
@@ -242,9 +262,9 @@ function settingsCallouts(): Callout[] {
 			action: s.label,
 			status: s.status as Status,
 			evidence: ui?.evidence ?? (s as { evidence: string }).evidence,
-			detail: s.detail,
-			keys: [...keys, ...(macKeys ?? [])],
-			keyGroups: [...keys.map((k) => [k]), ...(macKeys ? [macKeys] : [])],
+			detail: s.detail?.replace('{tabs}', generated.ui.tabs.join(', ')),
+			keys: samePerPreset([...keys, ...(macKeys ?? [])]),
+			keyGroups: samePerPreset([...keys.map((k) => [k]), ...(macKeys ? [macKeys] : [])]),
 			pad,
 			padChord: id === 'open',
 			lines: [],
@@ -258,16 +278,26 @@ export const CALLOUTS: Record<Mode, Callout[]> = {
 	settings: settingsCallouts(),
 };
 
-// Per key: its state in each mode, for the drawing's highlights.
+// Per key and preset: its state in each mode, for the drawing's highlights.
 export type KeyState = 'active' | 'unverified' | 'bound' | 'unused';
-export function keyStates(id: string): Record<Mode, KeyState> {
-	const bound = generated.controls.some((c) => c.keys.includes(id));
+export function keyStates(id: string, preset: PresetId): Record<Mode, KeyState> {
+	const bound = generated.controls.some((c) => presetKeys(c.id)[preset].includes(id));
 	const state = (mode: Mode): KeyState => {
-		const hit = CALLOUTS[mode].find((c) => c.keys.includes(id));
+		const hit = CALLOUTS[mode].find((c) => c.keys[preset].includes(id));
 		if (hit) return hit.status === 'unverified' ? 'unverified' : 'active';
 		return bound && mode !== 'settings' ? 'bound' : 'unused';
 	};
 	return { driving: state('driving'), menu: state('menu'), settings: state('settings') };
+}
+
+// The callouts that light a key, in every mode, as the drawing's data-callouts.
+export function calloutsOfKey(id: string, preset: PresetId): string {
+	const modes = Object.keys(CALLOUTS) as Mode[];
+	return modes
+		.flatMap((m) => CALLOUTS[m])
+		.filter((c) => c.keys[preset].includes(id))
+		.map((c) => c.id)
+		.join(' ');
 }
 
 export function padStates(element: string): Record<Mode, KeyState> {
@@ -279,15 +309,26 @@ export function padStates(element: string): Record<Mode, KeyState> {
 	return { driving: state('driving'), menu: state('menu'), settings: state('settings') };
 }
 
-export function controlsOfKey(id: string): { label: string; setting: string; slot: 1 | 2 }[] {
+export function controlsOfKey(id: string, preset: PresetId): { label: string; setting: string; slot: 1 | 2 }[] {
 	return generated.controls
-		.filter((c) => c.keys.includes(id))
-		.map((c) => (c.keys[0] === id ? { label: c.label, setting: c.setting, slot: 1 as const } : { label: c.label, setting: c.setting2, slot: 2 as const }));
+		.filter((c) => presetKeys(c.id)[preset].includes(id))
+		.map((c) =>
+			presetKeys(c.id)[preset][0] === id ? { label: c.label, setting: c.setting, slot: 1 as const } : { label: c.label, setting: c.setting2, slot: 2 as const },
+		);
 }
 
 // Controller models that passed a physical hand test, with its evidence.
 // Empty until one does; a listing is not an endorsement.
 export const TESTED_CONTROLLERS = (overlay as { testedControllers?: { model: string; date: string; evidence: string }[] }).testedControllers ?? [];
+
+// The default controller profile (pad_map.h): each Xbox 360 button and the
+// pad button, by position, that drives it.
+export const PAD_DEFAULT = generated.pad.buttons.map((b) => ({
+	control: controls.get(b.control)!.label,
+	// A stick's button is its press, not the stick itself.
+	xbox: b.sdl.endsWith('_STICK') ? `${PAD_NAMES[b.sdl]} press` : PAD_NAMES[b.sdl],
+	ps: b.sdl.endsWith('_STICK') ? `${PAD_NAMES_PS[b.sdl]} press (${b.sdl === 'LEFT_STICK' ? 'L3' : 'R3'})` : PAD_NAMES_PS[b.sdl],
+}));
 
 export const BINDING = overlay.binding as Record<string, { status: Status; evidence: string }>;
 export const SOURCE = generated.source;

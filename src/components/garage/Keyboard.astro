@@ -1,20 +1,14 @@
 ---
 // The 75% keyboard, drawn at build time from keyboard-75.ts and the controls
-// model. Each key carries its state per mode; CSS lights it for the current
-// mode, so the drawing is right without JS too. The SVG is an image to
+// model. Each key carries its state per mode in the Default preset; CSS lights
+// it for the current mode, so the drawing is right without JS too. The Garage's
+// script rewrites the states for the WASD and Arrows presets. The SVG is an image to
 // assistive tech: the callout list beside it is the accessible equivalent.
 import { KEYBOARD, KEYBOARD_HEIGHT, KEYBOARD_WIDTH } from '../../data/keyboard-75';
-import { CALLOUTS, keyStates, type Mode } from '../../lib/controls';
+import { calloutsOfKey, keyStates } from '../../lib/controls';
 
 const U = 60;
 const GAP = 5;
-const modes: Mode[] = ['driving', 'menu', 'settings'];
-const calloutsOf = (id: string) =>
-	modes
-		.flatMap((m) => CALLOUTS[m])
-		.filter((c) => c.keys.includes(id))
-		.map((c) => c.id)
-		.join(' ');
 ---
 
 <svg
@@ -23,7 +17,7 @@ const calloutsOf = (id: string) =>
 	data-full-viewbox={`0 0 ${KEYBOARD_WIDTH * U} ${KEYBOARD_HEIGHT * U}`}
 	data-unit={U}
 	role="img"
-	aria-label="A 75% Mac keyboard. ReCarbon's default keys are lit for the selected mode; the list beside it names each one."
+	aria-label="A 75% Mac keyboard. The selected preset's keys are lit for the selected mode; the list beside it names each one."
 	preserveAspectRatio="xMidYMid meet"
 >
 	<defs>
@@ -39,7 +33,7 @@ const calloutsOf = (id: string) =>
 			const h = U - GAP;
 			const x = k.x * U + GAP / 2;
 			const y = k.y * U + GAP / 2;
-			const s = keyStates(k.id);
+			const s = keyStates(k.id, 'default');
 			return (
 				<g
 					class="key"
@@ -48,7 +42,7 @@ const calloutsOf = (id: string) =>
 					data-driving={s.driving}
 					data-menu={s.menu}
 					data-settings={s.settings}
-					data-callouts={calloutsOf(k.id)}
+					data-callouts={calloutsOfKey(k.id, 'default')}
 				>
 					<rect class="cap" x={x} y={y} width={w} height={h} rx="7" />
 					{k.small ? (

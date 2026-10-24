@@ -1,60 +1,68 @@
 ---
 title: Controls
-description: ReCarbon's default keyboard and controller controls, in driving, the menus and the Settings overlay, with how each was verified. Rebinding with Settings > Controls and settings.toml.
+description: ReCarbon's keyboard presets (Default, WASD, Arrows) and default controller mapping, in driving, the menus and the Settings overlay, with how each was verified. Custom profiles are made in game.
 ---
 
 import ControlsTables from '../../../components/garage/ControlsTables.astro';
 import StatusBadge from '../../../components/StatusBadge.astro';
 
 The keyboard acts as an **Xbox 360 controller**: each of its 24 controls has two keys. The game
-sees the same controller whatever drives it. For the interactive view, open the
-**[Garage](../../garage/)**.
+sees the same controller whatever drives it. ReCarbon ships three built-in keyboard presets,
+**Default**, **WASD** and **Arrows**; the tables below show all three. For the interactive view,
+open the **[Garage](../../garage/)**.
 
 ## What the badges mean
 
-- <StatusBadge status="tested" /> pinned by ReCarbon's unit tests (`key_map_test`, `settings_keys_test`, `pad_map_test`).
-- <StatusBadge status="automated" /> seen in scripted or virtual-controller runs.
+- <StatusBadge status="tested" /> pinned by ReCarbon's unit tests (`key_map_test`, `settings_keys_test`, `profiles_test`, `pad_map_test`).
+- <StatusBadge status="automated" /> seen in scripted or virtual-controller runs, not on a physical controller.
 - <StatusBadge status="hand-verified" /> checked by a person in a hand test.
 - <StatusBadge status="source" /> read from ReCarbon's code or option text, not yet hand-tested.
 - <StatusBadge status="pending" /> expected from the option text, waiting for its hand test.
-- <StatusBadge status="unverified" /> the control is bound, but what it does in the game isn't known yet. Handbrake, Nitrous, Speedbreaker, Change Camera and Look Back are all **to verify**: they are expected on some of these controls, but which is which waits for the M7 controls test.
+- <StatusBadge status="unverified" /> the control is bound, but what it does in the game isn't known yet. Nitrous, Handbrake, Speedbreaker, gear shifts, Change Camera and Look Back are all **to verify**: nothing ties them to a control yet, and that waits for a hand test.
 - <StatusBadge status="not-mapped" /> ReCarbon doesn't read the input (back paddles, the Guide button).
 
-The **key → control** bindings below are all tested. The **game actions** in a race are pending
-until hand test 5 (M7), and a physical controller until the M5 controller test.
+The **key → control** bindings below are all tested, in every preset. Of the **game actions** in
+a race, Throttle, Brake and Steering were seen working in hand tests, on the Default keys; the
+rest wait for a hand test. The physical controller test is deferred: nothing on a real pad is
+verified.
 
 <ControlsTables headingLevel={2} />
 
-## Rebinding keys
+## Presets and profiles
 
-These are the **defaults**. To change them:
+- **Default** is the original layout. The arrow keys work the left stick (Left and Right steer)
+  and the D-pad at once, by design.
+- **WASD** drives with W A S D; the arrow keys are the D-pad.
+- **Arrows** drives with the arrow keys; W A S D are the D-pad.
+- In WASD and Arrows no key drives two controls, and the left stick's up and down have no key.
+  Everything else (Space, Backspace, Shift, Control, Q, E, Return, Escape, O K L ;, Z, C) is the
+  same in all three.
+
+The website shows these **built-in presets only**. **Custom profiles are configured in game:**
 
 1. Open Settings (F1, Fn+F1 or Cmd+,) and go to the **Controls** tab (Q / E).
-2. Pick a control's row. Left and right choose its first or second key.
-3. Press Space (or A) and then the new key. **Backspace** (or Y) clears the slot; **Delete** (or X)
-   resets the control to its defaults.
+2. The **Keyboard Profile** row switches profiles; the change takes effect at once.
+3. To rebind, pick a control's row (left and right choose its first or second key), press Space
+   (or A), then the new key. **Backspace** (or Y) clears the slot; **Delete** (or X) resets the
+   control. The built-in presets can't be changed: editing one makes a copy, such as
+   "WASD (custom)".
+4. Controller buttons are rebound on the **Controller** tab, which has its own **Controller
+   Profile** row. Only buttons can be rebound; the triggers, sticks and deadzones are fixed.
 
-Or edit the `[keys]` table of `settings.toml` (`~/Library/Application Support/ReCarbon/`). Names
-are the keys' physical positions, whatever the layout: `"w"`, `"left_shift"`, `"semicolon"`,
-`"keypad_1"`, or `"none"`. The second key of a control is `<name>_2`:
-
-```toml
-[keys]
-right_trigger = "w"
-right_trigger_2 = "up"      # a second key for the same control
-left_trigger = "s"
-left_trigger_2 = "down"
-```
+Profiles are saved in `~/Library/Application Support/ReCarbon/profiles/` (`keyboard.toml` and
+`controller.toml`). The active keyboard profile's keys are also kept in the `[keys]` table of
+`settings.toml`, so an older ReCarbon still finds them. Key names are physical positions,
+whatever the layout: `"w"`, `"left_shift"`, `"semicolon"`, `"keypad_1"`, or `"none"`.
 
 F1 opens Settings and can't be bound. Neither can Command, fn or the media keys.
-
-Controller rebinding, separate keyboard and controller profiles, and WASD and Arrows presets are
-**planned (M8)**, not available yet.
 
 ## Controller notes
 
 - Buttons are mapped **by position**: South, East, West, North are A, B, X, Y, so a PlayStation
-  pad's Cross is A.
+  pad's Cross is A. The Garage's Xbox / PlayStation switch changes only the names shown.
+- <StatusBadge status="automated" /> The default mapping and controller rebinding were checked
+  with SDL's virtual controller only. <StatusBadge status="pending" /> No physical controller has
+  been hand-tested (deferred), and controller rebinding hasn't been tried on hardware.
 - Sticks have a radial deadzone (8% by default) and the triggers their own (2%): Settings > Input.
 - **View (Back)** is held back for a moment while it might start the View + Menu chord that opens
   Settings.
