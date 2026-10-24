@@ -343,6 +343,11 @@
 	"achievements": [
 		{
 			"date": "2026-10-24",
+			"text": "This Progress page: milestone states checked against the roadmap, verified features, known gameplay issues, pending hand tests and recent work.",
+			"commits": []
+		},
+		{
+			"date": "2026-10-24",
 			"text": "Keyboard presets merged: WASD is now the built-in Default that a new player starts on, beside Arrows. A player on the former WASD preset keeps those keys as a custom profile.",
 			"commits": [
 				{
@@ -435,16 +440,6 @@
 				{
 					"sha": "585d8ab3f07fa717eed2b673b0f3afe5173de316",
 					"short": "585d8ab"
-				}
-			]
-		},
-		{
-			"date": "2026-10-24",
-			"text": "One atomic writer now saves both the settings and the input profiles; saving settings is unchanged.",
-			"commits": [
-				{
-					"sha": "265547705fe2369d1813867ef755bee9f0ddf357",
-					"short": "2655477"
 				}
 			]
 		}

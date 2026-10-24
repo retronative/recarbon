@@ -144,6 +144,7 @@ const HUMAN_TESTS = [
 // of these by its opening words; an unmatched one fails the run, so nothing
 // reaches the site unreviewed. The text shown is `text`.
 const ACHIEVEMENTS = [
+	{ starts: 'Public Progress page', text: 'This Progress page: milestone states checked against the roadmap, verified features, known gameplay issues, pending hand tests and recent work.' },
 	{ starts: 'Keyboard presets merged', text: 'Keyboard presets merged: WASD is now the built-in Default that a new player starts on, beside Arrows. A player on the former WASD preset keeps those keys as a custom profile.' },
 	{ starts: 'Boot alias "Yes" hang rechecked', text: 'A reported hang after creating a new profile at boot was rechecked on two Macs and didn\'t reproduce: the profile is saved and the main menu follows.' },
 	{ starts: 'Virtual-controller gameplay check', text: 'Change Camera, Look Back, gear shifts, Reverse and Pause seen working in a scripted Quick Race on a virtual controller. Nitrous, Handbrake and Speedbreaker are still to verify.' },
