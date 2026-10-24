@@ -8,7 +8,7 @@
 		},
 		"presets": {
 			"status": "tested",
-			"evidence": "tests/profiles_test.cpp: Default is the settings' defaults; WASD and Arrows are the approved tables in full, 22 keys each with no key on two controls; each preset's keys resolve to the intended controls only. Passed on the M1 worker at b5993d0."
+			"evidence": "tests/profiles_test.cpp: Default is the settings' defaults; WASD and Arrows are the approved tables in full, 22 keys each with no key on two controls; each preset's keys resolve to the intended controls only. Passed on the M1 worker at 8ad356e, and on the M5 at 3382981."
 		},
 		"controller": {
 			"status": "tested",

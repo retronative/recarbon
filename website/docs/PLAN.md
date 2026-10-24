@@ -1,6 +1,6 @@
 # ReCarbon website: design and implementation plan
 
-Research and planning only (2026-10-23, at commit 05607a2). Nothing here is built, installed,
+Research and planning only (2026-10-23, at commit 7d74acf). Nothing here is built, installed,
 published or pushed. Each phase below waits for the user's approval. This plan changes no
 milestone scope or criterion, and no runtime code.
 
@@ -79,7 +79,7 @@ passed through in `runtime/hid/input.cpp` `Update()`, with a radial stick deadzo
 | Keyboard in menus, `[keys]` rebinding surviving a restart | **Hand-verified** | M5 hand test 2 (ROADMAP M5) |
 | Keyboard controls in a race (each action) | **Pending** | M7 hand test 5, not yet run |
 | Physical controller | **Pending** | M5, an 8BitDo is deferred (ROADMAP, 2026-10-23) |
-| Virtual controller (menus, hot-unplug) | **Automated** | `RECARBON_VIRTUAL_PAD` runs; DETACH/ATTACH at 05607a2 |
+| Virtual controller (menus, hot-unplug) | **Automated** | `RECARBON_VIRTUAL_PAD` runs; DETACH/ATTACH at 7d74acf |
 | Back paddles / extra buttons | **Not mapped** | `pad_map.h` |
 
 The site never upgrades a badge without a commit that does it in `controls.json` (§2).
@@ -301,7 +301,7 @@ imagery of cars or cities posing as the game. It is static under reduced motion.
 
 | Section | Source in repo | Gap |
 |---|---|---|
-| Installation (disc image → `ReCarbon --install <iso> --dest`, app first-run installer) | `runtime/ui/installer_screen.cpp`, FEASIBILITY "Packaging and memory" (install check 417e0b8), `scripts/gen_install_manifest.py` | No end-user guide exists yet. M8 fresh-account install still pending |
+| Installation (disc image → `ReCarbon --install <iso> --dest`, app first-run installer) | `runtime/ui/installer_screen.cpp`, FEASIBILITY "Packaging and memory" (install check b063ffa), `scripts/gen_install_manifest.py` | No end-user guide exists yet. M8 fresh-account install still pending |
 | Download | `scripts/macos/make_app.py`, `check_app.py` | No release yet. Check 3 (`/opt/homebrew` strings in libvulkan) is a known issue. macOS 27+ only |
 | Supported hardware | FEASIBILITY (MacBook Air M5 measured; M1 Air run: 57 fps mean, CPU ~216%) | Other Macs untested; state "measured on" only |
 | Controls | §1, Garage | Game actions pending hand test 5 |

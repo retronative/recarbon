@@ -11,10 +11,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const DEFAULT_SRC = '../recarbon-worker/src/b5993d05a948dd2796bf8b8fe540f003598836ad';
-// Inside the ReCarbon repository (website/), the source is the parent folder.
-const IN_REPO = existsSync(resolve(ROOT, '../runtime/hid/key_map.h')) ? '..' : null;
-const SRC = resolve(ROOT, process.env.RECARBON_SRC ?? IN_REPO ?? DEFAULT_SRC);
+const SRC = resolve(ROOT, process.env.RECARBON_SRC ?? '..');
 const OUT = join(ROOT, 'src/content/docs/docs/licenses');
 const args = new Set(process.argv.slice(2));
 

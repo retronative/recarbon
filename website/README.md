@@ -27,9 +27,9 @@ Nothing about the controls or the settings is typed in by hand.
 files differ from the source**, or when the source no longer has a pattern the generator reads.
 The generator also fails if `pad_map.h` disagrees with `pad_map_test.cpp`'s baseline.
 
-The source is found at `RECARBON_SRC`, by default `../recarbon-worker/src/<commit>` (see the
-scripts). Without a source tree (a site-only clone), the check warns and passes; add `--strict`
-to make it fail instead.
+The source is the ReCarbon repository this site lives in (`website/`'s parent folder), or
+`RECARBON_SRC` for another checkout. Without a source tree (a site-only clone), the check warns
+and passes; add `--strict` to make it fail instead.
 
 What each control **does in the game** is hand-written in `src/data/controls.actions.json`, with
 a status and its evidence for every action. The build fails on a control id the generated data

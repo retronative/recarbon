@@ -5,9 +5,8 @@
 //   node scripts/gen-controls.mjs           write src/data/*.generated.json
 //   node scripts/gen-controls.mjs --check   fail if the committed JSON differs
 //
-// The source tree is read-only. Point RECARBON_SRC at a checkout of ReCarbon;
-// inside the ReCarbon repository (website/) it is the parent folder, and
-// otherwise the sibling worker checkout this site was built against.
+// The source tree is read-only: the ReCarbon repository this site lives in
+// (website/'s parent folder), or RECARBON_SRC pointing at another checkout.
 // With --check and no source tree present, it warns and passes, unless
 // --strict is given (a site-only clone can't see ReCarbon's private source).
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -15,10 +14,7 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const DEFAULT_SRC = '../recarbon-worker/src/b5993d05a948dd2796bf8b8fe540f003598836ad';
-// Inside the ReCarbon repository (website/), the source is the parent folder.
-const IN_REPO = existsSync(resolve(ROOT, '../runtime/hid/key_map.h')) ? '..' : null;
-const SRC = resolve(ROOT, process.env.RECARBON_SRC ?? IN_REPO ?? DEFAULT_SRC);
+const SRC = resolve(ROOT, process.env.RECARBON_SRC ?? '..');
 const OUT = {
 	controls: join(ROOT, 'src/data/controls.generated.json'),
 	settings: join(ROOT, 'src/data/settings.generated.json'),
