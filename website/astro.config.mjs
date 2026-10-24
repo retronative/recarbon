@@ -37,6 +37,9 @@ export default defineConfig({
 			title: 'ReCarbon',
 			// Starlight's Markdown features (asides, heading links) for docs outside src/content/docs/.
 			markdown: { processedDirs: ['../docs'] },
+			// Long code lines wrap, so no code block scrolls sideways (a scrolling block can't be
+			// reached with the keyboard).
+			expressiveCode: { defaultProps: { wrap: true } },
 			description: 'ReCarbon: an unofficial native port of Need for Speed: Carbon (Xbox 360) to Apple Silicon Macs. Unofficial fan project.',
 			// The title text next to it names the link (kept for screen readers when hidden), so the mark is decorative.
 			logo: { src: './src/assets/recarbon-mark.svg', alt: '' },

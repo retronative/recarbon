@@ -14,7 +14,7 @@ const { Content, headings } = await render(entry);
 
 <StarlightPage frontmatter={{ title: entry.data.title, description: entry.data.description }} headings={entry.data.text ? [] : headings}>
 	<p class="source">From <code>{entry.data.source}</code> in ReCarbon's repository.</p>
-	{entry.data.text ? <pre class="license-text">{entry.data.text}</pre> : <Content />}
+	{entry.data.text ? <pre class="license-text">{entry.data.text}</pre> : <div class="notices"><Content /></div>}
 </StarlightPage>
 
 <style>
@@ -32,5 +32,15 @@ const { Content, headings } = await render(entry);
 		border: 1px solid var(--sl-color-gray-5);
 		border-radius: 0.5rem;
 		background: var(--sl-color-gray-6);
+	}
+	/* The notices' tables wrap their long names and paths instead of widening the page. */
+	.notices :global(table) {
+		display: table;
+		table-layout: fixed;
+		width: 100%;
+	}
+	.notices :global(td),
+	.notices :global(th) {
+		overflow-wrap: anywhere;
 	}
 </style>
