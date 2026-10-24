@@ -3,9 +3,10 @@ title: Troubleshooting
 description: Where ReCarbon's logs are, how to save a bug report, and what to check first.
 ---
 
-:::note[Work in progress]
-This page grows with the alpha. Problems already known are on [Known issues](../known-issues/).
-:::
+> [!NOTE]
+> **Work in progress**
+>
+> This page grows with the alpha. Problems already known are on [Known issues](known-issues.md).
 
 ## Save a bug report
 
@@ -34,12 +35,12 @@ time. The newest five sessions are kept.
 Run `ReCarbon --where` in Terminal: it prints where the game install was found and the data
 folders. If you moved the install, ReCarbon looks in the default folder,
 `~/Library/Application Support/ReCarbon/game`. To check an image or a folder without copying it:
-`ReCarbon --verify <image or folder>`. See [Installation](../installation/).
+`ReCarbon --verify <image or folder>`. See [Installation](installation.md).
 
 ## Stutters
 
 Brief stalls of up to about a second are a known issue of the alpha: see
-[Known issues](../known-issues/). To see the frame rate, turn on **Settings > Advanced >
+[Known issues](known-issues.md). To see the frame rate, turn on **Settings > Advanced >
 Performance Overlay**.
 
 ## Settings went wrong

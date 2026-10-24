@@ -26,6 +26,7 @@ Until ReCarbon's first tagged release there is one docs version, labelled by
    // starlight({ plugins: [starlightVersions({ versions: [{ slug: '0.1' }] })], ... })
    ```
    Follow the plugin's own documentation for the exact archive step: it snapshots the current
-   docs as that version and adds a version switcher. The docs here live under the `docs/` slug
-   (`src/content/docs/docs/`), so check where it puts the archive before committing it.
+   docs as that version and adds a version switcher. The docs here are the repository's `docs/`,
+   loaded under the `docs/` slug (`src/content.config.ts`), not Starlight's default folder, so
+   check the plugin supports that and where it puts the archive before committing it.
 3. Then update the current docs for the new release, and repeat step 1 above.

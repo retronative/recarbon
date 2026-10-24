@@ -3,14 +3,15 @@ title: Developers
 description: Build ReCarbon from source on an Apple Silicon Mac, with your own disc, and run its tests.
 ---
 
-import ViewSource from '../../../components/ViewSource.astro';
+import ViewSource from '@site/components/ViewSource.astro';
 
 <ViewSource />
 
-:::caution[Development builds]
-A build from source links Homebrew's libraries and runs only on the macOS it was built for, or
-newer. You need your own disc, extracted so that `game/files/default.xex` exists.
-:::
+> [!WARNING]
+> **Development builds**
+>
+> A build from source links Homebrew's libraries and runs only on the macOS it was built for, or
+> newer. You need your own disc, extracted so that `game/files/default.xex` exists.
 
 ## Requirements
 
@@ -50,7 +51,7 @@ peak. The recompiler produces 72,864 functions in 289 files (181 MB).
    SpeedBreaker: the Xbox 360 kernel and XAM calls, memory and threads, the Xenos GPU on Vulkan
    (MoltenVK on Metal), XMA audio (FFmpeg), and input (SDL3).
 3. Input runs in three layers: device input → binding resolution → a virtual Xbox 360
-   controller. Mappings are data, so the site's [controls](../controls/) are generated from
+   controller. Mappings are data, so the site's [controls](controls.mdx) are generated from
    the same tables.
 
 ## Useful environment variables
@@ -61,7 +62,7 @@ peak. The recompiler produces 72,864 functions in 289 files (181 MB).
 | `RECARBON_VIRTUAL_PAD` | An SDL virtual controller for tests without a person |
 | `RECARBON_INPUT_LOG=1` | The left stick and triggers once a second, raw and as the game gets them |
 
-Each Settings option also has one: see [Settings](../settings/).
+Each Settings option also has one: see [Settings](settings.mdx).
 
 ## Contributing
 

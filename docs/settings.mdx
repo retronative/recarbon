@@ -3,7 +3,7 @@ title: Settings
 description: Every option in ReCarbon's Settings overlay, with its default and its settings.toml name. Generated from ReCarbon's source.
 ---
 
-import SettingsReference from '../../../components/SettingsReference.astro';
+import SettingsReference from '@site/components/SettingsReference.astro';
 
 Press **F1** to open ReCarbon's Settings at any time: in the game, in menus, during a race. On a
 Mac keyboard F1 is the brightness key, so press **Fn+F1**, or **Cmd+,**. On a controller, press
@@ -17,9 +17,10 @@ Changes apply at once unless marked *restart*. They are saved to `settings.toml`
 `~/Library/Application Support/ReCarbon/`. An environment variable (for example
 `RECARBON_AA=0`) wins over the file for that run, and the menu shows it.
 
-:::note[Generated]
-This page is generated from the option table in ReCarbon's `runtime/user/settings.cpp`, as the
-macOS build shows it. Options hidden on macOS are left out.
-:::
+> [!NOTE]
+> **Generated**
+>
+> This page is generated from the option table in ReCarbon's `runtime/user/settings.cpp`, as the
+> macOS build shows it. Options hidden on macOS are left out.
 
 <SettingsReference />

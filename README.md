@@ -64,6 +64,7 @@ rewrite SpeedBreaker. There is no Wine, CrossOver or runtime CPU emulation.
 
 ## Documents
 
+- [docs/](docs/README.md): the player documentation (also the website's docs pages)
 - [reference/FEASIBILITY.md](reference/FEASIBILITY.md): disc and executable analysis, SpeedBreaker audit, risks, verdict
 - [reference/ARCHITECTURE.md](reference/ARCHITECTURE.md): proposed architecture and project naming
 - [reference/ROADMAP.md](reference/ROADMAP.md): milestones and acceptance criteria

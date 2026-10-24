@@ -62,7 +62,13 @@ Docs Markdown links are relative (`../faq/`), so they work under any base path. 
 - `src/lib/controls.ts`: joins the generated data and the actions overlay; validates both.
 - `src/components/starlight/`: Starlight overrides (header, footer, banner, mobile menu).
 - `src/styles/tokens.css`: the palette and motion tokens, shared by everything.
-- `src/content/docs/docs/`: the documentation.
+- `../docs/` (the repository's `docs/`): the documentation, one source for GitHub and the site.
+  It is loaded from there (`src/content.config.ts`); `src/lib/docs-markdown.mjs` turns its
+  GitHub-style file links and alerts into the site's URLs and asides. After changing that plugin,
+  clear Astro's content cache (`rm -rf .astro node_modules/.astro`): cached `.md` pages aren't
+  rendered again otherwise.
+- `src/lib/licenses.mjs`, `src/pages/docs/licenses/`: the license pages, built from the
+  repository's license files.
 
 ## Rules
 

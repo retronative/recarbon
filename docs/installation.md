@@ -6,10 +6,11 @@ description: Install Need for Speed Carbon into ReCarbon from your own Xbox 360 
 ReCarbon installs the game **from your own disc image**: it copies the files it needs and checks
 each one against a manifest of hashes. Nothing is downloaded.
 
-:::caution[Alpha]
-There is no public release yet ([Download](../download/)). These steps describe the current
-build. A clean install on a fresh macOS user account is still to be tested (M8).
-:::
+> [!WARNING]
+> **Alpha**
+>
+> There is no public release yet ([Download](download.md)). These steps describe the current
+> build. A clean install on a fresh macOS user account is still to be tested (M8).
 
 ## 1. Make a disc image
 
@@ -54,7 +55,7 @@ started.
 ## 3. Play
 
 Start ReCarbon. Press **F1** (Fn+F1 on a Mac keyboard, or Cmd+,) for ReCarbon's Settings at any
-time; see [Controls](../controls/) and the [Garage](../../garage/).
+time; see [Controls](controls.mdx) and the [Garage](https://retronative.github.io/recarbon/garage/).
 
 ## Where ReCarbon keeps things
 

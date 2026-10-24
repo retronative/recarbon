@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
   # push:
   #   branches: [main]
-  #   paths: ['website/**', 'runtime/**', 'tests/pad_map_test.cpp', 'LICENSES/**', 'NOTICE']
+  #   paths: ['website/**', 'docs/**', 'runtime/**', 'tests/pad_map_test.cpp', 'LICENSES/**', 'NOTICE', 'COPYING', 'THIRD_PARTY_NOTICES.md']
 
 permissions:
   contents: read

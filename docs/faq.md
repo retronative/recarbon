@@ -13,7 +13,7 @@ trademarks of Electronic Arts Inc. and are used only to describe the game.
 
 From **your own Xbox 360 disc**. ReCarbon includes no game files, code, assets or executables,
 and no code generated from them. Please don't ask for, or share, game files or disc images. See
-[Installation](../installation/).
+[Installation](installation.md).
 
 ## Why isn't there a download of the game?
 
@@ -30,7 +30,7 @@ controllers. There is no Wine, CrossOver or runtime CPU emulation.
 
 [SpeedBreaker](https://github.com/SpeedBreakerProject/speedbreaker), the static recompilation of
 *Need for Speed: Most Wanted* (2005) by project(u), which itself follows Unleashed Recompiled. It
-uses XenonRecomp, and Xenia's research on the Xbox 360. See [Credits](../credits/).
+uses XenonRecomp, and Xenia's research on the Xbox 360. See [Credits](credits.md).
 
 ## Does it run on Intel Macs, Windows or Linux?
 
@@ -39,9 +39,9 @@ ReCarbon targets **Apple Silicon Macs**. Nothing else is planned or tested.
 ## Can I use a controller?
 
 Yes, through SDL3, but **no physical controller has been tested yet**. See the
-[Garage](../../garage/) for the default mapping and what each control is known to do.
+[Garage](https://retronative.github.io/recarbon/garage/) for the default mapping and what each control is known to do.
 
 ## Is it free?
 
 Yes. ReCarbon is free software under the GNU General Public License, version 3 or later. See
-[Licenses](../licenses/notice/).
+[Licenses](../NOTICE).

@@ -9,10 +9,11 @@ arm64. A runtime, adapted from [SpeedBreaker](https://github.com/SpeedBreakerPro
 stands in for the console's kernel, GPU (Vulkan on Metal through MoltenVK), XMA audio and
 controllers (SDL3). There is no emulator, no Wine or CrossOver, and no runtime CPU emulation.
 
-:::caution[Alpha]
-ReCarbon has **no public release yet**. These pages describe the current development build. Read
-[Known issues](known-issues/) before anything else.
-:::
+> [!WARNING]
+> **Alpha**
+>
+> ReCarbon has **no public release yet**. These pages describe the current development build. Read
+> [Known issues](known-issues.md) before anything else.
 
 ## Where things stand
 
@@ -29,11 +30,11 @@ Source: ReCarbon's `reference/ROADMAP.md`.
 
 ## Start here
 
-- [Download](download/): what a release will contain, and what you need.
-- [Installation](installation/): installing the game from your own disc image.
-- [Controls](controls/) and the interactive [Garage](../garage/).
-- [Settings](settings/): every option of the in-game Settings overlay (F1).
-- [Troubleshooting](troubleshooting/): logs and bug reports.
+- [Download](download.md): what a release will contain, and what you need.
+- [Installation](installation.md): installing the game from your own disc image.
+- [Controls](controls.mdx) and the interactive [Garage](https://retronative.github.io/recarbon/garage/).
+- [Settings](settings.mdx): every option of the in-game Settings overlay (F1).
+- [Troubleshooting](troubleshooting.md): logs and bug reports.
 
 You need your **own legally obtained copy** of the Xbox 360 disc. ReCarbon contains no game code,
 assets or executables, and this site never links to game files.

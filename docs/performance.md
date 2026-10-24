@@ -17,12 +17,12 @@ racing, from frame-time logs. That hasn't been measured yet.
 
 ## Known stalls
 
-Short stalls still happen: see [Known issues](../known-issues/). They are recorded honestly,
+Short stalls still happen: see [Known issues](known-issues.md). They are recorded honestly,
 not cut out of measurements.
 
 ## Settings that affect performance
 
-All in Settings (F1); see [Settings](../settings/):
+All in Settings (F1); see [Settings](settings.mdx):
 
 - **Internal Resolution:** the 3D scene's resolution. 1x is the console's 720p.
 - **Frame Rate:** 60, 30, or Auto (60, or 30 while the device is hot or can't hold 60).

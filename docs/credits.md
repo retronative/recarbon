@@ -40,7 +40,7 @@ SpeedBreaker keep its attribution; changes are noted in each file.
 SDL3 (with HIDAPI and yuv2rgb), glslang, SPIRV-Tools, MoltenVK (with SPIRV-Cross and cereal), the
 Vulkan Loader (with cJSON), Vulkan-Headers and SPIRV-Headers.
 
-The full texts are on the [Licenses](../licenses/notice/) pages, taken from ReCarbon's
+The full texts are on the [Licenses](../NOTICE) pages, taken from ReCarbon's
 `LICENSES/` folder. Source: ReCarbon's `THIRD_PARTY_NOTICES.md`.
 
 ## Source of the LGPL parts
