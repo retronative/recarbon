@@ -160,7 +160,8 @@ const CLUSTERS: { id: string; title: string; glyph: string; ps: [string, string]
 	{ id: 'dpad', title: 'D-pad', glyph: 'D', ps: ['D-pad', 'D'], controls: ['DpadUp', 'DpadDown', 'DpadLeft', 'DpadRight'] },
 	{ id: 'start', title: 'Menu (Start)', glyph: '≡', ps: ['Options (Start)', '≡'], controls: ['Start'] },
 	{ id: 'back', title: 'View (Back)', glyph: '⧉', ps: ['Create (Back)', '⧉'], controls: ['Back'] },
-	{ id: 'rs', title: 'Right stick', glyph: 'RS', ps: ['Right stick', 'RS'], controls: ['RightStickUp', 'RightStickDown', 'RightStickLeft', 'RightStickRight'] },
+	{ id: 'rsy', title: 'Right stick ↑ ↓', glyph: 'RS', ps: ['Right stick ↑ ↓', 'RS'], controls: ['RightStickUp', 'RightStickDown'] },
+	{ id: 'rsx', title: 'Right stick ← →', glyph: 'RS', ps: ['Right stick ← →', 'RS'], controls: ['RightStickLeft', 'RightStickRight'] },
 	{ id: 'lsc', title: 'Left stick click', glyph: 'L3', ps: ['Left stick press (L3)', 'L3'], controls: ['LeftStickClick'] },
 	{ id: 'rsc', title: 'Right stick click', glyph: 'R3', ps: ['Right stick press (R3)', 'R3'], controls: ['RightStickClick'] },
 ];

@@ -18,12 +18,14 @@ open the **[Garage](https://retronative.github.io/recarbon/garage/)**.
 - <StatusBadge status="hand-verified" /> checked by a person in a hand test.
 - <StatusBadge status="source" /> read from ReCarbon's code or option text, not yet hand-tested.
 - <StatusBadge status="pending" /> expected from the option text, waiting for its hand test.
-- <StatusBadge status="unverified" /> the control is bound, but what it does in the game isn't known yet. Nitrous, Handbrake, Speedbreaker, gear shifts, Change Camera and Look Back are all **to verify**: nothing ties them to a control yet, and that waits for a hand test.
+- <StatusBadge status="unverified" /> the control is bound, but what it does in the game isn't known yet. Nitrous, Handbrake and Speedbreaker are still **to verify**: nothing ties them to a control yet, and that waits for a hand test.
 - <StatusBadge status="not-mapped" /> ReCarbon doesn't read the input (back paddles, the Guide button).
 
 The **key → control** bindings below are all tested, in every preset. Of the **game actions** in
-a race, Throttle, Brake and Steering were seen working in hand tests, on the Default keys; the
-rest wait for a hand test. The physical controller test is deferred: nothing on a real pad is
+a race, Throttle, Brake and Steering were seen working in hand tests, on the Default keys. Change
+Camera (RB), Look Back (LB), Gear Up and Gear Down (the right stick, with a manual gearbox),
+Reverse (the Left Trigger at a standstill) and Pause (Start) were seen with SDL's virtual
+controller in a scripted Quick Race (automated), not yet by hand. The rest wait for a hand test. The physical controller test is deferred: nothing on a real pad is
 verified.
 
 <ControlsTables headingLevel={2} />

@@ -16,7 +16,7 @@ From ReCarbon's `reference/ROADMAP.md` (M7, "Known issues for the alpha"). Each 
 
 ## Still to be tested
 
-- Controls on a controller and on the keyboard in a race: Throttle, Brake / Reverse and Steering, and where Handbrake, Nitrous, Speedbreaker, Change Camera and Look Back are.
+- Controls on a controller and on the keyboard in a race, by hand: Throttle, Brake / Reverse and Steering; Change Camera, Look Back, gear shifts and Pause (so far seen only with the virtual controller); and where Handbrake, Nitrous and Speedbreaker are.
 - Vehicle physics against the Xbox 360 version.
 - Frame pacing over 10 minutes of racing.
 - Audio and picture during racing.
