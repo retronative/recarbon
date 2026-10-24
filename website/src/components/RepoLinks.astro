@@ -1,10 +1,9 @@
 ---
 // The footer's source links: repository and issues once the repository is
-// public (site.repo), a quiet note until then; and RetroNative's site. No
-// releases link: ReCarbon publishes no downloads.
+// public (site.repo), a quiet note until then. No releases link: ReCarbon
+// publishes no downloads. (RetroNative's link is OrgCredit, beside it.)
 import GitHubIcon from './GitHubIcon.astro';
 import { repo } from '../lib/repo';
-import { site } from '../site.config';
 ---
 
 {
@@ -14,7 +13,6 @@ import { site } from '../site.config';
 				<GitHubIcon size={16} /> Repository
 			</a>
 			<a href={repo.issues}>Issues</a>
-			<a href={site.orgUrl}>{site.org}</a>
 		</nav>
 	) : (
 		<p class="repo-soon">

@@ -3,6 +3,9 @@ title: Credits
 description: The projects and people ReCarbon is built on.
 ---
 
+ReCarbon is a **[RetroNative](https://retronative.github.io/)** project, one of the organization's
+native game ports.
+
 ReCarbon is derived from **[SpeedBreaker](https://github.com/SpeedBreakerProject/speedbreaker)**,
 Copyright (C) 2026 project(u) and SpeedBreaker contributors (GPL-3.0-or-later). Files taken from
 SpeedBreaker keep its attribution; changes are noted in each file.

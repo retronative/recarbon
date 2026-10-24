@@ -8,6 +8,8 @@ import SiteNav from '../components/SiteNav.astro';
 import VersionChip from '../components/VersionChip.astro';
 import Disclaimer from '../components/Disclaimer.astro';
 import RepoLinks from '../components/RepoLinks.astro';
+import ByOrg from '../components/ByOrg.astro';
+import OrgCredit from '../components/OrgCredit.astro';
 import mark from '../assets/recarbon-mark.svg?url';
 import { site } from '../site.config';
 import { url } from '../lib/url';
@@ -43,6 +45,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 				<img src={mark} alt="" width="48" height="30" />
 				<span>{site.name}</span>
 			</a>
+			<ByOrg />
 			<VersionChip />
 			<nav aria-label="Main" class="hud-nav">
 				<SiteNav />
@@ -68,6 +71,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 					<a href={url('docs/licenses/')}>Licenses</a>
 				</nav>
 				<RepoLinks />
+				<OrgCredit />
 				<p class="gpl">ReCarbon is free software under the GNU GPL, version 3 or later.</p>
 				<Disclaimer />
 			</div>

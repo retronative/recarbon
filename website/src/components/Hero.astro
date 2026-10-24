@@ -254,7 +254,7 @@ const particles = [...studs, ...dust].map((p) => {
 	<div class="content wrap">
 		<p class="chips">
 			<span class="chip chip--fan">Unofficial fan port</span>
-			<a class="chip" href={site.orgUrl}>{site.org}</a>
+			<span class="chip">{site.org}</span>
 		</p>
 		<h1 id="hero-title" class="title">
 			<span class="wordmark display"><span class="re">Re</span>Carbon</span>
@@ -661,12 +661,6 @@ const particles = [...studs, ...dust].map((p) => {
 	.soon a {
 		color: inherit;
 		text-underline-offset: 0.2em;
-	}
-	a.chip {
-		text-decoration: none;
-	}
-	a.chip:hover {
-		border-color: var(--rn-text);
 	}
 	.reqs {
 		display: flex;

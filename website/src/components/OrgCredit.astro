@@ -1,0 +1,18 @@
+---
+// The footer's credit line: ReCarbon is a RetroNative project.
+import { site } from '../site.config';
+---
+
+<p class="org-credit">A <a href={site.orgUrl}>{site.org}</a> project.</p>
+
+<style>
+	.org-credit {
+		margin: 0;
+		font-size: 0.85rem;
+		color: var(--rn-muted);
+	}
+	.org-credit a {
+		color: var(--rn-text);
+		text-underline-offset: 0.2em;
+	}
+</style>

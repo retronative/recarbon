@@ -1,0 +1,34 @@
+---
+// "by RetroNative" next to the ReCarbon logo, in both headers: the project's
+// organization, linked quietly. Not on a phone, where it would crowd the logo;
+// the footer's credit links it there.
+import { site } from '../site.config';
+---
+
+<a class="by-org" href={site.orgUrl}>by {site.org}</a>
+
+<style>
+	.by-org {
+		display: inline-flex;
+		align-items: center;
+		min-height: 24px; /* WCAG 2.5.8 target size */
+		padding-inline: 0.25rem;
+		margin-inline-start: 0.25rem;
+		font-family: var(--rn-font-mono);
+		font-size: 0.7rem;
+		letter-spacing: 0.08em;
+		white-space: nowrap;
+		color: var(--rn-muted);
+		text-decoration: none;
+	}
+	@media (max-width: 30rem) {
+		.by-org {
+			display: none;
+		}
+	}
+	.by-org:hover {
+		color: var(--rn-text);
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+	}
+</style>

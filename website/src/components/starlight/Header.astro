@@ -4,11 +4,13 @@ import Search from '@astrojs/starlight/components/Search.astro';
 import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
 import SiteNav from '../SiteNav.astro';
 import VersionChip from '../VersionChip.astro';
+import ByOrg from '../ByOrg.astro';
 ---
 
 <div class="hud">
 	<div class="title-wrapper">
 		<SiteTitle />
+		<ByOrg />
 		<VersionChip />
 	</div>
 	<div class="search print:hidden">
