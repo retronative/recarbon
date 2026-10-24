@@ -331,5 +331,6 @@ export const PAD_DEFAULT = generated.pad.buttons.map((b) => ({
 }));
 
 export const BINDING = overlay.binding as Record<string, { status: Status; evidence: string }>;
-export const SOURCE = generated.source;
+// The commit is null when the source is this repository (website/'s parent).
+export const SOURCE = generated.source as { commit: string | null; files: string[] };
 export const UI = generated.ui;
