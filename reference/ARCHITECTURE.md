@@ -171,13 +171,13 @@ M8 adds, on top of the binding layer and the existing rebinding:
 - reset to default;
 - migration of `[keys]` into the keyboard profile.
 
-## 4. Legal / hygiene
+## 4. Licensing and repository hygiene
 - The project is GPL-3.0-or-later, because the runtime is derived from SpeedBreaker and
   Unleashed Recompiled. Keep `COPYING`, `NOTICE`, `THIRD_PARTY_NOTICES.md` and `LICENSES/`.
-  Publish LGPL sources for FFmpeg.
-- No game code, data or generated code in git. The installer verifies the player's own disc.
-  The runtime decrypts and decompresses the player's own XEX with XenonRecomp's loader at
-  launch, as SpeedBreaker does.
+  A binary release must offer the LGPL sources (FFmpeg, libmspack).
+- No game code, data, decrypted images or generated code in git. The installer verifies the
+  player's own disc. The runtime decrypts and decompresses the player's own XEX with
+  XenonRecomp's loader at launch, as SpeedBreaker does.
 
 ## Appendix — if we target the original Xbox disc instead
 
