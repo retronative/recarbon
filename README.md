@@ -51,14 +51,14 @@ See [reference/FEASIBILITY.md](reference/FEASIBILITY.md) and
 | App / executable | `ReCarbon.app` (`scripts/macos/make_app.py`; a build against `scripts/macos/build_deps.sh`'s libraries passes `check_app`; no release published) / `ReCarbon` |
 | Bundle ID | `org.retronative.recarbon` |
 
-## How it will work
+## How it works
 
-ReCarbon is planned as a static recompilation, not an emulator. XenonRecomp translates the
+ReCarbon is a static recompilation, not an emulator. XenonRecomp translates the
 game's PowerPC code into C++ ahead of time, and that C++ compiles to native arm64. A runtime
 stands in for the Xbox 360's kernel, GPU (Vulkan on Metal through MoltenVK), XMA audio and
 controllers (SDL3).
 
-The plan builds on [SpeedBreaker](https://github.com/SpeedBreakerProject/speedbreaker), the
+It builds on [SpeedBreaker](https://github.com/SpeedBreakerProject/speedbreaker), the
 static recompilation of *Need for Speed: Most Wanted* (2005) by project(u). It does not
 rewrite SpeedBreaker. There is no Wine, CrossOver or runtime CPU emulation.
 
@@ -72,7 +72,7 @@ rewrite SpeedBreaker. There is no Wine, CrossOver or runtime CPU emulation.
 - `reference/analysis/xbeinfo.py`: reads the header of an original-Xbox executable (XBE)
 - [website/](website/README.md): the project website (Astro); not deployed
 
-## Building (development only, not playable)
+## Building from source
 
 You need macOS on Apple Silicon and Homebrew, plus your own disc extracted so that
 `game/files/default.xex` exists:
@@ -94,6 +94,17 @@ cmake -S . -B build/main -G Ninja -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm/bin/clang \
   -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++
 ninja -C build/main ReCarbon
+```
+
+Then install the game from your disc image (`build/main/runtime/ReCarbon --install <image.iso>`):
+see [docs/installation.md](docs/installation.md) and [docs/developers.mdx](docs/developers.mdx).
+
+To build the unit tests too, configure with `-DRECARBON_TESTS=ON` (needs `scripts/setup_tools.sh`
+first, like the game), then:
+
+```sh
+ninja -C build/main
+ctest --test-dir build/main
 ```
 
 The build links Homebrew's libraries, whose bottles are built for the macOS they were made on.

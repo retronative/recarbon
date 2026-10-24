@@ -20,9 +20,8 @@ description: ReCarbon has no public release yet. What a release will contain, an
 ## What you will need
 
 - An Apple Silicon Mac. See [Supported hardware](hardware.md) for what has been measured.
-- **macOS 27 or newer** for the current builds: they link libraries built for macOS 27.0. A
-  build for older macOS versions needs those libraries built from source, which is planned
-  (M8, packaging).
+- **macOS 27 or newer**: the release target (an M8 decision). The app's libraries are built from
+  source for it.
 - Your own Xbox 360 disc of *Need for Speed: Carbon*, as a disc image (`.iso`) or an extracted
   folder.
 - About 5.3 GB of disk space for the installed game (78 files in the install check).

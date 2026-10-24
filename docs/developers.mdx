@@ -37,6 +37,17 @@ cmake -S . -B build/main -G Ninja -DCMAKE_BUILD_TYPE=Release \
 ninja -C build/main ReCarbon
 ```
 
+Then install the game from your disc image into it (`build/main/runtime/ReCarbon --install
+<image.iso>`): see [Installation](installation.md).
+
+To build the unit tests too, configure with `-DRECARBON_TESTS=ON` (needs `scripts/setup_tools.sh`
+first, like the game), then:
+
+```sh
+ninja -C build/main
+ctest --test-dir build/main
+```
+
 The macOS deployment target defaults to your own macOS (`MACOSX_DEPLOYMENT_TARGET` when set). To
 choose another, set `MACOSX_DEPLOYMENT_TARGET` for both `setup_tools.sh` and the first `cmake`
 run. `tools/`, `game/`, `ppc/` and `build/` are git-ignored: **never commit or share them**.

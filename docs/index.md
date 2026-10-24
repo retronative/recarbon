@@ -21,10 +21,10 @@ controllers (SDL3). There is no emulator, no Wine or CrossOver, and no runtime C
 |---|---|---|
 | M0–M2 | Disc check, full recompilation (72,864 functions, 0 errors), native arm64 build | Done (2026-10-22) |
 | M3–M4 | Boot, GPU bring-up, first frames, movies | Passed (2026-10-22) |
-| M5 | Audio, movies, input | In progress: keyboard hand test passed; physical controller deferred |
-| M6 | Profile, saves, free-roam stability | Every criterion has evidence; closing is up to the maintainer |
+| M5 | Audio, movies, input | Accepted (2026-10-23), with open limitations; physical controller deferred |
+| M6 | Profile, saves, free-roam stability | Open: every criterion has evidence; the written new-profile route (a hand test) is pending |
 | M7 | Playable racing | In progress: a career race finished by hand; controls, physics and 10-minute frame pacing pending |
-| M8 | Polish and distribution | Packaging work started early; not done |
+| M8 | Polish and distribution | In progress: release packaging and keyboard presets done; a clean install on a new account and some hand tests pending |
 
 Source: ReCarbon's `reference/ROADMAP.md`.
 
