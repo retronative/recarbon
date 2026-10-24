@@ -67,7 +67,8 @@ and no milestone scope or criterion changes. ROADMAP M8 is the scope; this says 
     `THIRD_PARTY_NOTICES.md` with its text in `LICENSES/`.
   - glslang's GPL-3.0 parts are compatible.
   - Source builds add no new component.
-  - The LGPL source obligation for binaries (FFmpeg, libmspack) applies to any binary release.
+  - The LGPL source obligation (FFmpeg, libmspack) applies to any binary release; none is
+    published.
 - **Recommendation:** pin the versions in use now (column 2), the ones every ReCarbon test ran
   against, rather than SpeedBreaker's older ones.
   - Take each tarball from its project's official release URL.

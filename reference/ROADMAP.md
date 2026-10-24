@@ -282,7 +282,8 @@ customization. The controls criterion is judged on the default mappings.
     virtual-controller and hot-unplug tests pass, but they don't show physical compatibility.
   - Release packaging: resolved for a build against `scripts/macos/build_deps.sh`'s libraries,
     which `check_app` passes (M8, d780e34). Development builds still link Homebrew's libraries,
-    and no release is published (the LGPL source obligations apply to any binary).
+    and no release is published (the LGPL source offer is needed before any binary is
+    distributed).
   - Key labels on a non-English keyboard layout: under Myanmar (or another non-Latin layout)
     Settings > Controls draws letter keys as '?' (U+FFFD), because the menu's font lacks the
     script. Binding such a key is refused safely and nothing is saved (verified, 4a68b32), but
@@ -295,6 +296,9 @@ customization. The controls criterion is judged on the default mappings.
     - the written route repeated 3 times.
 
 ## M8 — Polish and distribution *(In progress: started 2026-10-23 by the user's approval, B1 packaging first)*
+- **License compliance:** `COPYING`, `NOTICE`, `THIRD_PARTY_NOTICES.md` and `LICENSES/` are kept
+  complete. Any binary release also needs the LGPL source offer (FFmpeg, libmspack). No binary
+  is published, and no claim of legal clearance is made.
 - **Status decision** (user, 2026-10-23): M8 started, packaging (B1) first. Input profiles (B2)
   wait for the user's approval of the revised preset tables. Decisions are in
   `reference/M8_PLAN.md`:
@@ -321,7 +325,8 @@ customization. The controls criterion is judged on the default mappings.
     fails check 3, and a wrong archive SHA-256 is refused.
   - **Not done:**
     - M8.4, the clean install on a new macOS account (the user creates it);
-    - the LGPL source offer for binaries.
+    - the LGPL source offer, needed before any binary is distributed (none is planned for the
+      source release).
   - **The availability gate is untested for target 27.0:** its control API is macOS 15.2, and
     with SDK 27.0 equal to the target there's nothing newer to catch.
 - **Evidence so far (B2, 2026-10-24):** input profiles, as approved in `reference/M8_PLAN.md`.
