@@ -10,7 +10,8 @@ are in [`docs/PLAN.md`](docs/PLAN.md).
 npm install
 npm run dev        # http://localhost:4321, live reload
 npm run build      # checks the generated data against ReCarbon's source, then builds dist/
-npm run preview    # serves dist/ on http://127.0.0.1:4321/recarbon/
+npm run preview    # serves dist/ on http://127.0.0.1:4321/recarbon/, as GitHub Pages does
+npm run check:urls # after a build: "/recarbon" and other unslashed URLs redirect (preview and dev)
 npm run check      # type-checks the .astro and .ts files
 ```
 

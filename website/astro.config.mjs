@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { licensePages } from './src/lib/licenses.mjs';
 import { satteri } from '@astrojs/markdown-satteri';
 import { docsMarkdownPlugin } from './src/lib/docs-markdown.mjs';
+import { trailingSlashRedirect } from './src/lib/trailing-slash.mjs';
 
 // Hosting (D1) and domain (D2): GitHub Pages of the public retronative/recarbon
 // repository, which will hold the runtime and this site (in website/):
@@ -27,6 +28,8 @@ export default defineConfig({
 		server: { fs: { allow: ['..'] } },
 	},
 	integrations: [
+		// "/recarbon" -> "/recarbon/" in dev, as GitHub Pages and scripts/preview.mjs do.
+		trailingSlashRedirect(),
 		starlight({
 			title: 'ReCarbon',
 			// Starlight's Markdown features (asides, heading links) for docs outside src/content/docs/.

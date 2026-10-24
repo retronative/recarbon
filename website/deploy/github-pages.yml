@@ -44,6 +44,9 @@ jobs:
         env:
           SITE_URL: https://retronative.github.io
           BASE_PATH: /recarbon/
+      - run: node scripts/check-urls.mjs
+        env:
+          BASE_PATH: /recarbon/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
