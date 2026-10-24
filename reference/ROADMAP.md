@@ -358,6 +358,10 @@ customization. The controls criterion is judged on the default mappings.
     buttons only, through the input code's own `keymap::Resolve`. Carbon's menus answer D-pad
     buttons (the M6/M7 scripted routes navigate with them). A real key moving a menu under each
     preset is left for a hand test: the scripted menu route didn't reach the main menu here.
+  - **Game actions on the virtual controller (2026-10-24, M8_PLAN):** in a Quick Race with a
+    manual gearbox, RB changes the camera, LB looks back, the right stick shifts up and down,
+    the Left Trigger reverses from a standstill and Start pauses. Nitrous, Speedbreaker and the
+    Handbrake weren't shown by any control and stay unverified.
   - **Not verified:** the physical controller (deferred), and controller rebinding on hardware.
   - **Reset to default and the M5 baseline (complete, 2026-10-24):** the user approved treating
     label-only changes as compatible with the unchanged baseline, provided key values, expected

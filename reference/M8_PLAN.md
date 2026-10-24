@@ -301,6 +301,45 @@ each control is Carbon's own code, so an action counts as known only with eviden
 
   The website repository isn't changed from here; its session applies this.
 
+### Control actions: virtual-controller gameplay check (2026-10-24)
+Scripted runs of the unchanged 8ad356e build (b5993d0 before the history rewrite, as its logs
+name it) on the M1 worker, each in its own isolated home (fresh profile, no save), with SDL's
+virtual Xbox 360 controller (`RECARBON_VIRTUAL_PAD`, `RECARBON_INPUT_LOG=1`).
+- **Route:** title, "Create a new alias?" No, the Xbox Live notice, Main Menu, Quick Race
+  (Circuit, default track), stock RX-8, Manual transmission, race.
+- **Method:** every button and stick was swept blind; nothing was taken from another game's
+  layout. An action counts only when a screenshot shows it against a frame of the same run just
+  before the input. With no input after GO the chase camera stayed for at least 9 s, so the
+  camera changes below aren't an idle camera.
+- **Two tiers:**
+  - Delivery: the step log shows the XInput state the game got, for every button and axis
+    except BACK. BACK is held back 250 ms for the Back + Start chord, so its step lines read
+    `0x0000`.
+  - Gameplay: Carbon visibly did the action.
+
+| Player action | Xbox control | Observed (paired frames) | Status |
+|---|---|---|---|
+| Change Camera | RB | Each tap moves to the next camera, kept after release: near chase, far chase, bumper, hood, near chase | Automated |
+| Look Back | LB (held) | View faces backward while held, normal on release | Automated |
+| Gear Up | Right stick up | HUD gear 1 > 2, and 1 > 2 > 3 (manual transmission) | Automated |
+| Gear Down | Right stick down | HUD gear 2 > 1, 3 > 2, 1 > N (manual transmission) | Automated |
+| Reverse | Left Trigger (held at a standstill) | HUD gear R, speed 0 > 7 > 25 mph, reverse lights | Automated (braking: hand test) |
+| Pause | Start (in a race) | PAUSE menu opens | Automated |
+| Menus | A, B, D-pad left/right/down | A accepts each route step; B closes PAUSE; RIGHT and LEFT move the main menu and PAUSE highlight; DOWN moves Automatic to Manual | Automated |
+| Nitrous | — | The nitrous gauge was empty in this race, so nothing could show it | Unverified |
+| Speedbreaker | — | Its gauge stayed full while every button and stick was held | Unverified |
+| Handbrake | — | No input slowed a 1 s coast from about 18 mph more than coasting alone (right stick left and BACK tried twice) | Unverified |
+
+- **No visible effect in a race:** Y, X, A, B, the stick clicks, the D-pad, BACK, the right
+  stick's left and right, and the left stick's up and down. They stay unverified for a hand test.
+- **Not a hand test:** none of this is a physical controller, and the conditions were one Quick
+  Race below about 35 mph.
+- **Not changed:** no binding and no runtime code.
+- **Evidence:** screenshots and logs are in the website session's handoff
+  (`recarbon-handoff/evidence/`), not in this repository; they show EA's game.
+- **An observation to recheck:** "Yes" at the boot alias prompt left the game on "Please don't
+  turn off…" for over 70 s in 2 runs, with no save written. The evidence wasn't kept.
+
 ### Check for Updates (optional polish, not a release gate; 73b4c26)
 - **When it runs:** only when the player presses Settings > Advanced > Check for Updates
   (`update_dialog.cpp`). No polling, no download, no install.
