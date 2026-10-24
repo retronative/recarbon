@@ -19,6 +19,7 @@ native arm64 macOS. It is built on SpeedBreaker (the NFS: Most Wanted port), and
 | `patches/xenonrecomp/` | XenonRecomp patches applied by `scripts/setup_tools.sh` (0001–0008 SpeedBreaker, 0009+ ReCarbon) | |
 | `tests/` | Instruction tests: SpeedBreaker's `nfsmw_*.s` and ReCarbon's hand-computed `carbon_*.s` | |
 | `reference/` | Feasibility, architecture, roadmap, header parsers | `docs/` is reserved for future project docs |
+| `website/` | The project website (Astro + Starlight, base path `/recarbon/`): see `website/README.md` | Controls, settings and license pages are generated from this repo's source (`npm run gen:controls`, `npm run sync:licenses`); the build fails on drift. Never edit `*.generated.json`. Its Pages workflow (`website/deploy/github-pages.yml`) is an inactive template: don't move it into `.github/workflows/` without the user's approval. |
 
 ## Commands
 

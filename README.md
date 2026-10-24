@@ -69,6 +69,7 @@ rewrite SpeedBreaker. There is no Wine, CrossOver or runtime CPU emulation.
 - [reference/ROADMAP.md](reference/ROADMAP.md): milestones and acceptance criteria
 - `reference/analysis/xexinfo.py`: reads the plaintext header of an Xbox 360 executable (XEX2)
 - `reference/analysis/xbeinfo.py`: reads the header of an original-Xbox executable (XBE)
+- [website/](website/README.md): the project website (Astro); not deployed
 
 ## Building (development only, not playable)
 
