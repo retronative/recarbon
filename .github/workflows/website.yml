@@ -1,14 +1,14 @@
 # GitHub Pages deployment of the ReCarbon website (website/) to
 # https://retronative.github.io/recarbon/ (Settings > Pages > Source: GitHub Actions).
-# It runs by hand (Actions > Website > Run workflow); the push trigger is enabled
-# once the first deployment has been checked (website/docs/DEPLOY.md).
+# It runs on a push to main that changes the site or what it is built from, or by
+# hand (Actions > Website > Run workflow).
 name: Website
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches: [main]
-  #   paths: ['website/**', 'docs/**', 'runtime/**', 'tests/pad_map_test.cpp', 'LICENSES/**', 'NOTICE', 'COPYING', 'THIRD_PARTY_NOTICES.md', '.github/workflows/website.yml']
+  push:
+    branches: [main]
+    paths: ['website/**', 'docs/**', 'runtime/**', 'tests/pad_map_test.cpp', 'LICENSES/**', 'NOTICE', 'COPYING', 'THIRD_PARTY_NOTICES.md', '.github/workflows/website.yml']
 
 # Nothing by default; each job asks for what it needs. Actions are pinned to the
 # commit of a release (its tag in the comment).
