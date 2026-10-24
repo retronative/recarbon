@@ -20,7 +20,7 @@ ReCarbon has **no public release yet**. These pages describe the current develop
 |---|---|---|
 | M0–M2 | Disc check, full recompilation (72,864 functions, 0 errors), native arm64 build | Done (2026-10-22) |
 | M3–M4 | Boot, GPU bring-up, first frames, movies | Passed (2026-10-22) |
-| M5 | Audio, movies, input | In progress: keyboard hand test passed; physical controller pending |
+| M5 | Audio, movies, input | In progress: keyboard hand test passed; physical controller deferred |
 | M6 | Profile, saves, free-roam stability | Every criterion has evidence; closing is up to the maintainer |
 | M7 | Playable racing | In progress: a career race finished by hand; controls, physics and 10-minute frame pacing pending |
 | M8 | Polish and distribution | Packaging work started early; not done |

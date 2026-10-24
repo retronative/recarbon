@@ -78,7 +78,7 @@ passed through in `runtime/hid/input.cpp` `Update()`, with a radial stick deadzo
 | Controller default table | **Tested** | `tests/pad_map_test.cpp:36-56` (14-button baseline) |
 | Keyboard in menus, `[keys]` rebinding surviving a restart | **Hand-verified** | M5 hand test 2 (ROADMAP M5) |
 | Keyboard controls in a race (each action) | **Pending** | M7 hand test 5, not yet run |
-| Physical controller | **Pending** | M5, an 8BitDo is due ~2026-10-30 |
+| Physical controller | **Pending** | M5, an 8BitDo is deferred (ROADMAP, 2026-10-23) |
 | Virtual controller (menus, hot-unplug) | **Automated** | `RECARBON_VIRTUAL_PAD` runs; DETACH/ATTACH at 05607a2 |
 | Back paddles / extra buttons | **Not mapped** | `pad_map.h` |
 

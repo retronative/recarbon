@@ -16,10 +16,11 @@ any macOS before 27 (current builds need 27 or newer: see [Download](../download
 
 ## Controllers
 
-- **Keyboard:** hand-tested in menus (M5 hand test 2). Racing controls are pending (M7).
+- **Keyboard:** hand-tested in menus (M5 hand test 2), and Throttle, Brake and Steering in races
+  (hand tests 1, 3 and 4), on the Default keys. The other racing controls are still to verify.
 - **Controllers:** read through SDL3's gamepad support, by position: a PlayStation pad's Cross acts
-  as A. **No physical controller has been tested yet.** A physical controller test is due (M5). The default
-  mapping is pinned by a unit test; see the [Garage](../../garage/).
+  as A. **No physical controller has been tested yet:** that test is deferred. The default mapping is
+  pinned by unit tests and checked with SDL's virtual controller only; see the [Garage](../../garage/).
 - Back paddles and extra buttons are **not mapped** by ReCarbon.
 
 Measured performance: see [Performance](../performance/).
