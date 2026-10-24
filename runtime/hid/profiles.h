@@ -12,10 +12,12 @@
 //     hid/pad_map.h, in its order (buttons only in v1: the triggers, sticks,
 //     deadzones and paddles stay as they are).
 //   - Built-in keyboard profiles: Default (the settings' defaults, M5's
-//     baseline, unchanged), WASD and Arrows (the user's tables, 2026-10-23:
-//     Default with the movement and D-pad rows replaced, so that no key drives
-//     two controls). They are never stored and never edited: an edit makes a
-//     custom copy.
+//     baseline, unchanged; a new player's) and Arrows (the user's table,
+//     2026-10-23: Default with the movement and D-pad rows replaced, so that
+//     no key drives two controls). The player sees Default as "WASD": the user
+//     merged the former WASD preset into it (2026-10-24), and its name stays
+//     "Default" in code and in keyboard.toml. They are never stored and never
+//     edited: an edit makes a custom copy.
 #pragma once
 #include <array>
 #include <cstddef>
@@ -38,9 +40,11 @@ namespace hid::profiles
     constexpr size_t SlotOf(settings::Id id) { return size_t(id) - size_t(settings::Id::KeyRightTrigger); }
     constexpr settings::Id IdOf(size_t slot) { return settings::Id(size_t(settings::Id::KeyRightTrigger) + slot); }
 
-    enum class Builtin : uint8_t { Default, Wasd, Arrows, Count };
-    inline constexpr std::string_view kBuiltinNames[] = { "Default", "WASD", "Arrows" };
-    static_assert(std::size(kBuiltinNames) == size_t(Builtin::Count));
+    enum class Builtin : uint8_t { Default, Arrows, Count };
+    inline constexpr std::string_view kBuiltinNames[] = { "Default", "Arrows" };
+    // What Settings shows for each (a label only; files keep the names).
+    inline constexpr std::string_view kBuiltinLabels[] = { "WASD", "Arrows" };
+    static_assert(std::size(kBuiltinNames) == size_t(Builtin::Count) && std::size(kBuiltinLabels) == size_t(Builtin::Count));
 
     // A preset's rows that differ from Default: a control and its two keys.
     struct Row
@@ -49,13 +53,6 @@ namespace hid::profiles
         std::string_view first, second;  // tokens of user/key_names.h
     };
     using C = keymap::Control;
-    inline constexpr Row kWasdRows[] = {
-        { C::RightTrigger, "w", "none" }, { C::LeftTrigger, "s", "none" },
-        { C::LeftStickLeft, "a", "none" }, { C::LeftStickRight, "d", "none" },
-        { C::LeftStickUp, "none", "none" }, { C::LeftStickDown, "none", "none" },
-        { C::DpadUp, "up", "none" }, { C::DpadDown, "down", "none" },
-        { C::DpadLeft, "left", "none" }, { C::DpadRight, "right", "none" },
-    };
     inline constexpr Row kArrowsRows[] = {
         { C::RightTrigger, "up", "none" }, { C::LeftTrigger, "down", "none" },
         { C::LeftStickLeft, "left", "none" }, { C::LeftStickRight, "right", "none" },
@@ -76,9 +73,7 @@ namespace hid::profiles
                 m[2 * size_t(r.control) + 1] = settings::keynames::Code(r.second);
             }
         };
-        if (builtin == Builtin::Wasd)
-            apply(kWasdRows);
-        else if (builtin == Builtin::Arrows)
+        if (builtin == Builtin::Arrows)
             apply(kArrowsRows);
         return m;
     }
@@ -92,8 +87,8 @@ namespace hid::profiles
         return true;
     }
 
-    // A key bound to more than one control (or twice to one), 0 if none: the
-    // presets' rule (Default has some by design: Up is the left stick and the
+    // A key bound to more than one control (or twice to one), 0 if none:
+    // Arrows' rule (Default has some by design: Up is the left stick and the
     // D-pad there).
     inline uint16_t RepeatedKey(const KeyboardMapping& m)
     {

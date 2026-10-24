@@ -8,7 +8,7 @@
 		},
 		"presets": {
 			"status": "tested",
-			"evidence": "tests/profiles_test.cpp: Default is the settings' defaults; WASD and Arrows are the approved tables in full, 22 keys each with no key on two controls; each preset's keys resolve to the intended controls only. Passed on the M1 worker at 8ad356e, and on the M5 at 3382981."
+			"evidence": "tests/profiles_test.cpp: Default, shown as WASD, is the settings' defaults (the former WASD preset merged into it, 2026-10-24); Arrows is the approved table in full, 22 keys with no key on two controls; each preset's keys resolve to the intended controls only. Passed on the M5 (2026-10-24)."
 		},
 		"controller": {
 			"status": "tested",
@@ -29,32 +29,32 @@
 	},
 	"actions": {
 		"RightTrigger": {
-			"driving": { "label": "Throttle", "status": "hand-verified", "evidence": "M8 controls audit (reference/M8_PLAN.md, 2026-10-24; the controls handoff of 2026-10-24): driven on the keyboard in hand tests 1, 3 and 4 (free-roam and a won career race), on the Default keys." }
+			"driving": { "label": "Throttle", "status": "hand-verified", "evidence": "M8 controls audit (reference/M8_PLAN.md, 2026-10-24; the controls handoff of 2026-10-24): driven on the keyboard in hand tests 1, 3 and 4 (free-roam and a won career race), on the WASD keys (the Default profile)." }
 		},
 		"LeftTrigger": {
-			"driving": { "label": "Brake / Reverse", "status": "hand-verified", "evidence": "Braking: M8 controls audit (reference/M8_PLAN.md, 2026-10-24), seen in hand tests 1, 3 and 4, on the Default keys. Reversing: virtual-controller check (2026-10-24) only, not yet by hand: held at a standstill, the HUD gear goes to R and the car backs up (0 > 7 > 25 mph)." }
+			"driving": { "label": "Brake / Reverse", "status": "hand-verified", "evidence": "Braking: M8 controls audit (reference/M8_PLAN.md, 2026-10-24), seen in hand tests 1, 3 and 4, on the WASD keys (the Default profile). Reversing: virtual-controller check (2026-10-24) only, not yet by hand: held at a standstill, the HUD gear goes to R and the car backs up (0 > 7 > 25 mph)." }
 		},
 		"LeftStickLeft": {
-			"driving": { "label": "Steering Left", "status": "hand-verified", "evidence": "M8 controls audit (reference/M8_PLAN.md, 2026-10-24; the controls handoff of 2026-10-24): steering seen in hand tests 1, 3 and 4, on the Default keys." }
+			"driving": { "label": "Steering Left", "status": "hand-verified", "evidence": "M8 controls audit (reference/M8_PLAN.md, 2026-10-24; the controls handoff of 2026-10-24): steering seen in hand tests 1, 3 and 4, on the WASD keys (the Default profile)." }
 		},
 		"LeftStickRight": {
-			"driving": { "label": "Steering Right", "status": "hand-verified", "evidence": "M8 controls audit (reference/M8_PLAN.md, 2026-10-24; the controls handoff of 2026-10-24): steering seen in hand tests 1, 3 and 4, on the Default keys." }
+			"driving": { "label": "Steering Right", "status": "hand-verified", "evidence": "M8 controls audit (reference/M8_PLAN.md, 2026-10-24; the controls handoff of 2026-10-24): steering seen in hand tests 1, 3 and 4, on the WASD keys (the Default profile)." }
 		},
 		"LeftStickUp": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." },
-			"menu": { "label": "Navigate", "status": "source", "evidence": "Option text in settings.cpp: \"The left stick pushed up (menus).\" Unbound in the WASD and Arrows presets." }
+			"menu": { "label": "Navigate", "status": "source", "evidence": "Option text in settings.cpp: \"The left stick pushed up (menus).\" Unbound in the Arrows preset." }
 		},
 		"LeftStickDown": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." },
-			"menu": { "label": "Navigate", "status": "source", "evidence": "The stick's down axis, paired with \"The left stick pushed up (menus).\" in settings.cpp. Unbound in the WASD and Arrows presets." }
+			"menu": { "label": "Navigate", "status": "source", "evidence": "The stick's down axis, paired with \"The left stick pushed up (menus).\" in settings.cpp. Unbound in the Arrows preset." }
 		},
 		"A": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." },
-			"menu": { "label": "Confirm", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the Default keys. Also seen with the virtual controller (2026-10-24, reference/M8_PLAN.md)." }
+			"menu": { "label": "Confirm", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the WASD keys (the Default profile). Also seen with the virtual controller (2026-10-24, reference/M8_PLAN.md)." }
 		},
 		"B": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." },
-			"menu": { "label": "Back", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the Default keys. Also seen with the virtual controller (2026-10-24, reference/M8_PLAN.md)." }
+			"menu": { "label": "Back", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the WASD keys (the Default profile). Also seen with the virtual controller (2026-10-24, reference/M8_PLAN.md)." }
 		},
 		"X": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." }
@@ -70,19 +70,19 @@
 		},
 		"DpadUp": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." },
-			"menu": { "label": "Navigate", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the Default keys. Under WASD and Arrows the D-pad keys reach the game as the D-pad only (profiles_test); a menu moved by them is not yet hand-tested (ROADMAP M8)." }
+			"menu": { "label": "Navigate", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the WASD keys (the Default profile). Under Arrows the D-pad keys (W A S D) reach the game as the D-pad only (profiles_test); a menu moved by them is not yet hand-tested (ROADMAP M8)." }
 		},
 		"DpadDown": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." },
-			"menu": { "label": "Navigate", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the Default keys. Under WASD and Arrows the D-pad keys reach the game as the D-pad only (profiles_test); a menu moved by them is not yet hand-tested (ROADMAP M8). Also seen with the virtual controller (2026-10-24, reference/M8_PLAN.md)." }
+			"menu": { "label": "Navigate", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the WASD keys (the Default profile). Under Arrows the D-pad keys (W A S D) reach the game as the D-pad only (profiles_test); a menu moved by them is not yet hand-tested (ROADMAP M8). Also seen with the virtual controller (2026-10-24, reference/M8_PLAN.md)." }
 		},
 		"DpadLeft": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." },
-			"menu": { "label": "Navigate", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the Default keys. Under WASD and Arrows the D-pad keys reach the game as the D-pad only (profiles_test); a menu moved by them is not yet hand-tested (ROADMAP M8). Also seen with the virtual controller (2026-10-24, reference/M8_PLAN.md)." }
+			"menu": { "label": "Navigate", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the WASD keys (the Default profile). Under Arrows the D-pad keys (W A S D) reach the game as the D-pad only (profiles_test); a menu moved by them is not yet hand-tested (ROADMAP M8). Also seen with the virtual controller (2026-10-24, reference/M8_PLAN.md)." }
 		},
 		"DpadRight": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." },
-			"menu": { "label": "Navigate", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the Default keys. Under WASD and Arrows the D-pad keys reach the game as the D-pad only (profiles_test); a menu moved by them is not yet hand-tested (ROADMAP M8). Also seen with the virtual controller (2026-10-24, reference/M8_PLAN.md)." }
+			"menu": { "label": "Navigate", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the WASD keys (the Default profile). Under Arrows the D-pad keys (W A S D) reach the game as the D-pad only (profiles_test); a menu moved by them is not yet hand-tested (ROADMAP M8). Also seen with the virtual controller (2026-10-24, reference/M8_PLAN.md)." }
 		},
 		"Start": {
 			"driving": { "label": "Pause", "status": "automated", "evidence": "Virtual-controller check (reference/M8_PLAN.md, 2026-10-24): scripted Quick Race on the M1 worker, Circuit, stock RX-8, manual gearbox, under about 35 mph; paired screenshots. Start in a race opens the PAUSE menu." },

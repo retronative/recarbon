@@ -1,9 +1,10 @@
 ---
 // The 75% keyboard, drawn at build time from keyboard-75.ts and the controls
-// model. Each key carries its state per mode in the Default preset; CSS lights
-// it for the current mode, so the drawing is right without JS too. The Garage's
-// script rewrites the states for the WASD and Arrows presets. The SVG is an image to
-// assistive tech: the callout list beside it is the accessible equivalent.
+// model. Each key carries its state per mode in the Default preset (shown as
+// WASD); CSS lights it for the current mode, so the drawing is right without
+// JS too. The Garage's script rewrites the states for the Arrows preset. The
+// SVG is an image to assistive tech: the callout list beside it is the
+// accessible equivalent.
 import { KEYBOARD, KEYBOARD_HEIGHT, KEYBOARD_WIDTH } from '../../data/keyboard-75';
 import { calloutsOfKey, keyStates } from '../../lib/controls';
 

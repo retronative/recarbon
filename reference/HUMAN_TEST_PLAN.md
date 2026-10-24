@@ -20,13 +20,14 @@ H=$PWD/game/m3/home-h06 && mkdir -p "$H/Library/Application Support" "$H/Library
 HOME=$H RECARBON_REAL_HOME=1 RECARBON_MUTE=0 scripts/run_attempt.sh h06a 3600
 ```
 
-1. **WASD menus (M8.11):** at the first menu, open Settings (Cmd+, or F1) > Controls >
-   Keyboard Profile: **WASD**, and close it. Move through the menus with the **arrow keys**
-   only (WASD's D-pad), Return to accept and Backspace to go back. Note the time and the
-   screens reached.
+1. **WASD menus (M8.11):** at the first menu, open Settings (Cmd+, or F1) > Controls and check
+   that Keyboard Profile reads **WASD** (a new player's profile), and close it. Move through
+   the menus with the **arrow keys** only (WASD's D-pad, which also work its left stick), Return
+   to accept and Backspace to go back. Note the time and the screens reached.
 2. **New profile (M6.6):** create a new profile and start the career, through to control of the
    car. Note the time.
-3. **WASD drives (M8.11):** drive briefly: W throttle, S brake, A/D steering.
+3. **WASD drives (M8.11):** drive briefly: W throttle, S brake, A/D steering (Left/Right steer
+   too).
 4. **Arrows, without a restart (M8.11):** open Settings and choose **Arrows**. Move through a
    menu with **W A S D** only, then drive with the arrows (Up throttle, Down brake, Left/Right
    steering). Note the times.
@@ -50,7 +51,8 @@ The same home: `HOME=$H RECARBON_REAL_HOME=1 RECARBON_MUTE=0 scripts/run_attempt
    free key here.
 
 ## Sessions 3–5: the written M7 route, 3 times (M7.1, M7.2, M7.5, M7.6, M7.7)
-The real home with its warm shader cache, on the **Default** keys (M7 is judged on Default).
+The real home with its warm shader cache, on the **WASD** keys (M7 is judged on WASD, the
+Default profile).
 For run *n* = 1, 2, 3:
 
 ```sh

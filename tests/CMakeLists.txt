@@ -77,7 +77,7 @@ recarbon_test(vmem_host_pages_test)
 # them: ASCII only (user/key_names.h Bindable, header only; ReCarbon M5.15).
 recarbon_test(key_bindable_test)
 # The built-in keyboard profiles against the approved tables, Default against
-# the settings' defaults, no key on two controls in WASD and Arrows, the
+# the settings' defaults, no key on two controls in Arrows, the
 # controller's default (hid/profiles.h; ReCarbon M8). SDL's headers only.
 recarbon_test(profiles_test SOURCES ${RT}/user/settings.cpp ${RT}/user/atomic_file.cpp)
 target_link_libraries(profiles_test PRIVATE SDL3::SDL3)

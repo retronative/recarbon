@@ -352,7 +352,7 @@
 	"presets": [
 		{
 			"id": "default",
-			"name": "Default",
+			"name": "WASD",
 			"keys": {
 				"RightTrigger": [
 					"w",
@@ -457,109 +457,6 @@
 				"left",
 				"right"
 			]
-		},
-		{
-			"id": "wasd",
-			"name": "WASD",
-			"keys": {
-				"RightTrigger": [
-					"w",
-					null
-				],
-				"LeftTrigger": [
-					"s",
-					null
-				],
-				"LeftStickLeft": [
-					"a",
-					null
-				],
-				"LeftStickRight": [
-					"d",
-					null
-				],
-				"LeftStickUp": [
-					null,
-					null
-				],
-				"LeftStickDown": [
-					null,
-					null
-				],
-				"A": [
-					"space",
-					null
-				],
-				"B": [
-					"backspace",
-					null
-				],
-				"X": [
-					"left_shift",
-					null
-				],
-				"Y": [
-					"left_ctrl",
-					null
-				],
-				"LB": [
-					"q",
-					null
-				],
-				"RB": [
-					"e",
-					null
-				],
-				"DpadUp": [
-					"up",
-					null
-				],
-				"DpadDown": [
-					"down",
-					null
-				],
-				"DpadLeft": [
-					"left",
-					null
-				],
-				"DpadRight": [
-					"right",
-					null
-				],
-				"Start": [
-					"return",
-					null
-				],
-				"Back": [
-					"escape",
-					null
-				],
-				"RightStickUp": [
-					"o",
-					null
-				],
-				"RightStickDown": [
-					"l",
-					null
-				],
-				"RightStickLeft": [
-					"k",
-					null
-				],
-				"RightStickRight": [
-					"semicolon",
-					null
-				],
-				"LeftStickClick": [
-					"z",
-					null
-				],
-				"RightStickClick": [
-					"c",
-					null
-				]
-			},
-			"shared": []
 		},
 		{
 			"id": "arrows",

@@ -10,7 +10,7 @@ The player documentation for ReCarbon. The same files build the website's docume
 - [Supported hardware](hardware.md)
 
 **Play**
-- [Controls](controls.mdx): the Default, WASD and Arrows keyboard presets and the controller
+- [Controls](controls.mdx): the WASD and Arrows keyboard presets and the controller
 - [Settings](settings.mdx)
 - [Performance](performance.md)
 

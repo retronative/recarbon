@@ -3,9 +3,9 @@
 // Input profiles in the user folder (ROADMAP M8, reference/M8_PLAN.md B2):
 // profiles/keyboard.toml and profiles/controller.toml, each the active
 // profile's name and the custom profiles. The mappings are hid/profiles.h's.
-//   - The built-in profiles (Default, WASD, Arrows; the controller's Default)
-//     are never stored or edited: an edit while one is active makes a custom
-//     copy, "<name> (custom)", and makes it active.
+//   - The built-in profiles (Default, shown as "WASD", and Arrows; the
+//     controller's Default) are never stored or edited: an edit while one is
+//     active makes a custom copy, "<label> (custom)", and makes it active.
 //   - The keyboard's bindings in effect are always the Key options, settings.toml's
 //     [keys] (the input code reads those): switching profiles sets them, and
 //     an edit to them (Settings > Controls) updates the active custom profile.
@@ -60,7 +60,8 @@ namespace profiles
     using PadStore = Store<PadProfile>;
 
     // A custom profile's name: 1 to 32 printable ASCII characters, not a
-    // built-in's ("Default", "WASD", "Arrows").
+    // built-in's name or label ("Default", "WASD", "Arrows"). "WASD" in a
+    // keyboard file names Default (the former WASD preset is merged into it).
     bool ValidName(std::string_view name);
     bool IsBuiltin(std::string_view name, bool keyboard);
 
@@ -104,7 +105,7 @@ namespace profiles
 
     // After the bindings in effect changed to `keys`: the active custom
     // profile takes them; with a built-in active, a custom copy named
-    // "<name> (custom)" (or "<name> (custom 2)"...) does, and becomes active.
+    // "<label> (custom)" (or "<label> (custom 2)"...) does, and becomes active.
     KeyboardStore AfterEdit(KeyboardStore store, const KeyboardMapping& keys, const KeyboardMapping& defaults);
     PadStore AfterEdit(PadStore store, const PadMapping& buttons);
 
@@ -124,6 +125,9 @@ namespace profiles
     // then the custom ones), and the active one.
     std::vector<std::string> KeyboardNames();
     std::string ActiveKeyboard();
+    // What Settings shows for a keyboard profile: a built-in's label ("WASD"
+    // for Default), a custom profile's name.
+    std::string KeyboardLabel(std::string_view name);
     // Makes `name` active and sets the Key options to its keys (at once, no
     // restart). False (nothing changed) for an unknown name, or when the write
     // fails (LastError).

@@ -119,8 +119,8 @@ const groups = (mode: Mode) => {
 						}
 					</div>
 					<p class="label-note">
-						Built-in presets: each changes which keys drive the controls. Hand tests so far used the Default keys; WASD and
-						Arrows are pinned by unit tests. Your own profiles are made in game.
+						Built-in presets: each changes which keys drive the controls. WASD, a new player's, has the keys the hand
+						tests used; Arrows is pinned by unit tests. Your own profiles are made in game.
 					</p>
 				</div>
 				<div class="clusters" role="group" aria-label="Keyboard area" hidden>
@@ -731,12 +731,11 @@ const groups = (mode: Mode) => {
 		font-size: 0.75rem;
 		color: var(--text-muted);
 	}
-	/* Keys per preset: the current preset's only (Default without JS). */
+	/* Keys per preset: the current preset's only (WASD without JS). */
 	.pk {
 		display: contents;
 	}
 	.garage[data-preset='default'] .pk[data-p]:not([data-p='default']),
-	.garage[data-preset='wasd'] .pk[data-p]:not([data-p='wasd']),
 	.garage[data-preset='arrows'] .pk[data-p]:not([data-p='arrows']) {
 		display: none;
 	}

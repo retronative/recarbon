@@ -115,6 +115,17 @@ namespace profiles
             }
         }
 
+        // A keyboard built-in by its name or label, in any case: "arrows" in a
+        // hand-edited file is Arrows, and "WASD" (also the former WASD
+        // preset's name, in older files) is Default.
+        std::optional<hp::Builtin> FindBuiltin(std::string_view name)
+        {
+            for (size_t b = 0; b < size_t(hp::Builtin::Count); b++)
+                if (SameIgnoringCase(hp::kBuiltinNames[b], name) || SameIgnoringCase(hp::kBuiltinLabels[b], name))
+                    return hp::Builtin(b);
+            return std::nullopt;
+        }
+
         template <class S>
         void ReadActive(const toml::table& root, Parsed<S>& out, bool keyboard)
         {
@@ -128,17 +139,7 @@ namespace profiles
                 out.store.active = "Default";
             }
             else if (IsBuiltin(out.store.active, keyboard))
-            {
-                // The built-in's own spelling ("wasd" in a hand-edited file is WASD).
-                if (keyboard)
-                {
-                    for (std::string_view b : hp::kBuiltinNames)
-                        if (SameIgnoringCase(b, out.store.active))
-                            out.store.active = std::string(b);
-                }
-                else
-                    out.store.active = "Default";
-            }
+                out.store.active = keyboard ? std::string(hp::kBuiltinNames[size_t(*FindBuiltin(out.store.active))]) : "Default";
         }
 
         template <class P>
@@ -177,7 +178,7 @@ namespace profiles
     {
         if (!keyboard)
             return SameIgnoringCase(name, "Default");
-        return std::any_of(std::begin(hp::kBuiltinNames), std::end(hp::kBuiltinNames), [&](std::string_view b) { return SameIgnoringCase(b, name); });
+        return FindBuiltin(name).has_value();
     }
 
     bool ValidName(std::string_view name)
@@ -190,7 +191,7 @@ namespace profiles
     std::string Serialize(const KeyboardStore& store)
     {
         std::string out = "# ReCarbon keyboard profiles (Settings > Controls), written by the game. The built-in\n"
-                          "# profiles (Default, WASD, Arrows) aren't stored. Each control: its first and second key,\n"
+                          "# profiles (Default, shown as WASD, and Arrows) aren't stored. Each control: its first and second key,\n"
                           "# named as in settings.toml's [keys]. A control left out takes Default's keys.\n";
         out += std::format("active = {}\n", Quote(store.active));
         for (const KeyboardProfile& p : store.custom)
@@ -289,9 +290,8 @@ namespace profiles
 
     std::optional<KeyboardMapping> Find(const KeyboardStore& store, std::string_view name, const KeyboardMapping& defaults)
     {
-        for (size_t b = 0; b < size_t(hp::Builtin::Count); b++)
-            if (SameIgnoringCase(hp::kBuiltinNames[b], name))
-                return hp::BuiltinMapping(hp::Builtin(b), defaults);
+        if (const std::optional<hp::Builtin> b = FindBuiltin(name))
+            return hp::BuiltinMapping(*b, defaults);
         for (const KeyboardProfile& p : store.custom)
             if (p.name == name)
                 return p.keys;
@@ -368,7 +368,7 @@ namespace profiles
                 p.keys = keys;
                 return store;
             }
-        std::string base = IsBuiltin(store.active, true) ? store.active : "Default";
+        std::string base = KeyboardLabel(IsBuiltin(store.active, true) ? store.active : "Default");
         store.active = UniqueCopyName(store.custom, base);
         store.custom.push_back({ store.active, keys });
         return store;
@@ -558,7 +558,8 @@ namespace profiles
         if (!m)
             return false;
         KeyboardStore next = s_keyboard;
-        next.active = std::string(name);
+        const std::optional<hp::Builtin> builtin = FindBuiltin(name);
+        next.active = std::string(builtin ? hp::kBuiltinNames[size_t(*builtin)] : name);
         if (!WriteKeyboard(next))
             return false;
         s_keyboard = std::move(next);
@@ -569,6 +570,12 @@ namespace profiles
         s_applying = false;
         fprintf(stderr, "[profiles] keyboard profile \"%s\"\n", s_keyboard.active.c_str());
         return true;
+    }
+
+    std::string KeyboardLabel(std::string_view name)
+    {
+        const std::optional<hp::Builtin> b = FindBuiltin(name);
+        return std::string(b ? hp::kBuiltinLabels[size_t(*b)] : name);
     }
 
     std::vector<std::string> PadNames()

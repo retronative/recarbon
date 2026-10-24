@@ -420,7 +420,8 @@ customization. The controls criterion is judged on the default mappings.
     (ARCHITECTURE §3.6):
     - Separate persistent profiles for the keyboard and the controller, stored in the user
       folder, each holding user-defined mappings (rebinding extended to the controller).
-    - Keyboard presets: WASD and Arrows.
+    - Keyboard presets: WASD and Arrows. (2026-10-24, user decision: the WASD preset is merged
+      into Default, which is shown as WASD; a new player starts on it.)
     - Manual profile switching.
     - Reset to default, which restores M5's baseline mapping exactly.
     - Existing `[keys]` settings are preserved: migrated into the keyboard profile, never

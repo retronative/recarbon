@@ -12,8 +12,9 @@ export type Mode = 'driving' | 'menu' | 'settings';
 export type Device = 'keyboard' | 'controller';
 export type PresetId = (typeof generated.presets)[number]['id'];
 
-// ReCarbon's built-in keyboard presets (hid/profiles.h): Default, WASD,
-// Arrows. Custom profiles are made in game and aren't shown.
+// ReCarbon's built-in keyboard presets (hid/profiles.h): Default, shown as
+// "WASD" (a new player's), and Arrows. Custom profiles are made in game and
+// aren't shown.
 export const PRESETS = generated.presets.map(({ id, name, shared }) => ({ id: id as PresetId, name, shared }));
 const presetKeys = (control: string) =>
 	Object.fromEntries(generated.presets.map((p) => [p.id, (p.keys as Record<string, (string | null)[]>)[control]])) as Record<PresetId, (string | null)[]>;

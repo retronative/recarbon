@@ -102,7 +102,7 @@ The site never upgrades a badge without a commit that does it in `controls.json`
 - **Drift check (CI):** the site workflow re-runs the generator and fails if the committed JSON
   differs. A second check asserts the generated defaults equal `tests/pad_map_test.cpp`'s
   baseline, so the C++ tests stay the authority.
-- **Built-ins vs customized:** the site shows ReCarbon's built-in keyboard presets (Default, WASD,
+- **Built-ins vs customized:** the site shows ReCarbon's built-in keyboard presets (WASD,
   Arrows; generated from `runtime/hid/profiles.h` and checked against `tests/profiles_test.cpp`)
   and the default controller profile, never a user's. A "Presets and your own profiles" panel
   says custom profiles are made in game (Settings > Controls, Settings > Controller). An optional

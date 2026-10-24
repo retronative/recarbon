@@ -504,6 +504,7 @@ namespace ui
             std::string active;
             bool enabled;
             bool (*choose)(std::string_view);
+            std::string (*display)(std::string_view) = nullptr;  // a name's label, if it has one
         };
         void ProfileRow(const ProfileChoice& c, float valueWidth, bool focus, bool& described)
         {
@@ -546,7 +547,7 @@ namespace ui
                 delta = 1;
             ImGui::PopStyleColor();
             ImGui::PopItemFlag();
-            const std::string value = c.enabled ? c.active : "Off";
+            const std::string value = !c.enabled ? "Off" : c.display ? c.display(c.active) : c.active;
             ImVec2 size = ImGui::CalcTextSize(value.c_str());
             ImGui::GetWindowDrawList()->AddText(ImVec2(valueMin.x + (valueWidth - size.x) * 0.5f, CentredTextTop(mid)),
                 ImGui::GetColorU32(!c.enabled ? ImGuiCol_TextDisabled : focused ? ImGuiCol_PlotLines : ImGuiCol_Text), value.c_str());
@@ -562,7 +563,7 @@ namespace ui
         ProfileChoice KeyboardChoice()
         {
             return { "keyboard-profile", "Keyboard Profile", profiles::KeyboardNames(), profiles::ActiveKeyboard(),
-                profiles::KeyboardEnabled(), profiles::SwitchKeyboard };
+                profiles::KeyboardEnabled(), profiles::SwitchKeyboard, profiles::KeyboardLabel };
         }
         ProfileChoice PadChoice()
         {
@@ -774,7 +775,7 @@ namespace ui
             }
             if (s_describedProfile)
             {
-                ImGui::TextWrapped("Left and right switch the keyboard profile, in effect at once. Default, WASD and Arrows are "
+                ImGui::TextWrapped("Left and right switch the keyboard profile, in effect at once. WASD and Arrows are "
                                    "built in: changing a key while one is active saves your keys as a copy, \"<name> (custom)\".");
                 if (!profiles::KeyboardEnabled() || !profiles::LastError().empty())
                 {

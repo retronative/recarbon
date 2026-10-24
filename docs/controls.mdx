@@ -1,15 +1,15 @@
 ---
 title: Controls
-description: ReCarbon's keyboard presets (Default, WASD, Arrows) and default controller mapping, in driving, the menus and the Settings overlay, with how each was verified. Custom profiles are made in game.
+description: ReCarbon's keyboard presets (WASD, Arrows) and default controller mapping, in driving, the menus and the Settings overlay, with how each was verified. Custom profiles are made in game.
 ---
 
 import ControlsTables from '@site/components/garage/ControlsTables.astro';
 import StatusBadge from '@site/components/StatusBadge.astro';
 
 The keyboard acts as an **Xbox 360 controller**: each of its 24 controls has two keys. The game
-sees the same controller whatever drives it. ReCarbon ships three built-in keyboard presets,
-**Default**, **WASD** and **Arrows**; the tables below show all three. For the interactive view,
-open the **[Garage](https://retronative.github.io/recarbon/garage/)**.
+sees the same controller whatever drives it. ReCarbon ships two built-in keyboard presets,
+**WASD** (what a new player starts with) and **Arrows**; the tables below show both. For the
+interactive view, open the **[Garage](https://retronative.github.io/recarbon/garage/)**.
 
 ## What the badges mean
 
@@ -22,7 +22,7 @@ open the **[Garage](https://retronative.github.io/recarbon/garage/)**.
 - <StatusBadge status="not-mapped" /> ReCarbon doesn't read the input (back paddles, the Guide button).
 
 The **key → control** bindings below are all tested, in every preset. Of the **game actions** in
-a race, Throttle, Brake and Steering were seen working in hand tests, on the Default keys. Change
+a race, Throttle, Brake and Steering were seen working in hand tests, on the WASD keys. Change
 Camera (RB), Look Back (LB), Gear Up and Gear Down (the right stick, with a manual gearbox),
 Reverse (the Left Trigger at a standstill) and Pause (Start) were seen with SDL's virtual
 controller in a scripted Quick Race (automated), not yet by hand. The rest wait for a hand test. The physical controller test is deferred: nothing on a real pad is
@@ -32,13 +32,13 @@ verified.
 
 ## Presets and profiles
 
-- **Default** is the original layout. The arrow keys work the left stick (Left and Right steer)
-  and the D-pad at once, by design.
-- **WASD** drives with W A S D; the arrow keys are the D-pad.
-- **Arrows** drives with the arrow keys; W A S D are the D-pad.
-- In WASD and Arrows no key drives two controls, and the left stick's up and down have no key.
-  Everything else (Space, Backspace, Shift, Control, Q, E, Return, Escape, O K L ;, Z, C) is the
-  same in all three.
+- **WASD** is the original layout, and a new player's. It drives with W A S D; the arrow keys
+  work the left stick (Left and Right steer too) and the D-pad at once, by design. Its stored
+  name, in `keyboard.toml`, is `"Default"`.
+- **Arrows** drives with the arrow keys; W A S D are the D-pad. No key drives two controls, and
+  the left stick's up and down have no key.
+- Everything else (Space, Backspace, Shift, Control, Q, E, Return, Escape, O K L ;, Z, C) is the
+  same in both.
 
 The website shows these **built-in presets only**. **Custom profiles are configured in game:**
 

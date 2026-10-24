@@ -119,6 +119,14 @@ and no milestone scope or criterion changes. ROADMAP M8 is the scope; this says 
 
 ## B2. Input profiles: design note
 
+> **Changed 2026-10-24 (user decision):** the WASD preset is merged into Default, which keeps
+> its keys (the column "Default (today)" below) and its name in code and in `keyboard.toml`,
+> and is shown as **WASD** in Settings and on the website. A new player starts on it. The
+> former WASD column is gone; Arrows is unchanged. "WASD" in a file names Default and stays
+> reserved; a copy of Default is "WASD (custom)". A player whose `[keys]` were the former WASD
+> keeps them as the custom profile "Custom (settings.toml)". The note below is the original
+> design.
+
 ### Constraints
 - **ROADMAP M8 scope:**
   - separate persistent keyboard and controller profiles in the user folder;

@@ -114,13 +114,17 @@ function parsePadBaseline(padMapTest) {
 }
 
 // The built-in keyboard presets (hid/profiles.h, ROADMAP M8): Default is the
-// settings' defaults; WASD and Arrows replace some of its rows, as
-// BuiltinMapping() does. Checked against profiles_test.cpp's full tables and
+// settings' defaults, shown as "WASD" (the former WASD preset merged into it,
+// 2026-10-24); Arrows replaces some of its rows, as BuiltinMapping() does.
+// Ids are the names (Default, Arrows); the site shows the labels. Checked against profiles_test.cpp's full tables and
 // its rules, so the C++ test stays the authority.
 function parsePresets(profilesH, profilesTest, controls, bindable) {
 	const names = block(profilesH, 'kBuiltinNames[] = {', '};', 'profiles.h kBuiltinNames');
 	const presetNames = [...names.matchAll(/"(\w+)"/g)].map((m) => m[1]);
-	expect(presetNames.join() === 'Default,WASD,Arrows', `profiles.h: built-in profiles are ${presetNames.join(', ')}`);
+	expect(presetNames.join() === 'Default,Arrows', `profiles.h: built-in profiles are ${presetNames.join(', ')}`);
+	const labels = block(profilesH, 'kBuiltinLabels[] = {', '};', 'profiles.h kBuiltinLabels');
+	const presetLabels = [...labels.matchAll(/"(\w+)"/g)].map((m) => m[1]);
+	expect(presetLabels.join() === 'WASD,Arrows', `profiles.h: built-in labels are ${presetLabels.join(', ')}`);
 	const rows = (name) =>
 		[...block(profilesH, `inline constexpr Row ${name}[] = {`, '};', `profiles.h ${name}`).matchAll(/\{\s*C::(\w+),\s*"(\w+)",\s*"(\w+)"\s*\}/g)].map(
 			(m) => ({ control: m[1], keys: [m[2], m[3]] }),
@@ -134,7 +138,7 @@ function parsePresets(profilesH, profilesTest, controls, bindable) {
 		}
 		return m;
 	};
-	const mappings = { Default: defaults, WASD: apply(rows('kWasdRows')), Arrows: apply(rows('kArrowsRows')) };
+	const mappings = { Default: defaults, Arrows: apply(rows('kArrowsRows')) };
 
 	const order = controls.map((c) => c.id);
 	const table = (name) => {
@@ -142,27 +146,25 @@ function parsePresets(profilesH, profilesTest, controls, bindable) {
 		expect(t.length === order.length, `profiles_test.cpp ${name}: ${t.length} rows for ${order.length} controls`);
 		return Object.fromEntries(t.map((m, i) => [order[i], [m[1], m[2]]]));
 	};
-	const tests = { Default: table('kDefaultTable'), WASD: table('kWasdTable'), Arrows: table('kArrowsTable') };
+	const tests = { Default: table('kDefaultTable'), Arrows: table('kArrowsTable') };
 	for (const [name, m] of Object.entries(mappings))
 		for (const id of order) {
 			expect(m[id].join() === tests[name][id].join(), `${name} ${id}: profiles.h gives ${m[id]}, profiles_test.cpp ${tests[name][id]}`);
 			for (const k of m[id]) expect(k === 'none' || bindable.has(k), `${name} ${id}: "${k}" is not in key_names.h`);
 		}
-	// The test's rules: no key on two controls in WASD and Arrows (22 keys
-	// each); Default shares Left between steering and the D-pad by design.
+	// The test's rules: no key on two controls in Arrows (22 keys); Default
+	// shares Left between steering and the D-pad by design.
 	const repeated = (m) => {
 		const keys = Object.values(m).flat().filter((k) => k !== 'none');
 		return { bound: keys.length, repeats: [...new Set(keys.filter((k, i) => keys.indexOf(k) !== i))] };
 	};
-	for (const name of ['WASD', 'Arrows']) {
-		const r = repeated(mappings[name]);
-		expect(r.repeats.length === 0 && r.bound === 22, `${name}: ${r.bound} keys bound, repeated: ${r.repeats.join(', ') || 'none'}`);
-	}
+	const arrows = repeated(mappings.Arrows);
+	expect(arrows.repeats.length === 0 && arrows.bound === 22, `Arrows: ${arrows.bound} keys bound, repeated: ${arrows.repeats.join(', ') || 'none'}`);
 	expect(/RepeatedKey\(defaults\) == Code\("left"\)/.test(profilesTest), 'profiles_test.cpp: the Default sharing rule changed');
 
-	return presetNames.map((name) => ({
+	return presetNames.map((name, i) => ({
 		id: name.toLowerCase(),
-		name,
+		name: presetLabels[i],
 		keys: Object.fromEntries(order.map((id) => [id, mappings[name][id].map((k) => (k === 'none' ? null : k))])),
 		shared: repeated(mappings[name]).repeats,
 	}));

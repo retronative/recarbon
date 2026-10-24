@@ -17,7 +17,7 @@ any macOS before 27 (current builds need 27 or newer: see [Release status](downl
 ## Controllers
 
 - **Keyboard:** hand-tested in menus (M5 hand test 2), and Throttle, Brake and Steering in races
-  (hand tests 1, 3 and 4), on the Default keys. The other racing controls are still to verify.
+  (hand tests 1, 3 and 4), on the WASD keys (the Default profile). The other racing controls are still to verify.
 - **Controllers:** read through SDL3's gamepad support, by position: a PlayStation pad's Cross acts
   as A. **No physical controller has been tested yet:** that test is deferred. The default mapping is
   pinned by unit tests and checked with SDL's virtual controller only; see the [Garage](https://retronative.github.io/recarbon/garage/).
