@@ -337,8 +337,19 @@ virtual Xbox 360 controller (`RECARBON_VIRTUAL_PAD`, `RECARBON_INPUT_LOG=1`).
 - **Not changed:** no binding and no runtime code.
 - **Evidence:** screenshots and logs are in the website session's handoff
   (`recarbon-handoff/evidence/`), not in this repository; they show EA's game.
-- **An observation to recheck:** "Yes" at the boot alias prompt left the game on "Please don't
-  turn off…" for over 70 s in 2 runs, with no save written. The evidence wasn't kept.
+- **An observation, rechecked and not reproduced:** "Yes" at the boot alias prompt left the game
+  on "Please don't turn off…" for over 70 s in 2 runs, with no save written. The evidence wasn't
+  kept. The recheck (2026-10-24) used a fresh isolated home and the virtual controller, on the
+  M5 (this build) and on the M1 (the 8ad356e build; the runtime is unchanged since). It took
+  "Yes", A on the Autosave notice and on "Please don't turn off your Xbox 360 console while the
+  Autosave icon is displayed", a name, START (Done), then "Yes" to "Do you want to enable
+  Autosave, and save your alias now?". "Saving AA…" wrote `rmcsave:\ALIAS_AA` (286,764 B plus
+  308 B `.xcontent`, as in 6b), and the main menu and Career followed on both Macs.
+  - Only A dismisses the notices: START did nothing there. "No" to the Autosave question saves
+    nothing ("The Autosave feature has been disabled").
+  - The original runs' cause isn't known. One recheck run shows the same symptom when the taps
+    never reach the game: a zsh-built script (`$t:A` is zsh's absolute-path modifier) sent no A
+    after the first, and the notice stayed up.
 
 ### Check for Updates (optional polish, not a release gate; 73b4c26)
 - **When it runs:** only when the player presses Settings > Advanced > Check for Updates
