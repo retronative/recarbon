@@ -7,10 +7,8 @@
     "start": "astro dev",
     "gen:controls": "node scripts/gen-controls.mjs",
     "check:controls": "node scripts/gen-controls.mjs --check",
-    "sync:licenses": "node scripts/sync-licenses.mjs",
-    "check:licenses": "node scripts/sync-licenses.mjs --check",
     "check": "astro check",
-    "prebuild": "npm run check:controls && npm run check:licenses",
+    "prebuild": "npm run check:controls",
     "build": "astro build",
     "preview": "astro preview --host 127.0.0.1",
     "astro": "astro"

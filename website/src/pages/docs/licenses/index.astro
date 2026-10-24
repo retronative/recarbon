@@ -1,0 +1,43 @@
+---
+// The license overview: ReCarbon's own license first, then every text the
+// pages under it render from the repository (src/lib/licenses.mjs).
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection } from 'astro:content';
+
+const pages = (await getCollection('licenses')).sort((a, b) => a.data.order - b.data.order);
+const href = (id: string) => `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}docs/licenses/${id}/`;
+const texts = pages.filter((p) => p.data.source.startsWith('LICENSES/'));
+---
+
+<StarlightPage frontmatter={{ title: 'Licenses', description: "ReCarbon's license (GPL-3.0-or-later), its notice, and the licenses of the software it is built from." }}>
+	<section class="own" aria-labelledby="own-title">
+		<h2 id="own-title">ReCarbon: GPL-3.0-or-later</h2>
+		<p>
+			ReCarbon is free software under the <strong>GNU General Public License, version 3 or (at your option) any later version</strong>.
+			It is derived from SpeedBreaker, also GPL-3.0-or-later.
+		</p>
+		<ul>
+			<li><a href={href('gpl-3-0')}>The GNU General Public License, version 3</a> (<code>COPYING</code>)</li>
+			<li><a href={href('notice')}>NOTICE</a>: copyright, attribution, and the unofficial-project and trademark notice</li>
+			<li><a href={href('third-party-notices')}>Third-party notices</a>: each component ReCarbon is built from or with, and its license</li>
+		</ul>
+	</section>
+	<h2 id="texts">License texts</h2>
+	<ul class="texts">
+		{texts.map((p) => <li><a href={href(p.id)}>{p.data.title}</a></li>)}
+	</ul>
+</StarlightPage>
+
+<style>
+	.own {
+		padding: 1rem 1.25rem;
+		border: 1px solid var(--sl-color-accent);
+		border-radius: 0.5rem;
+	}
+	.own h2 {
+		margin-top: 0;
+	}
+	.texts {
+		columns: 2 14rem;
+	}
+</style>

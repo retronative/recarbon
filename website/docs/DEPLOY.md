@@ -23,7 +23,7 @@ No other public repository is created, and no repository is renamed.
    history with `git subtree add --prefix=website <path-to-this-repo> main`, which keeps the
    commits). Leave out `node_modules/`, `dist/` and `.astro/`.
 2. The generators then find ReCarbon's source in the parent folder (`website/..`) by themselves.
-   Run `npm run gen:controls && npm run sync:licenses` once there and commit the result: the
+   Run `npm run gen:controls` once there and commit the result: the
    generated JSON's `source.commit` becomes `null` in-repo (the data's commit is the repository's
    own), so it must be regenerated once after the move.
 3. Copy `deploy/github-pages.yml` to `.github/workflows/website.yml`, and in the repository's

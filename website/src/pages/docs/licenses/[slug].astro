@@ -1,0 +1,36 @@
+---
+// One page per license file of ReCarbon's (src/lib/licenses.mjs): the text as
+// it is in the repository, or THIRD_PARTY_NOTICES.md rendered.
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+	return (await getCollection('licenses')).map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+---
+
+<StarlightPage frontmatter={{ title: entry.data.title, description: entry.data.description }} headings={entry.data.text ? [] : headings}>
+	<p class="source">From <code>{entry.data.source}</code> in ReCarbon's repository.</p>
+	{entry.data.text ? <pre class="license-text">{entry.data.text}</pre> : <Content />}
+</StarlightPage>
+
+<style>
+	.source {
+		color: var(--sl-color-gray-3);
+		font-size: var(--sl-text-sm);
+	}
+	.license-text {
+		/* Wrapped, so the page never scrolls sideways (and needs no keyboard scrolling). */
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+		font-size: var(--sl-text-sm);
+		line-height: 1.55;
+		padding: 1rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 0.5rem;
+		background: var(--sl-color-gray-6);
+	}
+</style>

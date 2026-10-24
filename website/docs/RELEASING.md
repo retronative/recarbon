@@ -11,7 +11,6 @@ Until ReCarbon's first tagged release there is one docs version, labelled by
 1. Regenerate the data from the release's commit and commit it:
    ```sh
    RECARBON_SRC=<path to ReCarbon at the tag> npm run gen:controls
-   RECARBON_SRC=<path to ReCarbon at the tag> npm run sync:licenses
    ```
    Check the Known issues page and the measured figures (landing page, Performance) against the
    release's ROADMAP and FEASIBILITY.

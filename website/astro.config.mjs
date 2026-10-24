@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import { licensePages } from './src/lib/licenses.mjs';
 
 // Hosting (D1) and domain (D2): GitHub Pages of the public retronative/recarbon
 // repository, which will hold the runtime and this site (in website/):
@@ -62,7 +63,12 @@ export default defineConfig({
 					items: [
 						{ label: 'Developers', slug: 'docs/developers' },
 						{ label: 'Credits', slug: 'docs/credits' },
-						{ label: 'Licenses', collapsed: true, items: [{ autogenerate: { directory: 'docs/licenses' } }] },
+						{
+							label: 'Licenses',
+							collapsed: true,
+							// Pages built from the repository's license files (src/pages/docs/licenses/).
+							items: [{ label: 'Overview (GPL-3.0-or-later)', link: '/docs/licenses/' }, ...licensePages().map((p) => ({ label: p.title, link: `/docs/licenses/${p.id}/` }))],
+						},
 					],
 				},
 			],

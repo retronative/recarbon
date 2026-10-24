@@ -18,12 +18,15 @@ npm run check      # type-checks the .astro and .ts files
 
 Nothing about the controls or the settings is typed in by hand.
 
+The license pages (`/docs/licenses/`) are built from the repository's `COPYING`, `NOTICE`,
+`THIRD_PARTY_NOTICES.md` and `LICENSES/` each time the site is built (`src/lib/licenses.mjs`), so
+the site keeps no copies of them.
+
 | Script | Reads (ReCarbon, read-only) | Writes |
 |---|---|---|
 | `npm run gen:controls` | `runtime/user/settings.cpp`, `runtime/hid/{key_map.h,pad_map.h,input.cpp}`, `runtime/user/key_names.h`, `runtime/ui/{ui.cpp,settings_menu.cpp}`, `runtime/report/internal.h`, `tests/pad_map_test.cpp` | `src/data/controls.generated.json`, `src/data/settings.generated.json` |
-| `npm run sync:licenses` | `LICENSES/*`, `NOTICE` | `src/content/docs/docs/licenses/*.md` |
 
-`npm run build` runs both in `--check` mode first (`prebuild`) and **fails when the committed
+`npm run build` runs it in `--check` mode first (`prebuild`) and **fails when the committed
 files differ from the source**, or when the source no longer has a pattern the generator reads.
 The generator also fails if `pad_map.h` disagrees with `pad_map_test.cpp`'s baseline.
 

@@ -37,10 +37,9 @@ jobs:
           cache: npm
           cache-dependency-path: website/package-lock.json
       - run: npm ci
-      # The drift checks read ReCarbon's source from the repository root
-      # (website/..); --strict makes a missing source fail instead of warn.
+      # The drift check, and the license pages, read ReCarbon's source from the
+      # repository root (website/..); --strict makes a missing source fail instead of warn.
       - run: node scripts/gen-controls.mjs --check --strict
-      - run: node scripts/sync-licenses.mjs --check --strict
       - run: npx astro build
         env:
           SITE_URL: https://retronative.github.io
