@@ -1,0 +1,71 @@
+---
+title: Developers
+description: Build ReCarbon from source on an Apple Silicon Mac, with your own disc, and run its tests.
+---
+
+import ViewSource from '../../../components/ViewSource.astro';
+
+<ViewSource />
+
+:::caution[Development builds]
+A build from source links Homebrew's libraries and runs only on the macOS it was built for, or
+newer. You need your own disc, extracted so that `game/files/default.xex` exists.
+:::
+
+## Requirements
+
+macOS on Apple Silicon and Homebrew:
+
+```sh
+brew install llvm lld cmake ninja python
+brew install sdl3 vulkan-loader vulkan-headers glslang spirv-tools molten-vk
+```
+
+## Build
+
+From the repository root:
+
+```sh
+scripts/setup_tools.sh     # XenonRecomp (pinned + patches), extract-xiso, xexsurvey, FFmpeg's XMA decoder
+scripts/survey.sh          # analyse default.xex, regenerate config/, recompile to ppc/, validate
+tests/run_instr_tests.sh   # instruction tests for the patched XenonRecomp
+
+cmake -S . -B build/main -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm/bin/clang \
+  -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++
+ninja -C build/main ReCarbon
+```
+
+The macOS deployment target defaults to your own macOS (`MACOSX_DEPLOYMENT_TARGET` when set). To
+choose another, set `MACOSX_DEPLOYMENT_TARGET` for both `setup_tools.sh` and the first `cmake`
+run. `tools/`, `game/`, `ppc/` and `build/` are git-ignored: **never commit or share them**.
+
+On the main test machine (MacBook Air M5, 24 GB) a clean native build took 97.9 s with a 2.56 GB
+peak. The recompiler produces 72,864 functions in 289 files (181 MB).
+
+## How it fits together
+
+1. **XenonRecomp** translates the game's PowerPC code (from your `default.xex`) into C++.
+2. That C++ compiles to native **arm64** and links with the **runtime**, adapted from
+   SpeedBreaker: the Xbox 360 kernel and XAM calls, memory and threads, the Xenos GPU on Vulkan
+   (MoltenVK on Metal), XMA audio (FFmpeg), and input (SDL3).
+3. Input runs in three layers: device input → binding resolution → a virtual Xbox 360
+   controller. Mappings are data, so the site's [controls](../controls/) are generated from
+   the same tables.
+
+## Useful environment variables
+
+| Variable | Does |
+|---|---|
+| `RECARBON_INPUT_SCRIPT` | Scripted input, e.g. `12:START,15.5:A,30-90/4:DOWN` |
+| `RECARBON_VIRTUAL_PAD` | An SDL virtual controller for tests without a person |
+| `RECARBON_INPUT_LOG=1` | The left stick and triggers once a second, raw and as the game gets them |
+
+Each Settings option also has one: see [Settings](../settings/).
+
+## Contributing
+
+ReCarbon's runtime and this website will be published together in one repository. It isn't
+public yet; this section will say how to contribute once it is.
+
+<ViewSource />

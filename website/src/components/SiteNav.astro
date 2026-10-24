@@ -1,0 +1,90 @@
+---
+// The race HUD's main links, shared by the custom pages and the docs header.
+import GitHubIcon from './GitHubIcon.astro';
+import { repo } from '../lib/repo';
+import { url } from '../lib/url';
+
+interface Props {
+	class?: string;
+}
+const current = Astro.url.pathname.replace(/\/$/, '');
+const links = [
+	{ label: 'Play', href: url('docs/download/'), hint: 'Download' },
+	{ label: 'Garage', href: url('garage/'), hint: 'Controls' },
+	{ label: 'Docs', href: url('docs/'), hint: 'Guides' },
+	{ label: 'Known issues', href: url('docs/known-issues/') },
+];
+const isCurrent = (href: string) => {
+	const path = href.replace(/\/$/, '');
+	return path === current || (path.endsWith('/docs') ? false : current.startsWith(path + '/'));
+};
+---
+
+<ul class:list={['site-nav', Astro.props.class]}>
+	{
+		links.map((l) => (
+			<li>
+				<a href={l.href} aria-current={isCurrent(l.href) ? 'page' : undefined}>
+					{l.label}
+				</a>
+			</li>
+		))
+	}
+	{
+		repo && (
+			<li>
+				<a class="gh" href={repo.url} aria-label="ReCarbon on GitHub" title="Source code on GitHub">
+					<GitHubIcon />
+					<span class="gh-label">GitHub</span>
+				</a>
+			</li>
+		)
+	}
+</ul>
+
+<style>
+	.site-nav {
+		display: flex;
+		gap: 0.25rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.site-nav a {
+		display: block;
+		padding: 0.5rem 0.75rem;
+		font-family: var(--rn-font-display);
+		font-weight: 700;
+		font-size: 0.85rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		text-decoration: none;
+		white-space: nowrap;
+		color: var(--sl-color-gray-2, var(--text-2));
+		border-bottom: 2px solid transparent;
+		transition: color var(--rn-fast) var(--rn-ease), border-color var(--rn-fast) var(--rn-ease);
+	}
+	.site-nav a:hover,
+	.site-nav a:focus-visible {
+		color: var(--sl-color-white, var(--text));
+		border-bottom-color: var(--rn-ember);
+	}
+	.gh {
+		display: flex;
+		align-items: center;
+		gap: 0.45rem;
+	}
+	/* In the bar the mark alone; in the stacked menus, the mark and its name. */
+	.site-nav:not(.stacked) .gh-label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
+	.site-nav a[aria-current='page'] {
+		color: var(--sl-color-accent-high, var(--link));
+		border-bottom-color: var(--rn-neon);
+	}
+</style>

@@ -1,0 +1,152 @@
+---
+// The 75% keyboard, drawn at build time from keyboard-75.ts and the controls
+// model. Each key carries its state per mode in the Default preset; CSS lights
+// it for the current mode, so the drawing is right without JS too. The Garage's
+// script rewrites the states for the WASD and Arrows presets. The SVG is an image to
+// assistive tech: the callout list beside it is the accessible equivalent.
+import { KEYBOARD, KEYBOARD_HEIGHT, KEYBOARD_WIDTH } from '../../data/keyboard-75';
+import { calloutsOfKey, keyStates } from '../../lib/controls';
+
+const U = 60;
+const GAP = 5;
+---
+
+<svg
+	class="kb"
+	viewBox={`0 0 ${KEYBOARD_WIDTH * U} ${KEYBOARD_HEIGHT * U}`}
+	data-full-viewbox={`0 0 ${KEYBOARD_WIDTH * U} ${KEYBOARD_HEIGHT * U}`}
+	data-unit={U}
+	role="img"
+	aria-label="A 75% Mac keyboard. The selected preset's keys are lit for the selected mode; the list beside it names each one."
+	preserveAspectRatio="xMidYMid meet"
+>
+	<defs>
+		<linearGradient id="kb-cap" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" style="stop-color: var(--kb-cap-top)"></stop>
+			<stop offset="1" style="stop-color: var(--kb-cap-bot)"></stop>
+		</linearGradient>
+	</defs>
+	<rect class="kb-case" x="-14" y="-14" width={KEYBOARD_WIDTH * U + 28} height={KEYBOARD_HEIGHT * U + 28} rx="16"></rect>
+	{
+		KEYBOARD.map((k) => {
+			const w = (k.w ?? 1) * U - GAP;
+			const h = U - GAP;
+			const x = k.x * U + GAP / 2;
+			const y = k.y * U + GAP / 2;
+			const s = keyStates(k.id, 'default');
+			return (
+				<g
+					class="key"
+					data-key={k.id}
+					data-name={k.name}
+					data-driving={s.driving}
+					data-menu={s.menu}
+					data-settings={s.settings}
+					data-callouts={calloutsOfKey(k.id, 'default')}
+				>
+					<rect class="cap" x={x} y={y} width={w} height={h} rx="7" />
+					{k.small ? (
+						<text class="legend small" x={x + 9} y={y + 21}>
+							{k.label}
+						</text>
+					) : (
+						<text class="legend" x={x + w / 2} y={y + h / 2 + 8} text-anchor="middle">
+							{k.label}
+						</text>
+					)}
+				</g>
+			);
+		})
+	}
+</svg>
+
+<style>
+	.kb {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: visible;
+		user-select: none;
+		-webkit-user-select: none;
+		touch-action: manipulation;
+	}
+	.kb-case {
+		fill: var(--kb-case);
+		stroke: var(--kb-case-line);
+		stroke-width: 2;
+	}
+	.cap {
+		fill: url(#kb-cap);
+		stroke: var(--kb-cap-line);
+		stroke-width: 1.5;
+		transition: fill var(--rn-fast) var(--rn-ease), stroke var(--rn-fast) var(--rn-ease), opacity var(--rn-fast);
+	}
+	.legend {
+		font-family: var(--rn-font-display);
+		font-weight: 700;
+		font-size: 23px;
+		fill: var(--kb-legend);
+		pointer-events: none;
+	}
+	.legend.small {
+		font-size: 12.5px;
+		font-family: var(--rn-font-body);
+		font-weight: 500;
+		letter-spacing: 0.02em;
+	}
+	.key {
+		cursor: pointer;
+		transition: opacity var(--rn-fast);
+	}
+
+	/* Per-mode states: unused keys dim to 25%; bound keys with no action in
+	   this mode to 50%; mapped keys take the mode colour; keys whose game
+	   action is still to verify get a quiet dashed outline. */
+	:global([data-mode='driving']) .key[data-driving='unused'],
+	:global([data-mode='menu']) .key[data-menu='unused'],
+	:global([data-mode='settings']) .key[data-settings='unused'] {
+		opacity: var(--kb-dim-unused);
+	}
+	:global([data-mode='driving']) .key[data-driving='bound'],
+	:global([data-mode='menu']) .key[data-menu='bound'],
+	:global([data-mode='settings']) .key[data-settings='bound'] {
+		opacity: var(--kb-dim-bound);
+	}
+	:global([data-mode='driving']) .key[data-driving='active'] .cap,
+	:global([data-mode='menu']) .key[data-menu='active'] .cap,
+	:global([data-mode='settings']) .key[data-settings='active'] .cap {
+		fill: color-mix(in srgb, var(--mode-color) 18%, var(--mix-base));
+		stroke: var(--mode-color);
+		stroke-width: 2;
+	}
+	:global([data-mode='driving']) .key[data-driving='active'] .legend,
+	:global([data-mode='menu']) .key[data-menu='active'] .legend,
+	:global([data-mode='settings']) .key[data-settings='active'] .legend {
+		fill: var(--kb-legend-strong);
+	}
+	:global([data-mode='driving']) .key[data-driving='unverified'] .cap,
+	:global([data-mode='menu']) .key[data-menu='unverified'] .cap {
+		stroke: color-mix(in srgb, var(--rn-ember) 75%, transparent);
+		stroke-width: 1.5;
+		stroke-dasharray: 5 4;
+	}
+
+	/* The hovered, focused or picked control: filled, and the rest dims. */
+	:global(.has-hot) .key:not(.is-hot) :is(.cap, .legend) {
+		opacity: 0.45;
+	}
+	.key.is-hot {
+		opacity: 1 !important;
+	}
+	/* Picked: a muted tint of the mode colour and a thin light outline. */
+	:global([data-mode]) .key.is-hot[data-key] .cap {
+		fill: color-mix(in srgb, var(--mode-color) 38%, var(--mix-base));
+		stroke: color-mix(in srgb, var(--mode-color) 45%, var(--text));
+		stroke-width: 1.5;
+		stroke-dasharray: none;
+	}
+	:global([data-mode]) .key.is-hot[data-key] .legend {
+		fill: var(--kb-legend-strong);
+		font-weight: 700;
+	}
+</style>

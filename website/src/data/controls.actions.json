@@ -1,0 +1,123 @@
+{
+	"$comment": "Player-facing labels use the site's racing terms in Title Case (Throttle, Brake, Steering Left / Right...), as ReCarbon's own Settings rows do since M8; they rename, never re-map. Hand-written overlay on controls.generated.json (docs/PLAN.md §2): what each Xbox control does in the game, per mode, with a status and its evidence. Ids must exist in the generated file; the build fails otherwise. Never upgrade a status here without the evidence that does it. An action with no label is shown as 'to verify' and never named.",
+	"testedControllers": [],
+	"binding": {
+		"keyboard": {
+			"status": "tested",
+			"evidence": "tests/key_map_test.cpp (24 controls, roles, bits), tests/settings_keys_test.cpp (defaults and [keys] names), tests/key_names_test.cpp"
+		},
+		"presets": {
+			"status": "tested",
+			"evidence": "tests/profiles_test.cpp: Default is the settings' defaults; WASD and Arrows are the approved tables in full, 22 keys each with no key on two controls; each preset's keys resolve to the intended controls only. Passed on the M1 worker at b5993d0."
+		},
+		"controller": {
+			"status": "tested",
+			"evidence": "tests/pad_map_test.cpp (the 14-button baseline), tests/profiles_test.cpp (the default controller profile)"
+		},
+		"virtualController": {
+			"status": "automated",
+			"evidence": "SDL virtual-controller runs (RECARBON_VIRTUAL_PAD): menus, hot-unplug with DETACH/ATTACH (FEASIBILITY §6a), and controller rebinding in Settings > Controller, persisting after a restart (ROADMAP M8). Automated evidence for the input path, not proof that a physical controller works."
+		},
+		"physicalController": {
+			"status": "pending",
+			"evidence": "Deferred, not verified (ROADMAP, the user's decision of 2026-10-23): no physical controller has been hand-tested, and controller rebinding hasn't been tried on hardware."
+		},
+		"paddles": {
+			"status": "not-mapped",
+			"evidence": "runtime/hid/pad_map.h has no SDL paddle or MISC entry, and nothing in runtime/ reads them. If a pad's own firmware remaps a paddle to another button, it acts as that button."
+		}
+	},
+	"actions": {
+		"RightTrigger": {
+			"driving": { "label": "Throttle", "status": "hand-verified", "evidence": "M8 controls audit (reference/M8_PLAN.md, 2026-10-24; the controls handoff of 2026-10-24): driven on the keyboard in hand tests 1, 3 and 4 (free-roam and a won career race), on the Default keys." }
+		},
+		"LeftTrigger": {
+			"driving": { "label": "Brake", "status": "hand-verified", "evidence": "M8 controls audit (reference/M8_PLAN.md, 2026-10-24; the controls handoff of 2026-10-24): braking seen in hand tests 1, 3 and 4, on the Default keys. Reversing isn't recorded yet, so it isn't called Reverse." }
+		},
+		"LeftStickLeft": {
+			"driving": { "label": "Steering Left", "status": "hand-verified", "evidence": "M8 controls audit (reference/M8_PLAN.md, 2026-10-24; the controls handoff of 2026-10-24): steering seen in hand tests 1, 3 and 4, on the Default keys." }
+		},
+		"LeftStickRight": {
+			"driving": { "label": "Steering Right", "status": "hand-verified", "evidence": "M8 controls audit (reference/M8_PLAN.md, 2026-10-24; the controls handoff of 2026-10-24): steering seen in hand tests 1, 3 and 4, on the Default keys." }
+		},
+		"LeftStickUp": {
+			"driving": { "status": "unverified", "evidence": "No evidence yet of what the stick's up axis does in a race (hand test 5, not yet run)." },
+			"menu": { "label": "Navigate", "status": "source", "evidence": "Option text in settings.cpp: \"The left stick pushed up (menus).\" Unbound in the WASD and Arrows presets." }
+		},
+		"LeftStickDown": {
+			"driving": { "status": "unverified", "evidence": "No evidence yet of what the stick's down axis does in a race (hand test 5, not yet run)." },
+			"menu": { "label": "Navigate", "status": "source", "evidence": "The stick's down axis, paired with \"The left stick pushed up (menus).\" in settings.cpp. Unbound in the WASD and Arrows presets." }
+		},
+		"A": {
+			"driving": { "status": "unverified", "evidence": "No evidence yet of A's action in a race (hand test 5, not yet run)." },
+			"menu": { "label": "Confirm", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the Default keys." }
+		},
+		"B": {
+			"driving": { "status": "unverified", "evidence": "No evidence yet of B's action in a race (hand test 5, not yet run)." },
+			"menu": { "label": "Back", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the Default keys." }
+		},
+		"X": {
+			"driving": { "status": "unverified", "evidence": "No evidence yet of X's action in a race (hand test 5, not yet run)." }
+		},
+		"Y": {
+			"driving": { "status": "unverified", "evidence": "No evidence yet of Y's action in a race (hand test 5, not yet run)." }
+		},
+		"LB": {
+			"driving": { "status": "unverified", "evidence": "No evidence yet of LB's action in a race (hand test 5, not yet run)." }
+		},
+		"RB": {
+			"driving": { "status": "unverified", "evidence": "No evidence yet of RB's action in a race (hand test 5, not yet run)." }
+		},
+		"DpadUp": {
+			"driving": { "status": "unverified", "evidence": "No evidence yet of the D-pad's action in a race (hand test 5, not yet run)." },
+			"menu": { "label": "Navigate", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the Default keys. Under WASD and Arrows the D-pad keys reach the game as the D-pad only (profiles_test); a menu moved by them is not yet hand-tested (ROADMAP M8)." }
+		},
+		"DpadDown": {
+			"driving": { "status": "unverified", "evidence": "No evidence yet of the D-pad's action in a race (hand test 5, not yet run)." },
+			"menu": { "label": "Navigate", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the Default keys. Under WASD and Arrows the D-pad keys reach the game as the D-pad only (profiles_test); a menu moved by them is not yet hand-tested (ROADMAP M8)." }
+		},
+		"DpadLeft": {
+			"driving": { "status": "unverified", "evidence": "No evidence yet of the D-pad's action in a race (hand test 5, not yet run)." },
+			"menu": { "label": "Navigate", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the Default keys. Under WASD and Arrows the D-pad keys reach the game as the D-pad only (profiles_test); a menu moved by them is not yet hand-tested (ROADMAP M8)." }
+		},
+		"DpadRight": {
+			"driving": { "status": "unverified", "evidence": "No evidence yet of the D-pad's action in a race (hand test 5, not yet run)." },
+			"menu": { "label": "Navigate", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the Default keys. Under WASD and Arrows the D-pad keys reach the game as the D-pad only (profiles_test); a menu moved by them is not yet hand-tested (ROADMAP M8)." }
+		},
+		"Start": {
+			"driving": { "status": "unverified", "evidence": "The option text says \"Start: pause.\", but the controls handoff (2026-10-24) records no evidence from play of Start's action in a race (hand test 5)." },
+			"menu": { "label": "Start / Done", "status": "automated", "evidence": "Scripted runs: START is Done on the game's Enter Name screen (FEASIBILITY §6b)." }
+		},
+		"Back": {
+			"driving": { "status": "unverified", "evidence": "Option text in settings.cpp says only \"Back.\"; its action in a race is not known yet (hand test 5, not yet run)." },
+			"menu": { "label": "Back", "status": "source", "evidence": "Option text in settings.cpp: \"Back.\" With Start, it also opens ReCarbon's Settings (the Back + Start chord), so the game sees Back slightly later." }
+		},
+		"RightStickUp": {
+			"driving": { "status": "unverified", "evidence": "Camera or look are possible, but nothing shows which yet (hand test 5, not yet run)." }
+		},
+		"RightStickDown": {
+			"driving": { "status": "unverified", "evidence": "Camera or look are possible, but nothing shows which yet (hand test 5, not yet run)." }
+		},
+		"RightStickLeft": {
+			"driving": { "status": "unverified", "evidence": "Camera or look are possible, but nothing shows which yet (hand test 5, not yet run)." }
+		},
+		"RightStickRight": {
+			"driving": { "status": "unverified", "evidence": "Camera or look are possible, but nothing shows which yet (hand test 5, not yet run)." }
+		},
+		"LeftStickClick": {
+			"driving": { "status": "unverified", "evidence": "No evidence yet of the left stick click's action in a race (hand test 5, not yet run)." }
+		},
+		"RightStickClick": {
+			"driving": { "status": "unverified", "evidence": "No evidence yet of the right stick click's action in a race (hand test 5, not yet run)." }
+		}
+	},
+	"settings": {
+		"open": { "label": "Open / Close Settings", "status": "source", "detail": "Any time, in game or in menus. On a Mac keyboard F1 is the brightness key: press Fn+F1, or Cmd+,." },
+		"pages": { "label": "Previous / Next Tab", "status": "source", "detail": "The tabs, in order: {tabs}." },
+		"navigate": { "label": "Navigate / Change Value", "status": "source", "detail": "Choose a row and change its value. On the Controls page, left and right pick the key slot (first or second key)." },
+		"activate": { "label": "Activate / Set Key", "status": "source", "detail": "Dear ImGui's keyboard navigation: Space activates. On the Controls page it waits for the new key.", "keys": ["space"], "pad": ["SOUTH"], "evidence": "runtime/ui/ui.cpp ImGuiConfigFlags_NavEnableKeyboard; the footer legend \"A: set key\"" },
+		"clearSlot": { "label": "Clear Key Slot", "status": "source", "detail": "On the Controls page: sets the chosen slot to none." },
+		"resetControl": { "label": "Reset Control", "status": "source", "detail": "On the Controls page: both slots go back to their defaults." },
+		"close": { "label": "Close / Back", "status": "source", "detail": "Also cancels the Quit Game confirmation." }
+	}
+}

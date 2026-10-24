@@ -1,0 +1,1205 @@
+---
+// The Garage: ReCarbon's controls as an in-game configuration screen
+// (PLAN §6). Server-rendered in full: without JS every mode's list shows and
+// the device and mode switches are anchors. The script adds the switching,
+// hover/focus/tap highlights, leader lines, the detail sheet and the mobile
+// keyboard clusters.
+import Keyboard from './Keyboard.astro';
+import Controller from './Controller.astro';
+import PadGuideList from './PadGuideList.astro';
+import StatusBadge from '../StatusBadge.astro';
+import { KEYBOARD, KEYBOARD_CLUSTERS, KEYBOARD_HEIGHT, KEYBOARD_WIDTH } from '../../data/keyboard-75';
+import {
+	BINDING,
+	CALLOUTS,
+	MODES,
+	PRESETS,
+	STATUS,
+	type Mode,
+	type PresetId,
+	PAD_NAMES,
+	PAD_NAMES_PS,
+	PAD_UNMAPPED,
+	UI,
+	calloutsOfKey,
+	controlsOfKey,
+	isBindable,
+	keyLabel,
+	keyName,
+	keyStates,
+} from '../../lib/controls';
+
+const keyText = (groups: string[][]) => groups.map((g) => g.map(keyLabel).join(' + '));
+// Each pad name as Xbox and PlayStation-style labels (display only).
+const padText = (els: string[], chord?: boolean) => {
+	const names = els.map((e) => ({ xb: PAD_NAMES[e] ?? e, ps: PAD_NAMES_PS[e] ?? e }));
+	return chord ? [{ xb: names.map((n) => n.xb).join(' + '), ps: names.map((n) => n.ps).join(' + ') }] : names;
+};
+const keyFacts = Object.fromEntries(
+	KEYBOARD.map((k) => [
+		k.id,
+		{
+			name: keyName(k.id),
+			bindable: isBindable(k.id),
+			controls: Object.fromEntries(PRESETS.map((p) => [p.id, controlsOfKey(k.id, p.id)])),
+		},
+	]),
+);
+// Per preset, each key's drawing state (driving, menu, settings) and callouts,
+// for the script to swap in when the preset changes.
+const drawing = Object.fromEntries(
+	PRESETS.map((p) => [
+		p.id,
+		Object.fromEntries(
+			KEYBOARD.map((k) => {
+				const s = keyStates(k.id, p.id);
+				return [k.id, [s.driving, s.menu, s.settings, calloutsOfKey(k.id, p.id)]];
+			}),
+		),
+	]),
+);
+const presetNames = Object.fromEntries(PRESETS.map((p) => [p.id, p.name]));
+// A callout's keys, once when every preset agrees, otherwise one set per preset
+// (CSS shows the current preset's).
+function perPreset<T>(byPreset: Record<PresetId, T>): { p?: PresetId; v: T }[] {
+	const first = JSON.stringify(byPreset[PRESETS[0].id]);
+	return PRESETS.every((p) => JSON.stringify(byPreset[p.id]) === first)
+		? [{ v: byPreset[PRESETS[0].id] }]
+		: PRESETS.map((p) => ({ p: p.id, v: byPreset[p.id] }));
+}
+const padFacts = Object.fromEntries(Object.entries(PAD_NAMES).map(([el, name]) => [el, { name, unmapped: PAD_UNMAPPED.includes(el) }]));
+const U = 60;
+// Each mode's list: the actions known (each with its status), then one group
+// for the bound controls whose game action is still to verify.
+const groups = (mode: Mode) => {
+	const known = CALLOUTS[mode].filter((c) => c.status !== 'unverified');
+	const tbd = CALLOUTS[mode].filter((c) => c.status === 'unverified');
+	return [
+		{ title: mode === 'settings' ? "ReCarbon's Settings keys" : 'Known actions', tbd: false, items: known },
+		...(tbd.length ? [{ title: 'Bound, action to verify', tbd: true, items: tbd }] : []),
+	];
+};
+---
+
+<section class="garage" data-mode="driving" data-device="keyboard" data-preset="default" aria-label="Garage: controls">
+	<div class="bar">
+		<div class="switch device-switch" role="group" aria-label="Device">
+			<a class="sw" href="#garage-keyboard" data-set-device="keyboard" aria-pressed="true">
+				<span aria-hidden="true">⌨</span> Keyboard
+			</a>
+			<a class="sw" href="#garage-controller" data-set-device="controller" aria-pressed="false">
+				<span aria-hidden="true">🎮</span> Controller
+			</a>
+		</div>
+		<div class="switch gearbox" role="group" aria-label="Mode">
+			{
+				MODES.map((m, i) => (
+					<a class="gear" href={`#mode-${m.id}`} data-set-mode={m.id} aria-pressed={i === 0 ? 'true' : 'false'}>
+						<span class="gear-letter" aria-hidden="true">
+							{m.gear}
+						</span>
+						<span class="gear-label">{m.label}</span>
+					</a>
+				))
+			}
+		</div>
+	</div>
+
+	<div class="stage">
+		<div class="device-pane">
+			<div class="device" id="garage-keyboard" data-device-pane="keyboard">
+				<div class="label-switch" data-preset-switch hidden>
+					<div class="switch" role="group" aria-label="Keyboard preset">
+						{
+							PRESETS.map((p, i) => (
+								<button type="button" class="sw sw--sm" data-set-preset={p.id} aria-pressed={i === 0 ? 'true' : 'false'}>
+									{p.name}
+								</button>
+							))
+						}
+					</div>
+					<p class="label-note">
+						Built-in presets: each changes which keys drive the controls. Hand tests so far used the Default keys; WASD and
+						Arrows are pinned by unit tests. Your own profiles are made in game.
+					</p>
+				</div>
+				<div class="clusters" role="group" aria-label="Keyboard area" hidden>
+					{
+						KEYBOARD_CLUSTERS.map((c, i) => (
+							<button
+								type="button"
+								class="cluster"
+								data-cluster={c.id}
+								data-box={c.box.map((v) => v * U).join(' ')}
+								aria-pressed={i === 0 ? 'true' : 'false'}
+							>
+								{c.label}
+							</button>
+						))
+					}
+					<svg class="minimap" viewBox={`0 0 ${KEYBOARD_WIDTH} ${KEYBOARD_HEIGHT}`} aria-hidden="true">
+						{KEYBOARD.map((k) => <rect x={k.x + 0.05} y={k.y + 0.05} width={(k.w ?? 1) - 0.1} height="0.9" rx="0.12" />)}
+						<rect class="viewport" x="0" y="0" width="1" height="1" />
+					</svg>
+				</div>
+				<Keyboard />
+			</div>
+			<div class="device" id="garage-controller" data-device-pane="controller">
+				<div class="label-switch" data-label-switch hidden>
+					<div class="switch" role="group" aria-label="Button labels">
+						<button type="button" class="sw sw--sm" data-set-labels="xb" aria-pressed="true">Xbox</button>
+						<button type="button" class="sw sw--sm" data-set-labels="ps" aria-pressed="false">PlayStation</button>
+					</div>
+					<p class="label-note">Labels only. ReCarbon reads a pad by button position; no PlayStation controller has been tested.</p>
+				</div>
+				<Controller />
+			</div>
+			<PadGuideList />
+			<p class="pad-note" data-for-device="controller">
+				<span class="pn"><span class="pn-ico is-pending" aria-hidden="true">{STATUS.pending.icon}</span>Not yet tested on a physical controller</span>
+				<span class="pn pn-more"><span class="pn-ico is-tested" aria-hidden="true">{STATUS.tested.icon}</span>Mapping unit-tested</span>
+				<span class="pn pn-more"><span class="pn-ico" aria-hidden="true">{STATUS['not-mapped'].icon}</span>Paddles not mapped</span>
+				<a href="#controller-notes">Notes</a>
+			</p>
+			<div class="detail is-empty" id="garage-detail" aria-live="polite">
+				<p class="detail-empty">Hover, tap or focus a control to see its keys, its settings.toml name and how it was verified.</p>
+				{MODES.flatMap((m) => CALLOUTS[m.id]).map((c) => (
+					<article class="sheet" data-sheet={c.id} hidden>
+						<header>
+							<h3>
+								{c.lines.length > 0 && (
+									<>
+										<span class="xb">{c.title}</span>
+										<span class="ps">{c.titlePs}</span>:{' '}
+									</>
+								)}
+								<span class:list={{ tbd: c.status === 'unverified' }}>{c.action}</span>
+							</h3>
+							<StatusBadge status={c.status} />
+						</header>
+						{c.detail && <p>{c.detail}</p>}
+						<p class="evidence">
+							<strong>Evidence:</strong> {c.evidence}
+						</p>
+						{c.lines.length > 0 ? (
+							<table>
+								<thead>
+									<tr>
+										<th scope="col">Settings row</th>
+										<th scope="col">Key 1</th>
+										<th scope="col">Key 2</th>
+										<th scope="col">Controller</th>
+									</tr>
+								</thead>
+								<tbody>
+									{c.lines.map((l) => (
+										<tr>
+											<th scope="row">
+												{l.label}
+												{l.action && l.action !== l.label && <span class="line-act">{l.action}</span>}
+											</th>
+											{[0, 1].map((slot) => (
+												<td>
+													{perPreset(l.keys).map(({ p, v }) => (
+														<span class="pk" data-p={p}>
+															{v[slot] ? <kbd>{keyLabel(v[slot])}</kbd> : '–'}
+															<code>
+																{slot ? l.setting2 : l.setting} = "{v[slot] ?? 'none'}"
+															</code>
+														</span>
+													))}
+												</td>
+											))}
+											<td>
+												<span class="xb">{c.pad.map((p) => PAD_NAMES[p]).join(', ')}</span>
+												<span class="ps">{c.pad.map((p) => PAD_NAMES_PS[p]).join(', ')}</span>
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
+						) : (
+							<p>
+								Keyboard: {keyText(c.keyGroups.default).join(', ')}. Controller: <span class="xb">{padText(c.pad, c.padChord).map((n) => n.xb).join(', ')}</span>
+								<span class="ps">{padText(c.pad, c.padChord).map((n) => n.ps).join(', ')}</span>. These are
+								ReCarbon's own Settings keys, not rebindable.
+							</p>
+						)}
+						{c.lines.length > 0 && (
+							<p class="binding">
+								Key binding <StatusBadge status={BINDING.keyboard.status} /> · Presets <StatusBadge status={BINDING.presets.status} /> ·
+								Controller mapping <StatusBadge status={BINDING.controller.status} /> · Virtual pad{' '}
+								<StatusBadge status={BINDING.virtualController.status} /> · Physical controller{' '}
+								<StatusBadge status={BINDING.physicalController.status} />
+							</p>
+						)}
+					</article>
+				))}
+				<article class="sheet" data-sheet="key" hidden>
+					<header>
+						<h3 data-fill="title" />
+					</header>
+					<p data-fill="body" />
+				</article>
+			</div>
+		</div>
+
+		<div class="callouts">
+			{
+				MODES.map((m) => (
+					<div class="mode-list" id={`mode-${m.id}`} data-mode-list={m.id}>
+						<h3 class="mode-title">
+							<span class="gear-letter" aria-hidden="true">
+								{m.gear}
+							</span>
+							{m.label} <span class="mode-blurb">{m.blurb}</span>
+						</h3>
+						{groups(m.id).map((g) => (
+							<section class:list={['group', { 'group--tbd': g.tbd }]} aria-label={g.title}>
+								<h4 class="group-title">
+									{g.title}
+									{g.tbd && <StatusBadge status="unverified" />}
+								</h4>
+								{g.tbd && (
+									<p class="group-note">
+										These keys and buttons are bound to Xbox controls (that part is tested), but what each does in a race
+										isn't known yet.
+										{m.id === 'driving' &&
+											' Nitrous, Handbrake, Speedbreaker, gear shifts, Change Camera and Look Back aren\'t tied to any of them yet: that waits for a hand test.'}
+									</p>
+								)}
+								<ul>
+									{g.items.map((c) => (
+										<li>
+											<button
+												type="button"
+												class:list={['callout', `is-${c.status}`]}
+												data-callout={c.id}
+												{...Object.fromEntries(PRESETS.map((p) => [`data-keys-${p.id}`, c.keys[p.id].join(' ')]))}
+												data-pad={c.pad.join(' ')}
+												aria-controls="garage-detail"
+												aria-pressed="false"
+											>
+												<span class="glyph" aria-hidden="true">
+													<span class="xb">{c.glyph}</span>
+													<span class="ps">{c.glyphPs}</span>
+												</span>
+												<span class="what">
+													{/* The Xbox input's name is in the detail panel; screen readers get it here. */}
+													{c.lines.length > 0 && (
+														<span class="sr-only">
+															<span class="xb">{c.title}</span>
+															<span class="ps">{c.titlePs}</span>:{' '}
+														</span>
+													)}
+													<span class:list={['act', { tbd: g.tbd }]}>{c.action}</span>
+												</span>
+												<span class="inputs inputs--keyboard">
+													{perPreset(c.keyGroups).map(({ p, v }) => (
+														<span class="pk" data-p={p}>
+															{v.length ? keyText(v).map((k) => <kbd>{k}</kbd>) : <span class="no-key">No key</span>}
+														</span>
+													))}
+												</span>
+												{/* A control row's own name already says which button it is. */}
+												<span class="inputs inputs--controller">
+													{c.lines.length === 0 &&
+														padText(c.pad, c.padChord).map((p) => (
+															<kbd>
+																<span class="xb">{p.xb}</span>
+																<span class="ps">{p.ps}</span>
+															</kbd>
+														))}
+												</span>
+												{!g.tbd && <StatusBadge status={c.status} compact />}
+											</button>
+										</li>
+									))}
+								</ul>
+							</section>
+						))}
+					</div>
+				))
+			}
+		</div>
+		<svg class="leaders" aria-hidden="true">
+			<defs>
+				<marker id="leader-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+					<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--mode-color)"></path>
+				</marker>
+			</defs>
+		</svg>
+	</div>
+
+	<p class="sr-only" data-live aria-live="polite"></p>
+
+	<script
+		type="application/json"
+		data-garage-facts
+		set:html={JSON.stringify({ keys: keyFacts, drawing, presets: presetNames, pad: padFacts, f1: UI.open.note })}
+	/>
+</section>
+
+<style>
+	.garage {
+		--mode-color: var(--mode-drive);
+		position: relative;
+		color: var(--text);
+	}
+	.garage[data-mode='menu'] {
+		--mode-color: var(--mode-menu);
+	}
+	.garage[data-mode='settings'] {
+		--mode-color: var(--mode-settings);
+	}
+
+	/* Switches: a device toggle and a gear selector. */
+	.bar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem 1.5rem;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 1.25rem;
+	}
+	.switch {
+		display: inline-flex;
+		max-width: 100%;
+		padding: 4px;
+		gap: 4px;
+		background: var(--surface-2);
+		border: 1px solid var(--line);
+		clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+	}
+	.sw,
+	.gear {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		min-height: 44px;
+		padding: 0.4rem 1.1rem;
+		font-family: var(--rn-font-display);
+		font-weight: 700;
+		font-size: 0.85rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		text-decoration: none;
+		color: var(--text-muted);
+		clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+		transition: color var(--rn-fast), background var(--rn-fast);
+	}
+	.sw:hover,
+	.gear:hover {
+		color: var(--text);
+	}
+	.sw[aria-pressed='true'] {
+		color: var(--page-bg);
+		background: var(--text);
+	}
+	.gear[aria-pressed='true'] {
+		color: var(--page-bg);
+		background: var(--mode-color);
+	}
+	@media (max-width: 30rem) {
+		.bar,
+		.switch {
+			width: 100%;
+		}
+		.sw,
+		.gear {
+			flex: 1;
+			justify-content: center;
+			padding-inline: 0.5rem;
+			letter-spacing: 0.04em;
+		}
+	}
+	.gear-letter {
+		display: inline-grid;
+		place-items: center;
+		width: 1.6rem;
+		height: 1.6rem;
+		font-size: 0.95rem;
+		border: 1.5px solid currentColor;
+		border-radius: 50%;
+	}
+	.sw:focus-visible,
+	.gear:focus-visible,
+	.callout:focus-visible,
+	.cluster:focus-visible {
+		outline: 2px solid var(--text);
+		outline-offset: 2px;
+	}
+
+	/* Stage: the device on the left, callout plates on the right. */
+	.stage {
+		position: relative;
+		display: grid;
+		gap: 1.5rem;
+		grid-template-columns: minmax(0, 1fr);
+	}
+	@media (min-width: 64rem) {
+		.stage {
+			grid-template-columns: minmax(0, 1.9fr) minmax(17rem, 1fr);
+			align-items: start;
+		}
+	}
+	.device-pane {
+		padding: clamp(0.75rem, 2vw, 1.5rem);
+		background:
+			radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--mode-color) 10%, transparent), transparent 60%),
+			linear-gradient(180deg, var(--surface-2), var(--page-bg));
+		border: 1px solid var(--line);
+		clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+	}
+	@media (min-width: 64rem) {
+		.device-pane {
+			position: sticky;
+			top: calc(var(--rn-header-h) + 1rem);
+			max-height: calc(100vh - var(--rn-header-h) - 2rem);
+			overflow-y: auto;
+			scrollbar-width: thin;
+		}
+	}
+	/* Below the two-column layout the drawing itself sticks under the header,
+	   with the detail and the list scrolling beneath it. */
+	@media (max-width: 63.99rem) {
+		.device-pane {
+			display: contents;
+		}
+		.detail.is-empty {
+			display: none;
+		}
+		.device {
+			position: sticky;
+			top: var(--rn-header-h);
+			z-index: 2;
+			padding: 0.6rem;
+			background: var(--page-bg);
+			border: 1px solid var(--line);
+			box-shadow: 0 10px 18px -12px #000;
+		}
+		.pad-note,
+		.detail {
+			margin-top: 0;
+		}
+		.callout {
+			scroll-margin-top: calc(var(--rn-header-h) + var(--sticky-h, 0px) + 0.5rem);
+		}
+	}
+	.garage.js[data-device='keyboard'] [data-for-device='controller'] {
+		display: none;
+	}
+	.pad-note {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.2rem 1rem;
+		margin: 0.75rem 0 0;
+		font-size: 0.78rem;
+		color: var(--text-muted);
+	}
+	.pn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+	.pn-ico {
+		font-weight: 700;
+	}
+	.pn-ico.is-pending {
+		color: var(--ink-amber);
+	}
+	.pn-ico.is-tested {
+		color: var(--mode-menu);
+	}
+	.pad-note a {
+		margin-inline-start: auto;
+	}
+	@media (max-width: 40rem) {
+		.pn-more {
+			display: none;
+		}
+	}
+
+	.leaders {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+		overflow: visible;
+	}
+	.leaders :global(path.leader) {
+		fill: none;
+		stroke: var(--mode-color);
+		stroke-width: 1;
+		opacity: 0.45;
+	}
+	.leaders :global(marker path) {
+		opacity: 0.6;
+	}
+
+	/* Callout plates. */
+	.mode-list + .mode-list {
+		margin-top: 2rem;
+	}
+	.mode-title {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		margin: 0 0 0.75rem;
+		font-family: var(--rn-font-display);
+		font-size: 1rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--mode-color);
+	}
+	.mode-blurb {
+		font-family: var(--rn-font-body);
+		font-size: 0.8rem;
+		letter-spacing: 0;
+		text-transform: none;
+		color: var(--text-muted);
+	}
+	.group + .group {
+		margin-top: 1.25rem;
+	}
+	.group-title {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		margin: 0 0 0.5rem;
+		font-family: var(--rn-font-display);
+		font-size: 0.75rem;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+	.group-note {
+		margin: 0 0 0.5rem;
+		font-size: 0.8rem;
+		line-height: 1.45;
+		color: var(--text-muted);
+	}
+	.callouts ul {
+		display: grid;
+		gap: 3px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.callout {
+		display: grid;
+		grid-template-columns: 2.1rem minmax(0, 1fr) auto auto;
+		align-items: center;
+		gap: 0.6rem;
+		width: 100%;
+		min-height: 44px;
+		padding: 0.3rem 0.6rem 0.3rem 0.4rem;
+		font: inherit;
+		text-align: start;
+		color: inherit;
+		background: var(--surface-2);
+		border: 1px solid transparent;
+		border-inline-start: 3px solid var(--mode-color);
+		cursor: pointer;
+		transition: background var(--rn-fast), border-color var(--rn-fast), transform var(--rn-fast) var(--rn-ease);
+	}
+	.group--tbd .callout {
+		grid-template-columns: 2.1rem minmax(0, 1fr) auto;
+		background: transparent;
+		border-inline-start: 3px dashed color-mix(in srgb, var(--rn-ember) 70%, transparent);
+		color: var(--text-2);
+	}
+	.callout:hover,
+	.callout.is-hot {
+		background: color-mix(in srgb, var(--mode-color) 14%, var(--surface-2));
+		transform: translateX(-3px);
+	}
+	.callout[aria-pressed='true'] {
+		background: color-mix(in srgb, var(--mode-color) 22%, var(--surface-2));
+		border-color: var(--mode-color);
+	}
+	.glyph {
+		display: grid;
+		place-items: center;
+		height: 1.7rem;
+		font-family: var(--rn-font-display);
+		font-weight: 700;
+		font-size: 0.72rem;
+		color: var(--mode-color);
+		border: 1px solid color-mix(in srgb, var(--mode-color) 45%, transparent);
+		border-radius: 3px;
+	}
+	.garage[data-device='keyboard'] .callout {
+		grid-template-columns: minmax(0, 1fr) auto auto;
+	}
+	.garage[data-device='keyboard'] .group--tbd .callout {
+		grid-template-columns: minmax(0, 1fr) auto;
+	}
+	.garage[data-device='keyboard'] .glyph {
+		display: none;
+	}
+	.glyph:empty {
+		visibility: hidden;
+	}
+	.group--tbd .glyph {
+		color: var(--text-2);
+		border-color: var(--line-strong);
+	}
+	.what {
+		display: grid;
+		min-width: 0;
+		line-height: 1.25;
+	}
+	.act {
+		font-weight: 600;
+		font-size: 0.92rem;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.tbd {
+		font-style: italic;
+		font-weight: 500;
+		color: color-mix(in srgb, var(--rn-ember) 65%, var(--text));
+	}
+	.inputs {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: 0.25rem;
+		max-width: 11rem;
+	}
+	kbd {
+		display: inline-block;
+		padding: 0 0.4rem;
+		font-family: var(--rn-font-mono);
+		font-size: 0.72rem;
+		line-height: 1.5;
+		color: var(--text);
+		background: var(--kbd-bg);
+		border: 1px solid var(--line-strong);
+		border-bottom-width: 2px;
+		border-radius: 3px;
+	}
+
+	/* Device and mode visibility (with JS; without it everything shows). */
+	.garage.js .device:not(.on) {
+		display: none;
+	}
+	.garage.js .mode-list:not(.on) {
+		display: none;
+	}
+	.garage.js .mode-title {
+		display: none;
+	}
+	.garage:not(.js) .device + .device {
+		margin-top: 2rem;
+	}
+	/* Xbox names by default; PlayStation-style ones in controller view when chosen. */
+	.garage .ps {
+		display: none;
+	}
+	.garage[data-device='controller'][data-labels='ps'] .ps {
+		display: inline;
+	}
+	.garage[data-device='controller'][data-labels='ps'] .xb {
+		display: none;
+	}
+	.label-switch:not([hidden]) {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.4rem 0.9rem;
+		margin-bottom: 0.5rem;
+	}
+	.sw--sm {
+		min-height: 36px;
+		padding: 0.25rem 0.9rem;
+		font-size: 0.75rem;
+		border: 0;
+		background: none;
+		cursor: pointer;
+	}
+	.label-note {
+		margin: 0;
+		font-size: 0.75rem;
+		color: var(--text-muted);
+	}
+	/* Keys per preset: the current preset's only (Default without JS). */
+	.pk {
+		display: contents;
+	}
+	.garage[data-preset='default'] .pk[data-p]:not([data-p='default']),
+	.garage[data-preset='wasd'] .pk[data-p]:not([data-p='wasd']),
+	.garage[data-preset='arrows'] .pk[data-p]:not([data-p='arrows']) {
+		display: none;
+	}
+	.no-key {
+		font-size: 0.72rem;
+		font-style: italic;
+		color: var(--text-muted);
+	}
+	.garage[data-device='keyboard'] .inputs--controller,
+	.garage[data-device='controller'] .inputs--keyboard {
+		display: none;
+	}
+	.garage:not(.js) .inputs--controller {
+		display: flex;
+	}
+
+	/* Mobile clusters. */
+	.clusters:not([hidden]) {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr)) 4.5rem;
+		gap: 0.3rem;
+		align-items: center;
+		margin-bottom: 0.5rem;
+	}
+	.cluster {
+		min-height: 40px;
+		padding: 0.2rem 0.3rem;
+		font: 600 0.72rem/1.1 var(--rn-font-body);
+		color: var(--text-muted);
+		background: var(--surface-2);
+		border: 1px solid var(--line);
+		border-radius: 3px;
+		cursor: pointer;
+	}
+	.cluster[aria-pressed='true'] {
+		color: var(--page-bg);
+		background: var(--mode-color);
+		border-color: var(--mode-color);
+	}
+	.minimap {
+		width: 100%;
+		height: auto;
+	}
+	.minimap rect {
+		fill: var(--line-strong);
+	}
+	.minimap .viewport {
+		fill: none;
+		stroke: var(--mode-color);
+		stroke-width: 0.15;
+	}
+
+	/* Detail sheet. */
+	.detail {
+		margin-top: 1rem;
+		padding: 0.85rem 1rem;
+		min-height: 4rem;
+		background: var(--surface);
+		border: 1px solid var(--line);
+		border-top: 2px solid var(--mode-color);
+	}
+	.detail-empty {
+		margin: 0;
+		color: var(--text-muted);
+	}
+	.sheet header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem 1rem;
+	}
+	.sheet h3 {
+		margin: 0;
+		font-family: var(--rn-font-display);
+		font-size: 1.05rem;
+	}
+	.sheet p {
+		margin: 0.6rem 0 0;
+		font-size: 0.9rem;
+	}
+	.evidence {
+		color: var(--text-muted);
+	}
+	.sheet table {
+		width: 100%;
+		margin-top: 0.75rem;
+		border-collapse: collapse;
+		font-size: 0.85rem;
+	}
+	.sheet :is(th, td) {
+		padding: 0.4rem 0.5rem;
+		text-align: start;
+		vertical-align: top;
+		border-bottom: 1px solid var(--line);
+	}
+	.sheet thead th {
+		font-size: 0.72rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+	.sheet code {
+		display: block;
+		margin-top: 0.2rem;
+		font-family: var(--rn-font-mono);
+		font-size: 0.72rem;
+		color: var(--text-muted);
+		overflow-wrap: anywhere;
+	}
+	.line-act {
+		display: block;
+		font-weight: 400;
+		font-size: 0.8rem;
+		color: var(--text-muted);
+	}
+	.binding {
+		line-height: 2.1;
+	}
+	@media (max-width: 40rem) {
+		.sheet thead {
+			display: none;
+		}
+		.sheet :is(tr, th, td) {
+			display: block;
+			border: 0;
+			padding: 0.15rem 0;
+		}
+		.sheet tr {
+			padding: 0.5rem 0;
+			border-bottom: 1px solid var(--line);
+		}
+	}
+
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.callout:hover,
+		.callout.is-hot {
+			transform: none;
+		}
+	}
+</style>
+
+<script>
+	type Facts = {
+		keys: Record<string, { name: string; bindable: boolean; controls: Record<string, { label: string; setting: string; slot: number }[]> }>;
+		// Per preset and key: its driving, menu and settings states, and its callouts.
+		drawing: Record<string, Record<string, [string, string, string, string]>>;
+		presets: Record<string, string>;
+		pad: Record<string, { name: string; unmapped: boolean }>;
+		f1: string;
+	};
+
+	for (const root of document.querySelectorAll<HTMLElement>('.garage')) setup(root);
+
+	function setup(root: HTMLElement) {
+		root.classList.add('js');
+		root.dataset.labels = 'xb';
+		const labelSwitch = root.querySelector<HTMLElement>('[data-label-switch]');
+		if (labelSwitch) labelSwitch.hidden = false;
+		const presetSwitch = root.querySelector<HTMLElement>('[data-preset-switch]');
+		if (presetSwitch) presetSwitch.hidden = false;
+		// Without JS the switches are anchors to each section; with it they're toggle buttons.
+		for (const el of root.querySelectorAll<HTMLElement>('[data-set-mode], [data-set-device]')) {
+			el.setAttribute('role', 'button');
+			el.addEventListener('keydown', (e) => {
+				if (e.key === ' ') {
+					e.preventDefault();
+					el.click();
+				}
+			});
+		}
+		const facts: Facts = JSON.parse(root.querySelector('[data-garage-facts]')!.textContent!);
+		const live = root.querySelector<HTMLElement>('[data-live]')!;
+		const leaders = root.querySelector<SVGSVGElement>('.leaders')!;
+		const stage = root.querySelector<HTMLElement>('.stage')!;
+		const kb = root.querySelector<SVGSVGElement>('.kb')!;
+		const clusters = root.querySelector<HTMLElement>('.clusters')!;
+		const wide = matchMedia('(min-width: 64rem)');
+		// Below the two-column layout the detail sheet opens under the row that
+		// was picked, and comes back to its place after.
+		const detail = root.querySelector<HTMLElement>('.detail');
+		const detailHome = document.createComment('detail');
+		detail?.before(detailHome);
+		const placeDetail = (button: HTMLElement | null) => {
+			if (!detail) return;
+			if (button && !wide.matches) button.closest('li')!.after(detail);
+			else if (detail.previousSibling !== detailHome) detailHome.after(detail);
+		};
+		const stickyHeight = () => {
+			const on = root.querySelector<HTMLElement>('.device.on');
+			root.style.setProperty('--sticky-h', `${wide.matches || !on ? 0 : on.offsetHeight}px`);
+		};
+		const narrow = matchMedia('(max-width: 40rem)');
+		let pinned: string | null = null;
+
+		const $$ = <T extends Element>(sel: string) => [...root.querySelectorAll<T>(sel)];
+		const callout = (id: string) => root.querySelector<HTMLButtonElement>(`[data-callout="${id}"]`);
+		// A callout's keys in the current preset.
+		const keysOf = (button: HTMLElement) => (button.getAttribute(`data-keys-${root.dataset.preset}`) ?? '').split(' ').filter(Boolean);
+
+		function setPressed(sel: string, attr: string, value: string) {
+			for (const el of $$<HTMLElement>(sel)) el.setAttribute('aria-pressed', String(el.getAttribute(attr) === value));
+		}
+
+		function show() {
+			const mode = root.dataset.mode!;
+			const device = root.dataset.device!;
+			for (const el of $$<HTMLElement>('[data-mode-list]')) el.classList.toggle('on', el.dataset.modeList === mode);
+			for (const el of $$<HTMLElement>('[data-device-pane]')) el.classList.toggle('on', el.dataset.devicePane === device);
+			setPressed('[data-set-mode]', 'data-set-mode', mode);
+			setPressed('[data-set-device]', 'data-set-device', device);
+			clusters.hidden = !(narrow.matches && device === 'keyboard');
+			// On a phone the controller shows the pad alone; the list names the actions.
+			const pad = root.querySelector<SVGSVGElement>('svg.pad');
+			if (pad) pad.setAttribute('viewBox', narrow.matches ? pad.dataset.padBox! : pad.dataset.fullBox!);
+			if (clusters.hidden) zoom(null);
+			unpin();
+			draw(null);
+			stickyHeight();
+		}
+
+		// Light the parts of the drawing behind one callout, and draw its leaders.
+		function draw(id: string | null) {
+			for (const el of $$('.is-hot')) el.classList.remove('is-hot');
+			leaders.querySelectorAll('path.leader').forEach((p) => p.remove());
+			root.classList.toggle('has-hot', !!id);
+			if (!id) return;
+			const button = callout(id);
+			if (!button) return;
+			button.classList.add('is-hot');
+			const device = root.dataset.device;
+			const parts =
+				device === 'keyboard'
+					? keysOf(button).map((k) => kb.querySelector(`[data-key="${k}"]`))
+					: button.dataset.pad!.split(' ').map((p) => root.querySelector(`.pad .pad-el[data-el="${p}"]`));
+			const lit = parts.filter((p): p is SVGGElement => !!p);
+			for (const p of lit) p.classList.add('is-hot');
+			// The controller guide's own label for it.
+			for (const g of root.querySelectorAll(`.gl[data-callouts~="${id}"]`)) g.classList.add('is-hot');
+			// Long traces only for the keyboard: the controller guide has its own short lines.
+			if (!wide.matches || device === 'controller' || button.offsetParent === null) return;
+			const box = stage.getBoundingClientRect();
+			const b = button.getBoundingClientRect();
+			// No leader to a row scrolled out of view.
+			const headerBottom = document.querySelector('.hud')?.getBoundingClientRect().bottom ?? 0;
+			if (b.bottom < headerBottom || b.top > innerHeight) return;
+			// Traces run from the row into the gutter between the drawing and the
+			// list, then straight across to the part, so they never cross the
+			// detail panel under the drawing.
+			const pane = root.querySelector<HTMLElement>('.device-pane')!.getBoundingClientRect();
+			const ex = b.left - box.left - 4;
+			const ey = b.top - box.top + b.height / 2;
+			const gx = (pane.right - box.left + ex) / 2;
+			for (const p of lit) {
+				const r = p.getBoundingClientRect();
+				if (r.width === 0 || r.bottom < pane.top || r.top > pane.bottom) continue;
+				const sx = r.right - box.left + 3;
+				const sy = r.top - box.top + r.height / 2;
+				const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+				path.setAttribute('class', 'leader');
+				path.setAttribute('d', `M ${ex} ${ey} H ${gx} V ${sy} H ${sx}`);
+				path.setAttribute('marker-end', 'url(#leader-arrow)');
+				leaders.appendChild(path);
+			}
+		}
+
+		function sheet(id: string | null) {
+			if (!detail) return;
+			for (const s of detail.querySelectorAll<HTMLElement>('[data-sheet]')) s.hidden = s.dataset.sheet !== id;
+			detail.querySelector<HTMLElement>('.detail-empty')!.hidden = !!id;
+			detail.classList.toggle('is-empty', !id);
+		}
+
+		function pin(id: string) {
+			pinned = id;
+			setPressed('[data-callout]', 'data-callout', id);
+			draw(id);
+			sheet(id);
+			const b = callout(id);
+			placeDetail(b);
+			if (b) {
+				const status = b.querySelector('.badge .text')?.textContent ?? 'Action to verify';
+				const ps = root.dataset.labels === 'ps' && root.dataset.device === 'controller';
+				const name = b.querySelector(ps ? '.what .sr-only .ps' : '.what .sr-only .xb')?.textContent;
+				live.textContent = `${name ? `${name}: ` : ''}${b.querySelector('.act')!.textContent}. ${status}`;
+				if (narrow.matches) zoomTo(keysOf(b)[0]);
+			}
+		}
+
+		function unpin() {
+			pinned = null;
+			setPressed('[data-callout]', 'data-callout', '');
+			sheet(null);
+			placeDetail(null);
+		}
+
+		// A key or pad part with no callout in this mode: describe it.
+		function describe(title: string, body: string) {
+			pinned = null;
+			setPressed('[data-callout]', 'data-callout', '');
+			draw(null);
+			placeDetail(null);
+			const s = root.querySelector<HTMLElement>('[data-sheet="key"]');
+			if (!s) return;
+			s.querySelector('[data-fill="title"]')!.textContent = title;
+			s.querySelector('[data-fill="body"]')!.textContent = body;
+			sheet('key');
+			live.textContent = `${title}. ${body}`;
+		}
+
+		function keyBody(id: string): string {
+			const k = facts.keys[id];
+			const preset = facts.presets[root.dataset.preset!];
+			const controls = k.controls[root.dataset.preset!];
+			if (id === 'f1') return `Reserved: opens and closes ReCarbon's Settings, and can't be rebound. ${facts.f1}`;
+			if (controls.length)
+				return `In the ${preset} preset: ${controls.map((c) => `${c.label} (${c.setting})`).join(', ')}. Not used in this mode. Rebind it in Settings > Controls.`;
+			if (k.bindable) return `Not bound in the ${preset} preset. You can bind it in Settings > Controls, in a profile of your own.`;
+			return "Not bound, and ReCarbon can't bind it (fn, Command and the media keys are left out on purpose).";
+		}
+
+		function pick(target: Element) {
+			const part = target.closest<SVGGElement>('[data-callouts]');
+			if (!part) return;
+			const mode = root.dataset.mode!;
+			const id = part.dataset.callouts!.split(' ').find((c) => c.startsWith(`${mode}-`));
+			if (id) {
+				pin(id);
+				callout(id)?.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+				return;
+			}
+			if (part.dataset.key) describe(facts.keys[part.dataset.key].name, keyBody(part.dataset.key));
+			else if (part.dataset.el) {
+				const p = facts.pad[part.dataset.el];
+				describe(p.name, p.unmapped ? 'Not mapped: ReCarbon does not read this input (yet). If the pad remaps it to another button, it acts as that button.' : 'Mapped, but with no known action in this mode.');
+			}
+		}
+
+		// Mobile: zoom the keyboard to one cluster.
+		function zoom(cluster: HTMLButtonElement | null) {
+			const full = kb.dataset.fullViewbox!;
+			const box = cluster ? cluster.dataset.box! : full;
+			kb.setAttribute('viewBox', box);
+			const [, , bw, bh] = box.split(' ').map(Number);
+			kb.style.aspectRatio = cluster ? `${bw} / ${bh}` : '';
+			kb.style.overflow = cluster ? 'hidden' : '';
+			setPressed('.cluster', 'data-cluster', cluster?.dataset.cluster ?? '');
+			const vp = root.querySelector<SVGRectElement>('.minimap .viewport');
+			if (vp) {
+				const [x, y, w, h] = (cluster?.dataset.box ?? full).split(' ').map((v) => Number(v) / Number(kb.dataset.unit));
+				vp.setAttribute('x', String(x));
+				vp.setAttribute('y', String(y));
+				vp.setAttribute('width', String(w));
+				vp.setAttribute('height', String(h));
+			}
+			stickyHeight();
+		}
+		function zoomTo(key: string | undefined) {
+			if (!key || clusters.hidden) return;
+			const cap = kb.querySelector<SVGGElement>(`[data-key="${key}"] .cap`);
+			if (!cap) return;
+			const cx = Number(cap.getAttribute('x')) + Number(cap.getAttribute('width')) / 2;
+			const cy = Number(cap.getAttribute('y')) + Number(cap.getAttribute('height')) / 2;
+			const hit = $$<HTMLButtonElement>('.cluster').find((c) => {
+				const [x, y, w, h] = c.dataset.box!.split(' ').map(Number);
+				return cx >= x && cx <= x + w && cy >= y && cy <= y + h;
+			});
+			if (hit) zoom(hit);
+		}
+
+		// A built-in keyboard preset: the drawing's key states, the lists' keys
+		// (CSS, by data-preset) and the detail tables follow it.
+		function setPreset(id: string) {
+			root.dataset.preset = id;
+			for (const key of kb.querySelectorAll<SVGGElement>('[data-key]')) {
+				const [driving, menu, settings, callouts] = facts.drawing[id][key.dataset.key!];
+				Object.assign(key.dataset, { driving, menu, settings, callouts });
+			}
+			setPressed('[data-set-preset]', 'data-set-preset', id);
+			const was = pinned;
+			unpin();
+			draw(null);
+			if (was) pin(was);
+			live.textContent = `${facts.presets[id]} preset`;
+		}
+
+		root.addEventListener('click', (e) => {
+			const t = e.target as Element;
+			const preset = t.closest<HTMLElement>('[data-set-preset]');
+			if (preset) {
+				setPreset(preset.dataset.setPreset!);
+				return;
+			}
+			// "Notes" in the controller footer: open the notes it points to.
+			if (t.closest('a[href="#controller-notes"]')) document.querySelector('#controller-notes')?.setAttribute('open', '');
+			const labels = t.closest<HTMLElement>('[data-set-labels]');
+			if (labels) {
+				root.dataset.labels = labels.dataset.setLabels!;
+				setPressed('[data-set-labels]', 'data-set-labels', root.dataset.labels);
+				live.textContent = `${labels.textContent} button labels`;
+				if (pinned) draw(pinned);
+				return;
+			}
+			const dev = t.closest<HTMLElement>('[data-set-device]');
+			const mode = t.closest<HTMLElement>('[data-set-mode]');
+			const c = t.closest<HTMLButtonElement>('[data-callout]');
+			const cl = t.closest<HTMLButtonElement>('.cluster');
+			if (dev) {
+				e.preventDefault();
+				root.dataset.device = dev.dataset.setDevice!;
+				show();
+				if (!clusters.hidden) zoom(root.querySelector('.cluster'));
+				live.textContent = `${dev.dataset.setDevice === 'keyboard' ? 'Keyboard' : 'Controller'} shown`;
+			} else if (mode) {
+				e.preventDefault();
+				root.dataset.mode = mode.dataset.setMode!;
+				show();
+				live.textContent = `Mode: ${mode.querySelector('.gear-label')!.textContent}`;
+			} else if (c) {
+				if (pinned === c.dataset.callout) {
+					unpin();
+					draw(null);
+				} else pin(c.dataset.callout!);
+			} else if (cl) zoom(cl);
+			else if (t.closest('.kb, .pad')) pick(t);
+		});
+		root.addEventListener('pointerover', (e) => {
+			if (e.pointerType !== 'mouse' || pinned) return;
+			const c = (e.target as Element).closest<HTMLElement>('[data-callout]');
+			if (c) draw(c.dataset.callout!);
+		});
+		root.addEventListener('pointerout', (e) => {
+			if (e.pointerType !== 'mouse' || pinned) return;
+			if ((e.target as Element).closest('[data-callout]')) draw(null);
+		});
+		root.addEventListener('focusin', (e) => {
+			const c = (e.target as Element).closest<HTMLElement>('[data-callout]');
+			if (c && !pinned) draw(c.dataset.callout!);
+		});
+		root.addEventListener('focusout', (e) => {
+			if (!pinned && (e.target as Element).closest('[data-callout]')) draw(null);
+		});
+		root.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape' && pinned) {
+				unpin();
+				draw(null);
+			}
+		});
+		const redraw = () => {
+			draw(pinned);
+			stickyHeight();
+		};
+		addEventListener('resize', redraw);
+		addEventListener('scroll', () => draw(pinned), { passive: true });
+		narrow.addEventListener('change', show);
+		wide.addEventListener('change', () => {
+			placeDetail(pinned ? callout(pinned) : null);
+			redraw();
+		});
+
+		show();
+		if (!clusters.hidden) zoom(root.querySelector('.cluster'));
+	}
+</script>

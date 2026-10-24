@@ -1,0 +1,109 @@
+---
+// The controls as plain tables, per mode: the text equivalent of the Garage's
+// drawings (PLAN §6), and the Controls docs page's reference. One keyboard
+// column per built-in preset; ReCarbon's own Settings keys are the same in all.
+import StatusBadge from '../StatusBadge.astro';
+import { CALLOUTS, MODES, PAD_NAMES, PRESETS, keyLabel } from '../../lib/controls';
+
+interface Props {
+	headingLevel?: 2 | 3;
+}
+const H = `h${Astro.props.headingLevel ?? 3}` as 'h2' | 'h3';
+const keys = (groups: string[][]) => groups.map((g) => g.map(keyLabel).join(' + ')).join(', ') || 'No key';
+const pad = (els: string[], chord?: boolean) => els.map((e) => PAD_NAMES[e] ?? e).join(chord ? ' + ' : ', ');
+---
+
+{
+	MODES.map((m) => (
+		<section class="ctl-mode">
+			<H id={`table-${m.id}`}>
+				{m.label}: {m.blurb}
+			</H>
+			<div class="ctl-scroll">
+				<table>
+					<thead>
+						<tr>
+							<th scope="col">Control</th>
+							{PRESETS.map((p) => (
+								<th scope="col">Keyboard: {p.name}</th>
+							))}
+							<th scope="col">Controller</th>
+							<th scope="col">Does</th>
+							<th scope="col">Status</th>
+						</tr>
+					</thead>
+					<tbody>
+						{CALLOUTS[m.id].map((c) => (
+							<tr>
+								<th scope="row">
+									{c.lines.length ? c.title : c.action}
+									{c.lines.map((l) => (
+										<code class="toml">{l.setting}</code>
+									))}
+								</th>
+								{c.lines.length > 0 ? (
+									PRESETS.map((p) => (
+										<td>
+											<span class="kbd-list">{keys(c.keyGroups[p.id])}</span>
+										</td>
+									))
+								) : (
+									<td colspan={PRESETS.length}>
+										<span class="kbd-list">{keys(c.keyGroups.default)}</span>
+									</td>
+								)}
+								<td>{pad(c.pad, c.padChord)}</td>
+								<td>{c.lines.length ? c.action : (c.detail ?? '')}</td>
+								<td>
+									<StatusBadge status={c.status} />
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		</section>
+	))
+}
+
+<style>
+	.ctl-scroll {
+		overflow-x: auto;
+	}
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.875rem;
+	}
+	th,
+	td {
+		padding: 0.5rem 0.6rem;
+		text-align: start;
+		vertical-align: top;
+		border-bottom: 1px solid var(--sl-color-gray-5, var(--line));
+	}
+	thead th {
+		font-family: var(--rn-font-display);
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--sl-color-gray-3, var(--text-muted));
+	}
+	.kbd-list {
+		display: block;
+		font-family: var(--rn-font-mono);
+	}
+	/* Above Starlight's inline code, which breaks anywhere. */
+	table .toml {
+		display: block;
+		margin-top: 0.25rem;
+		font-size: 0.75rem;
+		font-weight: 400;
+		color: var(--sl-color-gray-3, var(--text-muted));
+		background: none;
+		padding: 0;
+		white-space: nowrap;
+		overflow-wrap: normal;
+		word-break: normal;
+	}
+</style>

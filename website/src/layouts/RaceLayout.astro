@@ -1,0 +1,76 @@
+---
+// The custom pages' frame (landing, Garage): the race HUD header and the
+// legal footer, on the same tokens and fonts as the docs.
+import '../styles/fonts.css';
+import '../styles/tokens.css';
+import '../styles/race.css';
+import SiteNav from '../components/SiteNav.astro';
+import VersionChip from '../components/VersionChip.astro';
+import Disclaimer from '../components/Disclaimer.astro';
+import RepoLinks from '../components/RepoLinks.astro';
+import mark from '../assets/recarbon-mark.svg?url';
+import { site } from '../site.config';
+import { url } from '../lib/url';
+
+interface Props {
+	title: string;
+	description: string;
+}
+const { title, description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<meta name="color-scheme" content="dark" />
+		<meta name="theme-color" content="#0b0d10" />
+		<link rel="canonical" href={canonical} />
+		<link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:type" content="website" />
+		<slot name="head" />
+	</head>
+	<body>
+		<a class="skip" href="#main">Skip to content</a>
+		<header class="hud">
+			<a class="brand" href={url()}>
+				<img src={mark} alt="" width="48" height="30" />
+				<span>{site.name}</span>
+			</a>
+			<VersionChip />
+			<nav aria-label="Main" class="hud-nav">
+				<SiteNav />
+			</nav>
+			<details class="hud-menu">
+				<summary aria-label="Menu">
+					<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
+				</summary>
+				<nav aria-label="Main (mobile)">
+					<SiteNav class="stacked" />
+				</nav>
+			</details>
+		</header>
+		<main id="main">
+			<slot />
+		</main>
+		<footer class="legal">
+			<div class="legal-inner">
+				<nav aria-label="Footer" class="legal-links">
+					<a href={url('docs/')}>Docs</a>
+					<a href={url('docs/faq/')}>FAQ</a>
+					<a href={url('docs/credits/')}>Credits</a>
+					<a href={url('docs/licenses/notice/')}>Licenses</a>
+				</nav>
+				<RepoLinks />
+				<p class="gpl">ReCarbon is free software under the GNU GPL, version 3 or later.</p>
+				<Disclaimer />
+			</div>
+		</footer>
+	</body>
+</html>

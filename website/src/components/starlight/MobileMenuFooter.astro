@@ -1,0 +1,18 @@
+---
+import Default from '@astrojs/starlight/components/MobileMenuFooter.astro';
+import SiteNav from '../SiteNav.astro';
+---
+
+<nav aria-label="Main" class="mobile-nav">
+	<SiteNav class="stacked" />
+</nav>
+<Default />
+
+<style>
+	.mobile-nav :global(.site-nav) {
+		flex-wrap: wrap;
+		margin-bottom: 1rem;
+		padding-bottom: 1rem;
+		border-bottom: 1px solid var(--sl-color-gray-5);
+	}
+</style>

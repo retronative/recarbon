@@ -1,0 +1,50 @@
+---
+// The footer's source links: repository, issues and releases once the
+// repository is public (site.repo), a quiet note until then.
+import GitHubIcon from './GitHubIcon.astro';
+import { repo } from '../lib/repo';
+---
+
+{
+	repo ? (
+		<nav class="repo-links" aria-label="Source code">
+			<a href={repo.url}>
+				<GitHubIcon size={16} /> Repository
+			</a>
+			<a href={repo.issues}>Issues</a>
+			<a href={repo.releases}>Releases</a>
+		</nav>
+	) : (
+		<p class="repo-soon">
+			<GitHubIcon size={16} /> Source code on GitHub: published with the first public release.
+		</p>
+	)
+}
+
+<style>
+	.repo-links,
+	.repo-soon {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem 1.25rem;
+		margin: 0;
+		font-size: 0.85rem;
+	}
+	.repo-links a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		min-height: 32px;
+		font-weight: 600;
+		text-decoration: none;
+		color: var(--sl-color-white, var(--text));
+	}
+	.repo-links a:hover {
+		color: var(--sl-color-accent-high, var(--link));
+	}
+	.repo-soon {
+		gap: 0.4rem;
+		color: var(--sl-color-gray-3, var(--text-muted));
+	}
+</style>

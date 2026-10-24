@@ -1,0 +1,119 @@
+---
+// Settings > every page, generated from settings.cpp's option table
+// (settings.generated.json): labels, descriptions, defaults and the
+// settings.toml names, as the macOS build shows them.
+import settings from '../data/settings.generated.json';
+import { UI } from '../lib/controls';
+import { url } from '../lib/url';
+
+type Option = (typeof settings.options)[number] & { values?: { token: string; label: string }[]; unit?: string; min?: number; max?: number; defaultToken?: string };
+const options = settings.options as Option[];
+const fmt = (o: Option) => {
+	if (typeof o.default !== 'number') return o.default;
+	return o.unit === '%' && o.max !== undefined && o.max <= 1 ? `${Math.round(o.default * 100)}%` : `${o.default}${o.unit && o.unit !== '%' ? ` ${o.unit}` : o.unit ?? ''}`;
+};
+const range = (o: Option) => {
+	if (o.values) return o.values.map((v) => v.label).join(', ');
+	if (o.type === 'Bool') return 'On, Off';
+	if (o.min === undefined || o.max === undefined) return '';
+	const pct = o.unit === '%' && o.max <= 1;
+	return pct ? `${o.min * 100}–${o.max * 100}%` : `${o.min} to ${o.max}`;
+};
+const toml = (o: Option) => {
+	const v = typeof o.default === 'number' ? String(o.default) : o.type === 'Bool' ? String(o.default === 'On') : `"${o.defaultToken}"`;
+	return `[${o.table}] ${o.key} = ${v}`;
+};
+---
+
+{
+	UI.tabs.map((tab) => (
+		<section>
+			<h2 id={tab.toLowerCase()}>{tab}</h2>
+			{tab === 'Controls' ? (
+				<p>
+					One row per Xbox 360 control, each with two keys. See <a href={url('docs/controls/')}>Controls</a> and the{' '}
+					<a href={url('garage/')}>Garage</a>.
+				</p>
+			) : (
+				<dl class="opts">
+					{options
+						.filter((o) => o.category === tab)
+						.map((o) => (
+							<div class="opt">
+								<dt>
+									{o.label}
+									{o.apply === 'Restart' && <span class="restart">restart</span>}
+								</dt>
+								<dd>
+									<p>{o.description}</p>
+									<p class="meta">
+										Default <strong>{fmt(o)}</strong>
+										{range(o) && <> · {range(o)}</>}
+									</p>
+									<code>{toml(o)}</code>
+									{o.env && <code class="env">{o.env}</code>}
+								</dd>
+							</div>
+						))}
+				</dl>
+			)}
+			{tab === 'Advanced' && (
+				<p>
+					Advanced also has <strong>Save Bug Report</strong>, <strong>Check for Updates</strong>, the build's version and
+					commit, and the legal notice. The footer's last button is <strong>Quit Game</strong>, which asks first.
+				</p>
+			)}
+		</section>
+	))
+}
+
+<style>
+	.opts {
+		display: grid;
+		gap: 0;
+		margin: 0;
+	}
+	.opt {
+		display: grid;
+		gap: 0.25rem 1.5rem;
+		padding: 0.9rem 0;
+		border-bottom: 1px solid var(--sl-color-gray-5);
+	}
+	@media (min-width: 40rem) {
+		.opt {
+			grid-template-columns: 12rem 1fr;
+		}
+	}
+	dt {
+		margin: 0;
+		font-weight: 600;
+		color: var(--sl-color-white);
+	}
+	dd {
+		margin: 0;
+	}
+	dd p {
+		margin: 0 0 0.3rem;
+	}
+	.meta {
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-3);
+	}
+	code {
+		display: inline-block;
+		margin: 0.15rem 0.5rem 0 0;
+		font-size: var(--sl-text-xs);
+	}
+	.env {
+		opacity: 0.75;
+	}
+	.restart {
+		margin-inline-start: 0.5rem;
+		padding: 0 0.4rem;
+		font-size: var(--sl-text-xs);
+		font-weight: 400;
+		color: var(--sl-color-gray-2);
+		border: 1px solid var(--rn-amber);
+		border-radius: 2px;
+	}
+</style>

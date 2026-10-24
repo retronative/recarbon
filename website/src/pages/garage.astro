@@ -1,0 +1,259 @@
+---
+import RaceLayout from '../layouts/RaceLayout.astro';
+import Garage from '../components/garage/Garage.astro';
+import ControlsTables from '../components/garage/ControlsTables.astro';
+import StatusBadge from '../components/StatusBadge.astro';
+import { BINDING, PAD_DEFAULT, PRESETS, SOURCE, STATUS, TESTED_CONTROLLERS, type Status } from '../lib/controls';
+import { url } from '../lib/url';
+---
+
+<RaceLayout
+	title="Garage: ReCarbon controls"
+	description="ReCarbon's keyboard and controller controls, interactive: driving, menus and the Settings overlay, with how each one was verified."
+>
+	<section class="section garage-page">
+		<div class="wrap">
+			<p class="eyebrow">Garage · Controls</p>
+			<h1 class="display title">Tune your controls</h1>
+			<p class="intro">
+				ReCarbon turns the keyboard into an Xbox 360 controller. Pick a device, a mode and a keyboard preset
+				({PRESETS.map((p) => p.name).join(', ')}); hover, tap or tab through the list to light up each control. The Garage
+				shows ReCarbon's <strong>built-in presets</strong> only: your own profiles are made in game.
+			</p>
+
+			<Garage />
+
+			<div class="panels">
+				<details class="panel cut">
+					<summary>Text table: every mode</summary>
+					<ControlsTables />
+				</details>
+
+				<details class="panel cut" id="your-bindings">
+					<summary>Presets and your own profiles</summary>
+					<p>
+						ReCarbon has three built-in keyboard presets. <strong>Default</strong> is the original layout, where the arrow
+						keys work the left stick (Left and Right steer) and the D-pad at once. <strong>WASD</strong> drives with W A S D and leaves the arrows to the D-pad;
+						<strong>Arrows</strong> drives with the arrows and leaves W A S D to the D-pad. In those two no key does two
+						things. The built-ins can't be changed.
+					</p>
+					<p>
+						<strong>Custom profiles are configured in game</strong>, not on this site. Open Settings (<kbd>F1</kbd>,
+						<kbd>Fn</kbd>+<kbd>F1</kbd> or <kbd>⌘</kbd>+<kbd>,</kbd>) and go to <strong>Controls</strong> with <kbd>Q</kbd> /
+						<kbd>E</kbd>: the <strong>Keyboard Profile</strong> row switches profiles at once. Rebinding a key of a built-in
+						preset makes a copy of it, such as “WASD (custom)”. Controller buttons are rebound on the
+						<strong>Controller</strong> tab, which has its own <strong>Controller Profile</strong> row.
+					</p>
+					<p>
+						Profiles live in <code>~/Library/Application Support/ReCarbon/profiles/</code> (<code>keyboard.toml</code> and
+						<code>controller.toml</code>). The active keyboard profile's keys are also written to the <code>[keys]</code>
+						table of <code>settings.toml</code>, so an older ReCarbon still finds them.
+						<a href={url('docs/controls/#presets-and-profiles')}>More on profiles</a>
+					</p>
+				</details>
+
+				<details class="panel cut" id="controller-notes">
+					<summary>Controller notes</summary>
+					<ul class="proof">
+						<li><StatusBadge status={BINDING.controller.status} /> The default mapping below is pinned by unit tests.</li>
+						<li>
+							<StatusBadge status={BINDING.virtualController.status} /> SDL's virtual controller drives the menus, survives
+							unplugging, and rebinds buttons in Settings &gt; Controller. That is automated evidence, not a hardware test.
+						</li>
+						<li>
+							<StatusBadge status={BINDING.physicalController.status} /> No physical controller has been hand-tested with ReCarbon
+							yet, and controller rebinding hasn't been tried on hardware. What each button does in a race is still to verify.
+						</li>
+					</ul>
+					<h3 class="notes-h">Default controller profile</h3>
+					<p>
+						Pads are read through SDL3 <strong>by button position</strong>. The Xbox / PlayStation switch above changes the
+						names shown, not this mapping. Triggers, sticks and their deadzones are fixed; only the buttons can be rebound,
+						in game.
+					</p>
+					<div class="ctl-scroll">
+						<table class="pad-default">
+							<thead>
+								<tr>
+									<th scope="col">Xbox 360 control</th>
+									<th scope="col">Pad button (position)</th>
+									<th scope="col">PlayStation-style label</th>
+								</tr>
+							</thead>
+							<tbody>
+								{PAD_DEFAULT.map((b) => (
+									<tr>
+										<th scope="row">{b.control}</th>
+										<td>{b.xbox}</td>
+										<td>{b.ps}</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+					<ul>
+						<li>
+							<StatusBadge status="not-mapped" /> Back paddles, extra buttons and the Guide button aren't read by ReCarbon.
+							If a pad's own firmware or software remaps a paddle to another button, it acts as that button: ReCarbon only
+							sees the result.
+						</li>
+					</ul>
+				</details>
+
+				<section class="panel cut" aria-labelledby="tested-title">
+					<h2 id="tested-title">Tested controllers</h2>
+					{
+						TESTED_CONTROLLERS.length ? (
+							<ul>
+								{TESTED_CONTROLLERS.map((t) => (
+									<li>
+										<strong>{t.model}</strong>: hand-tested {t.date}. {t.evidence}
+									</li>
+								))}
+							</ul>
+						) : (
+							<p>
+								None yet: the physical controller test is deferred. A controller model is listed here only after it passes a
+								physical hand test with ReCarbon; virtual-controller runs don't count. A listing records a test result; it is
+								not an endorsement or a recommendation.
+							</p>
+						)
+					}
+				</section>
+
+				<section class="panel cut legend" aria-labelledby="legend-title">
+					<h2 id="legend-title">Status legend</h2>
+					<ul>
+						{
+							(Object.keys(STATUS) as Status[]).map((s) => (
+								<li>
+									<StatusBadge status={s} /> <span>{STATUS[s].meaning}</span>
+								</li>
+							))
+						}
+					</ul>
+					<p class="src">
+						Generated from ReCarbon's source{SOURCE.commit && <> at <code>{SOURCE.commit.slice(0, 7)}</code></>}:
+						{SOURCE.files.map((f, i) => (
+							<>
+								{i > 0 && ', '}
+								<code>{f}</code>
+							</>
+						))}.
+					</p>
+				</section>
+			</div>
+		</div>
+	</section>
+</RaceLayout>
+
+<style>
+	.title {
+		font-size: clamp(2.2rem, 6vw, 4rem);
+	}
+	.intro {
+		max-width: 44rem;
+		margin: 1rem 0 2rem;
+		color: var(--text-2);
+	}
+	.panels {
+		display: grid;
+		gap: 1rem;
+		margin-top: 2.5rem;
+	}
+	.panel {
+		padding: 1rem 1.25rem;
+		background: var(--surface);
+		border: 1px solid var(--line);
+	}
+	.panel summary {
+		min-height: 44px;
+		display: flex;
+		align-items: center;
+		font-family: var(--rn-font-display);
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		cursor: pointer;
+	}
+	.panel h2 {
+		margin: 0 0 0.75rem;
+		font-family: var(--rn-font-display);
+		font-size: 1rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+	.panel :global(kbd) {
+		font-family: var(--rn-font-mono);
+		font-size: 0.8em;
+		padding: 0 0.35em;
+		border: 1px solid var(--line-strong);
+		border-bottom-width: 2px;
+		border-radius: 3px;
+	}
+	.panel h3.notes-h {
+		margin: 1.25rem 0 0.5rem;
+		font-family: var(--rn-font-display);
+		font-size: 0.85rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+	.proof {
+		display: grid;
+		gap: 0.4rem;
+		padding: 0;
+		list-style: none;
+	}
+	.ctl-scroll {
+		overflow-x: auto;
+	}
+	.pad-default {
+		width: 100%;
+		max-width: 36rem;
+		border-collapse: collapse;
+		font-size: 0.875rem;
+	}
+	.pad-default :is(th, td) {
+		padding: 0.35rem 0.6rem;
+		text-align: start;
+		border-bottom: 1px solid var(--line);
+	}
+	.pad-default thead th {
+		font-size: 0.72rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+	.panel pre {
+		overflow-x: auto;
+		padding: 0.75rem 1rem;
+		background: var(--page-bg);
+		border: 1px solid var(--line);
+		font-family: var(--rn-font-mono);
+		font-size: 0.85rem;
+	}
+	.panel code {
+		font-family: var(--rn-font-mono);
+		font-size: 0.85em;
+		overflow-wrap: anywhere;
+	}
+	.legend ul {
+		display: grid;
+		gap: 0.5rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.legend li {
+		display: grid;
+		grid-template-columns: 9.5rem 1fr;
+		gap: 0.75rem;
+		align-items: baseline;
+		font-size: 0.9rem;
+	}
+	.src {
+		margin: 1rem 0 0;
+		font-size: 0.8rem;
+		color: var(--text-muted);
+	}
+</style>

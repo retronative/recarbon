@@ -1,0 +1,253 @@
+/* Base styles for the custom pages (landing, Garage). The docs use Starlight's. */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+html {
+	background: var(--page-bg);
+	color: var(--text);
+	font-family: var(--rn-font-body);
+	line-height: 1.6;
+	-webkit-text-size-adjust: 100%;
+	scroll-padding-top: calc(var(--rn-header-h) + 1rem);
+}
+body {
+	margin: 0;
+	min-height: 100vh;
+	background: var(--page-bg);
+	overflow-x: clip;
+}
+img,
+svg,
+video {
+	max-width: 100%;
+}
+a {
+	color: var(--link);
+}
+:focus-visible {
+	outline: 2px solid var(--rn-neon);
+	outline-offset: 3px;
+}
+
+.skip {
+	position: absolute;
+	left: 1rem;
+	top: -3rem;
+	z-index: 100;
+	padding: 0.5rem 1rem;
+	color: var(--rn-asphalt);
+	background: var(--rn-neon);
+}
+.skip:focus {
+	top: 1rem;
+}
+
+/* Header: the race HUD. */
+.hud {
+	position: sticky;
+	top: 0;
+	z-index: 50;
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	height: var(--rn-header-h);
+	padding: 0 1rem;
+	background: color-mix(in srgb, var(--page-bg) 92%, transparent);
+	backdrop-filter: blur(10px);
+	border-bottom: 1px solid transparent;
+	border-image: linear-gradient(90deg, transparent, var(--rn-neon) 20%, var(--rn-ember) 60%, transparent) 1;
+}
+.brand {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.6rem;
+	font-family: var(--rn-font-display);
+	font-weight: 700;
+	font-style: italic;
+	font-size: 1.25rem;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	text-decoration: none;
+	color: var(--text);
+}
+.brand img {
+	display: block;
+}
+.hud-nav {
+	display: none;
+	margin-inline-start: auto;
+}
+.hud-menu {
+	position: relative;
+	margin-inline-start: auto;
+}
+.hud-menu summary {
+	/* The same square button as the docs' menu toggle (starlight.css). */
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	color: var(--text);
+	cursor: pointer;
+	list-style: none;
+	border: 1px solid var(--line);
+	border-radius: 3px;
+}
+.hud-menu[open] summary {
+	background: var(--surface);
+}
+.hud-menu summary::-webkit-details-marker {
+	display: none;
+}
+.hud-menu nav {
+	position: absolute;
+	right: 0;
+	top: calc(100% + 0.5rem);
+	min-width: 12rem;
+	padding: 0.5rem;
+	background: var(--surface);
+	border: 1px solid var(--line);
+}
+.hud-menu .site-nav {
+	flex-direction: column;
+}
+/* As the docs header: no version chip on a phone, and between 50 and 72rem
+   the logo stands alone. */
+@media (max-width: 30rem) {
+	.hud > .version-chip {
+		display: none;
+	}
+}
+@media (min-width: 50rem) and (max-width: 72rem) {
+	.brand span,
+	.hud > .version-chip {
+		display: none;
+	}
+}
+@media (min-width: 50rem) {
+	.hud {
+		padding: 0 1.5rem;
+	}
+	.hud-nav {
+		display: block;
+	}
+	.hud-menu {
+		display: none;
+	}
+}
+
+/* Shared page pieces. */
+.wrap {
+	width: min(100% - 2rem, 76rem);
+	margin-inline: auto;
+}
+.eyebrow {
+	margin: 0 0 0.5rem;
+	font-family: var(--rn-font-mono);
+	font-size: 0.78rem;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--mode-drive);
+}
+.display {
+	margin: 0;
+	font-family: var(--rn-font-display);
+	font-weight: 700;
+	font-style: italic;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+	line-height: 1.05;
+}
+.section {
+	position: relative;
+	padding-block: clamp(3rem, 8vw, 6rem);
+}
+.section + .section::before {
+	/* speed lines on section edges */
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 1px;
+	background: linear-gradient(90deg, transparent 5%, var(--line) 30%, var(--mode-drive) 50%, var(--line) 70%, transparent 95%);
+	opacity: 0.6;
+}
+.cut {
+	clip-path: polygon(0 0, calc(100% - var(--rn-cut)) 0, 100% var(--rn-cut), 100% 100%, var(--rn-cut) 100%, 0 calc(100% - var(--rn-cut)));
+}
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	min-height: 48px;
+	padding: 0.7rem 1.6rem;
+	font-family: var(--rn-font-display);
+	font-weight: 700;
+	font-size: 0.95rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	text-decoration: none;
+	color: var(--rn-asphalt);
+	background: var(--rn-neon);
+	border: 0;
+	clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+	cursor: pointer;
+	transition: transform var(--rn-fast) var(--rn-ease), background var(--rn-fast);
+}
+.btn:hover {
+	background: #fff;
+	transform: translateY(-1px);
+}
+.btn--ghost {
+	color: var(--rn-text);
+	background: rgb(233 238 245 / 0.08);
+	box-shadow: inset 0 0 0 1px rgb(233 238 245 / 0.35);
+}
+.btn--ghost:hover {
+	background: rgb(233 238 245 / 0.18);
+}
+
+/* Footer. */
+.legal {
+	padding: 2.5rem 0 3rem;
+	background: var(--page-bg-deep);
+	border-top: 1px solid var(--line);
+}
+.legal-inner {
+	width: min(100% - 2rem, 76rem);
+	margin-inline: auto;
+	display: grid;
+	gap: 1rem;
+}
+.legal-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 1.5rem;
+}
+.legal-links a {
+	color: var(--text);
+	font-weight: 600;
+	font-size: 0.9rem;
+	text-decoration: none;
+}
+.legal-links a:hover {
+	color: var(--link);
+}
+.gpl {
+	margin: 0;
+	font-size: 0.85rem;
+	color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+	.btn:hover {
+		transform: none;
+	}
+}
