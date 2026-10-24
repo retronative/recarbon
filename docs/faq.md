@@ -1,6 +1,6 @@
 ---
 title: FAQ
-description: Common questions about ReCarbon, the game files, and the project's legal position.
+description: Common questions about ReCarbon, the game files and the project.
 ---
 
 ## Is this an official Need for Speed game?
