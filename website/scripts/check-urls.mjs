@@ -49,6 +49,14 @@ preview.close();
 
 const server = await dev({ root: ROOT, base: B, logLevel: 'error', server: { host: '127.0.0.1', port: 0 } });
 const d = `http://127.0.0.1:${server.address.port}`;
+// On a cold cache Vite optimizes dependencies on the first request and restarts
+// the server's module runner, failing that request: wait until a page renders.
+for (let i = 0; ; i++) {
+	const ok = await fetch(`${d}${B}`, { headers: { accept: 'text/html' } }).then((r) => r.ok, () => false);
+	if (ok) break;
+	if (i === 30) throw new Error('check-urls: the dev server never served the home page');
+	await new Promise((r) => setTimeout(r, 1000));
+}
 console.log('dev');
 for (const c of shared) await expect(d, ...c);
 // The dev server's own requests have no extension and are never redirected:
