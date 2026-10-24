@@ -37,8 +37,10 @@ building upstream's own test and runtime into a scratch folder with the bug plan
 6. **swapchain_use_test's work guard depends on the scheduler.** It requires more than 1000
    waiter uses in one run. On a MacBook Air M5 it failed 1 run in 50 alone, and one full
    ctest run (539 uses).
-   *Offer:* count the work over up to 5 runs, with every run still checked for soundness.
-   After the change: 0 of 100 alone and 0 of 40 under load failed.
+   *Offer:* run the work guard, and the v0.1.5 canary, until their conditions are met, for up
+   to 10 s, with every run still checked for soundness. With it, 10 of 10 full `ctest -j8` runs
+   passed under an 8-process CPU load (load average up to 66); counting over 5 runs alone had
+   failed most full runs at a load average of 13–19.
 7. **No translation of getGradients** (texture fetch opcode 18): upstream's
    `gpu/shader_translator.cpp` has none. Carbon's road shader needs it; it is unknown
    whether MW uses it.

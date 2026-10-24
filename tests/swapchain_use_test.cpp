@@ -1,6 +1,7 @@
 // From SpeedBreaker v0.1.8's tests/swapchain_use_test.cpp (GPL-3.0-or-later),
-// with one change: the waiter's work is counted over up to 5 stress runs
-// (see Stress). ReCarbon's present waiter is SpeedBreaker's. It reads the
+// with one change: the waiter's work, and the v0.1.5 canary, run as many
+// stress runs as it takes, for up to 10 s (see Stress), as a loaded
+// scheduler can starve the waiter thread. ReCarbon's present waiter is SpeedBreaker's. It reads the
 // driver's reports only on a 120 Hz Mac with VK_GOOGLE_display_timing, which
 // the M5 and M1 aren't (see present_schedule_test.cpp).
 //
@@ -210,10 +211,12 @@ namespace
         constexpr int kCycles = 20000;
         // ReCarbon: how much the waiter thread gets to do depends on the
         // scheduler (539 uses in one ctest run on the M5 against upstream's
-        // 1000), so its work is counted over up to 5 runs; every run must be
-        // sound.
+        // 1000; about 60 a run under a load average of 15), so its work is
+        // counted over as many runs as it takes, for up to 10 s; every run
+        // must be sound.
         StressCounts c{};
-        for (int run = 0; run < 5 && !(c.used > 1000 && c.refused > 0); run++)
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+        for (int run = 0; !(c.used > 1000 && c.refused > 0) && (run == 0 || std::chrono::steady_clock::now() < deadline); run++)
         {
             const StressCounts r = RunStress(false, kCycles);
             CHECK(r.unsound == 0, "%llu uses reached a destroyed swapchain, or another than their present's", (unsigned long long)r.unsound);
@@ -228,10 +231,13 @@ namespace
         printf("  %d recreations: %llu uses, %llu refused, %llu unsound\n", kCycles, (unsigned long long)c.used,
             (unsigned long long)c.refused, (unsigned long long)c.unsound);
         // The same with v0.1.5's order must reach destroyed swapchains (it
-        // is a race: up to 5 tries), or the canary proves nothing.
+        // is a race: up to 5 tries; ReCarbon: or as many as 10 s allow, as
+        // a loaded scheduler can keep the waiter from the race), or the
+        // canary proves nothing.
         uint64_t old = 0;
         int tries = 0;
-        while (old == 0 && tries < 5)
+        const auto canaryDeadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+        while (old == 0 && (tries < 5 || std::chrono::steady_clock::now() < canaryDeadline))
         {
             old += RunStress(true, kCycles).unsound;
             tries++;

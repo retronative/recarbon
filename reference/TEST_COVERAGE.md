@@ -38,7 +38,7 @@ listed here as equivalent, unbuildable or missed.
 | clean_exit | The crash report's first line | 7/7 |
 | depth24_pack, depth_only, zpd_report, pipeline_cache_header | Names only | 9, plus 1 that doesn't compile |
 | display_tone | Carbon's logged ramp #1, all ten levels | 5/5 |
-| present_schedule, fullscreen_policy, swapchain_use, cursor_idle | Names; swapchain_use's work guard counted over up to 5 runs | 10/11 |
+| present_schedule, fullscreen_policy, swapchain_use, cursor_idle | Names; swapchain_use's work guard and v0.1.5 canary given up to 10 s of runs | 10/11 |
 | audio_cadence | None | 3/3 |
 | memory_plan | Apple's part only, against the M5's and M1's logged plans | 3/4 (1 equivalent on Apple's inputs) |
 | report_zip | A long-input checksum against Python's zlib | 2/2 |
@@ -77,6 +77,14 @@ reason.
   (539 uses) and 1 of 50 runs alone.
   - Every run is still checked for soundness. Only the work is now counted over up to 5 runs.
   - After the change: 0 of 100 failed alone, and 0 of 40 under an 8-process CPU load.
+  - **Not enough under heavier load** (2026-10-24): with a load average of 13–19, full `ctest -j8`
+    runs failed 7 of 8 times (317 uses in 5 runs), and once the v0.1.5 canary missed in its 5
+    tries. Alone it passed 40 of 40. Both loops now run until their condition is met, for up
+    to 10 s; the conditions themselves are unchanged.
+    - Result: 10 of 10 full `ctest -j8` runs passed at a load average of 18–27, and 10 of 10
+      with 8 extra CPU-bound processes (load average up to 66).
+    - Planted bugs: no uses counted, and the canary's unsafe read removed, each fail at the
+      10 s bound.
 
 ## The earlier unexplained ctest failure (2026-10-24)
 
