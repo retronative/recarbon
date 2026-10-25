@@ -11,9 +11,9 @@ export const site = {
 	orgUrl: 'https://retronative.github.io/',
 	tagline: 'Carbon. Native. Apple Silicon.', // copy to be approved (PLAN §5.4)
 
-	// Release versioning: one "alpha" docs version until the first tagged
-	// release, then starlight-versions (docs/RELEASING.md).
-	docsVersion: 'alpha',
+	// Release versioning: the docs describe this release (starlight-versions
+	// later, docs/RELEASING.md).
+	docsVersion: '0.1.0',
 
 	// The source repository (D1: the runtime and this site, published together).
 	// Its links stay hidden or disabled until REPO_PUBLIC (above) is true; nothing
