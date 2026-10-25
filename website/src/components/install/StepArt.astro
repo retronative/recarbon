@@ -13,7 +13,7 @@ const label = [
 	'A disk image window with the ReCarbon app, and an arrow dragging it onto the Applications folder.',
 	'A sketch of System Settings, Privacy & Security, with the Open Anyway button highlighted.',
 	'A sketch of the installer: a disc, then a progress bar while it copies and checks about 5.7 GB.',
-	'The Space key, which is A on a controller, dismisses the Cannot connect to Xbox Live! message.',
+	'A stylized Xbox 360 controller with its main buttons highlighted.',
 ][step];
 ---
 
@@ -88,13 +88,22 @@ const label = [
 		{
 			step === 5 && (
 				<g>
-					<rect class="bubble" x="60" y="18" width="200" height="42" rx="8" />
-					<text class="label" x="160" y="44" text-anchor="middle">Cannot connect to Xbox Live!</text>
-					<path class="line" d="M160 66v18" />
-					<rect class="key" x="40" y="92" width="240" height="56" rx="8" />
-					<path class="key-top" d="M48 96h224v40H48z" />
-					<text class="key-text" x="160" y="122" text-anchor="middle">Space</text>
-					<text class="mono" x="160" y="172" text-anchor="middle">A on a controller</text>
+					<path class="pad-bumper" d="M92 44c10-8 26-10 40-6M228 44c-10-8-26-10-40-6" />
+					<path
+						class="pad-body"
+						d="M110 46h100c22 0 38 10 46 30l16 46c6 18-6 32-22 30-12-2-20-12-28-24l-12-16h-100l-12 16c-8 12-16 22-28 24-16 2-28-12-22-30l16-46c8-20 24-30 46-30z"
+					/>
+					<circle class="pad-guide" cx="160" cy="68" r="9" />
+					<circle class="pad-stick" cx="112" cy="78" r="13" />
+					<circle class="pad-stick-top" cx="112" cy="78" r="7" />
+					<path class="pad-dpad" d="M132 102h8v-8h8v8h8v8h-8v8h-8v-8h-8z" />
+					<circle class="pad-stick" cx="186" cy="108" r="13" />
+					<circle class="pad-stick-top" cx="186" cy="108" r="7" />
+					<circle class="pad-btn pad-btn--a" cx="214" cy="90" r="6" />
+					<circle class="pad-btn" cx="226" cy="78" r="6" />
+					<circle class="pad-btn" cx="202" cy="78" r="6" />
+					<circle class="pad-btn" cx="214" cy="66" r="6" />
+					<path class="pad-shine" d="M118 52h84" />
 				</g>
 			)
 		}
@@ -193,6 +202,48 @@ const label = [
 	}
 	.bar--on {
 		fill: color-mix(in srgb, var(--rn-neon) 22%, var(--rn-carbon));
+	}
+	.pad-body {
+		fill: var(--rn-asphalt);
+		stroke: var(--rn-steel);
+		stroke-width: 2.5;
+	}
+	.pad-bumper {
+		stroke: var(--rn-steel);
+		stroke-width: 5;
+	}
+	.pad-shine {
+		stroke: color-mix(in srgb, var(--rn-neon) 35%, transparent);
+		stroke-width: 2;
+	}
+	.pad-guide {
+		fill: var(--rn-graphite);
+		stroke: var(--rn-neon-soft);
+		stroke-width: 2;
+	}
+	.pad-stick {
+		fill: var(--rn-graphite);
+		stroke: var(--rn-steel);
+		stroke-width: 2;
+	}
+	.pad-stick-top {
+		fill: var(--rn-carbon);
+		stroke: var(--rn-neon);
+		stroke-width: 1.5;
+	}
+	.pad-dpad {
+		fill: var(--rn-graphite);
+		stroke: var(--rn-steel);
+		stroke-width: 1.5;
+	}
+	.pad-btn {
+		fill: var(--rn-carbon);
+		stroke: var(--rn-neon-soft);
+		stroke-width: 1.5;
+	}
+	.pad-btn--a {
+		fill: var(--rn-neon);
+		stroke: var(--rn-neon);
 	}
 	.button {
 		fill: var(--rn-neon);

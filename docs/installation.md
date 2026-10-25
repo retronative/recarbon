@@ -52,13 +52,15 @@ with that.
 
 ## 5. Play
 
-At the main menu the game says **"Cannot connect to Xbox Live!"**: press **Space** (**A** on a
-controller) to continue. It does this at every launch.
+You're all set. Start ReCarbon and hit the streets!
 
 Drive with **W** / **S** (throttle, brake) and **A** / **D** (steer). **Space** is the
 handbrake, **Backspace** the nitrous, and <kbd aria-label="Command">⌘</kbd> + <kbd>,</kbd> (Command + Comma) opens ReCarbon's Settings
 (or **F1**, Fn + F1 on a Mac keyboard). All keys:
 [Controls](controls.mdx).
+
+Optional: explore the controls and game features in the
+[Garage](https://retronative.github.io/recarbon/garage/).
 
 ## Check the download (optional)
 

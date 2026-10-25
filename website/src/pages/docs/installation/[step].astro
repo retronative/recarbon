@@ -25,7 +25,7 @@ const descriptions = [
 	'Step 2 of 5 of installing ReCarbon: open the disk image and drag ReCarbon to Applications.',
 	'Step 3 of 5 of installing ReCarbon: if macOS blocks it, allow it once in Privacy & Security.',
 	'Step 4 of 5 of installing ReCarbon: choose your own Xbox 360 disc image in its installer.',
-	'Step 5 of 5 of installing ReCarbon: dismiss the Xbox Live message and play.',
+	'Step 5 of 5 of installing ReCarbon: you are ready to race.',
 ];
 ---
 
@@ -148,10 +148,7 @@ const descriptions = [
 	{
 		n === 5 && (
 			<>
-				<p class="lead">
-					At the main menu the game says <strong>"Cannot connect to Xbox Live!"</strong>. Press <kbd>Space</kbd> (<strong>A</strong>{' '}
-					on a controller) to continue. It does this at every launch.
-				</p>
+				<p class="lead">You're all set. Start ReCarbon and hit the streets!</p>
 				<StepArt step={5} dmgName={release.dmg.name} />
 				<h2 id="keys">Keys to start with</h2>
 				<ul class="keys not-content">
@@ -162,8 +159,8 @@ const descriptions = [
 					<li><span><kbd aria-label="Command">⌘</kbd> + <kbd>,</kbd></span><span>ReCarbon's Settings<small class="alt">or <kbd>F1</kbd> (<kbd>Fn</kbd> + <kbd>F1</kbd>)</small></span></li>
 				</ul>
 				<p>
-					All keys and the controller: <a href={url('docs/controls/')}>Controls</a> and the <a href={url('garage/')}>Garage</a>. This
-					is an early release: playable, but not finished. See <a href={url('docs/known-issues/')}>Known issues</a>.
+					All keys and the controller: <a href={url('docs/controls/')}>Controls</a>. This is an early release: playable, but not
+					finished. See <a href={url('docs/known-issues/')}>Known issues</a>.
 				</p>
 			</>
 		)
@@ -190,9 +187,10 @@ const descriptions = [
 					<span class="what">Step {n + 1}: {next.short}</span>
 				</a>
 			) : (
-				<a class="btn next primary" href={url('docs/controls/')}>
-					<span class="dir">Finish ✓</span>
-					<span class="what">You're ready to race: see all controls</span>
+				<a class="btn next primary" href={url('garage/')}>
+					<span class="dir">Installation complete ✓ · optional</span>
+					<span class="what">Explore the Garage →</span>
+					<span class="note">Controls and game features, whenever you like</span>
 				</a>
 			)
 		}
@@ -408,6 +406,11 @@ const descriptions = [
 	}
 	.what {
 		font-size: var(--sl-text-base);
+	}
+	.note {
+		font-size: var(--sl-text-xs);
+		font-weight: 400;
+		opacity: 0.85;
 	}
 	@media (max-width: 36rem) {
 		.pager {
