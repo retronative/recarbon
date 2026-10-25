@@ -14,7 +14,7 @@ across the restart (none taken), and Carbon's frame-time equivalent (not found).
 |---|---|---|
 | M6.3 Profile and save: created, written, reloaded intact after a restart | Completed | An alias save created at Start Career (286,764 B) reloads after a restart with its hash unchanged, in an isolated test home (FEASIBILITY §6b). Career progress kept after a restart in hand test 4 (M7.4). |
 | M6.4 A race or free-roam loads from the front end to control of the car | Completed | The prologue reaches control of the car (hand test 1); a Quick Race loads from the front end (FEASIBILITY §6c). |
-| M6.5 No deadlock or crash for 10 minutes in free-roam | Completed | Hand test 3 (2026-10-23, by the user): 15 minutes in a row in free-roam after the prologue chase; no crash, hang report, strict stub or watchdog report, clean exit. Two 16-minute soaks clean after the render-queue fences (540970f). |
+| M6.5 No deadlock or crash for 10 minutes in free-roam | Completed | Hand test 3 (2026-10-23, by the user): 15 minutes in a row in free-roam after the prologue chase; no crash, hang report, strict stub or watchdog report, clean exit. Two 16-minute soaks clean after the render-queue fences (f4cf407). |
 | M6.6 The written route (new profile → free-roam → race load, then a restart), logs and save recorded, watchdog reports empty | **Accepted for the alpha** (user decision, 2026-10-26) | The M8.4 sessions below: new profile, race load, restart, save found and opened. Free-roam wasn't part of them and is covered by M6.5. |
 
 ## M6.6: the route as run (M8.4, MacBook Air M5, 2026-10-25)
@@ -43,4 +43,4 @@ logs; `reference/M8_ACCEPTANCE.md` explains the ids). The user copied the logs t
 ## Still open (not acceptance criteria)
 
 - M6.2's frame-time equivalent: not found in Carbon. The render-queue ARM fence hooks are in
-  (540970f). M7's frame pacing was accepted on its own evidence (`reference/M7_ACCEPTANCE.md`).
+  (f4cf407). M7's frame pacing was accepted on its own evidence (`reference/M7_ACCEPTANCE.md`).
