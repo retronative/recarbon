@@ -49,24 +49,24 @@
 			"menu": { "label": "Navigate", "status": "source", "evidence": "The stick's down axis, paired with \"The left stick pushed up (menus).\" in settings.cpp. Unbound in the Arrows preset." }
 		},
 		"A": {
-			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." },
+			"driving": { "label": "Handbrake", "status": "hand-verified", "evidence": "Space (A) worked as the handbrake by hand on the keyboard (reference/M7_ACCEPTANCE.md, M7.1, 2026-10-25), on the WASD keys (the Default profile), in a Quick Race on the MacBook Air M1 (race 3). The virtual-controller sweep (2026-10-24) showed no visible effect." },
 			"menu": { "label": "Confirm", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the WASD keys (the Default profile). Also seen with the virtual controller (2026-10-24, reference/M8_PLAN.md)." }
 		},
 		"B": {
-			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." },
+			"driving": { "label": "Nitrous", "status": "hand-verified", "evidence": "Backspace (B) fired the nitrous by hand on the keyboard (reference/M7_ACCEPTANCE.md, M7.1, 2026-10-25), on the WASD keys (the Default profile), in a Quick Race on the MacBook Air M1, with the BONUS RX-8 and a full nitrous gauge (the stock RX-8 has none). An earlier Backspace press, during race 3's key sweep, didn't trigger nitrous; why isn't known." },
 			"menu": { "label": "Back", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the WASD keys (the Default profile). Also seen with the virtual controller (2026-10-24, reference/M8_PLAN.md)." }
 		},
 		"X": {
-			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." }
+			"driving": { "label": "Speedbreaker", "status": "hand-verified", "evidence": "Left Shift (X) worked as Speedbreaker by hand on the keyboard (reference/M7_ACCEPTANCE.md, M7.1, 2026-10-25), on the WASD keys (the Default profile), in a Quick Race on the MacBook Air M1 (race 3). The virtual-controller sweep (2026-10-24) showed no visible effect." }
 		},
 		"Y": {
-			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." }
+			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race, and Left Ctrl (Y) didn't trigger nitrous in a hand test (2026-10-25)." }
 		},
 		"LB": {
 			"driving": { "label": "Look Back", "status": "automated", "evidence": "Virtual-controller check (reference/M8_PLAN.md, 2026-10-24): scripted Quick Race on the M1 worker, Circuit, stock RX-8, manual gearbox, under about 35 mph; paired screenshots. While held the view faces backward; normal on release." }
 		},
 		"RB": {
-			"driving": { "label": "Change Camera", "status": "automated", "evidence": "Virtual-controller check (reference/M8_PLAN.md, 2026-10-24): scripted Quick Race on the M1 worker, Circuit, stock RX-8, manual gearbox, under about 35 mph; paired screenshots. Each tap moves to the next camera, kept after release (near chase, far chase, bumper, hood, near chase)." }
+			"driving": { "label": "Change Camera", "status": "automated", "evidence": "Virtual-controller check (reference/M8_PLAN.md, 2026-10-24): scripted Quick Race on the M1 worker, Circuit, stock RX-8, manual gearbox, under about 35 mph; paired screenshots. Each tap moves to the next camera, kept after release (near chase, far chase, bumper, hood, near chase). The tester also changed the camera by hand in a race on the keyboard (2026-10-25, reference/M7_ACCEPTANCE.md); which key wasn't recorded, so the status stays automated." }
 		},
 		"DpadUp": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." },
@@ -99,10 +99,10 @@
 			"driving": { "label": "Gear Down", "status": "automated", "evidence": "Virtual-controller check (reference/M8_PLAN.md, 2026-10-24): scripted Quick Race on the M1 worker, Circuit, stock RX-8, manual gearbox, under about 35 mph; paired screenshots. Manual gearbox: the HUD gear goes 3 > 2 > 1 > N." }
 		},
 		"RightStickLeft": {
-			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." }
+			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test. With an automatic car (the BONUS RX-8, 2026-10-25, by hand on the keyboard) the tester saw K (left) shift down and ; (right) shift up. The virtual-controller check with a manual gearbox shifted on the right stick's up and down instead. The two are recorded side by side, not reconciled, so no action is named here." }
 		},
 		"RightStickRight": {
-			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." }
+			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test. With an automatic car (the BONUS RX-8, 2026-10-25, by hand on the keyboard) the tester saw K (left) shift down and ; (right) shift up. The virtual-controller check with a manual gearbox shifted on the right stick's up and down instead. The two are recorded side by side, not reconciled, so no action is named here." }
 		},
 		"LeftStickClick": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." }

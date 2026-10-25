@@ -306,6 +306,8 @@ each control is Carbon's own code, so an action counts as known only with eviden
   - "Brake / reverse" becomes "Brake";
   - "Steer left/right" becomes "Steering Left/Right";
   - every other action stays unverified until hand test 5 maps them.
+  - *Update (2026-10-25):* Handbrake (A, Space), Speedbreaker (X, Left Shift) and Nitrous (B,
+    Backspace) were found by hand on the keyboard in M7.1 (`reference/M7_ACCEPTANCE.md`).
 
   The website repository isn't changed from here; its session applies this.
 
