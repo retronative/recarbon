@@ -14,6 +14,7 @@ From ReCarbon's `reference/ROADMAP.md` (M7, "Known issues for the alpha"). Each 
 | Physical controller untested | Deferred: no real pad has been tested. The default mapping is pinned by a test, and a virtual controller drives the menus and a race. |
 | Development builds link Homebrew's libraries | A build against `scripts/macos/build_deps.sh`'s libraries passes `check_app` (M8). Development builds still name `/opt/homebrew` paths, so Vulkan layers installed there could be picked up. No release is published yet. |
 | Key labels on a non-Latin keyboard layout | Under Myanmar or another non-Latin layout, Settings > Controls shows letter keys as '?', because the menu's font lacks the script. Binding such a key is refused safely and nothing is saved. Gameplay input is unaffected. |
+| "Cannot connect to Xbox Live!" at every launch | Once per launch, on first entering the main menu, the game shows this notice because Xbox Live isn't available. Press **Return** (OK) to continue; nothing is lost. ReCarbon doesn't dismiss it for you: it can't yet tell reliably when this notice is the one on screen, and it won't press buttons blindly. |
 | macOS 27 or newer only | Current builds link libraries built for macOS 27.0. |
 | Movie frame pacing | Movies play at the right speed, but 20–28% of frames show for 1 or 3 refreshes instead of 2. Smoothing is deferred to polish. |
 

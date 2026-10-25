@@ -294,6 +294,12 @@ customization. The controls criterion is judged on the default mappings.
     time stayed flat while its textures doubled), and no crash or corruption is tied to it. It is a
     memory cost in long sessions. Any eviction must first establish GPU in-flight lifetime, fences
     and safe destruction (reference/M7_ACCEPTANCE.md).
+  - The game's "Cannot connect to Xbox Live!" notice at every launch needs one OK (a known alpha
+    limitation, user decision 2026-10-25). An automatic one-shot acknowledgement needs a reliable
+    dialog-open signal; a bounded instrumented investigation (4 scripted startups on the M1) found
+    that the dialog doesn't read its text or key (hash 0x91CC47DC) from the language table and builds
+    its own UTF-16 text when it opens, but identified no open or close signal. No workaround (timer,
+    blind press, picture detection) is used.
   - Physical controller: Deferred — not verified (not an alpha gate, user decision 2026-10-23). The
     virtual-controller and hot-unplug tests pass, but they don't show physical compatibility.
   - Release packaging: resolved for a build against `scripts/macos/build_deps.sh`'s libraries,
