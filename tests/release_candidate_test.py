@@ -15,6 +15,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RC_SH = os.path.join(ROOT, 'scripts', 'release_candidate.sh')
 TRANSFER_SH = os.path.join(ROOT, 'scripts', 'rc_transfer.sh')
 HELPER = os.path.join(ROOT, 'scripts', 'macos', 'rc_manifest.py')
+# The release's dmg, by its published, versioned name (make_app.py's hard link).
+DMG = 'ReCarbon-0.0.1-macos.dmg'
 spec = importlib.util.spec_from_file_location('rc_manifest', HELPER)
 rc = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(rc)
@@ -175,9 +177,8 @@ def make_rc(top, steps, exit_status, release=True, completed=True):
         if completed:
             f.write('completed\tyes\n')
     if release:
-        write(os.path.join(top, 'release/ReCarbon-macos.dmg'), 'dmg bytes')
-        write(os.path.join(top, 'release/ReCarbon-macos.dmg.sha256'),
-              f'{sha256(os.path.join(top, "release/ReCarbon-macos.dmg"))}  ReCarbon-macos.dmg\n')
+        write(os.path.join(top, f'release/{DMG}'), 'dmg bytes')
+        write(os.path.join(top, f'release/{DMG}.sha256'), f'{sha256(os.path.join(top, "release", DMG))}  {DMG}\n')
     return rc.write(top, exit_status)
 
 
@@ -197,7 +198,7 @@ def manifest_tests(tmp):
     if os.path.isfile(sums):
         lines = open(sums).read().splitlines()
         names = [l.split('  ', 1)[1] for l in lines]
-        check(names == ['MANIFEST.json', 'ReCarbon-macos.dmg', 'ReCarbon-macos.dmg.sha256'], f'SHA256SUMS lists the release ({names})')
+        check(names == ['MANIFEST.json', DMG, f'{DMG}.sha256'], f'SHA256SUMS lists the release ({names})')
         r = subprocess.run(['shasum', '-a', '256', '-c', 'SHA256SUMS'], cwd=os.path.join(top, 'release'), capture_output=True)
         check(r.returncode == 0, 'shasum -a 256 -c SHA256SUMS passes')
 
@@ -227,7 +228,7 @@ shift
 for last; do :; done
 dir="{home}/${{last#*:}}"
 while [ $# -gt 1 ]; do cp "$1" "$dir"; shift; done
-[ -z "$CORRUPT" ] || echo x >> "$dir/ReCarbon-macos.dmg"
+[ -z "$CORRUPT" ] || echo x >> "$dir/{DMG}"
 ''', 0o755)
     env = dict(os.environ, RC_SSH=os.path.join(bin_dir, 'ssh'), RC_SCP=os.path.join(bin_dir, 'scp'))
 
@@ -237,7 +238,7 @@ while [ $# -gt 1 ]; do cp "$1" "$dir"; shift; done
 
     r = transfer(passed_rc, 'rc/one')
     check(r.returncode == 0 and 'verified' in r.stdout, f'a passed candidate transfers ({r.returncode} {r.stdout!r} {r.stderr!r})')
-    check(tree(os.path.join(home, 'rc/one')) == ['MANIFEST.json', 'ReCarbon-macos.dmg', 'ReCarbon-macos.dmg.sha256', 'SHA256SUMS'],
+    check(tree(os.path.join(home, 'rc/one')) == ['MANIFEST.json', DMG, f'{DMG}.sha256', 'SHA256SUMS'],
           f'only the release files are sent ({tree(os.path.join(home, "rc/one"))})')
 
     write(os.path.join(home, 'rc/two/keep.txt'), 'theirs')
@@ -265,10 +266,24 @@ while [ $# -gt 1 ]; do cp "$1" "$dir"; shift; done
     # Consistent checksums, so only the recorded result can refuse it.
     rel = os.path.join(failed, 'release')
     with open(os.path.join(rel, 'SHA256SUMS'), 'w') as f:
-        for n in ('MANIFEST.json', 'ReCarbon-macos.dmg', 'ReCarbon-macos.dmg.sha256'):
+        for n in ('MANIFEST.json', DMG, f'{DMG}.sha256'):
             f.write(f'{sha256(os.path.join(rel, n))}  {n}\n')
     r = transfer(failed, 'rc/five')
     check(r.returncode != 0 and 'pass' in r.stderr and not os.path.exists(os.path.join(home, 'rc/five')), f'a candidate that did not pass is refused ({r.stderr!r})')
+
+    # An RC from before the versioned name: the dmg under its unversioned name only.
+    old = os.path.join(tmp, 'unversioned-rc')
+    shutil.copytree(passed_rc, old)
+    rel = os.path.join(old, 'release')
+    os.rename(os.path.join(rel, DMG), os.path.join(rel, 'ReCarbon-macos.dmg'))
+    os.remove(os.path.join(rel, f'{DMG}.sha256'))
+    write(os.path.join(rel, 'ReCarbon-macos.dmg.sha256'), f'{sha256(os.path.join(rel, "ReCarbon-macos.dmg"))}  ReCarbon-macos.dmg\n')
+    with open(os.path.join(rel, 'SHA256SUMS'), 'w') as f:
+        for n in ('MANIFEST.json', 'ReCarbon-macos.dmg', 'ReCarbon-macos.dmg.sha256'):
+            f.write(f'{sha256(os.path.join(rel, n))}  {n}\n')
+    r = transfer(old, 'rc/six')
+    check(r.returncode != 0 and 'not part of a release' in r.stderr and not os.path.exists(os.path.join(home, 'rc/six')),
+          f'a release without the versioned dmg is refused ({r.stderr!r})')
 
 
 def preflight_tests(tmp, py):

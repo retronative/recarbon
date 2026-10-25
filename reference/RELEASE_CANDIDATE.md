@@ -44,7 +44,7 @@ it through `retention_cleanup.py` like any evidence.
 | `extracted/` | the app copied back out of the dmg | never |
 | `logs/`, `steps.tsv`, `fields.tsv` | one log per step | never |
 | `MANIFEST.json` | commit, version, toolchain, deps prefix and record hash, MoltenVK pin and file hash, package and binary SHA-256, every step with PASS/FAIL, time and log | |
-| `release/` | on a pass only: the dmg, its `.sha256`, `MANIFEST.json`, `SHA256SUMS` | to our own test Macs only |
+| `release/` | on a pass only: the versioned dmg `ReCarbon-<version>-macos.dmg` (the published name; its `.sha256` names that file), its `.sha256`, `MANIFEST.json`, `SHA256SUMS` | to our own test Macs; the dmg and its `.sha256` also to the release page |
 
 ## What it checks
 
@@ -72,7 +72,7 @@ In order; the first failure stops the run, is recorded in `MANIFEST.json` (`resu
 10. `dmg-extract`, `check-extracted`, `binary-match`: the dmg mounted read-only, the app copied
     out with `ditto` and checked again, its main binary's SHA-256 equal to the built one's.
 11. `game-files-unchanged`: the disc folder's listing (names, sizes, times) is as before.
-12. `release`: `release/` and `SHA256SUMS`.
+12. `release`: `release/` with the versioned dmg (a hard link to the checked one) and its `.sha256`, checked with `shasum -a 256 -c`, and `SHA256SUMS`.
 
 ## Send it to a test Mac
 
@@ -88,7 +88,7 @@ and a remote folder that already exists), then runs `shasum -a 256 -c` there.
 On the test Mac, in the folder it arrived in:
 
 ```sh
-shasum -a 256 -c SHA256SUMS && shasum -a 256 -c ReCarbon-macos.dmg.sha256
+shasum -a 256 -c SHA256SUMS && shasum -a 256 -c ReCarbon-<version>-macos.dmg.sha256
 ```
 
 Open the dmg and drag `ReCarbon.app` onto `Applications`.

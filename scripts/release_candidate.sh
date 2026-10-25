@@ -16,8 +16,9 @@
 #   app/        make_app.py's ReCarbon.app, dmg, .sha256 and symbols/ (kept here: only release/ leaves)
 #   extracted/  the app copied back out of the dmg, checked again
 #   logs/       one log per step; MANIFEST.json, steps.tsv, fields.tsv
-#   release/    on a pass only: the dmg, its .sha256, MANIFEST.json and SHA256SUMS, what
-#               scripts/rc_transfer.sh copies to a test Mac
+#   release/    on a pass only: the versioned dmg (ReCarbon-<version>-macos.dmg, the published
+#               name), its .sha256, MANIFEST.json and SHA256SUMS, what scripts/rc_transfer.sh
+#               copies to a test Mac
 # Exits non-zero on any failure, with the failing step in MANIFEST.json.
 #
 # The commit's own scripts do the work (setup_tools.sh, survey.sh, run_instr_tests.sh,
@@ -140,7 +141,8 @@ checkout() {
   clean_checkout
 }
 step checkout checkout
-field version "$(sed -n 's/^project(ReCarbon VERSION \([0-9.]*\).*/\1/p' "$SRC/CMakeLists.txt")"
+VERSION="$(sed -n 's/^project(ReCarbon VERSION \([0-9.]*\).*/\1/p' "$SRC/CMakeLists.txt")"
+field version "$VERSION"
 
 # FFmpeg's source archive from this repo's tools/, when there: setup_tools.sh checks it against
 # the SHA-256 it pins either way, so it is the same file a download would be.
@@ -216,10 +218,13 @@ game_unchanged() { game_listing | diff "$LOGS/game-files.before" -; }
 step game-files-unchanged game_unchanged
 step checkout-clean-final clean_checkout
 
+# The versioned dmg is make_app.py's hard link to the checked one; its .sha256 names that file.
 release() {
+  local name="ReCarbon-$VERSION-macos.dmg"
+  [ -n "$VERSION" ] && [ "$APP/$name" -ef "$DMG" ] || { echo "$APP/$name: not a link to $DMG"; return 1; }
   mkdir "$OUT/release"
-  ln "$DMG" "$DMG.sha256" "$OUT/release/"
-  (cd "$OUT/release" && shasum -a 256 -c ReCarbon-macos.dmg.sha256)
+  ln "$APP/$name" "$APP/$name.sha256" "$OUT/release/"
+  (cd "$OUT/release" && shasum -a 256 -c "$name.sha256")
 }
 step release release
 field completed yes
