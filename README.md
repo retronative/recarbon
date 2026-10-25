@@ -58,6 +58,10 @@ See [reference/FEASIBILITY.md](reference/FEASIBILITY.md) and
 
 ## Installing
 
+You need *Need for Speed: Carbon* (USA) for Xbox 360, from your own disc image (`.iso`) or
+extracted folder. Other versions (PC, PlayStation, Wii, original Xbox, other regions) won't work:
+the installer checks every file against the USA disc, and says why when one doesn't match.
+
 ReCarbon is signed ad hoc and not notarized, so macOS blocks a downloaded copy the first time you
 open it. After a blocked attempt, choose **System Settings > Privacy & Security > Open Anyway** and
 confirm, once, and only for a copy whose checksum you've verified

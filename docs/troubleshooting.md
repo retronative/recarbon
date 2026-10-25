@@ -61,6 +61,16 @@ folders. If you moved the install, ReCarbon looks in the default folder,
 `~/Library/Application Support/ReCarbon/game`. To check an image or a folder without copying it:
 `ReCarbon --verify <image or folder>`. See [Advanced installation](installation-advanced.md).
 
+If the installer turns your disc image or folder down, its message says why:
+
+- **It doesn't look like the Xbox 360 version**: there is no Xbox 360 `default.xex` (a PC,
+  PlayStation or Wii disc), or it's an original Xbox disc (`default.xbe`).
+- **Another game**: it's an Xbox 360 game, but not *Need for Speed: Carbon*.
+- **A different region or version**: it's *Need for Speed: Carbon* for Xbox 360, but not the USA
+  edition, the only one ReCarbon supports. If it is your USA disc, the dump is damaged: dump it
+  again.
+- **Incomplete or damaged**: a file is missing or doesn't match the disc. Dump the disc again.
+
 ## Stutters
 
 Brief stalls of up to about a second are a known issue of the alpha: see

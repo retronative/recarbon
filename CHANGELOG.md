@@ -3,6 +3,14 @@
 What changed in each ReCarbon version, newest first. The game shows the current version's entry
 once, the first time that version starts (it's built into the game: runtime/CMakeLists.txt).
 
+## Unreleased
+
+### What's new
+
+- When the installer turns a disc image or folder down, it says why: another platform's disc (PC,
+  PlayStation, Wii, original Xbox), another game, or another region or version of *Need for Speed:
+  Carbon*. ReCarbon needs your own *Need for Speed: Carbon* (USA) disc for Xbox 360.
+
 ## v0.1.0
 
 ### What's new
