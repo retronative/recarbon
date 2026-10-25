@@ -6,6 +6,7 @@
 // 64-dword slot the game reserved in its ring buffer.
 #include <stdafx.h>
 #include <kernel/function.h>
+#include <kernel/thread_priority.h>  // ReCarbon: RaiseFrameThreadQos
 #include <kernel/vmem.h>
 #include <report/report.h>
 #include "command_processor.h"
@@ -114,6 +115,7 @@ void VdSwap(be<uint32_t>* buffer, be<uint32_t>* fetch, void* unk2, void* unk3, v
     be<uint32_t>* frontBuffer, be<uint32_t>* textureFormat, be<uint32_t>* colorSpace,
     be<uint32_t>* width, be<uint32_t>* height)
 {
+    kernel::RaiseFrameThreadQos();  // ReCarbon: a thread that presents drives the frames
     // RECARBON_TEST_CRASH: a crash with the game's render loop on the stack.
     if (report::g_testCrash.load(std::memory_order_relaxed)) [[unlikely]]
         report::TestCrash();

@@ -5,6 +5,7 @@
 #include "pad_map.h"
 #include <cpu/guest_time.h>
 #include <kernel/function.h>
+#include <kernel/thread_priority.h>  // ReCarbon: RaiseFrameThreadQos
 #include <ui/ui.h>
 #include <user/settings.h>
 #include <user/key_names.h>
@@ -899,6 +900,7 @@ uint32_t XamInputGetCapabilities(uint32_t userIndex, uint32_t flags, XAMINPUT_CA
 
 uint32_t XamInputGetState(uint32_t userIndex, uint32_t flags, XAMINPUT_STATE* state)
 {
+    kernel::RaiseFrameThreadQos();  // ReCarbon: a thread that polls every frame drives the frames
     Pad p;
     uint32_t packet;
     {

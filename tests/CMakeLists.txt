@@ -62,6 +62,11 @@ target_include_directories(critical_section_test PRIVATE ${ROOT}/tools/XenonReco
 # The QoS class a guest thread priority gets on macOS (kernel/thread_priority.h,
 # header only; ReCarbon M5: front-end audio running dry).
 recarbon_test(thread_priority_test)
+# ReCarbon: the guest threads that present or poll the controller raised to
+# user-initiated once, never lowered (kernel/thread_priority.cpp, real pthreads);
+# VdSwap's and XamInputGetState's sources read (ReCarbon M7: frame gaps under load).
+recarbon_test(frame_thread_qos_test SOURCES ${RT}/kernel/thread_priority.cpp
+    ARGS ${RT}/gpu/imports_video.cpp ${RT}/hid/input.cpp)
 # The controller's default button mapping, the M5 regression baseline
 # (hid/pad_map.h, header only; SDL3 for its button enum only).
 recarbon_test(pad_map_test)
