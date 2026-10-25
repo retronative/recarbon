@@ -17,7 +17,7 @@ const stats = [
 const works = [
 	{ m: 'M0–M2', title: 'Recompiled & native', state: 'done', text: 'The whole executable translates to C++ and links into a native arm64 app.' },
 	{ m: 'M3–M4', title: 'Boots & renders', state: 'done', text: 'Kernel, GPU bring-up, the EA logos and the movies, through MoltenVK on Metal.' },
-	{ m: 'M5', title: 'Audio, movies, input', state: 'progress', text: 'Music, lip-sync and keyboard menus pass by hand. A physical controller is next.' },
+	{ m: 'M5', title: 'Audio, movies, input', state: 'evidence', text: 'Accepted: music, lip-sync and keyboard menus pass by hand. A physical controller is deferred.' },
 	{ m: 'M6', title: 'Saves & free-roam', state: 'evidence', text: 'Accepted for the alpha: a new profile saves and reloads after a restart, a race loads, and 15 minutes of free-roam ran clean.' },
 	{ m: 'M7', title: 'Racing', state: 'evidence', text: 'Accepted for the alpha: full races driven by hand on the keyboard, about 51 fps on a MacBook Air M5. A physical controller is still untested.' },
 	{ m: 'M8', title: 'Alpha packaging', state: 'evidence', text: 'Completed for the alpha: v0.1.0 released, installed and played on a MacBook Air M5, including on a fresh macOS account. Not verified: a physical controller, a MacBook Air M1 install.' },
@@ -139,7 +139,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 				<li class="step cut">
 					<svg class="arc" viewBox="0 0 60 36" aria-hidden="true"><path d="M5 32 A25 25 0 0 1 55 32" pathLength="3" class="arc-3"></path></svg>
 					<h3>Race</h3>
-					<p>Start ReCarbon. Press <kbd>F1</kbd> (<kbd>Fn</kbd>+<kbd>F1</kbd> on a Mac) for its Settings.</p>
+					<p>Press <kbd>Space</kbd> at the main menu, then race. <kbd aria-label="Command">⌘</kbd> + <kbd>,</kbd> opens ReCarbon's Settings.</p>
 				</li>
 			</ol>
 			<p class="more">
