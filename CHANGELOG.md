@@ -7,7 +7,7 @@ once, the first time that version starts (it's built into the game: runtime/CMak
 
 ### What's new
 
-- A development snapshot, not a release: playable in parts, not finished.
+- The first alpha release: playable, not finished.
 - Need for Speed: Carbon's `default.xex`, from your own disc, is recompiled to native arm64 code
   with XenonRecomp and SpeedBreaker's pipeline, on SpeedBreaker's runtime.
 - It boots to the menus, plays the movies with sound, drives in free-roam and finishes career races
@@ -21,6 +21,9 @@ once, the first time that version starts (it's built into the game: runtime/CMak
 - The first-run installer copies and verifies the game's 78 files (5.74 GB) from your own disc
   image, also on a brand-new macOS account, and the game starts.
 - ReCarbon has its own icon, on the app and on the opened disk image.
+- FFmpeg's audio decoders and libmspack's LZX decoder are separate libraries in the app
+  (`Contents/Frameworks`) that you can replace with your own builds; the third-party notices say how,
+  and the release page has their source.
 - On a MacBook Air M5 a 9.8-minute race ran at about 51 fps on average. On a MacBook Air M1 races
   start at about 30 fps and slow down the longer you play.
 - Known issues: occasional stalls of about a second while racing, and shorter ones; the slowdown
