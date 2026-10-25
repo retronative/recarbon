@@ -86,7 +86,7 @@ The full steps, the command-line installer and where ReCarbon keeps things are i
 | Menus | Arrow keys, Space to accept, Backspace to go back |
 | ReCarbon's Settings | F1 (Fn+F1) or Cmd+, |
 
-An **Arrows** preset and custom profiles are in Settings > Controls ([Controls](controls.mdx)). A controller works by
+An **Arrows** preset and custom profiles are in Settings > Controls ([Controls](controls.mdx)). A controller is read by
 position (a PlayStation pad's Cross is A), but **no physical controller has been tested**.
 Hand-tested: throttle, brake, steering, camera, handbrake, Speedbreaker and nitrous. Reverse,
 Look Back, Pause and the manual-gearbox gear keys were seen only on a virtual controller.

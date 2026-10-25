@@ -48,7 +48,8 @@ clang 23.1.4. Both 24/24 steps PASS. `build/rc/` is git-ignored; nothing in it i
 `build/rc/`, outside this session and not through `retention_cleanup.py` (no audit entry). The
 values above for 282557c were read from its `MANIFEST.json` and `SHA256SUMS` before that. Its `release/` was
 copied to the M1 on 2026-10-25 (`rc/755b1c5-20261025T155507Z`; not rechecked since). The 94750af folder and its marker
-are intact; its `SHA256SUMS` verified at 00:14 (a Finder icon was added to the dmg file as extended
+and `release/` are intact, but its `extracted/ReCarbon.app` (the copy taken back out of the dmg)
+also left at 00:12, the same way; `SHA256SUMS` verified at 00:14 and 00:23 (a Finder icon was added to the dmg file as extended
 attributes at 00:09, which leaves its SHA-256 unchanged).
 
 ### What differs between the two RCs

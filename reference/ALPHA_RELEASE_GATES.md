@@ -81,6 +81,13 @@ Related: `reference/M8_ACCEPTANCE.md` (what was validated), `reference/RELEASE_C
 (`runtime/CMakeLists.txt`, `build_deps.sh`, `make_app.py`, `check_app.py`) that needs its own RC
 and tests: a later decision, not part of this alpha's RCs.
 
+**Fixed inside the RCs (no rebuild allowed now):** both RCs bundle the `THIRD_PARTY_NOTICES.md`
+of their commit in `Contents/Resources/licenses/`, written before any release: it says there are
+no downloads yet and carries no offer text. Likewise their compiled What's New is the CHANGELOG
+v0.0.1 entry as of their commit ("A development snapshot, not a release"); the 2026-10-26
+CHANGELOG edits reach only a later build. Publishing either RC as is means shipping that text;
+changing it needs a new RC.
+
 **Still to prepare:** the archive itself (published next to the dmg), the written offer in the
 app (Settings or the bundled `licenses/README.txt`) and on the download page. The current RCs
 carry the notices and license texts but no offer text.
