@@ -314,7 +314,10 @@ customization. The controls criterion is judged on the default mappings.
     - the driving controls on the keyboard: throttle, brake, steering, camera (E), handbrake (Space)
       and Speedbreaker (Left Shift) are hand-verified in the M1 races of 2026-10-25; nitrous isn't
       yet (the stock RX-8 has none). The physical controller is deferred;
-    - physics against the Xbox 360 version (no lap time or top speed compared yet);
+    - physics: positive human evidence from the M5 reference race (2026-10-25: 1st in 9:06.14 over
+      8 laps of Main Street, stock RX-8, automatic; steering, handling, braking and collisions felt
+      normal; the race clock matches the wall clock within ~1–2%), accepted by the user. Xbox 360
+      equivalence is **unverified**: no reference exists (reference/M7_ACCEPTANCE.md);
     - audio and picture: reported fine by the user on the M1, with sync resting on that report;
     - the written route repeated 3 times: done on the M1 (races 1–3, 2026-10-25), with frame-time
       and session logs per run.

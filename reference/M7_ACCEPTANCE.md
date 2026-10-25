@@ -10,11 +10,11 @@ judged on the MacBook Air M5, and the MacBook Air M1 results are supplementary (
 | Criterion | Status | Evidence |
 |---|---|---|
 | M7.1 Player controls (keyboard; the physical controller is deferred) | In progress | Throttle, brake and steering drove three full races; camera (E), handbrake (Space) and Speedbreaker (Left Shift) by hand. Nitrous untested: the stock RX-8 has none. |
-| M7.2 Vehicle physics | Pending | "Drove well" and "physics OK" by the tester; no lap time or top speed compared with the Xbox 360 version yet. |
+| M7.2 Vehicle physics | Positive human evidence; Xbox 360 equivalence **unverified** | M5 race (2026-10-25): 1st in 9:06.14 over 8 laps; steering, handling, braking and collisions felt normal to the tester; the race clock agrees with the log's wall clock within ~1–2%. No Xbox 360 reference exists, so equivalence isn't claimed. |
 | M7.3 AI opponents | Completed | Hand test 4 (2026-10-23). In the M1 races the 7 opponents start and race (screenshots); their finishing wasn't recorded. |
 | M7.4 Career race and save | Completed | Hand test 4 (2026-10-23). |
 | M7.5 Frame pacing, 10 minutes, M5 | **Accepted** (user decision, 2026-10-25) | M5 race: 9.77 min of racing (14 s short of 10; 8 laps is the game's maximum), 50.8 fps mean, no second under 30 fps outside a 3 s Space switch the tester caused, no degradation over the race, thermal "fair". The tester accepted the length. The M1 races don't meet 30 fps (below). |
-| M7.6 Audio and picture | In progress | Tester: picture and sound fine, nothing missing (M1), smooth with audio in sync (M5). Audio log: no underruns or gaps over 50 ms after startup in any race, except during the M5 Space switch. Sync rests on the tester's report. |
+| M7.6 Audio and picture | In progress | Tester: picture and sound fine, nothing missing (M1), smooth with audio in sync (M5 M7.5 race); audio and visuals normal (M5 physics race). Audio log: no underruns or gaps over 50 ms after startup in any race, except during the M5 Space switch. Sync rests on the tester's report. |
 | M7.7 Written route ×3 | Done on the M1 | Three human races with frame-time and session logs. The M5 race is still needed for M7.5. |
 
 ## The route
@@ -70,6 +70,33 @@ run); thermal "fair" throughout, level 2 at the end; AC power; Game Mode on; exi
   recorded here.
 - **Decision (user, 2026-10-25):** M7.5 accepted with 9.77 minutes of racing.
 
+## M7.2 physics reference race (MacBook Air M5), 2026-10-25
+
+The same packaged app, isolated test home and route as the M7.5 race: Main Street, 8 laps, stock
+Mazda RX-8, automatic transmission, other Quick Race options at their defaults (difficulty Medium,
+7 opponents, catch-up on, nitrous on). Paused a few seconds after GO and handed over; the race
+clock already ran for those seconds, so lap 1 includes them. Another session's game (Wine) was
+stopped for the race at this session's request; nothing else heavy ran.
+
+| | Result |
+|---|---|
+| Standings (tester's photo) | 1st 9:06.14 (tester); then 9:07.16, 9:20.49, 9:30.47, 9:34.32, 9:36.63, 9:55.45, 10:07.36 |
+| Lap times | Not available (the tester has no per-lap times) |
+| Game clock against the log | Race clock 546.1 s; the log puts the racing at about 547–558 s (its ~2.3 s resolution, the pre-pause seconds and the finish camera). They agree within about 1–2%: no sign of the simulation running slow or fast. Not a precise clock-rate measurement. |
+| Frame pacing while racing | 51.5 fps, p99 35 ms, max 64 ms, no second under 30 fps (9.0 min) |
+| Thermal, power | Pressure level 1 at launch, 2 at the end; AC power; Game Mode never paused while racing |
+| Tester | Everything felt normal: steering, handling, braking, collisions, audio and visuals; the car was responsive; no significant gameplay problems. Subjective impression (not a performance or physics comparison): driving felt smoother and more enjoyable than SpeedBreaker. |
+
+What this does and doesn't show:
+- The race clock and real time agree, the car completed 8 laps against 7 AI opponents who also
+  finished, and the finishing spread is plausible.
+- The game's own track screen gives a built-in record of 2:07.00 for the default 2 laps (63.5 s a
+  lap). The tester averaged 68.3 s a lap, about 7.5% slower, including the standing start. That is
+  consistent, not a measurement of physics fidelity.
+- **Decision (user, 2026-10-25):** the completed 8-lap M5 race is accepted as positive human
+  gameplay evidence for M7.2. Equivalence with the Xbox 360 version is recorded as **unverified**:
+  no reference (a lap time or top speed with the same car and track) exists, and none is assumed.
+
 ## Investigation: texture cache growth and the M1 frame-rate drop (read-only, 2026-10-25)
 
 - **Confirmed (code):** the `[perf]` "textures" figure counts live cache entries. Entries are keyed
@@ -93,6 +120,6 @@ run); thermal "fair" throughout, level 2 at the end; AC power; Game Mode on; exi
 
 ## Remaining for M7
 
-1. Nitrous by hand (needs a car that has it).
-2. A physics reference: a lap time on Main Street, or the top speed on a straight, against the
-   Xbox 360 version (the tester saw the lap times; the values aren't recorded yet).
+1. Nitrous by hand (M7.1; needs a car that has it). Kept separate from M7.2.
+2. M7.2's Xbox 360 equivalence stays unverified until a reference exists (a lap time or top speed
+   with the stock RX-8 on Main Street); not an open test on the ReCarbon side.
