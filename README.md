@@ -32,13 +32,16 @@ Native recompilation of Need for Speed: Carbon (Xbox 360) for Apple Silicon.
     shows letters as '?' and refuses new keys (gameplay input is unaffected).
 - **M6 (open):** it boots to free-roam and loads races. Free-roam held 15 minutes without a
   crash in a hand test. The new-profile route test is still pending.
-- **M7 (in progress, current):** a full career race finishes against AI, and progress survives a restart
-  (hand test 4). Still pending:
-  - the driving controls on the keyboard (a physical controller is deferred, not verified);
-  - physics;
-  - frame pacing over 10 minutes of racing;
-  - audio and picture;
-  - the repeated route.
+- **M7 (accepted for the alpha, 2026-10-25):** playable racing. The driving controls work on the
+  keyboard by hand (including Handbrake, Speedbreaker and Nitrous), a full career race finishes
+  against AI and progress survives a restart, and a 9.8-minute race on a MacBook Air M5 averaged
+  50.8 fps with no second under 30 fps outside a macOS Space switch. Still open, not recorded as
+  passed:
+  - a physical controller, deferred and not verified;
+  - equivalence with the Xbox 360 version's physics, deferred and unverified;
+  - audio and video sync, which rests on the tester's reports, not on measurement;
+  - Reverse, Look Back, Pause and the gear keys with a manual gearbox, not yet tried by hand.
+- **M8 (in progress, current):** alpha packaging. No alpha build is published.
 - **Known issues:** occasional stalls of about 1 s while racing, and shorter GPU-idle stalls
   (both unexplained). See ROADMAP M7.
 

@@ -15,5 +15,12 @@ once, the first time that version starts (it's built into the game: runtime/CMak
 - Fewer long stalls when other apps keep the Mac busy: the game threads that drive each frame now
   run at a higher macOS priority (measured on a MacBook Air M1: stalls of 100 ms or more went from
   5.3 to 0.3 per run under load).
-- Known issues: occasional stalls of about a second while racing, and shorter ones. A physical
-  controller hasn't been tested yet. It needs an Apple silicon Mac with macOS 27 or later.
+- Full Quick Races play by hand on the keyboard. On the WASD keys, Space is the handbrake, Left
+  Shift is Speedbreaker and Backspace fires the nitrous (on a car that has it), as the Controls
+  page now documents.
+- On a MacBook Air M5 a 9.8-minute race ran at about 51 fps on average. On a MacBook Air M1 races
+  start at about 30 fps and slow down the longer you play.
+- Known issues: occasional stalls of about a second while racing, and shorter ones; the slowdown
+  in long races on the M1; memory use that grows during long sessions; the "Cannot connect to Xbox
+  Live!" notice needs one press of A (Space) at every launch. A physical controller hasn't been
+  tested yet. It needs an Apple silicon Mac with macOS 27 or later.

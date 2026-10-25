@@ -236,7 +236,19 @@ customization.
   - Each criterion has evidence. M6 stays open until M6.6, the written new-profile route
     (user decision, 2026-10-23).
 
-## M7 — Playable racing *(In progress: the current milestone, user decision 2026-10-23)*
+## M7 — Playable racing *(Accepted for the alpha 2026-10-25, by the user's decision: M7.1–M7.7 completed under the alpha criteria, with deferred limitations)*
+- **Status decision** (user, 2026-10-25): M7 is closed for the alpha. M7.1–M7.7 are completed
+  under the agreed alpha criteria (reference/M7_ACCEPTANCE.md). These stay open and are **not**
+  recorded as passed:
+  - the physical controller: Deferred — not verified (M7.1 is judged on the keyboard);
+  - M7.2's comparison with the Xbox 360 version: playable driving physics are accepted, and Xbox
+    360 physics equivalence is **deferred and unverified** (the criterion revision is below);
+  - M7.6's audio and video sync rests on the tester's subjective reports, not on instrumented
+    synchronization testing (the audio logs show only no underruns or gaps);
+  - keyboard functions not yet tried by hand: Reverse, Look Back, Pause, and the gear keys with a
+    manual gearbox.
+
+  Closing M7 doesn't release anything: no alpha build is published. The alpha packaging is M8.
 Input as in M5: SpeedBreaker's keyboard rebinding and `[keys]` keep working. No new
 customization. The controls criterion is judged on the default mappings.
 - **Accept** (each verified separately):
@@ -265,7 +277,7 @@ customization. The controls criterion is judged on the default mappings.
       still there after a restart.
     - The log doesn't show whether session 1 wrote the save, and no hash was taken between
       the sessions, so persistence rests on what the user saw after the restart.
-  - **Frame pacing:** open. Hand test 4's race averaged 58.5 fps over about 4 minutes. The user
+  - **Frame pacing:** accepted on the M5 race of 2026-10-25 (below). Before it, hand test 4's race averaged 58.5 fps over about 4 minutes. The user
     felt one brief stutter while driving. The log has spikes of two kinds, neither explained:
     about 1 s spent in GPU submission (5 frames during the race), and one where the command
     processor sat idle, like hand test 3's stall (FEASIBILITY §6c).
@@ -276,8 +288,8 @@ customization. The controls criterion is judged on the default mappings.
     - **Measurement for the 10 minutes:** `RECARBON_FRAME_LOG=<csv>` logs every present without
       changing how frames are shown. `scripts/frame_times.py` reports fps, frame-time
       percentiles, missed-30-fps frames and the thermal state over a racing window, given as
-      session seconds or wall-clock start and finish times. Both have only been checked on
-      menu runs (they agree with `[perf]`), not yet on a race.
+      session seconds or wall-clock start and finish times. Checked on menu runs first (they
+      agree with `[perf]`), then used for every M7 race of 2026-10-25.
 - **Known issues for the alpha** (each still open, not acceptance criteria):
   - Occasional stalls of about 1 s: the presenter waits for a drawable while holding the queue
     lock (FEASIBILITY §6c). To revisit before a public release, or sooner if they become
@@ -315,13 +327,23 @@ customization. The controls criterion is judged on the default mappings.
     Settings > Controls draws letter keys as '?' (U+FFFD), because the menu's font lacks the
     script. Binding such a key is refused safely and nothing is saved (verified, 4a68b32), but
     the labels themselves aren't fixed. Gameplay input is unaffected.
-  - **Still pending:**
-    - the driving controls on the keyboard: throttle, brake, steering, camera (E), handbrake (Space)
-      and Speedbreaker (Left Shift) are hand-verified in the M1 races of 2026-10-25; nitrous isn't
-      yet (the stock RX-8 has none). The physical controller is deferred;
-    - audio and picture: reported fine by the user on the M1, with sync resting on that report;
-    - the written route repeated 3 times: done on the M1 (races 1–3, 2026-10-25), with frame-time
-      and session logs per run.
+  - **Closed for the alpha** (2026-10-25; reference/M7_ACCEPTANCE.md has the evidence):
+    - the keyboard controls (M7.1): steering, throttle, brake, camera (E), handbrake (Space, A),
+      Speedbreaker (Left Shift, X) and nitrous (Backspace, B, found 2026-10-25 with the BONUS
+      RX-8) are hand-verified. The first Backspace press, during an earlier key sweep, didn't
+      trigger nitrous; why isn't known. Still untested by hand: Reverse, Look Back, Pause, and the
+      gear keys with a manual gearbox. With the automatic BONUS RX-8 the tester saw gear down on K
+      and gear up on ; (the right stick's left and right); the virtual-controller check (manual
+      gearbox, 2026-10-24) saw shifts on the right stick's up and down. Both are recorded side by
+      side, not reconciled. The physical controller is deferred;
+    - audio and picture (M7.6): completed on human gameplay verification. The tester reported
+      picture and sound fine on the M1, smooth play with audio in sync on the M5, and normal
+      audio and visuals in the M5 physics race. Audio and video sync rests on those subjective
+      reports, not on instrumented synchronization testing: the audio logs show only no
+      underruns or gaps over 50 ms after startup (except during the tester's Space switch);
+    - the written route repeated 3 times (M7.7): done on the M1 (races 1–3, 2026-10-25), with
+      frame-time and session logs per run, and run twice more on the M5 (the M7.5 and M7.2
+      races, at 8 laps).
   - **M7.2 closed for the alpha** (user decision, 2026-10-25, with the criterion revised above):
     playable driving physics ACCEPTED; Xbox 360 physics equivalence DEFERRED / UNVERIFIED (no claim
     of exact physics fidelity). Evidence:
@@ -333,7 +355,10 @@ customization. The controls criterion is judged on the default mappings.
     game's maximum) at 50.8 fps, with no second under 30 fps outside a 3 s Space switch the tester
     caused, and no degradation over the race (reference/M7_ACCEPTANCE.md).
 
-## M8 — Polish and distribution *(In progress: started 2026-10-23 by the user's approval, B1 packaging first)*
+## M8 — Polish and distribution *(In progress: alpha packaging, since M7 closed for the alpha 2026-10-25; started 2026-10-23 by the user's approval, B1 packaging first)*
+- **Current work (2026-10-25):** alpha packaging for the user's own Macs, tracked in
+  `reference/M8_ALPHA_CHECKLIST.md`. The release-candidate tooling is committed (5b1b463); no
+  alpha build is published.
 - **License compliance:** `COPYING`, `NOTICE`, `THIRD_PARTY_NOTICES.md` and `LICENSES/` are kept
   complete. Any binary release also needs the LGPL source offer (FFmpeg, libmspack). No binary
   is published, and no claim of legal clearance is made.
@@ -399,7 +424,8 @@ customization. The controls criterion is judged on the default mappings.
   - **Game actions on the virtual controller (2026-10-24, M8_PLAN):** in a Quick Race with a
     manual gearbox, RB changes the camera, LB looks back, the right stick shifts up and down,
     the Left Trigger reverses from a standstill and Start pauses. Nitrous, Speedbreaker and the
-    Handbrake weren't shown by any control and stay unverified.
+    Handbrake weren't shown by any control here; they were found by hand on the keyboard on
+    2026-10-25 (Backspace, Left Shift and Space: M7.1).
   - **Not verified:** the physical controller (deferred), and controller rebinding on hardware.
   - **Reset to default and the M5 baseline (complete, 2026-10-24):** the user approved treating
     label-only changes as compatible with the unchanged baseline, provided key values, expected

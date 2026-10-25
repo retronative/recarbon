@@ -5,6 +5,10 @@ evidence: a named log per session, and wall-clock times written down for each st
 result rests on another's. The physical controller stays Deferred.
 Nothing here is PASS until the user has run it and the logs agree.
 
+*Status (2026-10-25):* the M7 part was run as the M7 races of 2026-10-25 (three on the M1, two on
+the M5), and M7 is closed for the alpha (`reference/M7_ACCEPTANCE.md`). Sessions 1, 2 and the
+M8.11 and M6.6 parts are still to run.
+
 ## Before each session (done by Claude, not the tester)
 - Nothing ReCarbon left running; the build commit and the binary's SHA-256 recorded.
 - For sessions on the real home (3–5): back up `settings.toml` and the saves, with hashes, as

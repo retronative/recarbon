@@ -20,6 +20,6 @@ From ReCarbon's `reference/ROADMAP.md` (M7, "Known issues for the alpha"). Each 
 
 ## Still to be tested
 
-- **Keyboard controls in a race:** Throttle, Brake and Steering drove three full Quick Races by hand on the WASD keys, and Change Camera (E), Handbrake (Space) and Speedbreaker (Left Shift) worked (2026-10-25). Still to test by hand: Nitrous (the stock RX-8 has none), Reverse, Look Back, gear shifts and Pause (so far seen only with the virtual controller).
-- **Vehicle physics** against the Xbox 360 version: the car drove well by hand, but no lap time or top speed has been compared yet.
-- **Audio and picture during racing:** reported fine by hand on the M1. Audio sync rests on that report alone.
+- **Keyboard controls in a race:** the driving controls are hand-tested on the WASD keys: Throttle (W), Brake (S), Steering (A/D), Change Camera (E), Handbrake (Space), Speedbreaker (Left Shift) and Nitrous (Backspace, on a car that has nitrous) (2026-10-25). Once, the first Backspace press didn't trigger nitrous; why isn't known. Still to test by hand: Reverse, Look Back and Pause (so far seen only with the virtual controller), and which keys shift gears with a manual gearbox (with an automatic car, the tester saw gear down on K and gear up on the ; key; the virtual controller shifted a manual gearbox with the right stick's up and down, O and L on the keyboard).
+- **Vehicle physics** against the Xbox 360 version: the car drives normally by hand (1st place over 8 laps against 7 AI opponents who all finished, on a MacBook Air M5), but no lap time or top speed has been compared with the console. Equivalence with the Xbox 360 version isn't verified.
+- **Audio and video sync:** reported fine by hand on a MacBook Air M1 and an M5. That rests on the tester's reports alone: the audio logs show no underruns or gaps, but sync hasn't been measured with instruments.

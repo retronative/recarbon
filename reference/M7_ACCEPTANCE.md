@@ -5,17 +5,23 @@ measurements and the tester's reports are kept apart. One criterion was revised 
 others are unchanged. M7.5 is judged on the MacBook Air M5, and the MacBook Air M1 results are supplementary (user decision,
 2026-10-25).
 
+**Decision (user, 2026-10-25): M7 is closed for the alpha.** M7.1–M7.7 are completed under the
+agreed alpha criteria. Deferred and not recorded as passed: the physical controller, and Xbox 360
+physics equivalence (M7.2). M7.6's audio and video sync rests on the tester's subjective reports.
+Closing M7 is not an alpha release: no build is published, and the alpha packaging is M8
+(`reference/M8_ALPHA_CHECKLIST.md`).
+
 ## Status
 
 | Criterion | Status | Evidence |
 |---|---|---|
-| M7.1 Player controls (keyboard; the physical controller is deferred) | In progress: **nitrous only** | Throttle, brake and steering drove three full races; camera (E), handbrake (Space) and Speedbreaker (Left Shift) by hand. Nitrous untested: the stock RX-8 has none. |
+| M7.1 Player controls (keyboard; the physical controller is deferred) | **Completed** (keyboard, by hand, 2026-10-25) | Steering, throttle, brake: three M1 races and the M5 races; camera (E), handbrake (Space), Speedbreaker (Left Shift): M1 races; **nitrous (Backspace, B)**: M1 check with the BONUS RX-8 (full gauge); the first Backspace press, during race 3's key sweep, didn't trigger nitrous, and why isn't known. Untested by hand: Reverse, Look Back, Pause, and the gear keys with a manual gearbox. The tester also saw gear down on K and gear up on ; (the right stick's left and right) with the automatic car; the virtual-controller check saw shifts on the right stick's up and down with a manual gearbox (recorded side by side). Physical controller: deferred, not verified. |
 | M7.2 Vehicle physics | **Closed for the alpha** (criterion revised, user decision 2026-10-25). Playable driving physics: **ACCEPTED**. Xbox 360 physics equivalence: **DEFERRED / UNVERIFIED** | M5 race: 1st in 9:06.14 over 8 laps, all 7 opponents finished; steering, handling, braking and collisions normal to the tester; no noticeable physics problems; race clock within ~1–2% of the wall clock. No claim of exact physics fidelity. |
 | M7.3 AI opponents | Completed | Hand test 4 (2026-10-23). In the M1 races the 7 opponents start and race (screenshots); their finishing wasn't recorded. |
 | M7.4 Career race and save | Completed | Hand test 4 (2026-10-23). |
 | M7.5 Frame pacing, 10 minutes, M5 | **Accepted** (user decision, 2026-10-25) | M5 race: 9.77 min of racing (14 s short of 10; 8 laps is the game's maximum), 50.8 fps mean, no second under 30 fps outside a 3 s Space switch the tester caused, no degradation over the race, thermal "fair". The tester accepted the length. The M1 races don't meet 30 fps (below). |
-| M7.6 Audio and picture | In progress | Tester: picture and sound fine, nothing missing (M1), smooth with audio in sync (M5 M7.5 race); audio and visuals normal (M5 physics race). Audio log: no underruns or gaps over 50 ms after startup in any race, except during the M5 Space switch. Sync rests on the tester's report. |
-| M7.7 Written route ×3 | Done on the M1 | Three human races with frame-time and session logs. The M5 race is still needed for M7.5. |
+| M7.6 Audio and picture | **Completed** on human gameplay verification (user decision, 2026-10-25) | Tester: picture and sound fine, nothing missing (M1), smooth with audio in sync (M5 M7.5 race); audio and visuals normal (M5 physics race). Audio log: no underruns or gaps over 50 ms after startup in any race, except during the M5 Space switch. Audio and video sync rests on the tester's subjective reports, not on instrumented synchronization testing: the audio logs show only that there were no underruns or gaps. |
+| M7.7 Written route ×3 | Completed | Three human races on the M1 with frame-time and session logs, and the two M5 races (M7.5 and M7.2) on the same route at 8 laps. |
 
 ## The route
 
@@ -129,6 +135,14 @@ What this does and doesn't show:
 
 ## Remaining for M7
 
-1. Nitrous by hand (M7.1; needs a car that has it). Kept separate from M7.2.
-2. Deferred, not an alpha gate: M7.2's comparison with the Xbox 360 version (unverified until a
-   console reference exists).
+None for the alpha: M7 is closed (user decision, 2026-10-25). Kept open, not alpha gates and not
+recorded as passed:
+1. The physical controller (M7.1): deferred, not verified.
+2. M7.2's comparison with the Xbox 360 version: deferred and unverified until a console reference
+   exists.
+3. Keyboard functions not yet tried by hand: Reverse, Look Back, Pause, and the gear keys with a
+   manual gearbox (the tester's K / ; observation with the automatic car and the virtual
+   controller's right stick up/down with a manual gearbox stay side by side, unreconciled).
+4. Known alpha limitations, unchanged: the ~1 s presenter/queue-lock stalls, the 250–600 ms
+   GPU-idle stalls, the M1 frame-rate drop in long races, texture cache growth, and the Xbox Live
+   notice's manual OK (A = Space).

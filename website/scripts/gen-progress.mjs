@@ -75,22 +75,22 @@ const MILESTONES = [
 	},
 	{
 		id: 'M7',
-		state: 'in-progress',
-		summary: 'The current milestone. AI races and a full career race finish; controls, physics and frame pacing are still to verify.',
+		state: 'accepted',
+		summary: 'Accepted for the alpha: every criterion met under the alpha criteria. Still open, none recorded as passed: the physical controller, Xbox 360 physics equivalence, and audio sync, which rests on the tester\'s report.',
 		criteria: [
 			{ id: 'M7.3', title: 'AI opponents spawn, race and finish' },
 			{ id: 'M7.4', title: 'A full career race finishes and its progress survives a restart' },
-			{ id: 'M7.1', title: 'Steering, throttle, brake, handbrake, nitrous and camera on the keyboard' },
-			{ id: 'M7.2', title: 'Vehicle physics consistent with the Xbox 360 version' },
-			{ id: 'M7.5', title: 'A stable 30 fps or better over 10 minutes of racing' },
-			{ id: 'M7.6', title: 'Audio in sync and no world geometry missing' },
+			{ id: 'M7.1', title: 'Steering, throttle, brake, handbrake, nitrous and camera on the keyboard, by hand' },
+			{ id: 'M7.2', title: 'Playable driving physics in a full race (equivalence with the Xbox 360 version not verified)' },
+			{ id: 'M7.5', title: 'A stable 30 fps or better on a MacBook Air M5 over a full race (9.8 minutes, accepted)' },
+			{ id: 'M7.6', title: 'Audio in sync and no world geometry missing, as reported by the tester' },
 			{ id: 'M7.7', title: 'The written test route, repeated 3 times' },
 		],
 	},
 	{
 		id: 'M8',
 		state: 'in-progress',
-		summary: 'Input profiles are built and tested; the app bundle check passes. A clean install on a fresh account is still to do.',
+		summary: 'The current milestone: alpha packaging. Input profiles are built and tested and the app bundle check passes; a clean install on a fresh account is still to do. Nothing is published yet.',
 		criteria: [
 			{ id: 'M8.7', title: 'Keyboard presets: WASD (the default) and Arrows' },
 			{ id: 'M8.8', title: 'Separate keyboard and controller profiles that persist' },
@@ -117,6 +117,7 @@ const FEATURES = [
 	{ title: '15 minutes of free-roam', text: 'Free-roam after the prologue chase, 15 minutes in a row with no crash or hang (hand test 3).', evidence: 'hand-verified', date: '2026-10-23', milestone: 'M6', task: 'M6.5' },
 	{ title: 'A career race, won', text: 'Zone Heat 1 finished in 1st place against AI opponents; the cash and progress were still there after a restart (hand test 4).', evidence: 'hand-verified', date: '2026-10-23', milestone: 'M7', task: 'M7.4' },
 	{ title: 'Keyboard and controller profiles', text: 'WASD and Arrows presets, custom profiles, controller button rebinding and migration of existing bindings, in scripted runs and unit tests.', evidence: 'automated', date: '2026-10-24', milestone: 'M8', task: 'M8.9' },
+	{ title: 'Playable racing on the keyboard', text: 'Quick Races driven by hand on the WASD keys, on a MacBook Air M5 and an M1: steering, throttle, brake, camera, Handbrake (Space), Speedbreaker (Left Shift) and, on a car that has it, Nitrous (Backspace). On the M5, 1st place over 8 laps against 7 AI opponents who all finished.', evidence: 'hand-verified', date: '2026-10-25', milestone: 'M7', task: 'M7.1' },
 	{ title: 'Game actions on a virtual controller', text: 'In a Quick Race: RB changes the camera, LB looks back, the right stick shifts gears, the Left Trigger reverses and Start pauses.', evidence: 'automated', date: '2026-10-24', milestone: 'M8' },
 	{ title: '48 unit tests', text: 'Every ctest entry passes on a MacBook Air M5 and an M1 Mac.', evidence: 'automated', date: '2026-10-24', milestone: 'M8', task: 'M8.6' },
 ];
@@ -128,14 +129,17 @@ const ISSUES = [
 	{ title: 'GPU-idle stalls of 250–600 ms', text: 'No lock wait is involved. The cause is unknown.', state: 'open' },
 	{ title: 'Movie frame pacing', text: 'Movies play at the right speed, but 20–28% of frames show for 1 or 3 refreshes instead of 2. Smoothing is deferred to polish.', state: 'deferred' },
 	{ title: 'Physical controller not yet tested', text: 'The virtual-controller and hot-unplug tests pass, but they don\'t show that a physical pad works.', state: 'deferred' },
+	{ title: 'Frame rate falls in long races on a MacBook Air M1', text: 'Races start at about 30 fps and fall with time under load, to 16–22 fps in 9- to 15-minute races. GPU throttling on the fanless M1 is a hypothesis, not a confirmed cause. The MacBook Air M5 held about 51 fps with no fall.', state: 'open' },
+	{ title: 'Texture cache grows during play', text: 'Textures are kept until a setting reloads them, so long sessions use more memory: about 500 MB over 7 laps. On current evidence it doesn\'t cause the M1 frame-rate drop. A fix is planned after the alpha.', state: 'deferred' },
+	{ title: '"Cannot connect to Xbox Live!" at every launch', text: 'The game shows this notice once per launch; accept it with A (Space on the keyboard). ReCarbon doesn\'t dismiss it for you.', state: 'open' },
 	{ title: 'Key labels on non-Latin keyboard layouts', text: 'Under a layout such as Myanmar, Settings > Controls draws letter keys as \'?\'. Binding such a key is refused safely; gameplay input is unaffected.', state: 'open' },
 ];
 
 // Pending human tests: reference/HUMAN_TEST_PLAN.md's sessions, by what they cover.
 const HUMAN_TESTS = [
 	{ title: 'Session 1: a new profile, both presets', covers: 'The new-profile route to a race load (M6.6); WASD and Arrows driving and switching without a restart (M8.11).', state: 'unverified' },
-	{ title: 'Session 2: restart and hand test 5', covers: 'The profile reloading intact (M6.6), and which keys give handbrake, nitrous, Speedbreaker, camera and look back.', state: 'unverified' },
-	{ title: 'Sessions 3–5: the M7 route, 3 times', covers: 'Controls, physics, 10 minutes of frame times, audio and picture, on a race of at least 10 minutes (M7.1, M7.2, M7.5–M7.7).', state: 'unverified' },
+	{ title: 'Session 2: restart and hand test 5', covers: 'The profile reloading intact (M6.6), and Reverse, Look Back, Pause and the gear keys with a manual gearbox on the keyboard (Handbrake, Nitrous, Speedbreaker and the camera were found by hand on 2026-10-25).', state: 'unverified' },
+	{ title: 'Sessions 3–5: the M7 route, 3 times', covers: 'Controls, physics, frame times, audio and picture over full races: three on a MacBook Air M1 and two on an M5 (M7.1, M7.2, M7.5–M7.7). Audio sync rests on the tester\'s report.', state: 'completed' },
 	{ title: 'Clean install on a fresh macOS account', covers: 'Installing from a disc image on a new user account (M8.4).', state: 'unverified' },
 	{ title: 'Physical controller', covers: 'Menus and driving on a real pad, once one is available. Never recorded as passed before then.', state: 'deferred' },
 ];
@@ -144,6 +148,7 @@ const HUMAN_TESTS = [
 // of these by its opening words; an unmatched one fails the run, so nothing
 // reaches the site unreviewed. The text shown is `text`.
 const ACHIEVEMENTS = [
+	{ starts: 'M7 playable racing accepted for the alpha', text: 'Playable racing accepted for the alpha: full Quick Races driven by hand on the keyboard, on a MacBook Air M5 (50.8 fps on average over 9.8 minutes of racing) and an M1. Still open: the physical controller and Xbox 360 physics equivalence. No alpha build is published yet.' },
 	{ starts: 'Frame-thread priority under load', text: 'Fewer long stalls when other apps keep the Mac busy: the game threads that drive each frame now run at a higher macOS priority. On a MacBook Air M1 under load, stalls of 100 ms or more went from 5.3 to 0.3 per race run, at the same frame rate.' },
 	{ starts: 'Public Progress page', text: 'This Progress page: milestone states checked against the roadmap, verified features, known gameplay issues, pending hand tests and recent work.' },
 	{ starts: 'Keyboard presets merged', text: 'Keyboard presets merged: WASD is now the built-in Default that a new player starts on, beside Arrows. A player on the former WASD preset keeps those keys as a custom profile.' },
