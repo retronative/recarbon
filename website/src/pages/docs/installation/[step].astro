@@ -37,9 +37,9 @@ const descriptions = [
 				installSteps.map((s, j) => (
 					<li class:list={{ done: j < i, current: j === i }}>
 						<a href={href(s)} aria-current={j === i ? 'step' : undefined}>
-							<span class="num" aria-hidden="true">{j < i ? '✓' : j + 1}</span>
+							<span class="num" aria-hidden="true">{j + 1}</span>
 							<span class="name">
-								<span class="sr-only">Step {j + 1}{j < i ? ' (done)' : ''}: </span>
+								<span class="sr-only">Step {j + 1}: </span>
 								{s.short}
 							</span>
 						</a>
@@ -222,19 +222,6 @@ const descriptions = [
 		font-size: 0.78rem;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
-		color: var(--rn-neon-soft);
-	}
-	.track .num {
-		width: fit-content;
-		padding: 0 0.4em;
-		border-radius: 2px;
-	}
-	.track .current .num {
-		background: var(--rn-neon);
-		border-color: var(--rn-neon);
-		color: var(--rn-asphalt);
-	}
-	.track .done .num {
 		color: var(--rn-neon-soft);
 	}
 	.track ol {
