@@ -40,7 +40,8 @@ folders. If you moved the install, ReCarbon looks in the default folder,
 ## Stutters
 
 Brief stalls of up to about a second are a known issue of the alpha: see
-[Known issues](known-issues.md). To see the frame rate, turn on **Settings > Advanced >
+[Known issues](known-issues.md). Other apps using a lot of CPU make short stalls more likely: ReCarbon
+gives its frame threads a higher priority, but quitting busy apps still helps. To see the frame rate, turn on **Settings > Advanced >
 Performance Overlay**.
 
 ## Settings went wrong

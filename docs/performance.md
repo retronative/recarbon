@@ -15,6 +15,24 @@ Only measured figures, with their dates and conditions. Nothing here is a promis
 The ROADMAP's racing criterion (M7) asks for a stable 30 fps or better over **10 minutes** of
 racing, from frame-time logs. That hasn't been measured yet.
 
+## Under CPU load from other apps
+
+ReCarbon raises the game threads that drive each frame (the ones that present a frame or read
+the controller) to macOS's "user-initiated" priority. It never lowers a thread that already
+runs higher. Measured before and after, with the same scripted Quick Race:
+
+| Measurement | Before | After | Conditions | Date |
+|---|---|---|---|---|
+| Stalls of 100 ms or more per run | 5.3 (3, 9, 4) | **0.3** (0, 0, 1) | MacBook Air M1 (8 GB), 720p internal resolution, six background busy loops, 3 runs each, 185 s of racing per run | 2026-10-25 |
+| Longest frame | 137 ms | 99 ms | same | 2026-10-25 |
+| Average frame rate | 40.6 fps | 40.6 fps | same (the load, not the priority, sets the frame rate) | 2026-10-25 |
+| Game CPU use | 1.75 cores | 1.94 cores | same: the frame threads now run instead of waiting | 2026-10-25 |
+| Without background load | no difference (0 stalls of 100 ms or more in 9 runs) | | MacBook Air M1 | 2026-10-25 |
+| Packaged app, Game Mode on, no background load | 39.8 fps in the race, 0 stalls of 100 ms or more, no audio gaps | | MacBook Air M1, fullscreen, scripted Quick Race | 2026-10-25 |
+
+Measured on one Mac with a synthetic load. It doesn't fix the stalls below, and it hasn't been
+measured on other Macs yet.
+
 ## Known stalls
 
 Short stalls still happen: see [Known issues](known-issues.md). They are recorded honestly,
