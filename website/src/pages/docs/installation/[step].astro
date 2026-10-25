@@ -194,7 +194,7 @@ const descriptions = [
 
 	<p class="more">
 		<a href={url('docs/installation/')}>View all steps on one page</a>
-		<span aria-hidden="true">·</span>
+		<span class="sep" aria-hidden="true">·</span>
 		<a href={url('docs/installation-advanced/')}>Advanced: install from Terminal</a>
 	</p>
 </StarlightPage>
@@ -390,6 +390,9 @@ const descriptions = [
 	.track a:focus-visible {
 		outline: 2px solid var(--rn-neon-soft);
 		outline-offset: -4px;
+	}
+	.more .sep {
+		margin-inline: 0.5rem;
 	}
 	.more {
 		display: flex;
