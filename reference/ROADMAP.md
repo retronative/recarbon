@@ -278,12 +278,22 @@ customization. The controls criterion is judged on the default mappings.
     lock (FEASIBILITY §6c). To revisit before a public release, or sooner if they become
     frequent.
   - GPU-idle stalls of 250–600 ms, with no lock wait: cause unknown (FEASIBILITY §6c).
-  - Frame rate dropping during long sessions on a fanless Mac, seen once (M1, M7 race 2,
-    2026-10-25). After about 45 minutes of back-to-back sessions, the 7-lap race ran at 30.5 fps for
-    about 75 s, then 21.6 fps to the end. Draws per frame were unchanged, GPU time rose from 31 to
-    45–47 ms per frame, and the thermal state was "fair" from 115 s. The cause isn't confirmed; the
-    leading hypothesis is GPU clocks reduced on a warm M1. The user didn't notice it. This is M1
-    evidence only, and M7.5 stays on the M5.
+  - Frame rate falling during long races on the MacBook Air M1 (an M1 limitation, user decision
+    2026-10-25). In the three human races of 2026-10-25, races started at about 30 fps and fell with
+    time under load: 21.6 fps from about 5 minutes into race 2, and about 16 fps by the end of race 3,
+    which started after a 25-minute cool-down. Draws per frame were unchanged, GPU time per frame
+    rose from 31 to 46–62 ms, and the thermal state was "fair". GPU throttling on the fanless M1 is a
+    hypothesis, not a confirmed cause (no GPU clock is readable on macOS), and no further M1 clock
+    experiment is planned for the alpha. A sustained 30 fps isn't claimed on the M1; M7.5 is judged
+    on the M5 (reference/M7_ACCEPTANCE.md).
+  - Texture cache growth (a known alpha limitation, user decision 2026-10-25; the fix is deferred
+    until after the alpha). Textures are cached by guest address, format and layout, and are only
+    removed when a setting that reloads them changes, so the cache grows while driving: about
+    5,000 entries (about 490 MB) after 7 laps on the M1, and 466 → 4,537 over 21 minutes of
+    free-roam on the M5. It isn't supported as the cause of the M1 frame-rate drop (race 2's GPU
+    time stayed flat while its textures doubled), and no crash or corruption is tied to it. It is a
+    memory cost in long sessions. Any eviction must first establish GPU in-flight lifetime, fences
+    and safe destruction (reference/M7_ACCEPTANCE.md).
   - Physical controller: Deferred — not verified (not an alpha gate, user decision 2026-10-23). The
     virtual-controller and hot-unplug tests pass, but they don't show physical compatibility.
   - Release packaging: resolved for a build against `scripts/macos/build_deps.sh`'s libraries,
@@ -295,13 +305,14 @@ customization. The controls criterion is judged on the default mappings.
     script. Binding such a key is refused safely and nothing is saved (verified, 4a68b32), but
     the labels themselves aren't fixed. Gameplay input is unaffected.
   - **Still pending:**
-    - the driving controls on the keyboard: throttle, brake, steering and camera are hand-verified in
-      the M1 races of 2026-10-25, but handbrake and nitrous aren't yet (the physical controller is
-      deferred);
+    - the driving controls on the keyboard: throttle, brake, steering, camera (E), handbrake (Space)
+      and Speedbreaker (Left Shift) are hand-verified in the M1 races of 2026-10-25; nitrous isn't
+      yet (the stock RX-8 has none). The physical controller is deferred;
     - physics against the Xbox 360 version (no lap time or top speed compared yet);
     - frame pacing over 10 minutes of racing on the M5 (the M1 races are supplementary);
     - audio and picture: reported fine by the user on the M1, with sync resting on that report;
-    - the written route repeated 3 times (2 of 3 done on the M1: races 1 and 2, 2026-10-25).
+    - the written route repeated 3 times: done on the M1 (races 1–3, 2026-10-25), with frame-time
+      and session logs per run; the M5 race is still required for M7.5.
 
 ## M8 — Polish and distribution *(In progress: started 2026-10-23 by the user's approval, B1 packaging first)*
 - **License compliance:** `COPYING`, `NOTICE`, `THIRD_PARTY_NOTICES.md` and `LICENSES/` are kept
