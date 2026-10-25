@@ -13,8 +13,8 @@ judged on the MacBook Air M5, and the MacBook Air M1 results are supplementary (
 | M7.2 Vehicle physics | Pending | "Drove well" and "physics OK" by the tester; no lap time or top speed compared with the Xbox 360 version yet. |
 | M7.3 AI opponents | Completed | Hand test 4 (2026-10-23). In the M1 races the 7 opponents start and race (screenshots); their finishing wasn't recorded. |
 | M7.4 Career race and save | Completed | Hand test 4 (2026-10-23). |
-| M7.5 Frame pacing, 10 minutes, M5 | **Open** | Not yet run on the M5. The M1 races don't meet 30 fps (below). |
-| M7.6 Audio and picture | In progress | Tester: picture and sound fine, nothing missing. Audio log: no underruns or gaps over 50 ms after startup in any race. Sync rests on the tester's report. |
+| M7.5 Frame pacing, 10 minutes, M5 | **Accepted** (user decision, 2026-10-25) | M5 race: 9.77 min of racing (14 s short of 10; 8 laps is the game's maximum), 50.8 fps mean, no second under 30 fps outside a 3 s Space switch the tester caused, no degradation over the race, thermal "fair". The tester accepted the length. The M1 races don't meet 30 fps (below). |
+| M7.6 Audio and picture | In progress | Tester: picture and sound fine, nothing missing (M1), smooth with audio in sync (M5). Audio log: no underruns or gaps over 50 ms after startup in any race, except during the M5 Space switch. Sync rests on the tester's report. |
 | M7.7 Written route ×3 | Done on the M1 | Three human races with frame-time and session logs. The M5 race is still needed for M7.5. |
 
 ## The route
@@ -49,6 +49,27 @@ keys:
   from 31 to 46–62 ms with draws unchanged, and the thermal state was "fair". Throttling on the
   fanless M1 is a hypothesis; no GPU clock is readable on macOS. Recorded as an M1 limitation.
 
+## MacBook Air M5 race (M7.5), 2026-10-25
+
+The same route at 8 laps (the game's maximum: a ninth Right wraps to 1), after a scripted dry run
+that re-timed the handover for the M5. Launched at thermal pressure level 1 (warm from the dry
+run); thermal "fair" throughout, level 2 at the end; AC power; Game Mode on; exit 0.
+
+| Window | Length | fps (mean) | Median / p99 frame | Max frame | Seconds under 30 fps |
+|---|---|---|---|---|---|
+| Whole race (219–805 s) | 9.77 min | 50.8 | 16.7 / 35.1 ms | 748.6 ms | 5 of 585 (all in the Space switch) |
+| Before the switch (222–355 s) | 2.2 min | 49.7 | 16.7 / 35.2 ms | 96.3 ms | 0 of 132 (lowest 35) |
+| After the switch (362–805 s) | 7.4 min | 51.6 | 16.7 / 35.0 ms | 99.2 ms | 0 of 442 (lowest 38) |
+
+- **The only stall:** the tester pressed Ctrl+Arrow on lap 3, switching macOS Spaces. Game Mode
+  paused from 20:46:14.5 to 20:46:17.3, exactly the frames of up to 749 ms and the audio gaps of up
+  to 95 ms. Attributed to the tester's action, not to ReCarbon.
+- **No degradation:** 47–56 fps and 15–19 ms of GPU time per frame from the first lap to the last,
+  while the texture cache grew from 857 to 5,918 entries.
+- **Tester:** smooth; audio in sync; the same controls as on the M1; lap times seen but not
+  recorded here.
+- **Decision (user, 2026-10-25):** M7.5 accepted with 9.77 minutes of racing.
+
 ## Investigation: texture cache growth and the M1 frame-rate drop (read-only, 2026-10-25)
 
 - **Confirmed (code):** the `[perf]` "textures" figure counts live cache entries. Entries are keyed
@@ -72,8 +93,6 @@ keys:
 
 ## Remaining for M7
 
-1. M7.5 on the M5: one human race of the route above, at least 10 minutes of racing, with the same
-   logs, judged on the existing criterion (a stable 30 fps or better, thermal state noted).
-2. Nitrous by hand (needs a car that has it).
-3. A physics reference: a lap time on Main Street, or the top speed on a straight, against the
-   Xbox 360 version.
+1. Nitrous by hand (needs a car that has it).
+2. A physics reference: a lap time on Main Street, or the top speed on a straight, against the
+   Xbox 360 version (the tester saw the lap times; the values aren't recorded yet).

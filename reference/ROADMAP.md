@@ -309,10 +309,12 @@ customization. The controls criterion is judged on the default mappings.
       and Speedbreaker (Left Shift) are hand-verified in the M1 races of 2026-10-25; nitrous isn't
       yet (the stock RX-8 has none). The physical controller is deferred;
     - physics against the Xbox 360 version (no lap time or top speed compared yet);
-    - frame pacing over 10 minutes of racing on the M5 (the M1 races are supplementary);
     - audio and picture: reported fine by the user on the M1, with sync resting on that report;
     - the written route repeated 3 times: done on the M1 (races 1–3, 2026-10-25), with frame-time
-      and session logs per run; the M5 race is still required for M7.5.
+      and session logs per run.
+  - **M7.5 accepted** (user decision, 2026-10-25): the M5 race ran 9.77 min of racing (8 laps, the
+    game's maximum) at 50.8 fps, with no second under 30 fps outside a 3 s Space switch the tester
+    caused, and no degradation over the race (reference/M7_ACCEPTANCE.md).
 
 ## M8 — Polish and distribution *(In progress: started 2026-10-23 by the user's approval, B1 packaging first)*
 - **License compliance:** `COPYING`, `NOTICE`, `THIRD_PARTY_NOTICES.md` and `LICENSES/` are kept
