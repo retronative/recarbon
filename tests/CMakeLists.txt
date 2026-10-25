@@ -172,6 +172,11 @@ recarbon_test(install_folder_test SOURCES ${INSTALL_SOURCES} ARGS ${CMAKE_BINARY
 recarbon_test(portable_test SOURCES ${RT}/install/portable_switch.cpp ${INSTALL_SOURCES} ARGS ${CMAKE_BINARY_DIR}/portable_scratch)
 target_link_libraries(install_folder_test PRIVATE "-framework CoreFoundation")  # placement.cpp's iCloud check
 target_link_libraries(portable_test PRIVATE "-framework CoreFoundation")
+# Why the installer turns a disc down (install/installer.cpp CheckGameVersion,
+# install/disc_source.cpp): another platform, another game, another region or
+# version of Carbon, on synthetic files in a scratch folder (ReCarbon's own).
+recarbon_test(disc_check_test SOURCES ${INSTALL_SOURCES} ARGS ${CMAKE_BINARY_DIR}/disc_check_scratch)
+target_link_libraries(disc_check_test PRIVATE "-framework CoreFoundation")
 # The write watch around CPU write faults on 16 KB host pages, on physical
 # memory mapped as the runtime maps it (kernel/write_watch.cpp), with ppc/'s
 # ppc_config.h for the guest base. From SpeedBreaker v0.1.8's (ReCarbon M8

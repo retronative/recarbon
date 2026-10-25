@@ -36,6 +36,10 @@ namespace install
     // takes a Manifest so tests can pass a small one instead.
     const Manifest& GameManifest();
 
+    // ReCarbon: what the installer tells someone whose disc isn't the one the
+    // manifest lists (another platform, game, region or version).
+    inline constexpr const char* kRequiredDisc = "ReCarbon needs your own Need for Speed: Carbon (USA) disc for Xbox 360.";
+
     // ASCII case-insensitive equality: the disc's names are ASCII.
     bool PathEqualsIgnoreCase(std::string_view a, std::string_view b);
 }

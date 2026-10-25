@@ -48,9 +48,11 @@ namespace install
     using ProgressCallback = std::function<void(const Progress&)>;
 
     // Is this the supported game and version? Hashes default.xex (5 MB) and
-    // reads its title ID: WrongGame (another title, or an original Xbox disc),
-    // UnsupportedVersion (Carbon, another default.xex; foundHash says
-    // which), NotADiscImage (no default.xex), ReadError. `identity`, if given,
+    // reads its title ID: WrongGame (another title, an original Xbox disc, or
+    // a default.xex that isn't an XEX2), UnsupportedVersion (Carbon, another
+    // region's or version's default.xex; foundHash says which), NotADiscImage
+    // (no default.xex), ReadError. The messages name the disc ReCarbon needs
+    // (kRequiredDisc). `identity`, if given,
     // receives what was found.
     Result CheckGameVersion(const DiscSource& source, const Manifest& manifest = GameManifest(),
         XexIdentity* identity = nullptr);

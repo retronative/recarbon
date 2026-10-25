@@ -377,10 +377,12 @@ namespace install
             if (dvd && image.size < kPartitionOffsets[4] + 33 * kSectorSize)
                 return Fail(Error::TruncatedImage, std::format("{} is incomplete: it ends after {}, before the game data "
                     "starts. Copy it again, or make a new backup from your disc.", name, FormatSize(image.size)));
+            // ReCarbon: a PC or PlayStation disc is ISO 9660 too, so name the disc needed.
             if (dvd)
                 return Fail(Error::UnsupportedFormat, name + " is a DVD image without an Xbox 360 game partition "
-                    "(perhaps only the video partition was copied). Dump the whole disc.");
-            return Fail(Error::NotADiscImage, name + " is not an Xbox 360 disc image.");
+                    "(perhaps only the video partition was copied, or it is another platform's disc). Dump the whole "
+                    "disc. " + kRequiredDisc);
+            return Fail(Error::NotADiscImage, name + " is not an Xbox 360 disc image. " + kRequiredDisc);
         }
 
         Result OpenImage(const fs::path& path, std::unique_ptr<DiscSource>& source, const OpenOptions& options)
@@ -518,13 +520,34 @@ namespace install
             return !name.empty() && name[0] == '.';
         }
 
-        bool HoldsXex(const fs::path& dir)
+        bool Holds(const fs::path& dir, std::string_view name)
         {
             std::error_code ec;
             for (fs::directory_iterator it(dir, fs::directory_options::skip_permission_denied, ec), end; !ec && it != end; it.increment(ec))
             {
                 std::error_code fileEc;
-                if (PathEqualsIgnoreCase(it->path().filename().string(), "default.xex") && it->is_regular_file(fileEc))
+                if (PathEqualsIgnoreCase(it->path().filename().string(), name) && it->is_regular_file(fileEc))
+                    return true;
+            }
+            return false;
+        }
+
+        bool HoldsXex(const fs::path& dir)
+        {
+            return Holds(dir, "default.xex");
+        }
+
+        // ReCarbon: an extracted original Xbox disc boots default.xbe, at the
+        // root or one folder down (where the picker looks for default.xex).
+        bool HoldsXbe(const fs::path& dir)
+        {
+            if (Holds(dir, "default.xbe"))
+                return true;
+            std::error_code ec;
+            for (fs::directory_iterator it(dir, fs::directory_options::skip_permission_denied, ec), end; !ec && it != end; it.increment(ec))
+            {
+                std::error_code dirEc;
+                if (!Hidden(it->path()) && it->is_directory(dirEc) && Holds(it->path(), "default.xbe"))
                     return true;
             }
             return false;
@@ -547,9 +570,12 @@ namespace install
                 }
                 if (ec && found.empty())
                     return Fail(Error::ReadError, std::format("Cannot read the folder {}: {}.", dir.string(), ec.message()), dir.string());
+                if (found.empty() && HoldsXbe(dir))
+                    return Fail(Error::NotADiscImage, std::format("{} holds an original Xbox game (default.xbe): it doesn't "
+                        "look like the Xbox 360 version of Need for Speed: Carbon. {}", dir.string(), kRequiredDisc), dir.string());
                 if (found.empty())
                     return Fail(Error::NotADiscImage, std::format("{} holds no game: there is no default.xex in it or in the "
-                        "folders directly inside it.", dir.string()), dir.string());
+                        "folders directly inside it. {}", dir.string(), kRequiredDisc), dir.string());
                 if (found.size() > 1)
                 {
                     std::sort(found.begin(), found.end());

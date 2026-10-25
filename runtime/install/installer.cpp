@@ -591,10 +591,10 @@ namespace install
         {
             // Original Xbox discs boot default.xbe.
             if (source.Find("default.xbe"))
-                return Fail(Error::WrongGame, std::format("{} holds an original Xbox game, not {} for Xbox 360.",
-                    What(source), kGameName), "default.xbe");
-            return Fail(Error::NotADiscImage, std::format("{} has no default.xex: it is not an Xbox 360 game.",
-                What(source)), "default.xex");
+                return Fail(Error::WrongGame, std::format("{} holds an original Xbox game: it doesn't look like the "
+                    "Xbox 360 version of {}. {}", What(source), kGameName, kRequiredDisc), "default.xbe");
+            return Fail(Error::NotADiscImage, std::format("{} has no default.xex: it doesn't look like the Xbox 360 "
+                "version of {}. {}", What(source), kGameName, kRequiredDisc), "default.xex");
         }
         if (!r.Ok())
             return r;
@@ -607,9 +607,10 @@ namespace install
         if (id.titleId != manifest.titleId)
         {
             r = Fail(Error::WrongGame, id.titleId
-                ? std::format("{} is not {}: it holds another game (title ID {:08X}; {} is {:08X}).", What(source),
-                    kGameName, id.titleId, kGameName, manifest.titleId)
-                : std::format("{} is not {}: its default.xex is not an Xbox 360 game executable.", What(source), kGameName),
+                ? std::format("{} holds another game, not {} (its title ID is {:08X}; {}'s is {:08X}). {}", What(source),
+                    kGameName, id.titleId, kGameName, manifest.titleId, kRequiredDisc)
+                : std::format("{}'s default.xex is not an Xbox 360 executable: it doesn't look like the Xbox 360 "
+                    "version of {}. {}", What(source), kGameName, kRequiredDisc),
                 id.file->path);
             r.foundHash = found;
             return r;
@@ -617,10 +618,11 @@ namespace install
         // Same title, different executable: another region or revision. The
         // recompiled code matches one executable byte for byte, so nothing
         // else can run, whatever else is on the disc.
-        r = Fail(Error::UnsupportedVersion, std::format("{} is {}, but not the version this build supports: its "
-            "default.xex has SHA-256 {}. Only {} is supported (default.xex {}){}.", What(source), kGameName, found,
-            kRelease, std::string(xex.sha256),
-            id.file->size == xex.size ? ", unless this one is a damaged dump" : ""), id.file->path);
+        r = Fail(Error::UnsupportedVersion, std::format("{} holds a different region or version of {}; ReCarbon "
+            "supports the USA edition (Xbox 360) only. Its default.xex has SHA-256 {}; {} has {}{}.", What(source),
+            kGameName, found, kRelease, std::string(xex.sha256),
+            id.file->size == xex.size ? " (if this is your USA disc, the dump is damaged: dump it again)" : ""),
+            id.file->path);
         r.foundHash = found;
         return r;
     }
