@@ -1,5 +1,5 @@
 {
-	"updated": "2026-10-24",
+	"updated": "2026-10-25",
 	"currentMilestone": "M7",
 	"milestones": [
 		{
@@ -342,9 +342,19 @@
 	],
 	"achievements": [
 		{
+			"date": "2026-10-25",
+			"text": "Fewer long stalls when other apps keep the Mac busy: the game threads that drive each frame now run at a higher macOS priority. On a MacBook Air M1 under load, stalls of 100 ms or more went from 5.3 to 0.3 per race run, at the same frame rate.",
+			"commits": []
+		},
+		{
 			"date": "2026-10-24",
 			"text": "This Progress page: milestone states checked against the roadmap, verified features, known gameplay issues, pending hand tests and recent work.",
-			"commits": []
+			"commits": [
+				{
+					"sha": "40223384c0a42949b9c5991b8b86f23a6332b8cf",
+					"short": "4022338"
+				}
+			]
 		},
 		{
 			"date": "2026-10-24",
@@ -430,16 +440,6 @@
 				{
 					"sha": "7e73197380469e859ba1d3a9fbd648c075d01b0e",
 					"short": "7e73197"
-				}
-			]
-		},
-		{
-			"date": "2026-10-24",
-			"text": "Keyboard and controller mappings became plain data, with the WASD and Arrows presets; no key drives two controls in Arrows.",
-			"commits": [
-				{
-					"sha": "585d8ab3f07fa717eed2b673b0f3afe5173de316",
-					"short": "585d8ab"
 				}
 			]
 		}
