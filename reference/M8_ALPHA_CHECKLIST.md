@@ -65,12 +65,14 @@ Kept in `docs/known-issues.md` and the release notes:
 ## 3. Publication gates
 
 From `reference/ALPHA_RELEASE_GATES.md`:
-- [ ] **G1** binary: publish the dmg and its checksum.
-- [ ] **G2** LGPL parts (FFmpeg 7.1.1 and libmspack's `lzxd.c`, both static): the source archive,
-      the written offer in the app and on the download page, the relinking route.
-- [ ] **G3** Developer ID + notarization, or ad hoc with the documented "Open Anyway".
+- [x] **G1** binary. Decided 2026-10-26: publish the dmg and its checksum.
+- [x] **G2** LGPL parts (FFmpeg 7.1.1 and libmspack's `lzxd.c`): replaceable dylibs, the offer
+      and steps in the bundled notices, the source archive built locally (RC e8eb933). The
+      download page's offer comes with the release change (G4).
+- [x] **G3** Developer ID + notarization, or ad hoc with the documented "Open Anyway". Decided
+      2026-10-26: ad hoc, Open Anyway.
 - [ ] **G4** approvals: push, website redeploy, tag, release page, binary upload.
-- [ ] Which RC is the alpha (recommended: 94750af; only 282557c was human install-tested).
+- [ ] Which RC is the alpha: the final RC is e8eb933 (`M8_ACCEPTANCE.md`); not human install-tested.
 - [ ] Whether the gamtest evidence closes M6.6 and so M6 (`M8_ACCEPTANCE.md`); and closing M8.
 
 ## Shortest path to publishing

@@ -132,7 +132,11 @@ Read from `COPYING`, `NOTICE`, `THIRD_PARTY_NOTICES.md`, `LICENSES/` and `refere
   others), SPIRV-Tools (Apache-2.0), MoltenVK (Apache-2.0, cereal BSD-3-Clause), and the code of
   XenonRecomp (MIT), Xenia (BSD-3-Clause) and the other components `THIRD_PARTY_NOTICES.md`
   lists. `make_app.py` puts their notices in `Contents/Resources/licenses/`.
-- **LGPL parts linked statically into the `ReCarbon` executable:** FFmpeg 7.1.1 (LGPL-2.1-or-later,
+- **LGPL parts** (gate G2, decided 2026-10-26: since 69faf7f separate, replaceable dylibs in
+  `Contents/Frameworks/`, `libavcodec.61.dylib`, `libavutil.59.dylib`, `librecarbon_lzx.dylib`,
+  checked by `check_app.py` check 7; the offer and the replacement steps are in
+  `THIRD_PARTY_NOTICES.md`; the source archive in `build/release-src/`). **Up to 94750af linked
+  statically into the `ReCarbon` executable:** FFmpeg 7.1.1 (LGPL-2.1-or-later,
   `libavcodec.a` and `libavutil.a` from `build_deps.sh`'s `ffmpeg-xma`, linked by
   `runtime/CMakeLists.txt`, with `patches/ffmpeg/0001-…`) and libmspack's `lzxd.c` (LGPL-2.1,
   compiled into the executable from XenonRecomp's submodule). `THIRD_PARTY_NOTICES.md` names

@@ -57,10 +57,11 @@ All measurements on a MacBook Air M5 (24 GB, macOS 27.0.1) unless marked M1.
 ## Install
 
 1. Download `ReCarbon-macos.dmg` and check it: `shasum -a 256 -c ReCarbon-macos.dmg.sha256`
-   (the expected SHA-256 is **[GATE G4: the chosen RC's dmg SHA-256]**). The `.dmg` file shows
+   (the expected SHA-256 is **[GATE G4: the chosen RC's dmg SHA-256; the final RC e8eb933's is
+   `6ba57adb4471a05a29d5c5d7a7c35b5fa812b8c2deda01222bd8b2ab01bdb510`]**). The `.dmg` file shows
    macOS's generic disk-image icon; ReCarbon's icon appears once it is open.
 2. Open the dmg and drag **ReCarbon** onto **Applications**.
-3. **First launch:** ReCarbon is **[GATE G3: "not notarized" or "signed and notarized"]**. If
+3. **First launch:** ReCarbon is signed ad hoc and **not notarized** (G3, decided 2026-10-26). If
    macOS says it can't verify the app, open **System Settings > Privacy & Security**, find the
    message about ReCarbon and choose **Open Anyway**, then confirm. You do this once. Don't turn
    Gatekeeper off.
@@ -133,9 +134,12 @@ ReCarbon is free software under the GPL-3.0-or-later; the app carries every comp
 and license text in `ReCarbon.app/Contents/Resources/licenses/` ([License](../COPYING),
 [Notices](../NOTICE), [Third-party notices](../THIRD_PARTY_NOTICES.md)).
 
-**[GATE G2: the source offer — where the ReCarbon source for this build (tag) and the
-third-party source archive (FFmpeg 7.1.1 + patch, libmspack, the bundled libraries) are, their
-SHA-256s, and how to replace the libraries. Written once G1 and G2 are decided.]**
+**Source.** FFmpeg's libavcodec and libavutil and libmspack's LZX decoder (LGPL-2.1) are separate
+libraries in `ReCarbon.app/Contents/Frameworks/` that you can replace with your own builds; their
+complete source is on this page as `ReCarbon-0.0.1-third-party-source.tar.xz` (SHA-256
+`8635a65fbcbdf655fd6238ae0e954231a5be50e5f0aa587db5529debd432dade`, also in its `.sha256`), and
+the steps to replace one are in [Third-party notices](../THIRD_PARTY_NOTICES.md).
+**[GATE G4: ReCarbon's own source for this build: the tag.]**
 
 ReCarbon is not affiliated with or endorsed by Electronic Arts. "Need for Speed" and "Carbon" are
 trademarks of Electronic Arts Inc.

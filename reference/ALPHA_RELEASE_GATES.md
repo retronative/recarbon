@@ -1,19 +1,40 @@
 # Alpha publication gates (internal, 2026-10-26)
 
 What must be decided or prepared before the ReCarbon alpha is published. Each gate gives the
-facts found in this repository, the options and the decision to make. Nothing here has been
-published, pushed, tagged or uploaded.
+facts found in this repository, the options and the decision. Nothing here has been published,
+pushed, tagged or uploaded.
 
 Related: `reference/M8_ACCEPTANCE.md` (what was validated), `reference/RELEASE_CANDIDATE.md`
 (how an RC is built), `reference/ALPHA_RELEASE_NOTES.md` (the draft notes),
 `reference/M8_ALPHA_CHECKLIST.md` (the checklist and the shortest path).
 
-| Gate | Subject | Decision needed |
+| Gate | Subject | Decision |
 |---|---|---|
-| G1 | Binary | What is published: the dmg and its checksum |
-| G2 | LGPL parts: source archive, written offer, replaceable libraries | What to publish and how the libraries can be replaced |
-| G3 | Signing and notarization | Developer ID + notarization, or ad hoc with "Open Anyway" |
+| G1 | Binary | Publish the dmg and its checksum |
+| G2 | LGPL parts: source archive, written offer, replaceable libraries | Replaceable dylibs; the source archive and the offer on the release page |
+| G3 | Signing and notarization | Ad hoc, with the documented "Open Anyway" |
 | G4 | Publication | Push, website redeploy, tag, release page, upload |
+
+## Decisions (2026-10-26) and their state
+
+- **G1: publish the dmg** (`ReCarbon-macos.dmg` and its `.sha256`) on the GitHub Release page.
+- **G2: replaceable dynamic libraries**, done in 69faf7f: FFmpeg's
+  `libavcodec.61.dylib` and `libavutil.59.dylib` (built shared by `scripts/build_ffmpeg_xma.sh`) and
+  libmspack's LZX decoder `librecarbon_lzx.dylib` (its own CMake target) are separate files in
+  `Contents/Frameworks/`, named `@rpath/<file>`, ad-hoc signed like the other libraries;
+  `check_app.py` check 7 fails a build with any of their code in the executable
+  (`tests/lgpl_dylibs_test.py`). The written offer and the replacement steps are in
+  `THIRD_PARTY_NOTICES.md` (968f03f, bundled in the app). The third-party source archive is built
+  locally: `build/release-src/ReCarbon-0.0.1-third-party-source.tar.xz` (40,814,628 B, SHA-256
+  `8635a65fbcbdf655fd6238ae0e954231a5be50e5f0aa587db5529debd432dade`, with `.sha256`; README and
+  `SHA256SUMS` inside), from files already on this Mac; not uploaded. It is published on the
+  release page next to the dmg, with the offer (the notices say "for as long as the binary is
+  offered there").
+- **G3: ad hoc signing** (option 2), with the documented **Open Anyway** step (README,
+  `docs/installation.md`, `docs/troubleshooting.md`, `docs/download.md`).
+- **The final RC** with all of it: `build/rc/f6ce759-20261025T180528Z` (24/24 PASS), below and in `M8_ACCEPTANCE.md`.
+- Still open: **G4** (push, website redeploy, tag, release page, uploads), and the switch
+  of `docs/download.md` and the other public pages to "released" (a release branch does that).
 
 ## G1. Binary
 
@@ -27,22 +48,19 @@ Related: `reference/M8_ACCEPTANCE.md` (what was validated), `reference/RELEASE_C
   scratch give byte-identical `config/` and `ppc/` (AGENTS.md), and `release_candidate.sh` builds
   from a fresh clone of one commit.
 
-**Options**
-1. Publish the dmg (with G2 and G3 done).
-2. Defer publication.
-
-**Decision:** which option.
+**Decision:** publish the dmg (2026-10-26).
 
 ## G2. LGPL-2.1 parts
 
 **Facts**
 - **FFmpeg 7.1.1** (LGPL-2.1-or-later), built by `scripts/build_ffmpeg_xma.sh` (XMA1/XMA2/WMA Pro
   decoders only, no GPL parts) with `patches/ffmpeg/0001-xma-single-stream-no-holdback.patch`.
-  The release build takes it from `build_deps.sh`'s `<prefix>/ffmpeg-xma`; `libavcodec.a` and
-  `libavutil.a` are **linked statically** into the executable (`runtime/CMakeLists.txt` lines
-  71–72, 154).
-- **libmspack** (LGPL-2.1): only `lzxd.c` is **compiled into** the executable
-  (`runtime/CMakeLists.txt` line 11) from XenonRecomp's submodule: `https://github.com/kyz/libmspack`
+  The release build takes it from `build_deps.sh`'s `<prefix>/ffmpeg-xma`. Up to 94750af
+  `libavcodec.a` and `libavutil.a` were **linked statically** into the executable; since 69faf7f
+  they are `libavcodec.61.dylib` and `libavutil.59.dylib` in `Contents/Frameworks/`.
+- **libmspack** (LGPL-2.1): only `lzxd.c` is used, from XenonRecomp's submodule; up to 94750af
+  it was **compiled into** the executable, since 69faf7f it is `librecarbon_lzx.dylib` in
+  `Contents/Frameworks/`. Its source: `https://github.com/kyz/libmspack`
   at `305907723a4e7ab2018e58040059ffb5e77db837` (tag v1.11, 2023-02-24), the revision XenonRecomp's
   pinned base `ddd128bcca99fe8bfbb99bea583c972351fa6ace` records. ReCarbon's XenonRecomp patches
   don't touch it.
@@ -65,34 +83,33 @@ Related: `reference/M8_ACCEPTANCE.md` (what was validated), `reference/RELEASE_C
 |---|---|
 | `ffmpeg-7.1.1.tar.xz` | `733984395e0dbbe5c046abda2dc49a5544e7e0e1e2366bba849222ae9e3a03b1` |
 | `patches/ffmpeg/0001-xma-single-stream-no-holdback.patch` | `bc89077528acbe34d6cce2b69da12738e21cd19fab5885c6187dc487ec246601` |
-| `scripts/build_ffmpeg_xma.sh` (at the release commit) | `8774f12ac1aa511d97292b1cbccccee0c37209e30b8d5ed4d90c0ca0994618b8` |
-| libmspack at `3059077` (only `lzxd.c` is used: `622183f03bac71a12327bc9f036395dcb5c3b7c6cc7d766785de24ac1354256a`) | a `git archive` of that revision, still to make |
+| `scripts/build_ffmpeg_xma.sh` (at e8eb933, the final RC; `8774f12a…` at 94750af) | `1626fa21cd20d92547959d315c598306423022698983052cfcc1c130fc7d13d6` |
+| libmspack at `3059077` (only `lzxd.c` is used: `622183f03bac71a12327bc9f036395dcb5c3b7c6cc7d766785de24ac1354256a`) | `libmspack-305907723a4e….tar.gz`, a `git archive` of that revision: `c018e87f79e8b04012fdb6fae454c600245f649602d77176186671ddf0376db8` |
 | `SDL3-3.4.18.tar.gz` | `9c75cf16330322c217dedd2e0609f1124f1b54b8633e763467b4684d0f4334a3` |
 | `Vulkan-Loader-vulkan-sdk-1.4.363.0.tar.gz` | `941eff558fc74f248745fb7df367640cf89a8457f216dae498a74ae14b6ba6f7` |
 | `Vulkan-Headers-vulkan-sdk-1.4.363.0.tar.gz` | `4a078be12bef21cfebc09d878b77a63cff9d68f899254a0b00d0e37ef73e7f7e` |
 | `SPIRV-Tools-vulkan-sdk-1.4.363.0.tar.gz` | `e6c83a215538fbfd265ccf398d3877985055df1273dbed73912bd05307664688` |
 | `SPIRV-Headers-vulkan-sdk-1.4.363.0.tar.gz` | `5b3a0d099f5c7649e29c0938476c462e71d66ad89a0bde42fa1ba3eb476956c9` |
 | `glslang-16.6.0.tar.gz` | `9c09b901149c729df745057dafa815278aaa101b84d2b6e14f16a42de52f97f2` |
-| `scripts/macos/build_deps.sh` (at the release commit) | `0e746703371c3f824ccf619e6b7f2972b963185b57b60b031920d9e127d0a0b5` |
+| `scripts/macos/build_deps.sh` (at e8eb933; `0e746703…` at 94750af) | `afe8c361346122656cb9fb306690c9796c1128658a83c99cfeb866b6b5c0cee1` |
 | MoltenVK 1.4.2 | no source here (Homebrew bottle only) |
 
-**Replacing the libraries:** build FFmpeg and libmspack as replaceable dylibs in
-`Contents/Frameworks/`, as the other libraries already are. A build change
-(`runtime/CMakeLists.txt`, `build_deps.sh`, `make_app.py`, `check_app.py`) that needs its own RC
-and tests: a later decision, not part of this alpha's RCs.
+**Replacing the libraries:** FFmpeg and libmspack are built as replaceable dylibs in
+`Contents/Frameworks/`, as the other libraries already are (69faf7f: `runtime/CMakeLists.txt`,
+`build_deps.sh`, `make_app.py`, `check_app.py`, with its own RC and tests).
 
-**Fixed inside the RCs (no rebuild allowed now):** both RCs bundle the `THIRD_PARTY_NOTICES.md`
+**Fixed inside the earlier RCs (282557c, 94750af):** both bundle the `THIRD_PARTY_NOTICES.md`
 of their commit in `Contents/Resources/licenses/`, written before any release: it says there are
 no downloads yet and carries no offer text. Likewise their compiled What's New is the CHANGELOG
 v0.0.1 entry as of their commit ("A development snapshot, not a release"); the 2026-10-26
-CHANGELOG edits reach only a later build. Publishing either RC as is means shipping that text;
-changing it needs a new RC.
+CHANGELOG edits reach only a later build. Publishing either RC as is means shipping that text.
+**The final RC e8eb933 replaces them**: its notices carry the offer and the replacement steps,
+and its What's New calls v0.0.1 the first alpha release.
 
-**Still to prepare:** the archive itself (published next to the dmg), the written offer in the
-app (Settings or the bundled `licenses/README.txt`) and on the download page. The current RCs
-carry the notices and license texts but no offer text.
+**Still to publish:** the archive next to the dmg, and the offer on the download page, with the
+release change.
 
-**Decision:** how the libraries become replaceable, and the offer's wording and duration.
+**Decision:** replaceable dylibs (2026-10-26), the offer as in `THIRD_PARTY_NOTICES.md`.
 
 ## G3. Signing and notarization
 
@@ -115,8 +132,7 @@ carry the notices and license texts but no offer text.
 2. **Ad hoc** (as today): no cost; every user of a downloaded copy has to use Open Anyway once,
    documented in the release notes and `docs/installation.md`.
 
-**Decision:** which option. Option 1 needs a new RC and the user's tests; option 2 can ship the
-current RC.
+**Decision:** ad hoc (option 2), 2026-10-26: the current RC ships as built.
 
 ## G4. Publication (nothing done)
 

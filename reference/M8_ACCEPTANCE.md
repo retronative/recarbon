@@ -14,11 +14,11 @@ macOS account). **Nothing is published yet.** Publication follows the gates in
 | Criterion | Status | Evidence |
 |---|---|---|
 | M8.1 Installer parametrized for Carbon (manifest, title ID, ReCarbon names) | **Completed** | Carbon's manifest (title 0x454107EC, 78 files). RC 282557c on the M5: the first-run installer copied and verified 78 files (5.74 GB) from the user's ISO into `~/Library/Application Support/ReCarbon/game`, in the main account (86.2 s, session 2026-10-25_23-13-21) and in the fresh account `gamtest` (48.7 s, session 2026-10-25_23-47-12); the game started each time. Earlier: `ReCarbon --install` 78 files, and the game found in the default folder (2026-10-23). |
-| M8.2 `ReCarbon.app` with license notices and LGPL sources | **In progress** | The notices, license texts and each library's provenance are in `Contents/Resources/licenses/` (make_app.py; checked by the RC's gate). Bundle ID `org.retronative.recarbon`, version 0.0.1. **Not done:** the LGPL source archive and offer (gate G2). |
+| M8.2 `ReCarbon.app` with license notices and LGPL sources | **Completed in the final RC e8eb933** (publication gated) | The notices, license texts and each library's provenance are in `Contents/Resources/licenses/` (make_app.py; checked by the RC's gate). Bundle ID `org.retronative.recarbon`, version 0.0.1. Gate G2 (decided 2026-10-26): FFmpeg and libmspack's LZX decoder are replaceable dylibs in `Contents/Frameworks/` (check_app.py check 7), the notices carry the source offer and the replacement steps, and the third-party source archive is built locally (`build/release-src/`, `ALPHA_RELEASE_GATES.md`). Replacement verified on a copy of the RC (below). |
 | M8.3 Optional: render scaling and widescreen hooks | **Deferred** (optional) | Not started. Not an alpha gate. |
 | M8.4 Clean install from a disc image on a fresh macOS account | **Completed on the M5** | Account `gamtest` (UID 502, created by the user), RC 282557c's app, no quarantine attribute. Session 1: ISO install, new profile save `ALIAS_ABO`, a race (3D mean 56.4 fps), Quit Game. Session 2: no "ended without quitting" notice, save `ALIAS_ABO` found and opened, a race (mean 54.5 fps, worst frame 100 ms), Quit Game. No hang report, strict stub, device loss or crash. **Not captured:** Game Mode in that account. **Seen:** the first race after the install hitched up to 450 ms while the empty shader cache compiled pipelines. Not done on the M1. |
-| M8.5 `check_app.py` passes | Completed | Both RCs: `check-app`, `check-dmg` and `check-extracted` PASS (and on the release app cd7dc02 / d780e34 before). |
-| M8.6 The unit tests run in ctest | Completed | The RCs' `ctest` step: 52/52 at 94750af. |
+| M8.5 `check_app.py` passes | Completed | e8eb933, 282557c and 94750af: `check-app`, `check-dmg` and `check-extracted` PASS (and on the release app cd7dc02 / d780e34 before). |
+| M8.6 The unit tests run in ctest | Completed | The RCs' `ctest` step: 52/52 at 94750af, 53/53 at e8eb933 (with `lgpl_dylibs_test`). |
 | M8.7 Keyboard presets WASD and Arrows | Completed | `profiles_test` (ROADMAP M8, B2). |
 | M8.8 Persistent keyboard and controller profiles | Completed | Scripted restarts in isolated homes; `profile_store_test`. |
 | M8.9 Custom mappings, controller rebinding, switching, reset | Completed | Scripted runs and the virtual pad. The physical controller is not verified (deferred). |
@@ -52,7 +52,38 @@ and `release/` are intact, but its `extracted/ReCarbon.app` (the copy taken back
 also left at 00:12, the same way; `SHA256SUMS` verified at 00:14 and 00:23 (a Finder icon was added to the dmg file as extended
 attributes at 00:09, which leaves its SHA-256 unchanged).
 
-### What differs between the two RCs
+### The final RC: e8eb933 (2026-10-26)
+
+`scripts/release_candidate.sh e8eb933` with `RC_DEPS=build/deps-lgpl` (build_deps.sh's libraries
+with FFmpeg shared; record SHA-256 `43eabd15…e8a3`), MoltenVK 1.4.2 pinned. Folder
+`build/rc/f6ce759-20261025T180528Z`, 24/24 steps PASS, version 0.0.1 (build 204), marker class `evidence`.
+
+- dmg SHA-256 `6ba57adb4471a05a29d5c5d7a7c35b5fa812b8c2deda01222bd8b2ab01bdb510` (22,071,083 B);
+  game binary `92cfdba7a2a88c1bc9d2a9d47cd7b08ed025bcc1b206b58ccf9c1069f5554d3e` (the dmg's copy
+  identical); `MANIFEST.json` `f3226c881d8739cfbeed0532f1cc43a5d59f378cfd54ee617c1da9602be2dcfd`.
+- Differs from 94750af by the LGPL dylibs (69faf7f), the release text (968f03f: What's New, the
+  notices with the offer and replacement steps) and `release_candidate.sh`'s absolute `RC_DEPS`
+  (e8eb933). Game code unchanged (`runtime/` only in `runtime/CMakeLists.txt`'s linking).
+- **Linkage:** the executable links `@rpath/libavcodec.61.dylib`, `@rpath/libavutil.59.dylib`,
+  `@rpath/librecarbon_lzx.dylib` with the one rpath `@executable_path/../Frameworks`; each dylib
+  is named `@rpath/<file>`, rpath `@loader_path`, macOS 27.0, `Signature=adhoc`; no `/opt/homebrew`
+  or build path in any binary; `nm`: none of their symbols defined in the executable (16 imported);
+  `codesign --verify --deep --strict` passes.
+- **Replacement** (on a copy, the RC untouched and re-verified): `libavcodec.61.dylib` rebuilt from
+  the source archive (`build_ffmpeg_xma.sh … --optflags=-O2`) and `librecarbon_lzx.dylib` built with
+  the archive README's command, put in Frameworks, signed as the notices say (library, then app);
+  `codesign --verify --deep --strict` passes and `DYLD_PRINT_LIBRARIES` shows dyld loading the
+  replacements' UUIDs (9D23E87E…, 787FB92A…; the RC's are B52D6EC9…, 16C88513…) from the copy's
+  Frameworks.
+- **Smoke test** (one launch of a copy, isolated home from `game/m7/template-home`, 175 s, SIGTERM):
+  the three LGPL dylibs loaded from the app's Frameworks, nothing missing; the xex loaded (LZX) and
+  the game booted through the movies to the main menu (profile loaded at 65 s); audio with levels up
+  to 0.88 peak and no gaps; no error, strict stub, hang report or crash; menus at 60.0 fps; clean exit
+  (status 0). The Quick Race route of `race_m5.args` didn't reach a race in that time (windowed).
+  `SDL_AUDIO_DRIVER=dummy` was not honored: the audio went to the system output device.
+- Not done (by scope): races, install matrices, M1, benchmarks; no human install test of e8eb933.
+
+### What differs between 282557c and 94750af
 
 - **Source** (`git diff --stat 282557c 94750af`): 9 files, all packaging, tests or docs —
   `scripts/macos/{make_app.py, check_app.py, rc_manifest.py, make_icon.swift, AppIcon.png}`,
