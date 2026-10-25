@@ -17,6 +17,12 @@ Until ReCarbon's first tagged release there is one docs version, labelled by
 2. Set `docsVersion` to the release (e.g. `"0.1"`), and update or remove the alpha banner text.
 3. Build and check the GitHub Pages build: `npm run build:pages && npm run preview:pages`.
 
+## At every release
+
+Update the version, the asset URLs and both checksums in `src/data/release.ts` (the Download page
+and the installation guide), and the same values in `../docs/download.md`,
+`../docs/installation.md` and `../docs/installation-advanced.md`, which GitHub shows.
+
 ## At the next release (when there is a version to archive)
 
 1. `npm install --save-exact starlight-versions`.

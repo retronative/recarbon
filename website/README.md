@@ -83,6 +83,11 @@ Docs Markdown links are relative (`../faq/`), so they work under any base path. 
   rendered again otherwise.
 - `src/lib/licenses.mjs`, `src/pages/docs/licenses/`: the license pages, built from the
   repository's license files.
+- `src/pages/docs/download/` and `src/pages/docs/installation/[step].astro`: the Download page and
+  the five-step installation guide (one static page per step), with the release's values in
+  `src/data/release.ts`. `docs/download.md` is their GitHub version and is not built as a page;
+  `docs/installation.md` is, as the guide's all-steps page (`/docs/installation/`).
+  `src/starlightRouteData.ts` keeps the sidebar's Installation entry current on all of them.
 
 ## Rules
 
