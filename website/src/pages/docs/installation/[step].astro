@@ -32,14 +32,15 @@ const descriptions = [
 <StarlightPage frontmatter={{ title: step.title, description: descriptions[i], tableOfContents: false, prev: false, next: false }}>
 	<nav class="track not-content" aria-label="Installation steps">
 		<p class="count">Step {n} of {total}</p>
+		<div class="meter" aria-hidden="true"><span style={`width: ${(n / total) * 100}%`}></span></div>
 		<ol>
 			{
 				installSteps.map((s, j) => (
 					<li class:list={{ done: j < i, current: j === i }}>
 						<a href={href(s)} aria-current={j === i ? 'step' : undefined}>
-							<span class="num" aria-hidden="true">{j + 1}</span>
+							<span class="num" aria-hidden="true">{j < i ? '✓' : j + 1}</span>
 							<span class="name">
-								<span class="sr-only">Step {j + 1}: </span>
+								<span class="sr-only">Step {j + 1}{j < i ? ' (done)' : ''}: </span>
 								{s.short}
 							</span>
 						</a>
@@ -168,25 +169,30 @@ const descriptions = [
 		)
 	}
 
-	<nav class="pager not-content" aria-label="Previous and next step">
+	<nav class="pager not-content" aria-label="Back and next step">
 		{
 			prev ? (
-				<a class="prev" href={href(prev)} rel="prev">
-					<span class="dir">Previous</span>
-					{n - 1}. {prev.title}
+				<a class="btn back" href={href(prev)} rel="prev">
+					<span class="dir">← Back</span>
+					<span class="what">Step {n - 1}: {prev.short}</span>
 				</a>
 			) : (
-				<a class="prev" href={url('docs/download/')}>
-					<span class="dir">Back</span>
-					Download
-				</a>
+				<span class="btn back disabled" aria-disabled="true">
+					<span class="dir">← Back</span>
+					<span class="what">This is the first step</span>
+				</span>
 			)
 		}
 		{
-			next && (
-				<a class:list={['next', { primary: n > 1 }]} href={href(next)} rel="next">
-					<span class="dir">Next</span>
-					{n + 1}. {next.title}
+			next ? (
+				<a class="btn next primary" href={href(next)} rel="next">
+					<span class="dir">Next step →</span>
+					<span class="what">Step {n + 1}: {next.short}</span>
+				</a>
+			) : (
+				<a class="btn next primary" href={url('docs/controls/')}>
+					<span class="dir">Finish ✓</span>
+					<span class="what">You're ready to race: see all controls</span>
 				</a>
 			)
 		}
@@ -219,6 +225,29 @@ const descriptions = [
 		font-size: 0.78rem;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
+		color: var(--rn-neon-soft);
+	}
+	.meter {
+		height: 4px;
+		margin: 0 0 0.75rem;
+		background: var(--sl-color-gray-5);
+	}
+	.meter span {
+		display: block;
+		height: 100%;
+		background: var(--rn-neon);
+	}
+	.track .num {
+		width: fit-content;
+		padding: 0 0.4em;
+		border-radius: 2px;
+	}
+	.track .current .num {
+		background: var(--rn-neon);
+		border-color: var(--rn-neon);
+		color: var(--rn-asphalt);
+	}
+	.track .done .num {
 		color: var(--rn-neon-soft);
 	}
 	.track ol {
@@ -352,7 +381,7 @@ const descriptions = [
 		gap: 0.75rem;
 		margin-top: 2.5rem;
 	}
-	.pager a {
+	.pager .btn {
 		display: flex;
 		flex-direction: column;
 		flex: 1 1 14rem;
@@ -369,15 +398,34 @@ const descriptions = [
 	.pager .next {
 		text-align: end;
 	}
-	.pager a:hover {
+	.pager a.btn:hover {
 		background: var(--sl-color-gray-6);
+	}
+	.pager .disabled {
+		color: var(--sl-color-gray-4);
+		border-style: dashed;
+		cursor: not-allowed;
+	}
+	.what {
+		font-size: var(--sl-text-base);
+	}
+	@media (max-width: 36rem) {
+		.pager {
+			flex-direction: column-reverse;
+		}
+		.pager .btn {
+			flex: 1 1 auto;
+		}
+		.more .sep {
+			display: none;
+		}
 	}
 	.pager .primary {
 		background: var(--sl-color-accent);
 		border-color: var(--sl-color-accent);
 		color: var(--rn-asphalt);
 	}
-	.pager .primary:hover {
+	.pager a.primary:hover {
 		background: var(--rn-neon-soft);
 	}
 	.pager .primary:focus-visible {
@@ -392,7 +440,7 @@ const descriptions = [
 		opacity: 0.8;
 	}
 	/* clip-path would cut the focus ring off: draw it inside. */
-	.pager a:focus-visible,
+	.pager .btn:focus-visible,
 	.track a:focus-visible {
 		outline: 2px solid var(--rn-neon-soft);
 		outline-offset: -4px;
