@@ -69,6 +69,8 @@ for f in share/recarbon-deps.json lib/libSDL3.0.dylib lib/libvulkan.1.dylib lib/
          ffmpeg-xma/include/libavcodec/avcodec.h; do
   [ -e "$DEPS/$f" ] || die "$DEPS/$f missing: build the release libraries first (scripts/macos/build_deps.sh $DEPS), or set RC_DEPS"
 done
+# Absolute: CMake reads a relative CMAKE_PREFIX_PATH against another folder (and finds Homebrew's).
+DEPS="$(cd "$DEPS" && pwd -P)"
 grep -q "\"deployment_target\": \"$MIN_MACOS\"" "$DEPS/share/recarbon-deps.json" \
   || die "$DEPS is not built for macOS $MIN_MACOS (share/recarbon-deps.json)"
 MVK_PIN="$(git -C "$REPO" show "$SHA:scripts/macos/make_app.py" | sed -n "s/^MOLTENVK_SHA256_PINNED = '\([0-9a-f]*\)'.*/\1/p")"
