@@ -15,6 +15,14 @@ cd "$ROOT"
 name="${1:?usage: run_attempt.sh <name> [seconds] [--headless]}"
 secs="${2:-90}"
 mkdir -p game/m3
+# ReCarbon: an ownership marker for the temporary-data retention policy
+# (../game-port-knowledge/general/data-retention-and-cleanup.md). game/m3 holds the
+# launch logs and investigation evidence that WORKLOG.local.md cites, so it is
+# "evidence": kept until explicitly released. An existing marker is never changed.
+if [ ! -e game/m3/.retention.json ]; then
+  printf '{"class": "evidence", "created_at": "%s", "note": "run_attempt.sh launch logs (game/m3/<name>.log) and investigation evidence", "owner": "recarbon/run_attempt.sh", "project": "recarbon", "status": "active"}\n' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > game/m3/.retention.json
+fi
 # Muted unless the caller sets RECARBON_MUTE=0 (ReCarbon M5: audio checks need the device).
 export RECARBON_RESOLUTION=1x RECARBON_MUTE="${RECARBON_MUTE:-1}" RECARBON_HANG_SECS="${RECARBON_HANG_SECS:-20}"
 unset RECARBON_STUB_CONTINUE

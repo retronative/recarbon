@@ -212,6 +212,8 @@ target_include_directories(settings_scaling_test SYSTEM PRIVATE ${ROOT}/tools/Xe
 # answers, and the runtime's log and CSV formats it reads. Python 3.9+.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
 add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/frame_times_test.py)
+# scripts/run_attempt.sh's retention marker for game/m3 (written once, never changed).
+add_test(NAME run_attempt_marker_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_attempt_marker_test.py)
 
 # Not ported from SpeedBreaker v0.1.8 (one line each: why).
 # edge_bars_test, band_filter_test, fade_layers_test: the edge-bar fills and the
