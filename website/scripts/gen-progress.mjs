@@ -90,7 +90,7 @@ const MILESTONES = [
 	{
 		id: 'M8',
 		state: 'in-progress',
-		summary: 'The current milestone: alpha packaging. Input profiles are built and tested and the app bundle check passes; a clean install on a fresh account is still to do. Nothing is published yet.',
+		summary: 'The current milestone: alpha packaging, validated on a MacBook Air M5. A release candidate passes every automated check and was installed and played by hand, including a clean install on a fresh macOS account. Testing for the alpha has ended. Nothing is published yet.',
 		criteria: [
 			{ id: 'M8.7', title: 'Keyboard presets: WASD (the default) and Arrows' },
 			{ id: 'M8.8', title: 'Separate keyboard and controller profiles that persist' },
@@ -102,6 +102,7 @@ const MILESTONES = [
 			{ id: 'M8.11', title: 'Both presets drive the game, by hand' },
 			{ id: 'M8.4', title: 'A clean install from a disc image on a fresh macOS account' },
 			{ id: 'M8.1', title: 'The installer parametrized for Carbon' },
+			{ id: 'M8.3', title: 'Optional: render scaling and widescreen', state: 'deferred' },
 		],
 	},
 ];
@@ -131,6 +132,7 @@ const ISSUES = [
 	{ title: 'Physical controller not yet tested', text: 'The virtual-controller and hot-unplug tests pass, but they don\'t show that a physical pad works.', state: 'deferred' },
 	{ title: 'Frame rate falls in long races on a MacBook Air M1', text: 'Races start at about 30 fps and fall with time under load, to 16–22 fps in 9- to 15-minute races. GPU throttling on the fanless M1 is a hypothesis, not a confirmed cause. The MacBook Air M5 held about 51 fps with no fall.', state: 'open' },
 	{ title: 'Texture cache grows during play', text: 'Textures are kept until a setting reloads them, so long sessions use more memory: about 500 MB over 7 laps. On current evidence it doesn\'t cause the M1 frame-rate drop. A fix is planned after the alpha.', state: 'deferred' },
+	{ title: 'Hitches in the first race after a fresh install', text: 'With an empty shader cache the first race compiles its pipelines as it goes: the worst frame was 450 ms on a fresh macOS account (MacBook Air M5), and 100 ms in the next session.', state: 'open' },
 	{ title: '"Cannot connect to Xbox Live!" at every launch', text: 'The game shows this notice once per launch; accept it with A (Space on the keyboard). ReCarbon doesn\'t dismiss it for you.', state: 'open' },
 	{ title: 'Key labels on non-Latin keyboard layouts', text: 'Under a layout such as Myanmar, Settings > Controls draws letter keys as \'?\'. Binding such a key is refused safely; gameplay input is unaffected.', state: 'open' },
 ];
@@ -140,7 +142,9 @@ const HUMAN_TESTS = [
 	{ title: 'Session 1: a new profile, both presets', covers: 'The new-profile route to a race load (M6.6); WASD and Arrows driving and switching without a restart (M8.11).', state: 'unverified' },
 	{ title: 'Session 2: restart and hand test 5', covers: 'The profile reloading intact (M6.6), and Reverse, Look Back, Pause and the gear keys with a manual gearbox on the keyboard (Handbrake, Nitrous, Speedbreaker and the camera were found by hand on 2026-10-25).', state: 'unverified' },
 	{ title: 'Sessions 3–5: the M7 route, 3 times', covers: 'Controls, physics, frame times, audio and picture over full races: three on a MacBook Air M1 and two on an M5 (M7.1, M7.2, M7.5–M7.7). Audio sync rests on the tester\'s report.', state: 'completed' },
-	{ title: 'Clean install on a fresh macOS account', covers: 'Installing from a disc image on a new user account (M8.4).', state: 'unverified' },
+	{ title: 'Clean install on a fresh macOS account', covers: 'Installing from a disc image on a new user account, a new profile, a race, and the save found after a relaunch (M8.4, MacBook Air M5). Game Mode wasn\'t captured on that account.', state: 'completed' },
+	{ title: 'Release candidate on a MacBook Air M5', covers: 'Install from a disc image, Game Mode, a race to the results, the save kept after a relaunch, a clean quit (the main account).', state: 'completed' },
+	{ title: 'Release candidate on a MacBook Air M1', covers: 'The same checks on the M1. Not run: testing for the alpha ended first.', state: 'unverified' },
 	{ title: 'Physical controller', covers: 'Menus and driving on a real pad, once one is available. Never recorded as passed before then.', state: 'deferred' },
 ];
 
@@ -148,6 +152,8 @@ const HUMAN_TESTS = [
 // of these by its opening words; an unmatched one fails the run, so nothing
 // reaches the site unreviewed. The text shown is `text`.
 const ACHIEVEMENTS = [
+	{ starts: 'M8 release candidates validated on the M5', text: 'Alpha packaging validated on a MacBook Air M5: two release candidates pass every automated check, and one was installed from a disc image and played by hand, in the main account and on a fresh macOS account, with its save found after a relaunch. Not a release: nothing is published yet.' },
+	{ starts: 'ReCarbon app icon', text: 'ReCarbon has its own app icon, drawn from this website\'s mark, on the app and on the opened disk image.' },
 	{ starts: 'M7 playable racing accepted for the alpha', text: 'Playable racing accepted for the alpha: full Quick Races driven by hand on the keyboard, on a MacBook Air M5 (50.8 fps on average over 9.8 minutes of racing) and an M1. Still open: the physical controller and Xbox 360 physics equivalence. No alpha build is published yet.' },
 	{ starts: 'Frame-thread priority under load', text: 'Fewer long stalls when other apps keep the Mac busy: the game threads that drive each frame now run at a higher macOS priority. On a MacBook Air M1 under load, stalls of 100 ms or more went from 5.3 to 0.3 per race run, at the same frame rate.' },
 	{ starts: 'Public Progress page', text: 'This Progress page: milestone states checked against the roadmap, verified features, known gameplay issues, pending hand tests and recent work.' },

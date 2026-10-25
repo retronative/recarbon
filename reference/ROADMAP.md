@@ -235,6 +235,11 @@ customization.
     soaks ran clean.
   - Each criterion has evidence. M6 stays open until M6.6, the written new-profile route
     (user decision, 2026-10-23).
+  - **For the user's decision (2026-10-26):** the M8.4 sessions on a fresh macOS account
+    created a new profile save (`ALIAS_ABO`), loaded and drove a race, quit, and after a
+    relaunch found and opened the same save, with no watchdog hang report
+    (`reference/M8_ACCEPTANCE.md`). Whether that closes M6.6, and M6, is the user's call; M6
+    stays open until then.
 
 ## M7 — Playable racing *(Accepted for the alpha 2026-10-25, by the user's decision: M7.1–M7.7 completed under the alpha criteria, with deferred limitations)*
 - **Status decision** (user, 2026-10-25): M7 is closed for the alpha. M7.1–M7.7 are completed
@@ -355,13 +360,31 @@ customization. The controls criterion is judged on the default mappings.
     game's maximum) at 50.8 fps, with no second under 30 fps outside a 3 s Space switch the tester
     caused, and no degradation over the race (reference/M7_ACCEPTANCE.md).
 
-## M8 — Polish and distribution *(In progress: alpha packaging, since M7 closed for the alpha 2026-10-25; started 2026-10-23 by the user's approval, B1 packaging first)*
-- **Current work (2026-10-25):** alpha packaging for the user's own Macs, tracked in
-  `reference/M8_ALPHA_CHECKLIST.md`. The release-candidate tooling is committed (5b1b463); no
-  alpha build is published.
+## M8 — Polish and distribution *(In progress: alpha packaging validated on the MacBook Air M5 2026-10-26, publication gated on the release gates; started 2026-10-23 by the user's approval, B1 packaging first)*
+- **State (2026-10-26):** testing ended by the user's decision; what wasn't verified is a known
+  limitation. The alpha packaging is validated on the M5: RCs 282557c and 94750af pass all 24
+  steps of `scripts/release_candidate.sh`, and 282557c was installed and played by hand in the
+  main account and in a fresh macOS account (M8.4). Nothing is published: publication waits on
+  gates G1–G4 (`reference/ALPHA_RELEASE_GATES.md`). Records: `reference/M8_ACCEPTANCE.md`,
+  `reference/M8_ALPHA_CHECKLIST.md`, draft notes `reference/ALPHA_RELEASE_NOTES.md`.
+  - **M8.1 (installer): Completed.** The installer copied and verified Carbon's 78 files
+    (5.74 GB) from the user's ISO into `~/Library/Application Support/ReCarbon/game` in both
+    M5 accounts, and the game started.
+  - **M8.4 (fresh account): Completed on the M5** (account `gamtest`: ISO install, new profile,
+    a race, the save reloaded after a relaunch, clean exits). Game Mode wasn't captured there;
+    the first race hitched up to 450 ms while the empty shader cache compiled pipelines. Not
+    done on the M1.
+  - **M8.2:** packaging and notices done; the LGPL source archive and offer wait on gate G2.
+  - **M8.11:** automated evidence only; the Arrows preset driving by hand and a custom profile
+    surviving a restart by hand are unverified (known limitations).
+  - **M8.3:** optional, deferred.
+  - **The M1** received both RCs with verified checksums (282557c installed), but its hand tests
+    were cancelled: it is not install-validated for the alpha.
+  - Recommended alpha: 94750af (the same compiled code as 282557c plus the icons); only 282557c
+    was install-tested by a person. The user decides.
 - **License compliance:** `COPYING`, `NOTICE`, `THIRD_PARTY_NOTICES.md` and `LICENSES/` are kept
   complete. Any binary release also needs the LGPL source offer (FFmpeg, libmspack). No binary
-  is published, and no claim of legal clearance is made.
+  is published yet.
 - **Status decision** (user, 2026-10-23): M8 started, packaging (B1) first. Input profiles (B2)
   wait for the user's approval of the revised preset tables. Decisions are in
   `reference/M8_PLAN.md`:

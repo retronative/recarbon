@@ -1,5 +1,5 @@
 {
-	"updated": "2026-10-25",
+	"updated": "2026-10-26",
 	"currentMilestone": "M8",
 	"milestones": [
 		{
@@ -159,7 +159,7 @@
 			"title": "Polish and distribution",
 			"state": "in-progress",
 			"date": null,
-			"summary": "The current milestone: alpha packaging. Input profiles are built and tested and the app bundle check passes; a clean install on a fresh account is still to do. Nothing is published yet.",
+			"summary": "The current milestone: alpha packaging, validated on a MacBook Air M5. A release candidate passes every automated check and was installed and played by hand, including a clean install on a fresh macOS account. Testing for the alpha has ended. Nothing is published yet.",
 			"criteria": [
 				{
 					"id": "M8.7",
@@ -204,12 +204,17 @@
 				{
 					"id": "M8.4",
 					"title": "A clean install from a disc image on a fresh macOS account",
-					"state": "unverified"
+					"state": "completed"
 				},
 				{
 					"id": "M8.1",
 					"title": "The installer parametrized for Carbon",
-					"state": "unverified"
+					"state": "completed"
+				},
+				{
+					"id": "M8.3",
+					"title": "Optional: render scaling and widescreen",
+					"state": "deferred"
 				}
 			]
 		}
@@ -325,6 +330,11 @@
 			"state": "deferred"
 		},
 		{
+			"title": "Hitches in the first race after a fresh install",
+			"text": "With an empty shader cache the first race compiles its pipelines as it goes: the worst frame was 450 ms on a fresh macOS account (MacBook Air M5), and 100 ms in the next session.",
+			"state": "open"
+		},
+		{
 			"title": "\"Cannot connect to Xbox Live!\" at every launch",
 			"text": "The game shows this notice once per launch; accept it with A (Space on the keyboard). ReCarbon doesn't dismiss it for you.",
 			"state": "open"
@@ -353,7 +363,17 @@
 		},
 		{
 			"title": "Clean install on a fresh macOS account",
-			"covers": "Installing from a disc image on a new user account (M8.4).",
+			"covers": "Installing from a disc image on a new user account, a new profile, a race, and the save found after a relaunch (M8.4, MacBook Air M5). Game Mode wasn't captured on that account.",
+			"state": "completed"
+		},
+		{
+			"title": "Release candidate on a MacBook Air M5",
+			"covers": "Install from a disc image, Game Mode, a race to the results, the save kept after a relaunch, a clean quit (the main account).",
+			"state": "completed"
+		},
+		{
+			"title": "Release candidate on a MacBook Air M1",
+			"covers": "The same checks on the M1. Not run: testing for the alpha ended first.",
 			"state": "unverified"
 		},
 		{
@@ -363,6 +383,16 @@
 		}
 	],
 	"achievements": [
+		{
+			"date": "2026-10-26",
+			"text": "Alpha packaging validated on a MacBook Air M5: two release candidates pass every automated check, and one was installed from a disc image and played by hand, in the main account and on a fresh macOS account, with its save found after a relaunch. Not a release: nothing is published yet.",
+			"commits": []
+		},
+		{
+			"date": "2026-10-25",
+			"text": "ReCarbon has its own app icon, drawn from this website's mark, on the app and on the opened disk image.",
+			"commits": []
+		},
 		{
 			"date": "2026-10-25",
 			"text": "Playable racing accepted for the alpha: full Quick Races driven by hand on the keyboard, on a MacBook Air M5 (50.8 fps on average over 9.8 minutes of racing) and an M1. Still open: the physical controller and Xbox 360 physics equivalence. No alpha build is published yet.",
@@ -438,30 +468,6 @@
 				{
 					"sha": "22ba881a189217bddb36e2db3a002f6e973efb04",
 					"short": "22ba881"
-				}
-			]
-		},
-		{
-			"date": "2026-10-24",
-			"text": "Rendering resolution re-measured on the MacBook Air M5: 1x, 1.5x, 2x and 3x frame costs recorded, and Auto picks 2x. Ultrawide and scaled 3D in gameplay are unverified.",
-			"commits": [
-				{
-					"sha": "990c2f6dfcd7ba4111675447fc5d646170d31837",
-					"short": "990c2f6"
-				}
-			]
-		},
-		{
-			"date": "2026-10-24",
-			"text": "25 unit tests ported from SpeedBreaker v0.1.8 and adapted to Carbon, each checked with planted bugs: ctest grows from 20 to 48 entries, all passing on both Macs.",
-			"commits": [
-				{
-					"sha": "bf29f1c9666a9447476170d38efd80f8b6aa9fcf",
-					"short": "bf29f1c"
-				},
-				{
-					"sha": "ae3d97f61ce9380b5fdd396e3d60f402ae107d92",
-					"short": "ae3d97f"
 				}
 			]
 		}
