@@ -51,7 +51,7 @@ def python311():
     return None
 
 
-# The bundle make_app.py writes (build/app-release's, 2026-10-25): the gate's "clean" fixture.
+# The bundle make_app.py writes (build/app-release's, 2026-10-25, and the icon): the gate's "clean" fixture.
 CLEAN_APP = '''Contents/Info.plist
 Contents/_CodeSignature/CodeResources
 Contents/MacOS/ReCarbon
@@ -63,6 +63,7 @@ Contents/Frameworks/libSPIRV-Tools-opt.dylib
 Contents/Frameworks/libvulkan.1.dylib
 Contents/Frameworks/libSPIRV-Tools.dylib
 Contents/Frameworks/libglslang.16.dylib
+Contents/Resources/AppIcon.icns
 Contents/Resources/licenses/THIRD_PARTY_NOTICES.md
 Contents/Resources/licenses/NOTICE
 Contents/Resources/licenses/COPYING
@@ -103,6 +104,9 @@ def gate_tests(tmp):
         'Contents/Resources/game/note.json': 'a folder of game data',
         'Contents/Resources/symbols/x.txt': 'a folder of game data',
         'Contents/MacOS/helper': 'outside',
+        'Contents/Resources/.hidden': 'outside',
+        'Contents/Resources/AppIcon.png': 'outside',
+        'Contents/Resources/licenses/.DS_Store': 'outside',
     }
     for rel, why in planted.items():
         app = make_app(os.path.join(tmp, 'p-' + rel.replace('/', '_')))
@@ -125,6 +129,20 @@ def gate_tests(tmp):
     os.symlink('/Applications', os.path.join(vol, 'Applications'))
     os.makedirs(os.path.join(vol, '.fseventsd'))
     check(rc.volume_problems(vol) == [], f'a clean dmg volume passes ({rc.volume_problems(vol)})')
+    write(os.path.join(vol, '.VolumeIcon.icns'), 'icns')
+    check(rc.volume_problems(vol) == [], f'a dmg volume with its icon passes ({rc.volume_problems(vol)})')
+    write(os.path.join(vol, '.secret'), 'x')
+    check(any(p.startswith('.secret') for p in rc.volume_problems(vol)), 'a stray hidden file on the volume fails')
+    os.remove(os.path.join(vol, '.secret'))
+    with open(os.path.join(vol, '.VolumeIcon.icns'), 'wb') as f:
+        f.truncate(5 << 20)
+    check(any('.VolumeIcon.icns' in p and 'over its bound' in p for p in rc.volume_problems(vol)),
+          'an oversized volume icon fails')
+    os.remove(os.path.join(vol, '.VolumeIcon.icns'))
+    os.symlink('/etc/hosts', os.path.join(vol, '.VolumeIcon.icns'))
+    check(any('.VolumeIcon.icns' in p and 'regular file' in p for p in rc.volume_problems(vol)),
+          'a volume icon that is a symbolic link fails')
+    os.remove(os.path.join(vol, '.VolumeIcon.icns'))
     write(os.path.join(vol, 'default.xex'), 'x')
     check(any(p.startswith('default.xex') for p in rc.volume_problems(vol)), 'a stray file on the volume fails')
     os.remove(os.path.join(vol, 'default.xex'))

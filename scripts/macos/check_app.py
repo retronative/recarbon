@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ReCarbon. GPL-3.0-or-later (see COPYING).
 # From SpeedBreaker's scripts/macos/check_app.py (GPL-3.0-or-later). ReCarbon
-# changes: the names, and a check of the bundle ID (org.retronative.recarbon).
+# changes: the names, a check of the bundle ID (org.retronative.recarbon), and of the icon.
 #
 # check_app.py <ReCarbon.app | ReCarbon-macos.dmg> [--min-macos=<version>] [--sdk=<path>]
 #              [--same-code-as=<ReCarbon.app | dmg>]
@@ -9,7 +9,9 @@
 # The release's checks of a Mac app (scripts/macos/make_app.py), that it opens on the oldest macOS it
 # says it does (default: CMakeLists.txt's SB_OSX_DEFAULT_TARGET, 15.0) and needs nothing outside itself.
 # A .dmg is checked against its .sha256 (when there is one) and mounted read-only to check the app in it.
-#   1. Info.plist: LSMinimumSystemVersion is that macOS.
+#   1. Info.plist: LSMinimumSystemVersion is that macOS. The icon: CFBundleIconFile names AppIcon, and
+#      Contents/Resources/AppIcon.icns has every size macOS asks for (16 to 512 at @1x and @2x); in a
+#      dmg, the volume's icon is the same file (.VolumeIcon.icns) with the root's custom-icon flag set.
 #   2. Every Mach-O in the app: arm64 only, built for that macOS or an older one; the game for exactly it.
 #   3. Loads nothing outside the app or the system: every library @rpath/ or /usr/lib/ or /System/, and
 #      rpaths only @executable_path/../Frameworks and @loader_path; no build machine's folders in the files
@@ -323,6 +325,63 @@ def opened(target):
             run('hdiutil', 'detach', mnt, check=False)
 
 
+# --- 1c: the icon ------------------------------------------------------------------------------------
+# An .icns's image types, by the pixels each holds: what make_app.py's iconset (16 to 512, @1x and @2x)
+# gives. (ic10 is 512@2x, ic11-ic14 16@2x to 256@2x.)
+ICNS_TYPES = {'ic04': 16, 'ic11': 32, 'ic05': 32, 'ic12': 64, 'ic07': 128, 'ic13': 256, 'ic08': 256, 'ic14': 512,
+              'ic09': 512, 'ic10': 1024}
+
+
+def icns_types(path):
+    """The image types in an .icns file (its 'info' and 'TOC ' entries left out), or None if it isn't one."""
+    with open(path, 'rb') as f:
+        data = f.read()
+    if len(data) < 8 or data[:4] != b'icns' or struct.unpack_from('>I', data, 4)[0] != len(data):
+        return None
+    found, off = set(), 8
+    while off + 8 <= len(data):
+        kind, size = data[off:off + 4].decode('latin-1'), struct.unpack_from('>I', data, off + 4)[0]
+        if size < 8:
+            return None
+        if kind not in ('info', 'TOC '):
+            found.add(kind)
+        off += size
+    return found if off == len(data) else None
+
+
+def has_custom_icon(path):
+    """The custom-icon flag (kHasCustomIcon) in a folder's Finder info."""
+    r = subprocess.run(['xattr', '-px', 'com.apple.FinderInfo', path], capture_output=True, text=True)
+    info = bytes.fromhex(''.join(r.stdout.split())) if r.returncode == 0 else b''
+    return len(info) >= 10 and info[8] & 0x04 != 0
+
+
+def icon_problems(app, plist):
+    if plist.get('CFBundleIconFile') != 'AppIcon':
+        return [f'CFBundleIconFile is {plist.get("CFBundleIconFile")!r}, not AppIcon']
+    icns = os.path.join(app, 'Contents/Resources/AppIcon.icns')
+    if not os.path.isfile(icns):
+        return ['no Contents/Resources/AppIcon.icns']
+    types = icns_types(icns)
+    if types is None:
+        return ['Contents/Resources/AppIcon.icns is not an .icns file']
+    missing = sorted(set(ICNS_TYPES) - types, key=lambda t: ICNS_TYPES[t])
+    return [f'AppIcon.icns has no {", ".join(f"{t} ({ICNS_TYPES[t]} px)" for t in missing)}'] if missing else []
+
+
+def volume_icon_problems(volume, app):
+    icon = os.path.join(volume, '.VolumeIcon.icns')
+    if os.path.islink(icon) or not os.path.isfile(icon):
+        return ['no .VolumeIcon.icns at the volume\'s root']
+    problems = []
+    with open(icon, 'rb') as a, open(os.path.join(app, 'Contents/Resources/AppIcon.icns'), 'rb') as b:
+        if a.read() != b.read():
+            problems.append('.VolumeIcon.icns is not the app\'s AppIcon.icns')
+    if not has_custom_icon(volume):
+        problems.append('the volume\'s root has no custom-icon flag (Finder shows the generic disk icon)')
+    return problems
+
+
 def check(app, minimum, sdk):
     """-> (every check passed, the code of each Mach-O)."""
     ok = True
@@ -339,6 +398,9 @@ def check(app, minimum, sdk):
     good_id = bundle_id in ('org.retronative.recarbon', 'org.retronative.recarbon.test')
     print(f'1b. Info.plist: CFBundleIdentifier {bundle_id}: {"ok" if good_id else "FAIL (want org.retronative.recarbon)"}')
     ok &= good_id
+    icon = icon_problems(app, plist)
+    print(f'1c. icon: {"ok (CFBundleIconFile AppIcon, AppIcon.icns 16 to 512 @1x/@2x)" if not icon else "FAIL " + "; ".join(icon)}')
+    ok &= not icon
     files = macho_files(app)
     exe = os.path.join(app, 'Contents/MacOS', plist.get('CFBundleExecutable', 'ReCarbon'))
     floor = version_tuple(minimum)
@@ -389,6 +451,10 @@ def main():
     with opened(target) as app:
         passed, code = check(app, minimum, sdk)
         ok &= passed
+        if target.endswith('.dmg'):
+            vol = volume_icon_problems(os.path.dirname(app), app)
+            print(f'1d. the dmg volume\'s icon: {"ok (.VolumeIcon.icns, the custom-icon flag)" if not vol else "FAIL " + "; ".join(vol)}')
+            ok &= not vol
     if OPTS.get('same-code-as'):
         ref = os.path.abspath(OPTS['same-code-as'])
         with opened(ref) as other:

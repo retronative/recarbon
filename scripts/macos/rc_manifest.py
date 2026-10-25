@@ -8,8 +8,8 @@
 #                                                  like game data or generated sources, and on any file
 #                                                  outside the bundle layout make_app.py writes
 #   rc_manifest.py gate-volume <mounted dmg>       the dmg's top level (the app, the Applications
-#                                                  shortcut, the file system's own entries), then
-#                                                  gate-app on the app in it
+#                                                  shortcut, the volume icon, the file system's own
+#                                                  entries), then gate-app on the app in it
 #   rc_manifest.py deps-guard <CMakeCache.txt> <prefix>
 #                                                  every bundled library the build found is the deps
 #                                                  prefix's (build_deps.sh), none Homebrew's
@@ -40,11 +40,13 @@ ALLOWED = [
     (r'Contents/Resources/vulkan/icd\.d/[^/]+\.json', 64 * 1024),
     (r'Contents/Resources/licenses/(?:[^/]+/)*' + LICENSE_FILE, 1 * MiB),
 ]
-# A mounted dmg's top level: make_app.py's app and Applications shortcut, and what macOS itself
-# keeps on a volume (not looked into).
-VOLUME_ENTRIES = {'ReCarbon.app', 'Applications'}
+# A mounted dmg's top level: make_app.py's app, Applications shortcut and volume icon (a regular
+# file within its bound: the app's AppIcon.icns), and what macOS itself keeps on a volume (not
+# looked into).
+VOLUME_ENTRIES = {'ReCarbon.app', 'Applications', '.VolumeIcon.icns'}
+VOLUME_ICON_LIMIT = 4 * MiB
 VOLUME_SYSTEM = {'.fseventsd', '.Trashes', '.DS_Store', '.Spotlight-V100', '.TemporaryItems', '.background',
-                 '.VolumeIcon.icns', '.HFS+ Private Directory Data\r', '.journal', '.journal_info_block'}
+                 '.HFS+ Private Directory Data\r', '.journal', '.journal_info_block'}
 
 # The CMake cache entries of what the game links or bundles: each must lie in the deps prefix.
 # (RECARBON_MOLTENVK is Homebrew's on purpose, pinned by make_app.py; glslangValidator is a build
@@ -98,6 +100,12 @@ def volume_problems(volume):
         if name == 'Applications':
             if not (os.path.islink(path) and os.readlink(path) == '/Applications'):
                 problems.append('Applications: not the shortcut to /Applications')
+        elif name == '.VolumeIcon.icns':
+            st = os.lstat(path)
+            if not stat.S_ISREG(st.st_mode):
+                problems.append('.VolumeIcon.icns: not a regular file')
+            elif st.st_size > VOLUME_ICON_LIMIT:
+                problems.append(f'.VolumeIcon.icns: {st.st_size} bytes, over its bound of {VOLUME_ICON_LIMIT}')
         elif name == 'ReCarbon.app' and os.path.isdir(path) and not os.path.islink(path):
             problems += ['ReCarbon.app/' + p for p in bundle_problems(path)]
         else:

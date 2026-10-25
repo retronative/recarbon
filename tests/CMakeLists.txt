@@ -217,6 +217,9 @@ add_test(NAME run_attempt_marker_test COMMAND Python3::Interpreter ${CMAKE_CURRE
 # scripts/release_candidate.sh's preflight, rc_manifest.py's content gate and manifest, and
 # scripts/rc_transfer.sh's refusals, in a scratch tree (no build, no game files, no network).
 add_test(NAME release_candidate_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/release_candidate_test.py)
+# scripts/macos/make_app.py's app icon (AppIcon.icns) and dmg volume icon (the custom-icon flag),
+# and check_app.py's checks of both (macOS: sips, iconutil, xattr; no build).
+add_test(NAME app_icon_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/app_icon_test.py)
 
 # Not ported from SpeedBreaker v0.1.8 (one line each: why).
 # edge_bars_test, band_filter_test, fade_layers_test: the edge-bar fills and the

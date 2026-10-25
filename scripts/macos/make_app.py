@@ -2,7 +2,9 @@
 # ReCarbon. GPL-3.0-or-later (see COPYING).
 # From SpeedBreaker's scripts/macos/make_app.py (GPL-3.0-or-later). ReCarbon
 # changes: the names, the bundle ID org.retronative.recarbon, the notices,
-# and no icon until ReCarbon has art of its own (SpeedBreaker's is not used).
+# and ReCarbon's own icon (SpeedBreaker's is not used): scripts/macos/AppIcon.png,
+# made from the website's mark (website/public/favicon.svg) by
+# scripts/macos/make_icon.swift, as the app's icon and the dmg's volume icon.
 #
 # make_app.py [build dir] [output dir] [--dmg] [--min-macos=<version>] [--test]:
 # ReCarbon.app for macOS (Apple silicon) from a build (default
@@ -16,8 +18,8 @@
 #                                    version only with MOLTENVK_VERSION=<it>)
 #   Contents/Resources/vulkan/icd.d/ MoltenVK's manifest (the Vulkan loader
 #                                    looks for drivers in the app's bundle)
-#   Contents/Resources/AppIcon.icns  from scripts/macos/AppIcon.png, when
-#                                    there is one (ReCarbon: none yet)
+#   Contents/Resources/AppIcon.icns  from scripts/macos/AppIcon.png, every
+#                                    size macOS asks for (16 to 512 @1x/@2x)
 #   Contents/Resources/licenses/     COPYING, NOTICE, THIRD_PARTY_NOTICES.md,
 #                                    LICENSES/, and each bundled library's
 #                                    own license files (from build_deps.sh's
@@ -65,10 +67,15 @@
 # --dmg: also <output>/ReCarbon-macos.dmg (the app and a shortcut to
 # Applications, to drag it onto) with its .sha256, the release download, and
 # a copy named by the version (ReCarbon-<version>-macos.dmg, a hard link).
+# The mounted volume shows the app's icon: .VolumeIcon.icns at its root and
+# the custom-icon flag in the root folder's Finder info (set on a read-write
+# image, then converted). The .dmg file itself gets no icon of its own: that
+# would be a resource fork, which leaves its SHA-256 alone but is lost on the
+# way to a player (a browser download, scp), so the dmg shows macOS's own.
 # The dmg is an HFS+ volume (Mac OS Extended) on a GPT disk, compressed
-# (UDZO), made by hdiutil while it works: macOS 27 deprecates hdiutil's
-# create, attach, detach and imageinfo (they still work; -quiet hides the
-# warning) in favour of `diskutil image`. Where hdiutil is missing or fails,
+# (UDZO), made by hdiutil (read-write, then converted) while it works:
+# macOS 27 deprecates hdiutil's create, attach, detach and imageinfo (they
+# still work; -quiet hides the warning) in favour of `diskutil image`. Where hdiutil is missing or fails,
 # `diskutil image` makes the same image (its "create from <folder>" makes
 # APFS only, so this goes by a blank image, partitioned and filled, then
 # converted): the same files, modes, owners and extended attributes. What
@@ -118,10 +125,47 @@ MOLTENVK_BOTTLE = 'molten-vk 1.4.2 bottle arm64_golden_gate, SHA-256 0de19dbda46
 # Projects compiled into a bundled library that come with their own license:
 # their files go next to the library's (LICENSES/ has them).
 EMBEDDED = {'molten-vk': [('cereal, BSD-3-Clause', 'LICENSES/cereal-BSD-3-Clause.txt', 'cereal-LICENSE.txt')]}
+ICON = os.path.join(ROOT, 'scripts/macos/AppIcon.png')
+ICON_SIZES = (16, 32, 128, 256, 512)  # each at @1x and @2x
+# A folder's Finder info: 32 bytes, its Finder flags the big-endian 16 bits at
+# offset 8, kHasCustomIcon among them.
+FINDER_INFO = 'com.apple.FinderInfo'
+HAS_CUSTOM_ICON = 0x0400
 
 
 def run(*args):
     return subprocess.run(args, check=True, capture_output=True, text=True).stdout
+
+
+def make_icns(png, icns):
+    """The .icns of `png` at every size macOS asks for (icon_<n>x<n>[@2x].png)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        iconset = os.path.join(tmp, 'AppIcon.iconset')
+        os.makedirs(iconset)
+        for size in ICON_SIZES:
+            for scale in (1, 2):
+                px = size * scale
+                name = f'icon_{size}x{size}' + ('@2x' if scale == 2 else '') + '.png'
+                run('sips', '-z', str(px), str(px), png, '--out', os.path.join(iconset, name))
+        run('iconutil', '-c', 'icns', iconset, '-o', icns)
+
+
+def finder_info(path):
+    """`path`'s Finder info (32 bytes, zeros when it has none)."""
+    r = subprocess.run(['xattr', '-px', FINDER_INFO, path], capture_output=True, text=True)
+    return bytes.fromhex(''.join(r.stdout.split())).ljust(32, b'\0')[:32] if r.returncode == 0 else bytes(32)
+
+
+def has_custom_icon(path):
+    return int.from_bytes(finder_info(path)[8:10], 'big') & HAS_CUSTOM_ICON != 0
+
+
+def set_custom_icon(path):
+    """The custom-icon flag on a folder (a volume's root: it shows .VolumeIcon.icns), the rest of its
+    Finder info kept."""
+    info = bytearray(finder_info(path))
+    info[8:10] = (int.from_bytes(info[8:10], 'big') | HAS_CUSTOM_ICON).to_bytes(2, 'big')
+    run('xattr', '-wx', FINDER_INFO, info.hex(), path)
 
 
 def deps(path):
@@ -441,6 +485,7 @@ def dmg_with_diskutil(stage, dmg, tmp):
         diskutil('mount', 'nobrowse', '-mountPoint', mnt, volume)
         run('ditto', stage, mnt)
         os.chmod(mnt, stat.S_IMODE(os.stat(stage).st_mode))  # the volume's root as hdiutil makes it
+        set_custom_icon(mnt)
         shutil.rmtree(os.path.join(mnt, '.fseventsd'), ignore_errors=True)  # the event log macOS starts at mount
         diskutil('unmount', volume)
     finally:
@@ -448,30 +493,61 @@ def dmg_with_diskutil(stage, dmg, tmp):
     diskutil('image', 'create', 'from', '--format', 'UDZO', blank, dmg)
 
 
-def check_dmg_with_diskutil(dmg, tmp):
-    """hdiutil verify's place when diskutil made the dmg: a compressed GPT +
-    HFS+ image that mounts, holding the app and the Applications shortcut,
-    and the app's code signature checks every file in it."""
-    info = plistlib.loads(diskutil('image', 'info', '--plist', dmg).encode())
-    hints = [p.get('content-hint') for p in info.get('Partitions', [])]
-    if info.get('Image Format') != 'UDZO' or hints != ['GUID_partition_scheme', 'Apple_HFS']:
-        raise SystemExit(f'make_app.py: {dmg} is {info.get("Image Format")} {hints}, not UDZO with one HFS+ volume')
+def dmg_with_hdiutil(stage, dmg, tmp):
+    """The dmg of `stage` made by hdiutil: read-write, the volume icon's flag
+    set on it, then converted to UDZO."""
+    rw = os.path.join(tmp, 'rw.dmg')
+    run('hdiutil', 'create', '-quiet', '-volname', 'ReCarbon', '-srcfolder', stage, '-fs', 'HFS+',
+        '-format', 'UDRW', '-ov', rw)
+    mnt = os.path.join(tmp, 'rw-volume')
+    os.makedirs(mnt)
+    run('hdiutil', 'attach', '-quiet', '-nobrowse', '-noautoopen', '-mountpoint', mnt, rw)
+    try:
+        set_custom_icon(mnt)
+        shutil.rmtree(os.path.join(mnt, '.fseventsd'), ignore_errors=True)  # the event log macOS starts at mount
+    finally:
+        run('hdiutil', 'detach', '-quiet', mnt)
+    run('hdiutil', 'convert', '-quiet', rw, '-format', 'UDZO', '-imagekey', 'zlib-level=9', '-ov', '-o', dmg)
+
+
+def check_dmg_contents(dmg, app, tmp):
+    """The dmg, mounted read-only: the app and the Applications shortcut, the
+    app's icon as the volume's (.VolumeIcon.icns and the root's custom-icon
+    flag), and the app's code signature checks every file in it."""
     mnt = os.path.join(tmp, 'check')
     os.makedirs(mnt)
     disks = attached_disks(diskutil('image', 'attach', '--plist', '--readOnly', '--nobrowse', '--mountPoint', mnt, dmg))
     try:
         top = sorted(os.listdir(mnt))
         link = os.path.join(mnt, 'Applications')
-        if top != ['Applications', 'ReCarbon.app'] or not os.path.islink(link) or os.readlink(link) != '/Applications':
-            raise SystemExit(f'make_app.py: {dmg} holds {top}, not ReCarbon.app and a shortcut to /Applications')
+        if top != ['.VolumeIcon.icns', 'Applications', 'ReCarbon.app'] or not os.path.islink(link) \
+                or os.readlink(link) != '/Applications':
+            raise SystemExit(f'make_app.py: {dmg} holds {top}, not ReCarbon.app, a shortcut to /Applications '
+                             f'and .VolumeIcon.icns')
+        with open(os.path.join(mnt, '.VolumeIcon.icns'), 'rb') as a, \
+                open(os.path.join(app, 'Contents/Resources/AppIcon.icns'), 'rb') as b:
+            if a.read() != b.read():
+                raise SystemExit(f'make_app.py: {dmg}\'s .VolumeIcon.icns is not the app\'s AppIcon.icns')
+        if not has_custom_icon(mnt):
+            raise SystemExit(f'make_app.py: {dmg}\'s volume has no custom-icon flag')
         run('codesign', '--verify', '--deep', '--strict', os.path.join(mnt, 'ReCarbon.app'))
     finally:
         subprocess.run(['diskutil', 'eject', disks[0][0]], capture_output=True)
 
 
+def check_dmg_with_diskutil(dmg, app, tmp):
+    """hdiutil verify's place when diskutil made the dmg: a compressed GPT +
+    HFS+ image, then its contents."""
+    info = plistlib.loads(diskutil('image', 'info', '--plist', dmg).encode())
+    hints = [p.get('content-hint') for p in info.get('Partitions', [])]
+    if info.get('Image Format') != 'UDZO' or hints != ['GUID_partition_scheme', 'Apple_HFS']:
+        raise SystemExit(f'make_app.py: {dmg} is {info.get("Image Format")} {hints}, not UDZO with one HFS+ volume')
+    check_dmg_contents(dmg, app, tmp)
+
+
 def make_dmg(app, version):
-    """ReCarbon-macos.dmg: the app and a shortcut to Applications. Returns
-    it and the tool that made it."""
+    """ReCarbon-macos.dmg: the app and a shortcut to Applications, with the
+    app's icon as the volume's. Returns it and the tool that made it."""
     dmg = os.path.join(OUT, 'ReCarbon-macos.dmg')
     versioned = os.path.join(OUT, f'ReCarbon-{version}-macos.dmg')
     with tempfile.TemporaryDirectory() as tmp:
@@ -479,6 +555,7 @@ def make_dmg(app, version):
         os.makedirs(stage)
         run('ditto', app, os.path.join(stage, 'ReCarbon.app'))
         os.symlink('/Applications', os.path.join(stage, 'Applications'))
+        shutil.copyfile(os.path.join(app, 'Contents/Resources/AppIcon.icns'), os.path.join(stage, '.VolumeIcon.icns'))
         for f in (dmg, versioned):
             if os.path.exists(f):
                 os.remove(f)
@@ -486,13 +563,12 @@ def make_dmg(app, version):
         if DMG_TOOL != 'diskutil':
             if shutil.which('hdiutil'):
                 try:
-                    run('hdiutil', 'create', '-quiet', '-volname', 'ReCarbon', '-srcfolder', stage, '-fs', 'HFS+',
-                        '-format', 'UDZO', '-imagekey', 'zlib-level=9', '-ov', dmg)
+                    dmg_with_hdiutil(stage, dmg, tmp)
                     tool = 'hdiutil'
                 except subprocess.CalledProcessError as e:
                     if DMG_TOOL == 'hdiutil':
-                        raise SystemExit(f'make_app.py: hdiutil create: {failure(e)}')
-                    print(f'make_app.py: hdiutil create failed ({failure(e)}): making the dmg with diskutil image',
+                        raise SystemExit(f'make_app.py: hdiutil: {failure(e)}')
+                    print(f'make_app.py: hdiutil failed ({failure(e)}): making the dmg with diskutil image',
                           file=sys.stderr)
                     if os.path.exists(dmg):
                         os.remove(dmg)
@@ -510,8 +586,9 @@ def make_dmg(app, version):
                 out.write(f'{digest}  {os.path.basename(f)}\n')  # sha256sum -c / shasum -a 256 -c
         if tool == 'hdiutil':
             run('hdiutil', 'verify', '-quiet', dmg)
+            check_dmg_contents(dmg, app, tmp)
         else:
-            check_dmg_with_diskutil(dmg, tmp)
+            check_dmg_with_diskutil(dmg, app, tmp)
     return dmg, tool
 
 
@@ -596,21 +673,10 @@ def main():
                 '        "library_path": "../../../Frameworks/libMoltenVK.dylib",\n'
                 '        "api_version": "1.4.0",\n        "is_portability_driver": true\n    }\n}\n')
 
-    # The icon, every size macOS asks for (ReCarbon: only with an AppIcon.png).
-    icon = os.path.isfile(os.path.join(ROOT, 'scripts/macos/AppIcon.png'))
-    with tempfile.TemporaryDirectory() as tmp:
-        iconset = os.path.join(tmp, 'AppIcon.iconset')
-        os.makedirs(iconset)
-        if not icon:
-            iconset = None
-        src = os.path.join(ROOT, 'scripts/macos/AppIcon.png')
-        for size in (16, 32, 128, 256, 512) if icon else ():
-            for scale in (1, 2):
-                px = size * scale
-                name = f'icon_{size}x{size}' + ('@2x' if scale == 2 else '') + '.png'
-                run('sips', '-z', str(px), str(px), src, '--out', os.path.join(iconset, name))
-        if icon:
-            run('iconutil', '-c', 'icns', iconset, '-o', os.path.join(resources, 'AppIcon.icns'))
+    # The icon, every size macOS asks for.
+    if not os.path.isfile(ICON):
+        raise SystemExit(f'make_app.py: no {ICON} (swift scripts/macos/make_icon.swift makes it)')
+    make_icns(ICON, os.path.join(resources, 'AppIcon.icns'))
 
     # Every binary here runs on the macOS the plist promises, and so does the
     # FFmpeg linked into the game (an archive built for a newer macOS links
@@ -645,7 +711,7 @@ def main():
     copy_licenses(resources, {**copied, 'libMoltenVK.dylib': MOLTENVK})
 
     with open(os.path.join(contents, 'Info.plist'), 'wb') as p:
-        plistlib.dump({**({'CFBundleIconFile': 'AppIcon'} if icon else {}),
+        plistlib.dump({'CFBundleIconFile': 'AppIcon',
             'CFBundleDevelopmentRegion': 'en',
             'CFBundleExecutable': 'ReCarbon',
             'CFBundleIdentifier': BUNDLE_ID,
