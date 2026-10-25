@@ -9,8 +9,7 @@ each one against a manifest of hashes. Nothing is downloaded.
 > [!WARNING]
 > **Alpha**
 >
-> There is no public release yet ([Release status](download.md)). These steps describe the current
-> build. A clean install from a disc image on a fresh macOS user account was tested on a MacBook
+> These steps install ReCarbon v0.1.0 ([Download](download.md)). A clean install from a disc image on a fresh macOS user account was tested on a MacBook
 > Air M5 (M8); an install on a MacBook Air M1 wasn't tested.
 
 ## 1. Make a disc image

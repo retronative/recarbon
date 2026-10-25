@@ -20,14 +20,14 @@ const works = [
 	{ m: 'M5', title: 'Audio, movies, input', state: 'progress', text: 'Music, lip-sync and keyboard menus pass by hand. A physical controller is next.' },
 	{ m: 'M6', title: 'Saves & free-roam', state: 'evidence', text: 'A career profile saves and reloads; 15 minutes of free-roam ran clean.' },
 	{ m: 'M7', title: 'Racing', state: 'evidence', text: 'Accepted for the alpha: full races driven by hand on the keyboard, about 51 fps on a MacBook Air M5. A physical controller is still untested.' },
-	{ m: 'M8', title: 'Alpha packaging', state: 'progress', text: 'Alpha packaging validated on a MacBook Air M5: a release candidate installed and played, including on a fresh macOS account. Nothing is published yet.' },
+	{ m: 'M8', title: 'Alpha packaging', state: 'progress', text: 'Alpha packaging validated on a MacBook Air M5: a release candidate installed and played, including on a fresh macOS account. v0.1.0 alpha released.' },
 ];
 const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence in', progress: 'In progress', open: 'Not yet' };
 ---
 
 <RaceLayout
 	title={`${site.name}: Need for Speed: Carbon, native on Apple Silicon (unofficial fan port)`}
-	description="ReCarbon is an unofficial native port of Need for Speed: Carbon (Xbox 360) to Apple Silicon Macs. Early development: playable in parts, not released. Bring your own disc."
+	description="ReCarbon is an unofficial native port of Need for Speed: Carbon (Xbox 360) to Apple Silicon Macs. v0.1.0, the first playable alpha, is out. Bring your own disc."
 >
 	<Hero />
 
@@ -144,7 +144,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 				</li>
 			</ol>
 			<p class="more">
-				<a href={url('docs/installation/')}>Installation guide →</a> · No public release or download:
+				<a href={url('docs/download/')}>Download v0.1.0 →</a> · <a href={url('docs/installation/')}>Installation guide</a> ·
 				<a href={url('docs/developers/')}>build from source</a>
 			</p>
 		</div>

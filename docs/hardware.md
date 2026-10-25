@@ -12,7 +12,7 @@ was measured on.
 | MacBook Air, Apple M1 | 27.0.1 | The packaged app from its bundle (2026-10-23), and three full races by hand that start at about 30 fps and slow down in long races (2026-10-25). The alpha release candidate wasn't installed and played there. | FEASIBILITY §6b, M7 acceptance record |
 
 **Everything else is untested**: other Apple Silicon Macs, Macs without Homebrew installed, and
-any macOS before 27 (current builds need 27 or newer: see [Release status](download.md)).
+any macOS before 27 (current builds need 27 or newer: see [Download](download.md)).
 
 ## Controllers
 

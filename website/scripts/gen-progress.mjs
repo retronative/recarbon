@@ -90,7 +90,7 @@ const MILESTONES = [
 	{
 		id: 'M8',
 		state: 'in-progress',
-		summary: 'The current milestone: alpha packaging, validated on a MacBook Air M5. A release candidate passes every automated check and was installed and played by hand, including a clean install on a fresh macOS account. Testing for the alpha has ended. Nothing is published yet.',
+		summary: 'The current milestone: alpha packaging, validated on a MacBook Air M5. A release candidate passes every automated check and was installed and played by hand, including a clean install on a fresh macOS account. Testing for the alpha has ended, and v0.1.0, the first playable alpha, is released (2026-10-26).',
 		criteria: [
 			{ id: 'M8.7', title: 'Keyboard presets: WASD (the default) and Arrows' },
 			{ id: 'M8.8', title: 'Separate keyboard and controller profiles that persist' },
@@ -152,7 +152,8 @@ const HUMAN_TESTS = [
 // of these by its opening words; an unmatched one fails the run, so nothing
 // reaches the site unreviewed. The text shown is `text`.
 const ACHIEVEMENTS = [
-	{ starts: 'M8 release candidates validated on the M5', text: 'Alpha packaging validated on a MacBook Air M5: two release candidates pass every automated check, and one was installed from a disc image and played by hand, in the main account and on a fresh macOS account, with its save found after a relaunch. Not a release: nothing is published yet.' },
+	{ starts: 'ReCarbon v0.1.0 alpha released', text: 'ReCarbon v0.1.0, the first playable alpha, is released for Apple Silicon Macs with macOS 27: a disk image to install with your own Xbox 360 disc image. Known limitations are on the Known issues page.' },
+	{ starts: 'M8 release candidates validated on the M5', text: 'Alpha packaging validated on a MacBook Air M5: two release candidates pass every automated check, and one was installed from a disc image and played by hand, in the main account and on a fresh macOS account, with its save found after a relaunch.' },
 	{ starts: 'ReCarbon app icon', text: 'ReCarbon has its own app icon, drawn from this website\'s mark, on the app and on the opened disk image.' },
 	{ starts: 'M7 playable racing accepted for the alpha', text: 'Playable racing accepted for the alpha: full Quick Races driven by hand on the keyboard, on a MacBook Air M5 (50.8 fps on average over 9.8 minutes of racing) and an M1. Still open: the physical controller and Xbox 360 physics equivalence. No alpha build is published yet.' },
 	{ starts: 'Frame-thread priority under load', text: 'Fewer long stalls when other apps keep the Mac busy: the game threads that drive each frame now run at a higher macOS priority. On a MacBook Air M1 under load, stalls of 100 ms or more went from 5.3 to 0.3 per race run, at the same frame rate.' },

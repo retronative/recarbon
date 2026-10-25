@@ -159,7 +159,7 @@
 			"title": "Polish and distribution",
 			"state": "in-progress",
 			"date": null,
-			"summary": "The current milestone: alpha packaging, validated on a MacBook Air M5. A release candidate passes every automated check and was installed and played by hand, including a clean install on a fresh macOS account. Testing for the alpha has ended. Nothing is published yet.",
+			"summary": "The current milestone: alpha packaging, validated on a MacBook Air M5. A release candidate passes every automated check and was installed and played by hand, including a clean install on a fresh macOS account. Testing for the alpha has ended, and v0.1.0, the first playable alpha, is released (2026-10-26).",
 			"criteria": [
 				{
 					"id": "M8.7",
@@ -385,7 +385,12 @@
 	"achievements": [
 		{
 			"date": "2026-10-26",
-			"text": "Alpha packaging validated on a MacBook Air M5: two release candidates pass every automated check, and one was installed from a disc image and played by hand, in the main account and on a fresh macOS account, with its save found after a relaunch. Not a release: nothing is published yet.",
+			"text": "ReCarbon v0.1.0, the first playable alpha, is released for Apple Silicon Macs with macOS 27: a disk image to install with your own Xbox 360 disc image. Known limitations are on the Known issues page.",
+			"commits": []
+		},
+		{
+			"date": "2026-10-26",
+			"text": "Alpha packaging validated on a MacBook Air M5: two release candidates pass every automated check, and one was installed from a disc image and played by hand, in the main account and on a fresh macOS account, with its save found after a relaunch.",
 			"commits": []
 		},
 		{
@@ -456,20 +461,6 @@
 			"date": "2026-10-24",
 			"text": "ReCarbon's source and this website went public, with every page checked live: no broken links and no accessibility violations found by axe-core.",
 			"commits": []
-		},
-		{
-			"date": "2026-10-24",
-			"text": "A fresh clone from GitHub rebuilds byte-identical generated code, and the instruction tests and the website build pass. A timing test was made reliable under load.",
-			"commits": [
-				{
-					"sha": "f5ea08ccdd52736afad619f75d7e0a0d6b99b0fd",
-					"short": "f5ea08c"
-				},
-				{
-					"sha": "22ba881a189217bddb36e2db3a002f6e973efb04",
-					"short": "22ba881"
-				}
-			]
 		}
 	]
 }

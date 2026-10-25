@@ -17,7 +17,7 @@ Native recompilation of Need for Speed: Carbon (Xbox 360) for Apple Silicon.
 
 ## Status
 
-**Early Development — Playable in Parts.** Not released. Statuses come from
+**Alpha: v0.1.0 released**, the first playable alpha ([Download](docs/download.md)). Statuses come from
 [reference/ROADMAP.md](reference/ROADMAP.md). A milestone passes only when every criterion is met.
 
 - **M0–M2:** the Xbox 360 executable (title 0x454107EC) is verified, recompiles to C++ with no
@@ -53,7 +53,7 @@ See [reference/FEASIBILITY.md](reference/FEASIBILITY.md) and
 | Item | Value |
 |---|---|
 | Target | Apple Silicon Macs (primary test device: MacBook Air M5). Current builds need macOS 27, because the Homebrew libraries they bundle do |
-| App / executable | `ReCarbon.app` (`scripts/macos/make_app.py`; a build against `scripts/macos/build_deps.sh`'s libraries passes `check_app`; no release published) / `ReCarbon` |
+| App / executable | `ReCarbon.app` (`scripts/macos/make_app.py`; a build against `scripts/macos/build_deps.sh`'s libraries passes `check_app`; v0.1.0 is published as an ad-hoc signed dmg) / `ReCarbon` |
 | Bundle ID | `org.retronative.recarbon` |
 
 ## Installing
@@ -133,7 +133,7 @@ Packaging (M8): the app's libraries are built from SHA-256-checked sources for m
 `scripts/macos/build_deps.sh <prefix>`, about 6 minutes and about 60 MB of downloads. A build
 configured with `-DCMAKE_PREFIX_PATH=<prefix> -DFFMPEG_XMA=<prefix>/ffmpeg-xma` in its own build
 folder is what `scripts/macos/make_app.py` packages and `scripts/macos/check_app.py` passes.
-MoltenVK is Homebrew's 1.4.2, pinned by its SHA-256 in `make_app.py`. No release is published.
+MoltenVK is Homebrew's 1.4.2, pinned by its SHA-256 in `make_app.py`. v0.1.0 is built this way.
 
 `tools/`, `game/`, `ppc/` and `build/` are git-ignored. Never commit or share them.
 
