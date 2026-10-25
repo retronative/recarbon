@@ -245,6 +245,11 @@ customization. The controls criterion is judged on the default mappings.
     decision 2026-10-23. The keyboard remains required.)*
   - **Vehicle physics:** the car behaves consistently. Compare against the Xbox 360 version where
     possible (e.g. top speed or a lap time on a known route), with notes.
+    *(Revised for the alpha, user decision 2026-10-25: the Xbox 360 comparison is removed from
+    the alpha gate, because a reliable original-console reference is impractical to obtain now.
+    The original requirement above is kept. M7.2 is accepted for the alpha on the M5 human race
+    (reference/M7_ACCEPTANCE.md), and the Xbox 360 comparison is **deferred and unverified**, not
+    passed.)*
   - **AI opponents:** they spawn, race and finish.
   - **Race completion:** one full career race finishes, the results screen shows, and the career
     progress is saved and survives a restart.
@@ -314,13 +319,16 @@ customization. The controls criterion is judged on the default mappings.
     - the driving controls on the keyboard: throttle, brake, steering, camera (E), handbrake (Space)
       and Speedbreaker (Left Shift) are hand-verified in the M1 races of 2026-10-25; nitrous isn't
       yet (the stock RX-8 has none). The physical controller is deferred;
-    - physics: positive human evidence from the M5 reference race (2026-10-25: 1st in 9:06.14 over
-      8 laps of Main Street, stock RX-8, automatic; steering, handling, braking and collisions felt
-      normal; the race clock matches the wall clock within ~1–2%), accepted by the user. Xbox 360
-      equivalence is **unverified**: no reference exists (reference/M7_ACCEPTANCE.md);
     - audio and picture: reported fine by the user on the M1, with sync resting on that report;
     - the written route repeated 3 times: done on the M1 (races 1–3, 2026-10-25), with frame-time
       and session logs per run.
+  - **M7.2 closed for the alpha** (user decision, 2026-10-25, with the criterion revised above):
+    playable driving physics ACCEPTED; Xbox 360 physics equivalence DEFERRED / UNVERIFIED (no claim
+    of exact physics fidelity). Evidence:
+    the M5 Main Street race (8 laps, stock RX-8, automatic: 1st in 9:06.14, all 7 opponents
+    finished); steering, handling, braking and collisions normal to the tester; no noticeable
+    physics problems; the race clock within ~1–2% of the wall clock. The Xbox 360 comparison is
+    deferred and unverified.
   - **M7.5 accepted** (user decision, 2026-10-25): the M5 race ran 9.77 min of racing (8 laps, the
     game's maximum) at 50.8 fps, with no second under 30 fps outside a 3 s Space switch the tester
     caused, and no degradation over the race (reference/M7_ACCEPTANCE.md).

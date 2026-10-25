@@ -1,16 +1,16 @@
 # M7 acceptance record (playable racing)
 
 The state of each M7 criterion (ROADMAP M7) and its evidence, last updated 2026-10-25. Objective
-measurements and the tester's reports are kept apart. Nothing here weakens a criterion: M7.5 is
-judged on the MacBook Air M5, and the MacBook Air M1 results are supplementary (user decision,
+measurements and the tester's reports are kept apart. One criterion was revised by the user's decision, M7.2 (below); the
+others are unchanged. M7.5 is judged on the MacBook Air M5, and the MacBook Air M1 results are supplementary (user decision,
 2026-10-25).
 
 ## Status
 
 | Criterion | Status | Evidence |
 |---|---|---|
-| M7.1 Player controls (keyboard; the physical controller is deferred) | In progress | Throttle, brake and steering drove three full races; camera (E), handbrake (Space) and Speedbreaker (Left Shift) by hand. Nitrous untested: the stock RX-8 has none. |
-| M7.2 Vehicle physics | Positive human evidence; Xbox 360 equivalence **unverified** | M5 race (2026-10-25): 1st in 9:06.14 over 8 laps; steering, handling, braking and collisions felt normal to the tester; the race clock agrees with the log's wall clock within ~1–2%. No Xbox 360 reference exists, so equivalence isn't claimed. |
+| M7.1 Player controls (keyboard; the physical controller is deferred) | In progress: **nitrous only** | Throttle, brake and steering drove three full races; camera (E), handbrake (Space) and Speedbreaker (Left Shift) by hand. Nitrous untested: the stock RX-8 has none. |
+| M7.2 Vehicle physics | **Closed for the alpha** (criterion revised, user decision 2026-10-25). Playable driving physics: **ACCEPTED**. Xbox 360 physics equivalence: **DEFERRED / UNVERIFIED** | M5 race: 1st in 9:06.14 over 8 laps, all 7 opponents finished; steering, handling, braking and collisions normal to the tester; no noticeable physics problems; race clock within ~1–2% of the wall clock. No claim of exact physics fidelity. |
 | M7.3 AI opponents | Completed | Hand test 4 (2026-10-23). In the M1 races the 7 opponents start and race (screenshots); their finishing wasn't recorded. |
 | M7.4 Career race and save | Completed | Hand test 4 (2026-10-23). |
 | M7.5 Frame pacing, 10 minutes, M5 | **Accepted** (user decision, 2026-10-25) | M5 race: 9.77 min of racing (14 s short of 10; 8 laps is the game's maximum), 50.8 fps mean, no second under 30 fps outside a 3 s Space switch the tester caused, no degradation over the race, thermal "fair". The tester accepted the length. The M1 races don't meet 30 fps (below). |
@@ -93,9 +93,18 @@ What this does and doesn't show:
 - The game's own track screen gives a built-in record of 2:07.00 for the default 2 laps (63.5 s a
   lap). The tester averaged 68.3 s a lap, about 7.5% slower, including the standing start. That is
   consistent, not a measurement of physics fidelity.
-- **Decision (user, 2026-10-25):** the completed 8-lap M5 race is accepted as positive human
-  gameplay evidence for M7.2. Equivalence with the Xbox 360 version is recorded as **unverified**:
-  no reference (a lap time or top speed with the same car and track) exists, and none is assumed.
+- **Criterion revision (user decision, 2026-10-25).** The roadmap's original M7.2 criterion asks
+  for a comparison with the Xbox 360 version where possible (a top speed or a lap time on a known
+  route). A reliable original-console reference is impractical to obtain at this stage, so that
+  comparison is removed from the alpha gate. The original text stays in the roadmap.
+- **Recorded outcome:** playable driving physics **ACCEPTED**; Xbox 360 physics equivalence
+  **DEFERRED / UNVERIFIED**; the original-console comparison is no longer an alpha release gate;
+  no claim of exact physics fidelity is made.
+- **Accepted for the alpha** on this evidence: the successful 8-lap race; steering, handling,
+  braking and collisions normal to the tester; no noticeable gameplay physics problems; the race
+  clock consistent with the wall clock; all AI opponents finished.
+- **Deferred and unverified, not passed:** equivalence with the Xbox 360 version's physics. No
+  console reference exists in the evidence and none is assumed.
 
 ## Investigation: texture cache growth and the M1 frame-rate drop (read-only, 2026-10-25)
 
@@ -121,5 +130,5 @@ What this does and doesn't show:
 ## Remaining for M7
 
 1. Nitrous by hand (M7.1; needs a car that has it). Kept separate from M7.2.
-2. M7.2's Xbox 360 equivalence stays unverified until a reference exists (a lap time or top speed
-   with the stock RX-8 on Main Street); not an open test on the ReCarbon side.
+2. Deferred, not an alpha gate: M7.2's comparison with the Xbox 360 version (unverified until a
+   console reference exists).
