@@ -56,7 +56,8 @@ At the main menu the game says **"Cannot connect to Xbox Live!"**: press **Space
 controller) to continue. It does this at every launch.
 
 Drive with **W** / **S** (throttle, brake) and **A** / **D** (steer). **Space** is the
-handbrake, **Backspace** the nitrous, and **F1** (Fn+F1) opens ReCarbon's Settings. All keys:
+handbrake, **Backspace** the nitrous, and <kbd aria-label="Command">⌘</kbd> + <kbd>,</kbd> (Command + Comma) opens ReCarbon's Settings
+(or **F1**, Fn + F1 on a Mac keyboard). All keys:
 [Controls](controls.mdx).
 
 ## Check the download (optional)

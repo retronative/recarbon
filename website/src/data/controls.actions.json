@@ -112,7 +112,7 @@
 		}
 	},
 	"settings": {
-		"open": { "label": "Open / Close Settings", "status": "source", "detail": "Any time, in game or in menus. On a Mac keyboard F1 is the brightness key: press Fn+F1, or Cmd+,." },
+		"open": { "label": "Open / Close Settings", "status": "source", "detail": "Any time, in game or in menus: Cmd+, (Command + Comma). Also F1 (Fn+F1 on a Mac keyboard, where F1 is the brightness key)." },
 		"pages": { "label": "Previous / Next Tab", "status": "source", "detail": "The tabs, in order: {tabs}." },
 		"navigate": { "label": "Navigate / Change Value", "status": "source", "detail": "Choose a row and change its value. On the Controls page, left and right pick the key slot (first or second key)." },
 		"activate": { "label": "Activate / Set Key", "status": "source", "detail": "Dear ImGui's keyboard navigation: Space activates. On the Controls page it waits for the new key.", "keys": ["space"], "pad": ["SOUTH"], "evidence": "runtime/ui/ui.cpp ImGuiConfigFlags_NavEnableKeyboard; the footer legend \"A: set key\"" },

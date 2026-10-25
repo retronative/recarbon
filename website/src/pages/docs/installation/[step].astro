@@ -158,7 +158,7 @@ const descriptions = [
 					<li><span><kbd>A</kbd> <kbd>D</kbd></span><span>Steer</span></li>
 					<li><span><kbd>Space</kbd></span><span>Handbrake</span></li>
 					<li><span><kbd>Backspace</kbd></span><span>Nitrous</span></li>
-					<li><span><kbd>F1</kbd></span><span>ReCarbon's Settings (<kbd>Fn</kbd>+<kbd>F1</kbd> on a Mac keyboard)</span></li>
+					<li><span><kbd aria-label="Command">⌘</kbd> + <kbd>,</kbd></span><span>ReCarbon's Settings<small class="alt">or <kbd>F1</kbd> (<kbd>Fn</kbd> + <kbd>F1</kbd>)</small></span></li>
 				</ul>
 				<p>
 					All keys and the controller: <a href={url('docs/controls/')}>Controls</a> and the <a href={url('garage/')}>Garage</a>. This
@@ -328,6 +328,12 @@ const descriptions = [
 		padding: 0.5rem 0.75rem;
 		background: var(--sl-color-gray-6);
 		border-inline-start: 3px solid var(--rn-neon);
+	}
+	.keys .alt {
+		display: block;
+		margin-top: 0.2rem;
+		color: var(--sl-color-gray-3);
+		font-size: var(--sl-text-xs);
 	}
 	.keys kbd {
 		font-family: var(--rn-font-mono);

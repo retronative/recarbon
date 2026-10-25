@@ -28,7 +28,7 @@ Don't turn Gatekeeper off and don't remove quarantine attributes to get around t
 
 ## Save a bug report
 
-Open Settings (**F1**, **Fn+F1** or **Cmd+,**, or View + Menu on a controller), go to
+Open Settings (<kbd aria-label="Command">⌘</kbd> + <kbd>,</kbd>, or F1 / Fn + F1, or View + Menu on a controller), go to
 **Advanced**, and choose **Save Bug Report**. ReCarbon writes one `.zip` to your Desktop with:
 
 - the logs of the recent sessions, and any crash or hang reports;
