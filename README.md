@@ -41,7 +41,7 @@ Native recompilation of Need for Speed: Carbon (Xbox 360) for Apple Silicon.
   - a physical controller, deferred and not verified;
   - equivalence with the Xbox 360 version's physics, deferred and unverified;
   - audio and video sync, which rests on the tester's reports, not on measurement;
-  - Reverse, Look Back, Pause and the gear keys with a manual gearbox, not yet tried by hand.
+  - Reverse, Look Back and Pause, not yet tried by hand (gear shifts on K / ; are hand-tested, with automatic transmission).
 - **M8 (completed for the alpha, 2026-10-26):** v0.1.0 is released. Alpha packaging,
   validated on a MacBook Air M5: a release candidate installed and played, including a clean
   install on a fresh macOS account. Still open, not recorded as passed:

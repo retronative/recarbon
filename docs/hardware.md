@@ -18,8 +18,9 @@ any macOS before 27 (current builds need 27 or newer: see [Download](download.md
 
 - **Keyboard:** hand-tested in menus (M5 hand test 2), and in races Throttle, Brake and Steering
   (hand tests 1, 3 and 4, and the races of 2026-10-25), Handbrake (Space), Speedbreaker (Left
-  Shift) and Nitrous (Backspace) (2026-10-25), on the WASD keys (the Default profile). Reverse,
-  Look Back, Pause and the gear keys with a manual gearbox are still to try by hand.
+  Shift), Nitrous (Backspace) and the gear shifts on K (down) and ; (up), with automatic
+  transmission (2026-10-25), on the WASD keys (the Default profile). Reverse, Look Back and Pause
+  are still to try by hand.
 - **Controllers:** read through SDL3's gamepad support, by position: a PlayStation pad's Cross acts
   as A. **No physical controller has been tested yet:** that test is deferred. The default mapping is
   pinned by unit tests and checked with SDL's virtual controller only; see the [Garage](https://retronative.github.io/recarbon/garage/).

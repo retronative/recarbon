@@ -15,7 +15,7 @@ Closing M7 is not an alpha release: no build is published, and the alpha packagi
 
 | Criterion | Status | Evidence |
 |---|---|---|
-| M7.1 Player controls (keyboard; the physical controller is deferred) | **Completed** (keyboard, by hand, 2026-10-25) | Steering, throttle, brake: three M1 races and the M5 races; camera (E), handbrake (Space), Speedbreaker (Left Shift): M1 races; **nitrous (Backspace, B)**: M1 check with the BONUS RX-8 (full gauge); the first Backspace press, during race 3's key sweep, didn't trigger nitrous, and why isn't known. Untested by hand: Reverse, Look Back, Pause, and the gear keys with a manual gearbox. The tester also saw gear down on K and gear up on ; (the right stick's left and right) with the automatic car; the virtual-controller check saw shifts on the right stick's up and down with a manual gearbox (recorded side by side). Physical controller: deferred, not verified. |
+| M7.1 Player controls (keyboard; the physical controller is deferred) | **Completed** (keyboard, by hand, 2026-10-25) | Steering, throttle, brake: three M1 races and the M5 races; camera (E), handbrake (Space), Speedbreaker (Left Shift): M1 races; **nitrous (Backspace, B)**: M1 check with the BONUS RX-8 (full gauge); the first Backspace press, during race 3's key sweep, didn't trigger nitrous, and why isn't known. Untested by hand: Reverse, Look Back, Pause, and the gear keys with a manual gearbox. **Gear Down (K) and Gear Up (;)**, the right stick's left and right, hand-verified with automatic transmission (BONUS RX-8); the virtual-controller check also shifted a manual gearbox on the right stick's up and down (O / L). Physical controller: deferred, not verified. |
 | M7.2 Vehicle physics | **Closed for the alpha** (criterion revised, user decision 2026-10-25). Playable driving physics: **ACCEPTED**. Xbox 360 physics equivalence: **DEFERRED / UNVERIFIED** | M5 race: 1st in 9:06.14 over 8 laps, all 7 opponents finished; steering, handling, braking and collisions normal to the tester; no noticeable physics problems; race clock within ~1–2% of the wall clock. No claim of exact physics fidelity. |
 | M7.3 AI opponents | Completed | Hand test 4 (2026-10-23). In the M1 races the 7 opponents start and race (screenshots); their finishing wasn't recorded. |
 | M7.4 Career race and save | Completed | Hand test 4 (2026-10-23). |
@@ -140,9 +140,8 @@ recorded as passed:
 1. The physical controller (M7.1): deferred, not verified.
 2. M7.2's comparison with the Xbox 360 version: deferred and unverified until a console reference
    exists.
-3. Keyboard functions not yet tried by hand: Reverse, Look Back, Pause, and the gear keys with a
-   manual gearbox (the tester's K / ; observation with the automatic car and the virtual
-   controller's right stick up/down with a manual gearbox stay side by side, unreconciled).
+3. Keyboard functions not yet tried by hand: Reverse, Look Back and Pause. Gear Down (K) and Gear
+   Up (;) are hand-verified with automatic transmission (2026-10-25).
 4. Known alpha limitations, unchanged: the ~1 s presenter/queue-lock stalls, the 250–600 ms
    GPU-idle stalls, the M1 frame-rate drop in long races, texture cache growth, and the Xbox Live
    notice's manual OK (A = Space).

@@ -99,10 +99,10 @@
 			"driving": { "label": "Gear Down", "status": "automated", "evidence": "Virtual-controller check (reference/M8_PLAN.md, 2026-10-24): scripted Quick Race on the M1 worker, Circuit, stock RX-8, manual gearbox, under about 35 mph; paired screenshots. Manual gearbox: the HUD gear goes 3 > 2 > 1 > N." }
 		},
 		"RightStickLeft": {
-			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test. With an automatic car (the BONUS RX-8, 2026-10-25, by hand on the keyboard) the tester saw K (left) shift down and ; (right) shift up. The virtual-controller check with a manual gearbox shifted on the right stick's up and down instead. The two are recorded side by side, not reconciled, so no action is named here." }
+			"driving": { "label": "Gear Down", "status": "hand-verified", "evidence": "By hand on the keyboard (2026-10-25, the tester, MacBook Air M1, the BONUS RX-8 with automatic transmission): K (Right Stick Left on the WASD preset) shifts down. Observed with automatic transmission. The virtual-controller check (2026-10-24, reference/M8_PLAN.md) shifted a manual gearbox with the right stick's up and down (O / L on the WASD keys)." }
 		},
 		"RightStickRight": {
-			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test. With an automatic car (the BONUS RX-8, 2026-10-25, by hand on the keyboard) the tester saw K (left) shift down and ; (right) shift up. The virtual-controller check with a manual gearbox shifted on the right stick's up and down instead. The two are recorded side by side, not reconciled, so no action is named here." }
+			"driving": { "label": "Gear Up", "status": "hand-verified", "evidence": "By hand on the keyboard (2026-10-25, the tester, MacBook Air M1, the BONUS RX-8 with automatic transmission): ; (Right Stick Right on the WASD preset) shifts up. Observed with automatic transmission. The virtual-controller check (2026-10-24, reference/M8_PLAN.md) shifted a manual gearbox with the right stick's up and down (O / L on the WASD keys)." }
 		},
 		"LeftStickClick": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." }

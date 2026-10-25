@@ -263,8 +263,8 @@ customization.
     360 physics equivalence is **deferred and unverified** (the criterion revision is below);
   - M7.6's audio and video sync rests on the tester's subjective reports, not on instrumented
     synchronization testing (the audio logs show only no underruns or gaps);
-  - keyboard functions not yet tried by hand: Reverse, Look Back, Pause, and the gear keys with a
-    manual gearbox.
+  - keyboard functions not yet tried by hand: Reverse, Look Back and Pause. Gear Down (K) and
+    Gear Up (;) were confirmed by hand with automatic transmission (2026-10-25).
 
   Closing M7 doesn't release anything: no alpha build is published. The alpha packaging is M8.
 Input as in M5: SpeedBreaker's keyboard rebinding and `[keys]` keep working. No new
@@ -349,11 +349,11 @@ customization. The controls criterion is judged on the default mappings.
     - the keyboard controls (M7.1): steering, throttle, brake, camera (E), handbrake (Space, A),
       Speedbreaker (Left Shift, X) and nitrous (Backspace, B, found 2026-10-25 with the BONUS
       RX-8) are hand-verified. The first Backspace press, during an earlier key sweep, didn't
-      trigger nitrous; why isn't known. Still untested by hand: Reverse, Look Back, Pause, and the
-      gear keys with a manual gearbox. With the automatic BONUS RX-8 the tester saw gear down on K
-      and gear up on ; (the right stick's left and right); the virtual-controller check (manual
-      gearbox, 2026-10-24) saw shifts on the right stick's up and down. Both are recorded side by
-      side, not reconciled. The physical controller is deferred;
+      trigger nitrous; why isn't known. Gear Down (K) and Gear Up
+      (;), the right stick's left and right, are hand-verified with automatic transmission (the
+      BONUS RX-8, 2026-10-25); the virtual-controller check (manual gearbox, 2026-10-24) also shifted
+      on the right stick's up and down. Still untested by hand: Reverse, Look Back and Pause. The
+      physical controller is deferred;
     - audio and picture (M7.6): completed on human gameplay verification. The tester reported
       picture and sound fine on the M1, smooth play with audio in sync on the M5, and normal
       audio and visuals in the M5 physics race. Audio and video sync rests on those subjective
