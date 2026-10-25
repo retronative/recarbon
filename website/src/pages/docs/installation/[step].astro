@@ -32,7 +32,6 @@ const descriptions = [
 <StarlightPage frontmatter={{ title: step.title, description: descriptions[i], tableOfContents: false, prev: false, next: false }}>
 	<nav class="track not-content" aria-label="Installation steps">
 		<p class="count">Step {n} of {total}</p>
-		<div class="meter" aria-hidden="true"><span style={`width: ${(n / total) * 100}%`}></span></div>
 		<ol>
 			{
 				installSteps.map((s, j) => (
@@ -224,16 +223,6 @@ const descriptions = [
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 		color: var(--rn-neon-soft);
-	}
-	.meter {
-		height: 4px;
-		margin: 0 0 0.75rem;
-		background: var(--sl-color-gray-5);
-	}
-	.meter span {
-		display: block;
-		height: 100%;
-		background: var(--rn-neon);
 	}
 	.track .num {
 		width: fit-content;
