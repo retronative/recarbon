@@ -18,11 +18,13 @@ public binary would need. Built from ROADMAP M8, `reference/RELEASE_CANDIDATE.md
 - [x] Commit the RC tooling (`scripts/release_candidate.sh`, `scripts/rc_transfer.sh`,
       `scripts/macos/rc_manifest.py`, `tests/release_candidate_test.py`, `reference/RELEASE_CANDIDATE.md`)
       after review: committed as 5b1b463.
-- [ ] Cut the RC from the commit that will be the alpha (after the docs commits), not from an
-      older one.
+- [x] Cut the RC from the commit that will be the alpha (after the docs commits), not from an
+      older one: 282557c, all 24 steps PASS (`build/rc/755b1c5-20261025T155507Z`; dmg SHA-256
+      94086c84…dc51e, game binary 97491602…5b88, identical in the app and the dmg's copy).
 
 ## 3. Install and acceptance on both Macs (by hand)
-- [ ] Transfer the dmg to the M1 with `scripts/rc_transfer.sh` (checksum verified on arrival).
+- [x] Transfer the dmg to the M1 with `scripts/rc_transfer.sh` (checksum verified on arrival):
+      done 2026-10-25, all three checksums OK on the M1, no quarantine attribute on the copy.
 - [ ] On the M1 and on the M5, the checklist in `reference/RELEASE_CANDIDATE.md`: clean first
       launch (record what Gatekeeper does with the ad-hoc signature), game data installed from the
       user's own disc image, Game Mode on, WASD controls, audio, one race to the results, a save
