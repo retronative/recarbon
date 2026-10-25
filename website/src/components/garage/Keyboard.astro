@@ -46,7 +46,14 @@ const GAP = 5;
 					data-callouts={calloutsOfKey(k.id, 'default')}
 				>
 					<rect class="cap" x={x} y={y} width={w} height={h} rx="7" />
-					{k.small ? (
+					{k.icon ? (
+						<>
+							<title>{k.name}</title>
+							<text class="legend small icon" x={x + w - 9} y={y + 22} text-anchor="end" aria-hidden="true">
+								{k.label}
+							</text>
+						</>
+					) : k.small ? (
 						<text class="legend small" x={x + 9} y={y + 21}>
 							{k.label}
 						</text>
@@ -94,6 +101,11 @@ const GAP = 5;
 		font-family: var(--rn-font-body);
 		font-weight: 500;
 		letter-spacing: 0.02em;
+	}
+	/* A symbol reads lighter than a word at the same size: a little larger. */
+	.legend.icon {
+		font-size: 16px;
+		letter-spacing: 0;
 	}
 	.key {
 		cursor: pointer;

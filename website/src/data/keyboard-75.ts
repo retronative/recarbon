@@ -11,6 +11,7 @@ export interface KeyCap {
 	y: number;
 	w?: number;
 	small?: boolean; // a word legend, set smaller
+	icon?: boolean; // a symbol legend (⌫), set at the key's right edge
 }
 
 const row = (y: number, x0: number, ids: string[], label = (id: string) => id.toUpperCase()): KeyCap[] =>
@@ -41,7 +42,7 @@ export const KEYBOARD: KeyCap[] = [
 	...row(R1, 1, ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']),
 	{ id: 'minus', label: '-', name: 'Minus', x: 11, y: R1 },
 	{ id: 'equals', label: '=', name: 'Equals', x: 12, y: R1 },
-	named('backspace', 'delete ⌫', 'Backspace (delete ⌫ on a Mac keyboard)', 13, R1, 2),
+	{ ...named('backspace', '⌫', 'Backspace', 13, R1, 2), icon: true },
 	named('home', 'home', 'Home', 15, R1),
 
 	named('tab', 'tab', 'Tab', 0, R2, 1.5),
