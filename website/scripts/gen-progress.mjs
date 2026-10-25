@@ -267,7 +267,11 @@ function generate(progress, roadmap) {
 // What the committed JSON must meet with or without progress.json.
 function validate(data, roadmap) {
 	checkMilestones(data.milestones, roadmap);
-	expect(data.milestones.some((m) => m.id === data.currentMilestone && m.state === 'in-progress'), `current milestone ${data.currentMilestone} is not in progress`);
+	// The current milestone is one in progress; with none in progress (every
+	// milestone closed), it is the roadmap's last one.
+	const open = data.milestones.filter((m) => m.state === 'in-progress');
+	const current = open.length ? open : data.milestones.slice(-1);
+	expect(current.some((m) => m.id === data.currentMilestone), `current milestone ${data.currentMilestone} is not ${open.length ? 'in progress' : 'the last milestone'}`);
 	for (const x of [...data.milestones.flatMap((m) => m.criteria), ...data.humanTests]) expect(STATES.includes(x.state), `"${x.title}": unknown state ${x.state}`);
 	for (const x of data.issues) expect(['open', 'deferred'].includes(x.state), `issue "${x.title}": state ${x.state}`);
 	expect(data.achievements.length <= MAX_ACHIEVEMENTS, `${data.achievements.length} achievements, more than ${MAX_ACHIEVEMENTS}`);
