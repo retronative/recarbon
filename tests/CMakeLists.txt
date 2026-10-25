@@ -214,6 +214,9 @@ find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
 add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/frame_times_test.py)
 # scripts/run_attempt.sh's retention marker for game/m3 (written once, never changed).
 add_test(NAME run_attempt_marker_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_attempt_marker_test.py)
+# scripts/release_candidate.sh's preflight, rc_manifest.py's content gate and manifest, and
+# scripts/rc_transfer.sh's refusals, in a scratch tree (no build, no game files, no network).
+add_test(NAME release_candidate_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/release_candidate_test.py)
 
 # Not ported from SpeedBreaker v0.1.8 (one line each: why).
 # edge_bars_test, band_filter_test, fade_layers_test: the edge-bar fills and the
