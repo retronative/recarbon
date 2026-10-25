@@ -48,10 +48,11 @@ The full texts are on the [Licenses](../NOTICE) pages, taken from ReCarbon's
 
 ## Source of the LGPL parts
 
-FFmpeg and libmspack (LGPL-2.1) are compiled into the `ReCarbon` executable. ReCarbon distributes
-no binaries yet. Whoever distributes a build must also offer the complete source of those parts at
-the versions used: FFmpeg 7.1.1 (`https://ffmpeg.org/releases/ffmpeg-7.1.1.tar.xz`) with ReCarbon's
-patch and build script, and libmspack as XenonRecomp's pinned submodule has it.
+FFmpeg's libavcodec and libavutil and libmspack's LZX decoder (LGPL-2.1) are separate libraries in
+`ReCarbon.app/Contents/Frameworks/` that you can replace with your own builds. Their complete source
+at the versions used, FFmpeg 7.1.1 (`https://ffmpeg.org/releases/ffmpeg-7.1.1.tar.xz`) with
+ReCarbon's patch and build script and libmspack as XenonRecomp's pinned submodule has it, is on each
+release's GitHub Release page; the replacement steps are in `THIRD_PARTY_NOTICES.md`.
 
 ## This website
 

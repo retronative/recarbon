@@ -6,7 +6,7 @@ SpeedBreaker, Copyright (C) 2026 project(u) and SpeedBreaker contributors (GPL-3
 built from software by others under their own licenses, listed here. The license texts are in
 [`LICENSES/`](LICENSES).
 
-ReCarbon's download is the Mac app (`ReCarbon.app` in `ReCarbon-macos.dmg`, Apple silicon, macOS
+ReCarbon's download is the Mac app (`ReCarbon.app` in `ReCarbon-<version>-macos.dmg`, Apple silicon, macOS
 27 or later), published on the project's GitHub Releases page
 (`https://github.com/retronative/recarbon/releases`) and built by
 [`scripts/macos/make_app.py`](scripts/macos/make_app.py). The app bundles SDL3, the Vulkan loader,
@@ -65,8 +65,8 @@ in `ReCarbon.app/Contents/Frameworks/` (`libavcodec.61.dylib`, `libavutil.59.dyl
 
 **Source offer.** With every binary release, ReCarbon publishes the complete source of these parts,
 at the versions in that release, on the same GitHub Release page as the binary, for as long as the
-binary is offered there: for v0.0.1, `ReCarbon-0.0.1-third-party-source.tar.xz`, with its SHA-256
-in `ReCarbon-0.0.1-third-party-source.tar.xz.sha256`. It holds FFmpeg 7.1.1
+binary is offered there: for v0.1.0, `ReCarbon-0.1.0-third-party-source.tar.xz`, with its SHA-256
+in `ReCarbon-0.1.0-third-party-source.tar.xz.sha256`. It holds FFmpeg 7.1.1
 (`https://ffmpeg.org/releases/ffmpeg-7.1.1.tar.xz`, SHA-256 in `scripts/setup_tools.sh`), the patch
 and [`scripts/build_ffmpeg_xma.sh`](scripts/build_ffmpeg_xma.sh); libmspack at XenonRecomp's pinned
 revision `305907723a4e7ab2018e58040059ffb5e77db837`; the source archives of the other bundled

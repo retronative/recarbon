@@ -13,11 +13,13 @@ Related: `reference/M8_ACCEPTANCE.md` (what was validated), `reference/RELEASE_C
 | G1 | Binary | Publish the dmg and its checksum |
 | G2 | LGPL parts: source archive, written offer, replaceable libraries | Replaceable dylibs; the source archive and the offer on the release page |
 | G3 | Signing and notarization | Ad hoc, with the documented "Open Anyway" |
-| G4 | Publication | Push, website redeploy, tag, release page, upload |
+| G4 | Publication | Approved: push, tag `v0.1.0`, GitHub Release (dmg, source archive, checksums), website redeploy |
 
 ## Decisions (2026-10-26) and their state
 
-- **G1: publish the dmg** (`ReCarbon-macos.dmg` and its `.sha256`) on the GitHub Release page.
+- **Version: v0.1.0** (user decision, 2026-10-26): `CMakeLists.txt`, the CHANGELOG entry the app
+  shows as What's New, the dmg's and the source archive's names, and the tag.
+- **G1: publish the dmg** (`ReCarbon-0.1.0-macos.dmg` and its `.sha256`) on the GitHub Release page.
 - **G2: replaceable dynamic libraries**, done in 69faf7f: FFmpeg's
   `libavcodec.61.dylib` and `libavutil.59.dylib` (built shared by `scripts/build_ffmpeg_xma.sh`) and
   libmspack's LZX decoder `librecarbon_lzx.dylib` (its own CMake target) are separate files in
@@ -25,22 +27,29 @@ Related: `reference/M8_ACCEPTANCE.md` (what was validated), `reference/RELEASE_C
   `check_app.py` check 7 fails a build with any of their code in the executable
   (`tests/lgpl_dylibs_test.py`). The written offer and the replacement steps are in
   `THIRD_PARTY_NOTICES.md` (968f03f, bundled in the app). The third-party source archive is built
-  locally: `build/release-src/ReCarbon-0.0.1-third-party-source.tar.xz` (40,814,628 B, SHA-256
-  `8635a65fbcbdf655fd6238ae0e954231a5be50e5f0aa587db5529debd432dade`, with `.sha256`; README and
-  `SHA256SUMS` inside), from files already on this Mac; not uploaded. It is published on the
+  locally: `build/release-src/ReCarbon-0.1.0-third-party-source.tar.xz` (40,815,220 B, SHA-256
+  `a0e805b44a4724acc445e18049ed5662946376c4a94f52d8ef311704cc19e883`, with `.sha256`; README and
+  `SHA256SUMS` inside), from files already on this Mac; not uploaded. It has the contents of the
+  earlier `ReCarbon-0.0.1-third-party-source.tar.xz` (`8635a65f…`, kept), with its README naming
+  0.1.0. It is published on the
   release page next to the dmg, with the offer (the notices say "for as long as the binary is
   offered there").
 - **G3: ad hoc signing** (option 2), with the documented **Open Anyway** step (README,
   `docs/installation.md`, `docs/troubleshooting.md`, `docs/download.md`).
-- **The final RC** with all of it: `build/rc/f6ce759-20261025T180528Z` (24/24 PASS), below and in `M8_ACCEPTANCE.md`.
-- Still open: **G4** (push, website redeploy, tag, release page, uploads), and the switch
-  of `docs/download.md` and the other public pages to "released" (a release branch does that).
+- **The RC with all of it** at version 0.0.1: e8eb933 (`build/rc/f6ce759-20261025T180528Z`, 24/24
+  PASS, `M8_ACCEPTANCE.md`). The final RC is built once more at the v0.1.0 commit, which only
+  changes the version and documentation.
+- **G4: approved by the user** (2026-10-26): push, tag `v0.1.0` on the final RC's commit, the
+  GitHub Release with `ReCarbon-0.1.0-macos.dmg`, `ReCarbon-0.1.0-macos.dmg.sha256`,
+  `ReCarbon-0.1.0-third-party-source.tar.xz` and its `.sha256`, then the website redeploy. Still
+  to do with it: the switch of `docs/download.md` and the other public pages to "released".
 
 ## G1. Binary
 
 **Facts**
-- The download is `ReCarbon-macos.dmg` (`ReCarbon.app` and a shortcut to Applications) with its
-  `.sha256`, as `scripts/release_candidate.sh` puts them in an RC's `release/`.
+- The download is `ReCarbon-<version>-macos.dmg` (`ReCarbon.app` and a shortcut to Applications)
+  with its `.sha256`, which names that file, as `scripts/release_candidate.sh` puts them in an
+  RC's `release/` (8bce7a4).
 - The app contains no game data files: the RC's content gate (`rc_manifest.py`) rejects `.xex`,
   `.iso`, `ZZDATA*`, generated sources and the like, and the player installs the game from their
   own disc image.
@@ -134,7 +143,7 @@ release change.
 
 **Decision:** ad hoc (option 2), 2026-10-26: the current RC ships as built.
 
-## G4. Publication (nothing done)
+## G4. Publication (approved, not done yet)
 
 - **Push** of the local commits to `origin/main` (`git log --oneline origin/main..main`): the 16
   from 716f126 to 94750af (716f126, 4cb161c, fe7a7b9, 868c6c7, 3e34a67, 505fad0, 9a402e2,
@@ -142,13 +151,13 @@ release change.
   2026-10-26 documentation commits. Check the list again before pushing.
 - **Website redeploy** (GitHub Pages, `.github/workflows/website.yml`), after the push; then
   `node scripts/gen-progress.mjs` again, so the Progress page can link the newly public commits.
-- **Tag** (e.g. `v0.0.1-alpha`) on the RC's commit (94750af or 282557c), the commit the binary
-  names in Settings > Advanced and `Info.plist` (`ReCarbonCommit`). The documentation commits
-  after it don't change the app, except `CHANGELOG.md`: its v0.0.1 entry is compiled into the
-  game's What's New, so the RCs show the entry as it was at their commit.
+- **Tag** `v0.1.0` on the final RC's commit, the commit the binary names in Settings > Advanced
+  and `Info.plist` (`ReCarbonCommit`). Documentation commits after it don't change the app,
+  except `CHANGELOG.md`: its v0.1.0 entry is compiled into the game's What's New, so an RC shows
+  the entry as it was at its commit.
 - **Release page** (text: `reference/ALPHA_RELEASE_NOTES.md`) and `docs/download.md` switched
   from "no release yet" to the release, in the same change.
-- **Binary upload** of the chosen dmg with its `.sha256` (and, per G2, the source archive), only
-  after G1, G2 and G3.
+- **Binary upload** of `ReCarbon-0.1.0-macos.dmg` with its `.sha256` and, per G2,
+  `ReCarbon-0.1.0-third-party-source.tar.xz` with its `.sha256`.
 
-**Decision:** each approval separately, in that order.
+**Decision:** approved by the user (2026-10-26), in that order.

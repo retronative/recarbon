@@ -26,8 +26,8 @@ So the first time you open a downloaded copy, macOS blocks it. You allow it once
 
 1. **Check the download.** Proceed only with a copy from ReCarbon's GitHub release whose checksum
    matches. In Terminal, in the folder with the download:
-   `shasum -a 256 -c ReCarbon-macos.dmg.sha256` must print `ReCarbon-macos.dmg: OK`.
-2. Open `ReCarbon-macos.dmg` and drag **ReCarbon** onto **Applications**.
+   `shasum -a 256 -c ReCarbon-0.1.0-macos.dmg.sha256` must print `ReCarbon-0.1.0-macos.dmg: OK`.
+2. Open `ReCarbon-0.1.0-macos.dmg` and drag **ReCarbon** onto **Applications**.
 3. Open **ReCarbon** from Applications. macOS says it can't verify the app (the wording varies with
    the macOS version). Choose **Done** or **OK**, not **Move to Trash**.
 4. Open **System Settings > Privacy & Security** and scroll down to **Security**. Next to the

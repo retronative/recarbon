@@ -17,7 +17,8 @@ ReCarbon isn't notarized, so macOS blocks a downloaded copy the first time. The 
   Open ReCarbon from Applications again, choose **Done**, then go straight to **System Settings >
   Privacy & Security** and scroll down to **Security**.
 - **"ReCarbon is damaged and can't be opened":** the download is incomplete or changed. Delete it,
-  download it again from the GitHub release, and check its checksum.
+  download it again from the GitHub release, and check it:
+  `shasum -a 256 -c ReCarbon-0.1.0-macos.dmg.sha256` must print `ReCarbon-0.1.0-macos.dmg: OK`.
 - **Nothing happens, or the button doesn't stay:** quit System Settings, open ReCarbon again from
   Applications (not from inside the disc image), and repeat.
 - **A managed Mac** (work or school) may not allow apps that aren't notarized at all.

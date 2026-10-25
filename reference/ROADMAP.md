@@ -364,8 +364,8 @@ customization. The controls criterion is judged on the default mappings.
 - **State (2026-10-26):** testing ended by the user's decision; what wasn't verified is a known
   limitation. The alpha packaging is validated on the M5: RCs 282557c and 94750af pass all 24
   steps of `scripts/release_candidate.sh`, and 282557c was installed and played by hand in the
-  main account and in a fresh macOS account (M8.4). Nothing is published: publication waits on
-  gates G1–G4 (`reference/ALPHA_RELEASE_GATES.md`). Records: `reference/M8_ACCEPTANCE.md`,
+  main account and in a fresh macOS account (M8.4). Nothing is published yet: gates G1–G4
+  are decided and the release is v0.1.0 (`reference/ALPHA_RELEASE_GATES.md`). Records: `reference/M8_ACCEPTANCE.md`,
   `reference/M8_ALPHA_CHECKLIST.md`, draft notes `reference/ALPHA_RELEASE_NOTES.md`.
   - **M8.1 (installer): Completed.** The installer copied and verified Carbon's 78 files
     (5.74 GB) from the user's ISO into `~/Library/Application Support/ReCarbon/game` in both

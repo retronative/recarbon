@@ -71,8 +71,12 @@ From `reference/ALPHA_RELEASE_GATES.md`:
       download page's offer comes with the release change (G4).
 - [x] **G3** Developer ID + notarization, or ad hoc with the documented "Open Anyway". Decided
       2026-10-26: ad hoc, Open Anyway.
-- [ ] **G4** approvals: push, website redeploy, tag, release page, binary upload.
-- [ ] Which RC is the alpha: the final RC is e8eb933 (`M8_ACCEPTANCE.md`); not human install-tested.
+- [x] **G4** approvals: push, website redeploy, tag, release page, binary upload. Approved
+      2026-10-26: tag `v0.1.0`; the release page carries `ReCarbon-0.1.0-macos.dmg`, the source
+      archive `ReCarbon-0.1.0-third-party-source.tar.xz` and their `.sha256` files.
+- [x] Version 0.1.0 (user decision 2026-10-26). The alpha is the final RC built at the v0.1.0
+      commit: the code of e8eb933 (`M8_ACCEPTANCE.md`), with the version and documentation
+      changed; not human install-tested.
 - [ ] Whether the gamtest evidence closes M6.6 and so M6 (`M8_ACCEPTANCE.md`); and closing M8.
 
 ## Shortest path to publishing
@@ -81,7 +85,7 @@ From `reference/ALPHA_RELEASE_GATES.md`:
 2. Decide G1 (the dmg).
 3. Decide G3 (ad hoc needs nothing new; Developer ID needs a new RC and a launch
    test). Prepare G2's archive from `build/release-src/MANIFEST-draft.tsv`, and write the offer.
-4. Fill the release notes' **[GATE …]** placeholders; switch `docs/download.md`, the home page's
+4. Fill the release notes' **[DMG SHA-256]**; switch `docs/download.md`, the home page's
    M8 card, the Progress page and the README status lines to the release, in one change.
 5. With approval, in order: push, tag the RC's commit, redeploy the website, create the release
    page, upload the dmg, its `.sha256` and (per G2) the source archive.

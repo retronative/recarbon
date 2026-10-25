@@ -60,7 +60,8 @@ See [reference/FEASIBILITY.md](reference/FEASIBILITY.md) and
 
 ReCarbon is signed ad hoc and not notarized, so macOS blocks a downloaded copy the first time you
 open it. After a blocked attempt, choose **System Settings > Privacy & Security > Open Anyway** and
-confirm, once, and only for a copy whose checksum you've verified. Never turn Gatekeeper off. The
+confirm, once, and only for a copy whose checksum you've verified
+(`shasum -a 256 -c ReCarbon-0.1.0-macos.dmg.sha256`). Never turn Gatekeeper off. The
 full steps, including installing the game from your own disc image, are in
 [docs/installation.md](docs/installation.md).
 

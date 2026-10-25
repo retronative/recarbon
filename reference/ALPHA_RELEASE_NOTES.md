@@ -1,13 +1,14 @@
-# ReCarbon v0.0.1 alpha: release notes (DRAFT, not published)
+# ReCarbon v0.1.0 alpha: release notes (DRAFT, not published)
 
-> **Internal draft, 2026-10-26.** No release exists. This text is for the release page and for
-> `docs/download.md` once gates G1–G4 are decided (`reference/ALPHA_RELEASE_GATES.md`).
-> Placeholders are marked **[GATE …]**. Until then the public pages say there is no release.
+> **Internal draft, 2026-10-26.** No release exists yet. This text is for the v0.1.0 release page
+> and for `docs/download.md`; gates G1–G4 are decided (`reference/ALPHA_RELEASE_GATES.md`). The
+> one placeholder, **[DMG SHA-256]**, is the final RC's dmg SHA-256 (its `.sha256` file). Until
+> the release the public pages say there is no release.
 >
 > **Lifting it into `docs/download.md`:** everything between the two `8<` lines below is written
 > in the docs' conventions (GitHub alerts, links relative to `docs/`, license links to `../`), so
 > it can replace that page's body as is. Keep the page's front matter, change its `title` to
-> "Download" and its `description`, and fill or remove every **[GATE …]** first. The links resolve
+> "Download" and its `description`, and fill in **[DMG SHA-256]** first. The links resolve
 > only from `docs/`, not from `reference/`.
 
 <!-- 8< ---------------- docs/download.md body starts here ---------------- -->
@@ -15,7 +16,7 @@
 > [!WARNING]
 > **Alpha**
 >
-> ReCarbon v0.0.1 is the first playable alpha: races, career progress and saves work, but it is
+> ReCarbon v0.1.0 is the first playable alpha: races, career progress and saves work, but it is
 > not finished. Read [Known issues](known-issues.md) before you play.
 
 ## What this is
@@ -56,9 +57,8 @@ All measurements on a MacBook Air M5 (24 GB, macOS 27.0.1) unless marked M1.
 
 ## Install
 
-1. Download `ReCarbon-macos.dmg` and check it: `shasum -a 256 -c ReCarbon-macos.dmg.sha256`
-   (the expected SHA-256 is **[GATE G4: the chosen RC's dmg SHA-256; the final RC e8eb933's is
-   `6ba57adb4471a05a29d5c5d7a7c35b5fa812b8c2deda01222bd8b2ab01bdb510`]**). The `.dmg` file shows
+1. Download `ReCarbon-0.1.0-macos.dmg` and check it: `shasum -a 256 -c ReCarbon-0.1.0-macos.dmg.sha256`
+   (the expected SHA-256 is **[DMG SHA-256]**). The `.dmg` file shows
    macOS's generic disk-image icon; ReCarbon's icon appears once it is open.
 2. Open the dmg and drag **ReCarbon** onto **Applications**.
 3. **First launch:** ReCarbon is signed ad hoc and **not notarized** (G3, decided 2026-10-26). If
@@ -136,10 +136,11 @@ and license text in `ReCarbon.app/Contents/Resources/licenses/` ([License](../CO
 
 **Source.** FFmpeg's libavcodec and libavutil and libmspack's LZX decoder (LGPL-2.1) are separate
 libraries in `ReCarbon.app/Contents/Frameworks/` that you can replace with your own builds; their
-complete source is on this page as `ReCarbon-0.0.1-third-party-source.tar.xz` (SHA-256
-`8635a65fbcbdf655fd6238ae0e954231a5be50e5f0aa587db5529debd432dade`, also in its `.sha256`), and
+complete source is on this page as `ReCarbon-0.1.0-third-party-source.tar.xz` (SHA-256
+`a0e805b44a4724acc445e18049ed5662946376c4a94f52d8ef311704cc19e883`, also in its `.sha256`), and
 the steps to replace one are in [Third-party notices](../THIRD_PARTY_NOTICES.md).
-**[GATE G4: ReCarbon's own source for this build: the tag.]**
+ReCarbon's own source for this build is its repository at the tag `v0.1.0`
+(`https://github.com/retronative/recarbon/tree/v0.1.0`).
 
 ReCarbon is not affiliated with or endorsed by Electronic Arts. "Need for Speed" and "Carbon" are
 trademarks of Electronic Arts Inc.

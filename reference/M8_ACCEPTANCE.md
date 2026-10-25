@@ -7,7 +7,12 @@ decision: what wasn't verified by then is listed as a limitation, not as passed.
 **State:** the alpha packaging is validated on the MacBook Air M5 (two release candidates pass
 every automated check; one was installed and played by hand in the main account and in a fresh
 macOS account). **Nothing is published yet.** Publication follows the gates in
-`reference/ALPHA_RELEASE_GATES.md` (G1–G4). M8 stays in progress until the user closes it.
+`reference/ALPHA_RELEASE_GATES.md` (G1–G4, all decided 2026-10-26; the release is v0.1.0).
+M8 stays in progress until the user closes it.
+
+**Commit ids:** the RC folders, their `MANIFEST.json` and `Info.plist` name the commits they were
+built from before the unpublished commits' text was revised on 2026-10-26. The code is the same;
+this record uses the new ids: 755b1c5 is now 282557c, b06e341 is 94750af, f6ce759 is e8eb933.
 
 ## Criteria
 

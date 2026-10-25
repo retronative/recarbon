@@ -3,7 +3,7 @@
 What changed in each ReCarbon version, newest first. The game shows the current version's entry
 once, the first time that version starts (it's built into the game: runtime/CMakeLists.txt).
 
-## v0.0.1
+## v0.1.0
 
 ### What's new
 
