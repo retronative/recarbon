@@ -1,0 +1,400 @@
+---
+// The installation guide: one static page per step (/docs/installation/step-1/ ... step-5/),
+// so it works without JavaScript. Every page links to every step (the progress list), to the
+// previous and next step, and to all steps on one page: docs/installation.md, served at
+// /docs/installation/, which is also the GitHub version of these steps.
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { Aside, Code, LinkButton } from '@astrojs/starlight/components';
+import StepArt from '../../../components/install/StepArt.astro';
+import { installSteps, release, type InstallStep } from '../../../data/release';
+import { url } from '../../../lib/url';
+
+export function getStaticPaths() {
+	return installSteps.map((step, i) => ({ params: { step: step.slug }, props: { i } }));
+}
+
+const { i } = Astro.props as { i: number };
+const step = installSteps[i];
+const n = i + 1;
+const total = installSteps.length;
+const prev = installSteps[i - 1];
+const next = installSteps[i + 1];
+const href = (s: InstallStep) => url(`docs/installation/${s.slug}/`);
+const descriptions = [
+	'Step 1 of 5 of installing ReCarbon: download the app for Apple Silicon Macs.',
+	'Step 2 of 5 of installing ReCarbon: open the disk image and drag ReCarbon to Applications.',
+	'Step 3 of 5 of installing ReCarbon: if macOS blocks it, allow it once in Privacy & Security.',
+	'Step 4 of 5 of installing ReCarbon: choose your own Xbox 360 disc image in its installer.',
+	'Step 5 of 5 of installing ReCarbon: dismiss the Xbox Live message and play.',
+];
+---
+
+<StarlightPage frontmatter={{ title: step.title, description: descriptions[i], tableOfContents: false, prev: false, next: false }}>
+	<nav class="track not-content" aria-label="Installation steps">
+		<p class="count">Step {n} of {total}</p>
+		<ol>
+			{
+				installSteps.map((s, j) => (
+					<li class:list={{ done: j < i, current: j === i }}>
+						<a href={href(s)} aria-current={j === i ? 'step' : undefined}>
+							<span class="num" aria-hidden="true">{j + 1}</span>
+							<span class="name">
+								<span class="sr-only">Step {j + 1}: </span>
+								{s.short}
+							</span>
+						</a>
+					</li>
+				))
+			}
+		</ol>
+	</nav>
+
+	{
+		n === 1 && (
+			<>
+				<p class="lead">Get the ReCarbon app for Apple Silicon Macs (macOS 27 or newer).</p>
+				<div class="cta not-content">
+					<LinkButton href={release.dmg.url} icon="download" iconPlacement="start">
+						Download ReCarbon {release.version}
+					</LinkButton>
+					<p class="file">
+						{release.dmg.name} · from the <a href={release.page}>{release.tag} release</a>
+					</p>
+				</div>
+				<StepArt step={1} dmgName={release.dmg.name} />
+				<p>The file shows macOS's plain disk-image icon. ReCarbon's own icon appears once you open it.</p>
+				<details>
+					<summary>Check the download (optional)</summary>
+					<p>In Terminal, in the folder with the download, run:</p>
+					<Code code={`shasum -a 256 ${release.dmg.name}`} lang="sh" />
+					<p>The code it prints must be:</p>
+					<p>
+						<code class="hash">{release.dmg.sha256}</code>
+					</p>
+					<p>
+						It's also in the release's checksum file, <a href={release.dmg.sha256Url}>{release.dmg.name}.sha256</a>.
+					</p>
+				</details>
+			</>
+		)
+	}
+
+	{
+		n === 2 && (
+			<>
+				<p class="lead">
+					Open <strong>{release.dmg.name}</strong>, then drag <strong>ReCarbon</strong> onto <strong>Applications</strong>.
+				</p>
+				<StepArt step={2} dmgName={release.dmg.name} />
+				<p>Then open ReCarbon from your Applications folder, not from the disk image.</p>
+			</>
+		)
+	}
+
+	{
+		n === 3 && (
+			<>
+				<p class="lead">ReCarbon isn't notarized by Apple, so macOS blocks it the first time. You allow it once.</p>
+				<ol class="substeps">
+					<li>
+						Open <strong>ReCarbon</strong> from Applications. When macOS says it can't verify the app, choose <strong>Done</strong> (or{' '}
+						<strong>OK</strong>), not <strong>Move to Trash</strong>.
+					</li>
+					<li>
+						Open <strong>System Settings &gt; Privacy &amp; Security</strong> and scroll down to <strong>Security</strong>.
+					</li>
+					<li>
+						Next to the message about ReCarbon, choose <strong>Open Anyway</strong>, then confirm with <strong>Open Anyway</strong>{' '}
+						(macOS may ask for your password).
+					</li>
+				</ol>
+				<StepArt step={3} dmgName={release.dmg.name} />
+				<p>
+					From then on, ReCarbon opens normally. <strong>Open Anyway</strong> appears only after a blocked attempt, and for a
+					limited time; the wording varies with the macOS version. Don't see it? See{' '}
+					<a href={url('docs/troubleshooting/#macos-wont-open-recarbon')}>macOS won't open ReCarbon</a>.
+				</p>
+				<Aside type="danger" title="Only for a copy you trust">
+					Allow ReCarbon only if it came from ReCarbon's official release (you can <a href={href(installSteps[0])}>check the download</a>
+					in step 1). Never turn Gatekeeper off, and never remove the download's quarantine attributes.
+				</Aside>
+				<p>ReCarbon opened without a warning? Go on to step 4.</p>
+			</>
+		)
+	}
+
+	{
+		n === 4 && (
+			<>
+				<p class="lead">
+					ReCarbon's installer opens. Choose your own Xbox 360 disc image of <i>Need for Speed: Carbon</i>: an <code>.iso</code>{' '}
+					file or an extracted folder.
+				</p>
+				<StepArt step={4} dmgName={release.dmg.name} />
+				<p>
+					It looks in the usual places, or you browse for your image. It copies and checks about <strong>5.7 GB</strong>, so keep
+					that much space free, then starts the game. Nothing is downloaded.
+				</p>
+				<p class="quiet">
+					ReCarbon includes no game files. This site doesn't explain how to obtain them in any other way, and the project won't help
+					with that.
+				</p>
+			</>
+		)
+	}
+
+	{
+		n === 5 && (
+			<>
+				<p class="lead">
+					At the main menu the game says <strong>"Cannot connect to Xbox Live!"</strong>. Press <kbd>Space</kbd> (<strong>A</strong>{' '}
+					on a controller) to continue. It does this at every launch.
+				</p>
+				<StepArt step={5} dmgName={release.dmg.name} />
+				<h2 id="keys">Keys to start with</h2>
+				<ul class="keys not-content">
+					<li><span><kbd>W</kbd> <kbd>S</kbd></span><span>Throttle, brake</span></li>
+					<li><span><kbd>A</kbd> <kbd>D</kbd></span><span>Steer</span></li>
+					<li><span><kbd>Space</kbd></span><span>Handbrake</span></li>
+					<li><span><kbd>Backspace</kbd></span><span>Nitrous</span></li>
+					<li><span><kbd>F1</kbd></span><span>ReCarbon's Settings (<kbd>Fn</kbd>+<kbd>F1</kbd> on a Mac keyboard)</span></li>
+				</ul>
+				<p>
+					All keys and the controller: <a href={url('docs/controls/')}>Controls</a> and the <a href={url('garage/')}>Garage</a>. This
+					is an early release: playable, but not finished. See <a href={url('docs/known-issues/')}>Known issues</a>.
+				</p>
+			</>
+		)
+	}
+
+	<nav class="pager not-content" aria-label="Previous and next step">
+		{
+			prev ? (
+				<a class="prev" href={href(prev)} rel="prev">
+					<span class="dir">Previous</span>
+					{n - 1}. {prev.title}
+				</a>
+			) : (
+				<a class="prev" href={url('docs/download/')}>
+					<span class="dir">Back</span>
+					Download
+				</a>
+			)
+		}
+		{
+			next && (
+				<a class:list={['next', { primary: n > 1 }]} href={href(next)} rel="next">
+					<span class="dir">Next</span>
+					{n + 1}. {next.title}
+				</a>
+			)
+		}
+	</nav>
+
+	<p class="more">
+		<a href={url('docs/installation/')}>View all steps on one page</a>
+		<span aria-hidden="true">·</span>
+		<a href={url('docs/installation-advanced/')}>Advanced: install from Terminal</a>
+	</p>
+</StarlightPage>
+
+<style>
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
+
+	/* The progress list: every step is a link, the current one is marked (aria-current). */
+	.track {
+		margin-bottom: 1.5rem;
+	}
+	.count {
+		margin: 0 0 0.6rem;
+		font-family: var(--rn-font-mono);
+		font-size: 0.78rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--rn-neon-soft);
+	}
+	.track ol {
+		display: grid;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		gap: 0.35rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.track a {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		min-height: 44px;
+		padding: 0.5rem 0.25rem 0.4rem;
+		border-top: 3px solid var(--sl-color-gray-5);
+		font-size: 0.8rem;
+		line-height: 1.25;
+		text-decoration: none;
+		color: var(--sl-color-gray-3);
+		transition: color var(--rn-fast) var(--rn-ease), border-color var(--rn-fast) var(--rn-ease);
+	}
+	.track .done a {
+		border-top-color: color-mix(in srgb, var(--rn-neon) 55%, var(--sl-color-gray-5));
+		color: var(--sl-color-gray-2);
+	}
+	.track .current a {
+		border-top-color: var(--rn-neon);
+		color: var(--sl-color-white);
+		font-weight: 600;
+	}
+	.track a:hover {
+		color: var(--sl-color-white);
+	}
+	.num {
+		font-family: var(--rn-font-display);
+		font-style: italic;
+		font-weight: 700;
+		font-size: 1.1rem;
+	}
+	.current .num {
+		color: var(--rn-neon);
+	}
+	@media (max-width: 36rem) {
+		/* Narrow screens: numbers only, plus the current step's name. */
+		.track li:not(.current) .name {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip: rect(0 0 0 0);
+			white-space: nowrap;
+		}
+		.track a {
+			align-items: center;
+			text-align: center;
+		}
+		.track .current a {
+			align-items: center;
+		}
+	}
+
+	.lead {
+		font-size: var(--sl-text-lg);
+		color: var(--sl-color-white);
+	}
+	.cta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem 1rem;
+		margin-top: 1.25rem;
+	}
+	.cta :global(.sl-link-button) {
+		font-size: var(--sl-text-lg);
+	}
+	.file {
+		margin: 0;
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-3);
+		overflow-wrap: anywhere;
+	}
+	.hash {
+		overflow-wrap: anywhere;
+	}
+	.substeps li + li {
+		margin-top: 0.5rem;
+	}
+	.quiet {
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-3);
+	}
+
+	.keys {
+		display: grid;
+		gap: 0.5rem;
+		margin: 1rem 0;
+		padding: 0;
+		list-style: none;
+	}
+	.keys li {
+		display: grid;
+		grid-template-columns: 7.5rem 1fr;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.5rem 0.75rem;
+		background: var(--sl-color-gray-6);
+		border-inline-start: 3px solid var(--rn-neon);
+	}
+	.keys kbd {
+		font-family: var(--rn-font-mono);
+		font-size: 0.85em;
+		padding: 0.1em 0.45em;
+		border: 1px solid var(--sl-color-gray-4);
+		border-bottom-width: 2px;
+		border-radius: 3px;
+		background: var(--rn-asphalt);
+	}
+
+	.pager {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: 0.75rem;
+		margin-top: 2.5rem;
+	}
+	.pager a {
+		display: flex;
+		flex-direction: column;
+		flex: 1 1 14rem;
+		gap: 0.15rem;
+		min-height: 44px;
+		padding: 0.75rem 1rem;
+		border: 1px solid var(--sl-color-gray-5);
+		text-decoration: none;
+		color: var(--sl-color-white);
+		font-weight: 600;
+		clip-path: polygon(0 0, calc(100% - var(--rn-cut)) 0, 100% var(--rn-cut), 100% 100%, var(--rn-cut) 100%, 0 calc(100% - var(--rn-cut)));
+		transition: background-color var(--rn-fast) var(--rn-ease);
+	}
+	.pager .next {
+		text-align: end;
+	}
+	.pager a:hover {
+		background: var(--sl-color-gray-6);
+	}
+	.pager .primary {
+		background: var(--sl-color-accent);
+		border-color: var(--sl-color-accent);
+		color: var(--rn-asphalt);
+	}
+	.pager .primary:hover {
+		background: var(--rn-neon-soft);
+	}
+	.pager .primary:focus-visible {
+		outline-color: var(--rn-asphalt);
+	}
+	.dir {
+		font-family: var(--rn-font-mono);
+		font-size: 0.72rem;
+		font-weight: 400;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		opacity: 0.8;
+	}
+	/* clip-path would cut the focus ring off: draw it inside. */
+	.pager a:focus-visible,
+	.track a:focus-visible {
+		outline: 2px solid var(--rn-neon-soft);
+		outline-offset: -4px;
+	}
+	.more {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem 0.75rem;
+		margin-top: 1.5rem;
+		font-size: var(--sl-text-sm);
+	}
+</style>

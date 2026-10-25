@@ -44,6 +44,8 @@ export default defineConfig({
 			// The title text next to it names the link (kept for screen readers when hidden), so the mark is decorative.
 			logo: { src: './src/assets/recarbon-mark.svg', alt: '' },
 			favicon: '/favicon.svg',
+			// Keeps the Installation entry current on every page of the guide.
+			routeMiddleware: './src/starlightRouteData.ts',
 			customCss: ['./src/styles/fonts.css', './src/styles/tokens.css', './src/styles/starlight.css'],
 			components: {
 				Header: './src/components/starlight/Header.astro',
@@ -59,8 +61,10 @@ export default defineConfig({
 					label: 'Start',
 					items: [
 						{ label: 'Overview', slug: 'docs' },
-						{ label: 'Release status', slug: 'docs/download' },
-						{ label: 'Installation', slug: 'docs/installation' },
+						// Site pages (src/pages/docs/): the Download page and the step-by-step installation
+						// guide. docs/installation.md is its all-steps page, /docs/installation/.
+						{ label: 'Download', link: '/docs/download/' },
+						{ label: 'Installation', link: '/docs/installation/step-1/' },
 						{ label: 'Supported hardware', slug: 'docs/hardware' },
 					],
 				},

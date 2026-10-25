@@ -8,8 +8,10 @@ export const collections = {
 	// The repository's docs/, one source for GitHub and the site. Starlight's docsLoader()
 	// only reads src/content/docs/; this is the same glob, from the repository root, so the
 	// ids (and URLs) stay docs/<page>. docs/README.md is the GitHub index, not a page.
+	// docs/download.md is the GitHub version of the site's own Download page
+	// (src/pages/docs/download/).
 	docs: defineCollection({
-		loader: glob({ base: '..', pattern: ['docs/**/[^_]*.{md,mdx}', '!docs/README.md'] }),
+		loader: glob({ base: '..', pattern: ['docs/**/[^_]*.{md,mdx}', '!docs/README.md', '!docs/download.md'] }),
 		schema: docsSchema(),
 	}),
 	// ReCarbon's own license files (COPYING, NOTICE, THIRD_PARTY_NOTICES.md, LICENSES/),

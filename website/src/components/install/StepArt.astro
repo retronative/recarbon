@@ -1,0 +1,234 @@
+---
+// Schematic drawings for the installation guide, one per step, drawn for the site in its
+// palette. They are illustrations, not screenshots: macOS's real windows look different and
+// their wording varies by version, so the drawings use placeholder bars, not copied text.
+interface Props {
+	step: number;
+	dmgName: string;
+}
+const { step, dmgName } = Astro.props;
+const label = [
+	'',
+	`A disk image file, ${dmgName}, with a download arrow above it.`,
+	'A disk image window with the ReCarbon app, and an arrow dragging it onto the Applications folder.',
+	'A sketch of System Settings, Privacy & Security, with the Open Anyway button highlighted.',
+	'A sketch of the installer: a disc, then a progress bar while it copies and checks about 5.7 GB.',
+	'The Space key, which is A on a controller, dismisses the Cannot connect to Xbox Live! message.',
+][step];
+---
+
+<figure class="step-art not-content">
+	<svg viewBox="0 0 320 180" role="img" aria-label={label}>
+		{
+			step === 1 && (
+				<g>
+					<path class="accent-line" d="M160 18v44M144 48l16 16 16-16" />
+					<path class="panel" d="M126 78h52l16 16v66h-68z" />
+					<path class="line" d="M178 78v16h16" />
+					<ellipse class="line" cx="160" cy="124" rx="18" ry="7" />
+					<path class="line" d="M142 124v12c0 4 8 7 18 7s18-3 18-7v-12" />
+					<text class="mono" x="160" y="176" text-anchor="middle">{dmgName}</text>
+				</g>
+			)
+		}
+		{
+			step === 2 && (
+				<g>
+					<rect class="window" x="16" y="20" width="288" height="140" rx="10" />
+					<path class="line" d="M16 44h288" />
+					<circle class="dot" cx="34" cy="32" r="4" />
+					<circle class="dot" cx="48" cy="32" r="4" />
+					<circle class="dot" cx="62" cy="32" r="4" />
+					<rect class="app" x="56" y="66" width="56" height="56" rx="14" />
+					<text class="app-mark" x="84" y="101" text-anchor="middle">Re</text>
+					<text class="label" x="84" y="144" text-anchor="middle">ReCarbon</text>
+					<path class="drag" d="M124 94c30-24 56-24 84 0" />
+					<path class="accent-line" d="M198 82l12 13-17 4" />
+					<path class="folder" d="M212 74h20l6 8h32v40h-58z" />
+					<text class="label" x="241" y="144" text-anchor="middle">Applications</text>
+				</g>
+			)
+		}
+		{
+			step === 3 && (
+				<g>
+					<rect class="window" x="16" y="14" width="288" height="152" rx="10" />
+					<path class="line" d="M96 14v152" />
+					<circle class="dot" cx="32" cy="28" r="4" />
+					<circle class="dot" cx="46" cy="28" r="4" />
+					<circle class="dot" cx="60" cy="28" r="4" />
+					<rect class="bar" x="28" y="48" width="56" height="7" rx="3" />
+					<rect class="bar" x="28" y="64" width="46" height="7" rx="3" />
+					<rect class="bar bar--on" x="24" y="78" width="66" height="16" rx="4" />
+					<rect class="bar" x="28" y="102" width="50" height="7" rx="3" />
+					<text class="title" x="110" y="40">Privacy &amp; Security</text>
+					<text class="label" x="110" y="70">Security</text>
+					<rect class="bar" x="110" y="82" width="120" height="7" rx="3" />
+					<rect class="bar" x="110" y="96" width="90" height="7" rx="3" />
+					<rect class="button" x="196" y="116" width="94" height="26" rx="6" />
+					<text class="button-text" x="243" y="133" text-anchor="middle">Open Anyway</text>
+					<path class="pointer" d="M270 136l0 22 6-6 5 10 4-2-5-10 8 0z" />
+				</g>
+			)
+		}
+		{
+			step === 4 && (
+				<g>
+					<rect class="window" x="16" y="20" width="288" height="140" rx="10" />
+					<circle class="line" cx="74" cy="90" r="34" />
+					<circle class="accent-line" cx="74" cy="90" r="8" />
+					<path class="line" d="M74 66a24 24 0 0 1 24 24" />
+					<text class="label" x="128" y="72">Copying and checking</text>
+					<rect class="track" x="128" y="84" width="152" height="12" rx="6" />
+					<rect class="fill" x="128" y="84" width="96" height="12" rx="6" />
+					<text class="mono" x="128" y="118">about 5.7 GB</text>
+				</g>
+			)
+		}
+		{
+			step === 5 && (
+				<g>
+					<rect class="bubble" x="60" y="18" width="200" height="42" rx="8" />
+					<text class="label" x="160" y="44" text-anchor="middle">Cannot connect to Xbox Live!</text>
+					<path class="line" d="M160 66v18" />
+					<rect class="key" x="40" y="92" width="240" height="56" rx="8" />
+					<path class="key-top" d="M48 96h224v40H48z" />
+					<text class="key-text" x="160" y="122" text-anchor="middle">Space</text>
+					<text class="mono" x="160" y="172" text-anchor="middle">A on a controller</text>
+				</g>
+			)
+		}
+	</svg>
+	<figcaption>Illustration</figcaption>
+</figure>
+
+<style>
+	.step-art {
+		margin: 1.5rem 0;
+		padding: 1rem 1rem 0.5rem;
+		background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--rn-neon) 9%, transparent), transparent 65%), var(--rn-carbon);
+		border: 1px solid var(--rn-graphite);
+		clip-path: polygon(0 0, calc(100% - var(--rn-cut)) 0, 100% var(--rn-cut), 100% 100%, var(--rn-cut) 100%, 0 calc(100% - var(--rn-cut)));
+	}
+	svg {
+		display: block;
+		width: 100%;
+		max-width: 30rem;
+		height: auto;
+		margin-inline: auto;
+		fill: none;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+	figcaption {
+		margin-top: 0.25rem;
+		font-family: var(--rn-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		text-align: end;
+		color: var(--rn-muted);
+	}
+	text {
+		fill: var(--rn-text);
+		stroke: none;
+		font-family: var(--rn-font-body);
+		font-size: 13px;
+	}
+	.title {
+		font-family: var(--rn-font-display);
+		font-weight: 700;
+		font-size: 15px;
+	}
+	.label {
+		fill: #c3cad6;
+	}
+	.mono {
+		font-family: var(--rn-font-mono);
+		font-size: 11px;
+		fill: var(--rn-muted);
+	}
+	.line {
+		stroke: var(--rn-steel);
+		stroke-width: 2;
+	}
+	.accent-line {
+		stroke: var(--rn-neon);
+		stroke-width: 3;
+	}
+	.panel,
+	.window,
+	.bubble {
+		fill: var(--rn-asphalt);
+		stroke: var(--rn-steel);
+		stroke-width: 2;
+	}
+	.dot {
+		fill: var(--rn-graphite);
+	}
+	.app {
+		fill: var(--rn-graphite);
+		stroke: var(--rn-neon);
+		stroke-width: 2;
+	}
+	.app-mark {
+		font-family: var(--rn-font-display);
+		font-style: italic;
+		font-weight: 700;
+		font-size: 22px;
+		fill: var(--rn-neon);
+	}
+	.drag {
+		stroke: var(--rn-neon);
+		stroke-width: 3;
+		stroke-dasharray: 6 7;
+	}
+	.folder {
+		fill: color-mix(in srgb, var(--rn-neon) 14%, var(--rn-carbon));
+		stroke: var(--rn-neon-soft);
+		stroke-width: 2;
+	}
+	.bar {
+		fill: var(--rn-graphite);
+	}
+	.bar--on {
+		fill: color-mix(in srgb, var(--rn-neon) 22%, var(--rn-carbon));
+	}
+	.button {
+		fill: var(--rn-neon);
+		stroke: var(--rn-neon-soft);
+		stroke-width: 4;
+		stroke-opacity: 0.35;
+	}
+	.button-text {
+		fill: var(--rn-asphalt);
+		font-weight: 700;
+		font-size: 12px;
+	}
+	.pointer {
+		fill: var(--rn-text);
+		stroke: var(--rn-asphalt);
+		stroke-width: 1.5;
+	}
+	.track {
+		fill: var(--rn-graphite);
+	}
+	.fill {
+		fill: var(--rn-neon);
+	}
+	.key {
+		fill: #191d24;
+		stroke: #313845;
+		stroke-width: 2;
+	}
+	.key-top {
+		fill: #262c36;
+		stroke: var(--rn-neon);
+		stroke-width: 2;
+	}
+	.key-text {
+		font-family: var(--rn-font-mono);
+		font-size: 16px;
+		font-weight: 600;
+	}
+</style>

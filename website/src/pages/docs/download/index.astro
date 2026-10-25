@@ -1,0 +1,229 @@
+---
+// The Download page, for players: the download, what you need, an optional checksum check, and
+// the way into the installation guide (the one place for the steps). Technical pages are links.
+// docs/download.md is its GitHub version (left out of the docs collection, src/content.config.ts).
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { Code, LinkButton } from '@astrojs/starlight/components';
+import { release } from '../../../data/release';
+import { url } from '../../../lib/url';
+
+const needs = [
+	{ icon: 'chip', text: 'An Apple Silicon Mac' },
+	{ icon: 'screen', text: 'macOS 27 or newer' },
+	{ icon: 'disc', text: 'Your own Xbox 360 disc image' },
+];
+const details = [
+	{ label: 'Known issues', href: url('docs/known-issues/') },
+	{ label: 'Performance', href: url('docs/performance/') },
+	{ label: 'Supported hardware', href: url('docs/hardware/') },
+	{ label: 'Controls', href: url('docs/controls/') },
+	{ label: 'Troubleshooting and bug reports', href: url('docs/troubleshooting/') },
+	{ label: 'Advanced installation', href: url('docs/installation-advanced/') },
+	{ label: 'Licenses', href: url('docs/licenses/') },
+];
+---
+
+<StarlightPage
+	frontmatter={{
+		title: 'Download',
+		description: `Download ReCarbon v${release.version}, an early playable release, for Apple Silicon Macs with macOS 27 or newer. Bring your own disc.`,
+		tableOfContents: false,
+	}}
+>
+	<section class="get not-content" aria-labelledby="get-title">
+		<p class="version">ReCarbon v{release.version}</p>
+		<h2 id="get-title" class="get-title">Need for Speed: Carbon, native on your Mac</h2>
+		<p class="pitch">An unofficial native port of the Xbox 360 game to Apple Silicon Macs.</p>
+		<div class="cta">
+			<LinkButton href={release.dmg.url} icon="download" iconPlacement="start">Download for Apple Silicon</LinkButton>
+			<p class="file">
+				{release.dmg.name} · <a href={release.page}>release page</a>
+			</p>
+		</div>
+		<ul class="needs" aria-label="What you need">
+			{
+				needs.map((n) => (
+					<li>
+						<svg viewBox="0 0 24 24" aria-hidden="true">
+							{n.icon === 'chip' && <path d="M7 7h10v10H7zM10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4" />}
+							{n.icon === 'screen' && <path d="M3 5h18v11H3zM9 20h6M12 16v4" />}
+							{
+								n.icon === 'disc' && (
+									<>
+										<circle cx="12" cy="12" r="9" />
+										<circle cx="12" cy="12" r="2.5" />
+									</>
+								)
+							}
+						</svg>
+						{n.text}
+					</li>
+				))
+			}
+		</ul>
+		<p class="note">
+			<strong>Early release:</strong> playable, but not finished. Read the <a href={url('docs/known-issues/')}>Known issues</a> before you
+			play.
+		</p>
+		<div class="next">
+			<LinkButton href={url('docs/installation/step-1/')} variant="secondary" icon="right-arrow">How to install</LinkButton>
+		</div>
+	</section>
+
+	<details class="check">
+		<summary>Check the download (optional)</summary>
+		<p>In Terminal, in the folder with the download, run:</p>
+		<Code code={`shasum -a 256 ${release.dmg.name}`} lang="sh" />
+		<p>The code it prints must be:</p>
+		<p>
+			<code class="hash">{release.dmg.sha256}</code>
+		</p>
+		<p>
+			It's also in the release's checksum file, <a href={release.dmg.sha256Url}>{release.dmg.name}.sha256</a>.
+		</p>
+	</details>
+
+	<h2 id="details">Details</h2>
+	<ul class="links not-content">
+		{
+			details.map((d) => (
+				<li>
+					<a href={d.href}>{d.label}</a>
+				</li>
+			))
+		}
+	</ul>
+
+	<h2 id="licenses">Licenses and source</h2>
+	<p>
+		ReCarbon is free software under the <a href={url('docs/licenses/')}>GPL-3.0-or-later</a>. The source of its replaceable LGPL
+		libraries (<a href={url('docs/licenses/third-party-notices/')}>third-party notices</a>) is on the{' '}
+		<a href={release.page}>release page</a> as <code>{release.thirdPartySource.name}</code> (SHA-256{' '}
+		<code class="hash">{release.thirdPartySource.sha256}</code>). ReCarbon's own source for this build is the tag{' '}
+		<a href={release.source}>{release.tag}</a>.
+	</p>
+	<p class="quiet">
+		No game files are included. ReCarbon is not affiliated with or endorsed by Electronic Arts. "Need for Speed" and "Carbon" are
+		trademarks of Electronic Arts Inc.
+	</p>
+</StarlightPage>
+
+<style>
+	.get {
+		position: relative;
+		padding: 1.5rem 1.5rem 1.25rem;
+		background:
+			linear-gradient(105deg, color-mix(in srgb, var(--rn-neon) 10%, transparent), transparent 55%),
+			var(--rn-carbon);
+		border-top: 2px solid var(--rn-neon);
+		clip-path: polygon(0 0, calc(100% - var(--rn-cut)) 0, 100% var(--rn-cut), 100% 100%, var(--rn-cut) 100%, 0 calc(100% - var(--rn-cut)));
+	}
+	.version {
+		margin: 0;
+		font-family: var(--rn-font-mono);
+		font-size: 0.78rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--rn-neon-soft);
+	}
+	.get-title {
+		margin: 0.35rem 0 0.25rem;
+		font-family: var(--rn-font-display);
+		font-style: italic;
+		font-size: clamp(1.4rem, 4vw, 1.9rem);
+		line-height: 1.15;
+		color: var(--sl-color-white);
+	}
+	.pitch {
+		margin: 0;
+		color: var(--sl-color-gray-2);
+	}
+	.cta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem 1rem;
+		margin-top: 1.25rem;
+	}
+	.cta :global(.sl-link-button) {
+		font-size: var(--sl-text-lg);
+	}
+	.file {
+		margin: 0;
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-3);
+		overflow-wrap: anywhere;
+	}
+	.needs {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.5rem;
+		margin: 1.25rem 0 0;
+		padding: 0;
+		list-style: none;
+		font-weight: 600;
+		color: var(--sl-color-gray-1);
+	}
+	.needs li {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	.needs svg {
+		width: 20px;
+		height: 20px;
+		fill: none;
+		stroke: var(--rn-neon);
+		stroke-width: 1.7;
+		stroke-linejoin: round;
+	}
+	.note {
+		margin: 1.25rem 0 0;
+		padding: 0.5rem 0.75rem;
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-2);
+		background: color-mix(in srgb, var(--rn-amber) 7%, transparent);
+		border-inline-start: 3px solid var(--rn-amber);
+	}
+
+	.next {
+		margin-top: 1.25rem;
+	}
+	.next :global(.sl-link-button) {
+		font-size: var(--sl-text-lg);
+	}
+	.check {
+		margin-top: 1.5rem;
+	}
+	.links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin: 1rem 0 0;
+		padding: 0;
+		list-style: none;
+	}
+	.links a {
+		display: inline-flex;
+		align-items: center;
+		min-height: 44px;
+		padding: 0.25rem 0.9rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 3px;
+		text-decoration: none;
+		color: var(--sl-color-gray-1);
+		font-size: var(--sl-text-sm);
+		font-weight: 600;
+	}
+	.links a:hover {
+		border-color: var(--rn-neon);
+		color: var(--sl-color-white);
+	}
+	.hash {
+		overflow-wrap: anywhere;
+	}
+	.quiet {
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-3);
+	}
+</style>
