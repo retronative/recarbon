@@ -65,7 +65,7 @@ for f in scripts/setup_tools.sh scripts/survey.sh survey/validate_recomp.py test
   git -C "$REPO" cat-file -e "$SHA:$f" 2> /dev/null || die "$SHORT has no $f: not a commit this script can build"
 done
 for f in share/recarbon-deps.json lib/libSDL3.0.dylib lib/libvulkan.1.dylib lib/cmake/SDL3 lib/cmake/glslang \
-         lib/cmake/SPIRV-Tools ffmpeg-xma/lib/libavcodec.a ffmpeg-xma/lib/libavutil.a \
+         lib/cmake/SPIRV-Tools ffmpeg-xma/lib/libavcodec.dylib ffmpeg-xma/lib/libavutil.dylib \
          ffmpeg-xma/include/libavcodec/avcodec.h; do
   [ -e "$DEPS/$f" ] || die "$DEPS/$f missing: build the release libraries first (scripts/macos/build_deps.sh $DEPS), or set RC_DEPS"
 done

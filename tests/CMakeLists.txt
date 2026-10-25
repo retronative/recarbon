@@ -220,6 +220,9 @@ add_test(NAME release_candidate_test COMMAND Python3::Interpreter ${CMAKE_CURREN
 # scripts/macos/make_app.py's app icon (AppIcon.icns) and dmg volume icon (the custom-icon flag),
 # and check_app.py's checks of both (macOS: sips, iconutil, xattr; no build).
 add_test(NAME app_icon_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/app_icon_test.py)
+# Alpha gate G2: check_app.py's check that FFmpeg and libmspack's LZX decoder are separate dylibs in
+# the app, never linked statically again, on stand-in apps built with clang (macOS; no build).
+add_test(NAME lgpl_dylibs_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/lgpl_dylibs_test.py)
 
 # Not ported from SpeedBreaker v0.1.8 (one line each: why).
 # edge_bars_test, band_filter_test, fade_layers_test: the edge-bar fills and the

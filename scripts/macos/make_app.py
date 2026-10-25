@@ -12,7 +12,11 @@
 #   Contents/MacOS/ReCarbon      the game
 #   Contents/Frameworks/             the libraries it links (SDL3, the Vulkan
 #                                    loader, glslang, SPIRV-Tools, and what
-#                                    they link), named @rpath/<file>, and
+#                                    they link; ReCarbon, gate G2: FFmpeg's
+#                                    libavcodec and libavutil and libmspack's
+#                                    LZX decoder, librecarbon_lzx, the LGPL
+#                                    parts, as separate replaceable files),
+#                                    named @rpath/<file>, and
 #                                    MoltenVK, the Vulkan driver (Homebrew's
 #                                    1.4.2: it runs on macOS 12+; another
 #                                    version only with MOLTENVK_VERSION=<it>)
@@ -35,7 +39,7 @@
 #
 # The macOS the app runs on: the build's deployment target (CMakeLists.txt's
 # default, 15.0, unless the build was configured with another). Every library
-# in the app, and the FFmpeg the game links statically, must be built for it
+# in the app must be built for it
 # or an older macOS; a newer one is refused, with the two ways out:
 #   - the libraries built for it by scripts/macos/build_deps.sh <prefix>, the
 #     build configured with -DCMAKE_PREFIX_PATH=<prefix>
@@ -125,6 +129,16 @@ MOLTENVK_BOTTLE = 'molten-vk 1.4.2 bottle arm64_golden_gate, SHA-256 0de19dbda46
 # Projects compiled into a bundled library that come with their own license:
 # their files go next to the library's (LICENSES/ has them).
 EMBEDDED = {'molten-vk': [('cereal, BSD-3-Clause', 'LICENSES/cereal-BSD-3-Clause.txt', 'cereal-LICENSE.txt')]}
+# ReCarbon (gate G2): the LGPL-2.1 libraries that come from neither a build_deps.sh prefix nor a
+# Homebrew keg: libmspack's LZX decoder, which the game's build makes (runtime/CMakeLists.txt), and
+# in a development build FFmpeg from tools/ffmpeg-xma (scripts/setup_tools.sh). Their license files
+# come from this repository: (file name, project, [(file in the repository, name in licenses/<project>/)]).
+OWN_LIBRARIES = [
+    (r'librecarbon_lzx\.dylib', 'libmspack', [('LICENSES/libmspack-LGPL-2.1.txt', 'COPYING.LIB')]),
+    (r'lib(?:avcodec|avutil)\.\d+\.dylib', 'FFmpeg', [('LICENSES/FFmpeg-LGPL-2.1.txt', 'COPYING.LGPLv2.1')]
+     + [(os.path.join('patches/ffmpeg', f), f) for f in sorted(os.listdir(os.path.join(ROOT, 'patches/ffmpeg')))
+        if f.endswith('.patch')]),
+]
 ICON = os.path.join(ROOT, 'scripts/macos/AppIcon.png')
 ICON_SIZES = (16, 32, 128, 256, 512)  # each at @1x and @2x
 # A folder's Finder info: 32 bytes, its Finder flags the big-endian 16 bits at
@@ -320,10 +334,10 @@ def deps_prefix(path):
 def copy_licenses(resources, libraries):
     """Contents/Resources/licenses: ReCarbon's notices and every bundled
     library's own license files: from the build_deps.sh prefix it was built
-    in (with the project, version, source and SHA-256 it was built from), or
-    from its Homebrew keg. A prefix's projects that the game and the
-    libraries are built with but that aren't a library of their own here
-    (the Vulkan and SPIR-V headers, the FFmpeg the game links statically)
+    in (with the project, version, source and SHA-256 it was built from),
+    from its Homebrew keg, or (OWN_LIBRARIES) from this repository. A
+    prefix's projects that the game and the libraries are built with but
+    that aren't a library of their own here (the Vulkan and SPIR-V headers)
     get their license files too."""
     licenses = os.path.join(resources, 'licenses')
     os.makedirs(licenses)
@@ -401,37 +415,48 @@ def copy_licenses(resources, libraries):
             lines.append(f'  {lib}: {package} {version}, from Homebrew{provenance} '
                          f'({", ".join(sorted(set(found))) or "no license file found"})'
                          + (f'; it includes {", ".join(embedded)}' if embedded else ''))
+        elif own_library(lib):
+            project, files = own_library(lib)
+            for path, name in files:
+                os.makedirs(os.path.join(licenses, project), exist_ok=True)
+                shutil.copy2(os.path.join(ROOT, path), os.path.join(licenses, project, name))
+                found.append(name)
+            lines.append(f'  {lib}: {own_description(lib, src)} (LGPL-2.1); license files in {project}/: {", ".join(found)}')
         else:
             lines.append(f'  {lib}: from {src} (neither a build_deps.sh prefix nor a Homebrew keg)')
         if not found:
             missing.append(lib)
 
     # What the game and those libraries are built with from the same prefixes
-    # (the headers of a prefix that a bundled library came from), and the
-    # FFmpeg the game links statically when it comes from one. A prefix only
-    # FFmpeg came from, as when the libraries are Homebrew's, gives FFmpeg
-    # alone: the game was built with Homebrew's headers then.
+    # (the headers of a prefix that a bundled library came from). (A project
+    # with libraries of its own that aren't in the app isn't in it at all.)
     library_prefixes = {prefix for prefix, _ in used}
-    ffmpeg = cache_value('FFMPEG_XMA')
-    ffmpeg_prefix = deps_prefix(os.path.join(ffmpeg, 'lib/libavcodec.a')) if ffmpeg else None
-    if ffmpeg_prefix:
-        record(ffmpeg_prefix)
-    # (A project with libraries of its own that aren't in the app isn't in it at all.)
     others = [(prefix, project) for prefix in sorted(records) for project, j in records[prefix]['projects'].items()
-              if (prefix, project) not in used
-              and (prefix == ffmpeg_prefix if project == 'FFmpeg'
-                   else not j['libraries'] and prefix in library_prefixes)]
+              if (prefix, project) not in used and not j['libraries'] and prefix in library_prefixes]
     if others:
         lines += ['', 'Built into the game and the libraries above, with their license files here:']
         for prefix, project in others:
             files = copy_project(prefix, project)
-            ffmpeg_here = project == 'FFmpeg'
-            what = 'linked into the game, statically, with ReCarbon\'s patch' if ffmpeg_here else 'headers'
-            lines.append(f'  {describe(prefix, project, built=ffmpeg_here)}: {what}; license files in {project}/: {", ".join(files)}')
+            lines.append(f'  {describe(prefix, project, built=False)}: headers; license files in {project}/: {", ".join(files)}')
     with open(os.path.join(licenses, 'README.txt'), 'w') as f:
         f.write('\n'.join(lines) + '\n')
     if missing:
         raise SystemExit('make_app.py: no license file found for ' + ', '.join(missing))
+
+
+def own_library(lib):
+    """(project, [(file in the repository, name)]) of an OWN_LIBRARIES library, or None."""
+    return next(((project, files) for pattern, project, files in OWN_LIBRARIES if re.fullmatch(pattern, lib)), None)
+
+
+def own_description(lib, src):
+    """What an OWN_LIBRARIES library is built from, for licenses/README.txt."""
+    if lib.startswith('librecarbon_lzx'):
+        mspack = os.path.join(cache_value('CMAKE_HOME_DIRECTORY') or ROOT, 'tools/XenonRecomp/thirdparty/libmspack')
+        rev = subprocess.run(['git', '-C', mspack, 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
+        return (f'libmspack\'s LZX decoder (lzxd.c) at {rev or "an unknown revision"} (https://github.com/kyz/libmspack, '
+                f'XenonRecomp\'s submodule), built with the game as a library of its own, unmodified')
+    return f'FFmpeg (scripts/build_ffmpeg_xma.sh, with patches/ffmpeg), from {os.path.dirname(src)}'
 
 
 def failure(e):
@@ -678,22 +703,13 @@ def main():
         raise SystemExit(f'make_app.py: no {ICON} (swift scripts/macos/make_icon.swift makes it)')
     make_icns(ICON, os.path.join(resources, 'AppIcon.icns'))
 
-    # Every binary here runs on the macOS the plist promises, and so does the
-    # FFmpeg linked into the game (an archive built for a newer macOS links
-    # with only an ld warning).
+    # Every binary here runs on the macOS the plist promises.
     def show(v):
         return '.'.join(map(str, v[:2] if v[2] == 0 else v))
     floor = version_tuple(minimum)
     need = {f: minos(f) for f in [exe] + [os.path.join(frameworks, n) for n in os.listdir(frameworks)]}
     newer = [f'{os.path.basename(f)} ({show(v)}, from {origin[f]})' for f, v in sorted(need.items()) if v > floor]
     newest = max(need.values())
-    ffmpeg = cache_value('FFMPEG_XMA')
-    for a in ('lib/libavcodec.a', 'lib/libavutil.a') if ffmpeg else ():
-        path = os.path.join(ffmpeg, a)
-        found = minos_all(path) if os.path.isfile(path) else []
-        if any(v > floor for v in found):
-            newer.append(f'{os.path.basename(a)} ({show(max(found))}, from {path}, linked into the game)')
-            newest = max(newest, max(found))
     if newer:
         brew = any('/Cellar/' in n or '/opt/homebrew/' in n for n in newer)
         raise SystemExit(

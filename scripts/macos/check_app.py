@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # ReCarbon. GPL-3.0-or-later (see COPYING).
 # From SpeedBreaker's scripts/macos/check_app.py (GPL-3.0-or-later). ReCarbon
-# changes: the names, a check of the bundle ID (org.retronative.recarbon), and of the icon.
+# changes: the names, a check of the bundle ID (org.retronative.recarbon), of the icon, and of the
+# LGPL parts as separate libraries (7).
 #
 # check_app.py <ReCarbon.app | ReCarbon-macos.dmg> [--min-macos=<version>] [--sdk=<path>]
 #              [--same-code-as=<ReCarbon.app | dmg>]
@@ -42,6 +43,11 @@
 #      merges other work, so its game code differs from any earlier build's anyway). That proof is
 #      scripts/macos/check_codegen.py, run on the release's own commit: its code for this macOS against
 #      its code for macOS 26.0, function by function.
+#   7. ReCarbon (alpha gate G2): the LGPL-2.1 parts are separate, replaceable libraries, never inside the
+#      executable: FFmpeg's libavcodec.<major>.dylib and libavutil.<major>.dylib and libmspack's LZX decoder
+#      librecarbon_lzx.dylib are each in Contents/Frameworks, linked by the executable as @rpath/<file>,
+#      and define their own symbols; the executable defines none of theirs (avcodec_*, av_*, avpriv_*,
+#      ff_*, lzxd_*), so a build that links any of them statically again fails.
 # Needs Apple's command line tools (otool, nm, codesign, clang, the macOS SDK).
 import collections, contextlib, hashlib, os, plistlib, re, struct, subprocess, sys, tempfile
 
@@ -285,6 +291,44 @@ def scan_imports(files, minimum, sdk, ok):
     return ok
 
 
+# --- 7: the LGPL parts as separate libraries ----------------------------------------------------------
+# (what, the file in Contents/Frameworks, a symbol it must define and the executable import)
+LGPL_LIBRARIES = [('FFmpeg libavcodec', r'libavcodec\.\d+\.dylib', '_avcodec_send_packet'),
+                  ('FFmpeg libavutil', r'libavutil\.\d+\.dylib', '_av_frame_alloc'),
+                  ('libmspack LZX', r'librecarbon_lzx\.dylib', '_lzxd_decompress')]
+LGPL_SYMBOL = re.compile(r'_(?:avcodec|avutil|avpriv|av|ff|swr|lzxd)_\w')
+
+
+def defined_symbols(path):
+    """The names of the symbols a Mach-O file defines, local ones included."""
+    return run('nm', '-U', '-j', path).split()
+
+
+def lgpl_problems(app, exe):
+    """What fails check 7, as lines (none: the LGPL parts are separate libraries)."""
+    problems = []
+    frameworks = os.path.join(app, 'Contents/Frameworks')
+    present = sorted(os.listdir(frameworks)) if os.path.isdir(frameworks) else []
+    linked = [os.path.basename(l) for l in libraries(exe) if l.startswith('@rpath/')]
+    imported = set(run('nm', '-u', '-j', exe).split())
+    for what, pattern, symbol in LGPL_LIBRARIES:
+        files = [f for f in present if re.fullmatch(pattern, f) and not os.path.islink(os.path.join(frameworks, f))]
+        if len(files) != 1:
+            problems.append(f'{what}: {len(files)} files matching {pattern} in Contents/Frameworks, not 1')
+            continue
+        if files[0] not in linked:
+            problems.append(f'{what}: the executable doesn\'t link @rpath/{files[0]}')
+        if symbol not in defined_symbols(os.path.join(frameworks, files[0])):
+            problems.append(f'{what}: {files[0]} doesn\'t define {symbol}')
+        if symbol not in imported:
+            problems.append(f'{what}: the executable doesn\'t import {symbol}')
+    inside = sorted({s for s in defined_symbols(exe) if LGPL_SYMBOL.match(s)})
+    if inside:
+        problems.append(f'the executable defines {len(inside)} symbols of the LGPL parts (linked statically?): '
+                        + ', '.join(inside[:8]) + (' ...' if len(inside) > 8 else ''))
+    return problems
+
+
 # --- 6: the code ---------------------------------------------------------------------------------------
 def text_section(path):
     """(SHA-256, size, address) of a thin 64-bit Mach-O's __TEXT,__text, or None."""
@@ -432,6 +476,12 @@ def check(app, minimum, sdk):
     print('6. code (__TEXT,__text SHA-256, size, address):')
     for rel, c in sorted(code.items()):
         print(f'   {c[0]}  {c[1]:>10}  0x{c[2]:x}  {rel}' if c else f'   (no __text)  {rel}')
+    lgpl = lgpl_problems(app, exe) if exe in files else [f'no {exe}']
+    print(f'7. the LGPL parts are separate libraries in Contents/Frameworks (libavcodec, libavutil, librecarbon_lzx), '
+          f'none inside the executable: {"ok" if not lgpl else "FAIL"}')
+    for p in lgpl:
+        print(f'   {p}')
+    ok &= not lgpl
     return ok, code
 
 

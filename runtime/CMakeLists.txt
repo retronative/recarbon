@@ -8,12 +8,25 @@ add_library(XenonUtilsLite STATIC
     ${XR}/XenonUtils/image.cpp
     ${XR}/XenonUtils/xex_patcher.cpp
     ${XR}/XenonUtils/memory_mapped_file.cpp
-    ${XR}/thirdparty/libmspack/libmspack/mspack/lzxd.c
     ${XR}/thirdparty/tiny-AES-c/aes.c)
 target_include_directories(XenonUtilsLite PUBLIC ${XR}/XenonUtils ${XR}/thirdparty/simde
     PRIVATE ${XR}/thirdparty/libmspack/libmspack/mspack ${XR}/thirdparty/tiny-AES-c ${XR}/thirdparty/TinySHA1)
 target_compile_definitions(XenonUtilsLite PRIVATE NOMINMAX)
 target_compile_options(XenonUtilsLite PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-include cstdlib>)
+# ReCarbon (alpha gate G2): libmspack's LZX decoder (lzxd.c, LGPL-2.1, from
+# XenonRecomp's submodule) is a library of its own, librecarbon_lzx.dylib,
+# named @rpath/<file>, never compiled into the game: a separate, replaceable
+# file in the app's Contents/Frameworks (LGPL-2.1 section 6), as FFmpeg's
+# libraries below. (iOS: static, linked into the app by Xcode.)
+if(IOS)
+    add_library(recarbon_lzx STATIC ${XR}/thirdparty/libmspack/libmspack/mspack/lzxd.c)
+else()
+    add_library(recarbon_lzx SHARED ${XR}/thirdparty/libmspack/libmspack/mspack/lzxd.c)
+    set_target_properties(recarbon_lzx PROPERTIES INSTALL_NAME_DIR @rpath BUILD_WITH_INSTALL_NAME_DIR ON)
+    target_link_options(recarbon_lzx PRIVATE -Wl,-headerpad_max_install_names)
+endif()
+target_include_directories(recarbon_lzx PRIVATE ${XR}/thirdparty/libmspack/libmspack/mspack)
+target_link_libraries(XenonUtilsLite PUBLIC recarbon_lzx)
 
 file(GLOB_RECURSE RUNTIME_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 list(FILTER RUNTIME_SOURCES EXCLUDE REGEX "/thirdparty/")
@@ -63,13 +76,27 @@ else()
     find_package(Vulkan REQUIRED)
 endif()
 find_package(glslang REQUIRED CONFIG)
-# FFmpeg for XMA audio: the minimal static build that scripts/setup_tools.sh
-# makes in tools/ffmpeg-xma (with patches/ffmpeg applied: no sample hold-back
-# for single-stream XMA, which the game's audio mixer depends on).
+# FFmpeg for XMA audio: the minimal build that scripts/setup_tools.sh makes
+# in tools/ffmpeg-xma (with patches/ffmpeg applied: no sample hold-back for
+# single-stream XMA, which the game's audio mixer depends on). ReCarbon
+# (alpha gate G2): its shared libraries (libavcodec.61.dylib,
+# libavutil.59.dylib, named @rpath/<file>), never the static ones, so the
+# app carries them as separate, replaceable files. A build folder that found
+# the static archives before looks again. (iOS: static, linked by Xcode.)
 set(FFMPEG_XMA ${CMAKE_CURRENT_SOURCE_DIR}/../tools/ffmpeg-xma CACHE PATH "FFmpeg-XMA's install prefix")
+if(IOS)
+    set(_recarbon_ffmpeg_suffix .a)
+else()
+    set(_recarbon_ffmpeg_suffix .dylib)
+    foreach(_lib AVCODEC_LIBRARY AVUTIL_LIBRARY)
+        if(${_lib} MATCHES "\\.a$")
+            unset(${_lib} CACHE)
+        endif()
+    endforeach()
+endif()
 find_path(FFMPEG_INCLUDE_DIR libavcodec/avcodec.h PATHS ${FFMPEG_XMA}/include NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH REQUIRED)
-find_library(AVCODEC_LIBRARY NAMES libavcodec.a PATHS ${FFMPEG_XMA}/lib NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH REQUIRED)
-find_library(AVUTIL_LIBRARY NAMES libavutil.a PATHS ${FFMPEG_XMA}/lib NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH REQUIRED)
+find_library(AVCODEC_LIBRARY NAMES libavcodec${_recarbon_ffmpeg_suffix} PATHS ${FFMPEG_XMA}/lib NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH REQUIRED)
+find_library(AVUTIL_LIBRARY NAMES libavutil${_recarbon_ffmpeg_suffix} PATHS ${FFMPEG_XMA}/lib NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH REQUIRED)
 # Dear ImGui (thirdparty/imgui, vendored): the installer and the settings overlay.
 set(IMGUI ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/imgui)
 add_library(imgui STATIC ${IMGUI}/imgui.cpp ${IMGUI}/imgui_draw.cpp ${IMGUI}/imgui_tables.cpp ${IMGUI}/imgui_widgets.cpp

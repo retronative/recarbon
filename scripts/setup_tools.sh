@@ -69,9 +69,10 @@ if [ $survey_stale = 1 ]; then
   echo "built tools/survey/xexsurvey"
 fi
 
-# FFmpeg for XMA audio: a minimal static libavcodec (XMA1/XMA2/WMAPro
-# decoders only) with patches/ffmpeg applied (scripts/build_ffmpeg_xma.sh).
-# On macOS it is linked into the game, so it is built for the game's
+# FFmpeg for XMA audio: a minimal libavcodec (XMA1/XMA2/WMAPro decoders
+# only) with patches/ffmpeg applied (scripts/build_ffmpeg_xma.sh), as shared
+# libraries (ReCarbon, gate G2: a static tools/ffmpeg-xma of an earlier
+# commit is rebuilt). On macOS the game loads them, so it is built for the game's
 # deployment target. ReCarbon change: that is the same default as
 # CMakeLists.txt's, MACOSX_DEPLOYMENT_TARGET when set, else this Mac's major
 # version (<major>.0, like Homebrew's bottles), not SpeedBreaker's fixed 15.0;
@@ -79,10 +80,10 @@ fi
 FFMPEG_VERSION=7.1.1
 FFMPEG_SHA256=733984395e0dbbe5c046abda2dc49a5544e7e0e1e2366bba849222ae9e3a03b1
 ffmpeg_ok=1
-[ -f "$TOOLS/ffmpeg-xma/lib/libavcodec.a" ] || ffmpeg_ok=0
+[ -f "$TOOLS/ffmpeg-xma/lib/libavcodec.dylib" ] && [ -f "$TOOLS/ffmpeg-xma/lib/libavutil.dylib" ] || ffmpeg_ok=0
 if [ "$(uname -s)" = Darwin ]; then
   export MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-$(sw_vers -productVersion | cut -d. -f1).0}"
-  if [ $ffmpeg_ok = 1 ] && [ "$(otool -l "$TOOLS/ffmpeg-xma/lib/libavcodec.a" "$TOOLS/ffmpeg-xma/lib/libavutil.a" \
+  if [ $ffmpeg_ok = 1 ] && [ "$(otool -l "$TOOLS/ffmpeg-xma/lib/libavcodec.dylib" "$TOOLS/ffmpeg-xma/lib/libavutil.dylib" \
        | awk '/LC_BUILD_VERSION/{b=1} b&&/minos/{print $2; b=0}' | sort -u)" != "$MACOSX_DEPLOYMENT_TARGET" ]; then
     echo "tools/ffmpeg-xma isn't built for macOS $MACOSX_DEPLOYMENT_TARGET: rebuilding it"; ffmpeg_ok=0
   fi

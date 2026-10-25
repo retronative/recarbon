@@ -25,8 +25,10 @@
 #   SPIRV-Tools 1.4.363.0, glslang 16.6.0               shared libraries
 #   Vulkan-Loader 1.4.363.0                             libvulkan.1.dylib
 #   SDL3 3.4.18                                         libSDL3.0.dylib
-#   FFmpeg 7.1.1 (scripts/build_ffmpeg_xma.sh)          <prefix>/ffmpeg-xma,
-#                                                       static, in the game
+#   FFmpeg 7.1.1 (scripts/build_ffmpeg_xma.sh)          <prefix>/ffmpeg-xma:
+#                                                       libavcodec.61.dylib and
+#                                                       libavutil.59.dylib (ReCarbon,
+#                                                       gate G2: shared, not static)
 #
 # (SpeedBreaker:) The same versions v0.1.0 bundled from Homebrew, built the way Homebrew
 # builds them, so they run exactly as fast: its formulas' CMake options,
@@ -63,8 +65,8 @@
 # after the load commands and hashes the file into its LC_UUID, and CMake's
 # install step only deletes such an rpath afterwards, so its length moved
 # libglslang's code and it changed libSPIRV-Tools-opt's UUID on every build.
-# So a rebuild gives the same libraries, byte for byte (every .dylib, and
-# FFmpeg-XMA's archives), whatever the prefix's path and the (temporary) work
+# So a rebuild gives the same libraries, byte for byte (every .dylib, FFmpeg-XMA's
+# included), whatever the prefix's path and the (temporary) work
 # folder's; what differs is only what names the prefix (the .pc files) and
 # the dates in libSDL3_test.a, neither in the app. Every compiler is the one
 # recorded: Apple's clang from xcrun (FFmpeg's configure too, which would
@@ -330,7 +332,7 @@ cp "$ROOT"/patches/ffmpeg/*.patch "$PREFIX/share/licenses/FFmpeg/"
 # The check: every library is arm64 only and built for exactly this macOS.
 minos() { otool -l "$1" | awk '/LC_BUILD_VERSION/{b=1} b&&/minos/{print $2; b=0}' | sort -u; }
 bad=0
-for f in "$PREFIX"/lib/*.dylib "$PREFIX"/ffmpeg-xma/lib/*.a; do
+for f in "$PREFIX"/lib/*.dylib "$PREFIX"/ffmpeg-xma/lib/*.dylib; do
   [ -L "$f" ] && continue
   m="$(minos "$f" | tr '\n' ' ' | sed 's/ $//')"
   a="$(lipo -archs "$f" 2>/dev/null || echo '?')"
@@ -358,7 +360,9 @@ for line in sys.argv[7:]:
         'licenses': sorted(os.path.relpath(os.path.join(d, f), licenses)
                            for d, _, fs in os.walk(licenses) for f in fs),
     }
-projects['FFmpeg']['libraries'] = ['ffmpeg-xma/lib/libavcodec.a', 'ffmpeg-xma/lib/libavutil.a']
+# (ReCarbon: FFmpeg's dylibs, by every name they're installed as, as make_app.py matches them.)
+projects['FFmpeg']['libraries'] = sorted(f for f in os.listdir(os.path.join(prefix, 'ffmpeg-xma/lib'))
+                                         if f.startswith(('libavcodec.', 'libavutil.')) and f.endswith('.dylib'))
 record = {'deployment_target': target, 'architecture': 'arm64', 'compiler': compiler, 'sdk': sdk,
           'tools': {'cmake': cmake, 'ninja': ninja},
           'flags': 'CMake Release with -Os -DNDEBUG (as Homebrew), no -mcpu/-march; FFmpeg: its configure defaults '

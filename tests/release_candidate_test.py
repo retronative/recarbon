@@ -51,7 +51,7 @@ def python311():
     return None
 
 
-# The bundle make_app.py writes (build/app-release's, 2026-10-25, and the icon): the gate's "clean" fixture.
+# The bundle make_app.py writes (build/app-release's, 2026-10-25, the icon, and the LGPL dylibs of gate G2): the gate's "clean" fixture.
 CLEAN_APP = '''Contents/Info.plist
 Contents/_CodeSignature/CodeResources
 Contents/MacOS/ReCarbon
@@ -63,6 +63,9 @@ Contents/Frameworks/libSPIRV-Tools-opt.dylib
 Contents/Frameworks/libvulkan.1.dylib
 Contents/Frameworks/libSPIRV-Tools.dylib
 Contents/Frameworks/libglslang.16.dylib
+Contents/Frameworks/libavcodec.61.dylib
+Contents/Frameworks/libavutil.59.dylib
+Contents/Frameworks/librecarbon_lzx.dylib
 Contents/Resources/AppIcon.icns
 Contents/Resources/licenses/THIRD_PARTY_NOTICES.md
 Contents/Resources/licenses/NOTICE
@@ -71,6 +74,7 @@ Contents/Resources/licenses/README.txt
 Contents/Resources/licenses/FFmpeg/LICENSE.md
 Contents/Resources/licenses/FFmpeg/0001-xma-single-stream-no-holdback.patch
 Contents/Resources/licenses/FFmpeg/COPYING.LGPLv2.1
+Contents/Resources/licenses/libmspack/COPYING.LIB
 Contents/Resources/licenses/LICENSES/GPL-3.0.txt
 Contents/Resources/licenses/LICENSES/XenonRecomp-MIT.md
 Contents/Resources/licenses/SPIRV-Tools/LICENSE
@@ -290,7 +294,7 @@ def preflight_tests(tmp, py):
     deps = os.path.join(tmp, 'deps')
     write(os.path.join(deps, 'share/recarbon-deps.json'), '{\n  "deployment_target": "27.0"\n}\n')
     for rel in ('lib/libSDL3.0.dylib', 'lib/libvulkan.1.dylib', 'lib/cmake/SDL3/x', 'lib/cmake/glslang/x',
-                'lib/cmake/SPIRV-Tools/x', 'ffmpeg-xma/lib/libavcodec.a', 'ffmpeg-xma/lib/libavutil.a',
+                'lib/cmake/SPIRV-Tools/x', 'ffmpeg-xma/lib/libavcodec.dylib', 'ffmpeg-xma/lib/libavutil.dylib',
                 'ffmpeg-xma/include/libavcodec/avcodec.h'):
         write(os.path.join(deps, rel), 'x')
     game = os.path.join(tmp, 'disc')
@@ -316,7 +320,7 @@ def preflight_tests(tmp, py):
 
     nodeps = os.path.join(tmp, 'deps-incomplete')
     shutil.copytree(deps, nodeps)
-    os.remove(os.path.join(nodeps, 'ffmpeg-xma/lib/libavcodec.a'))
+    os.remove(os.path.join(nodeps, 'ffmpeg-xma/lib/libavcodec.dylib'))
     nogame = os.path.join(tmp, 'empty-disc')
     os.makedirs(nogame)
     other_mvk = os.path.join(tmp, 'other-moltenvk.dylib')
@@ -327,7 +331,7 @@ def preflight_tests(tmp, py):
     cases = [
         ('an unknown commit', dict(commit='deadbeef'), 'no such commit'),
         ('a missing deps prefix', dict(RC_DEPS=os.path.join(tmp, 'nowhere')), 'build_deps.sh'),
-        ('an incomplete deps prefix', dict(RC_DEPS=nodeps), 'libavcodec.a missing'),
+        ('an incomplete deps prefix', dict(RC_DEPS=nodeps), 'libavcodec.dylib missing'),
         ('missing game files', dict(RC_GAME=nogame), 'default.xex missing'),
         ('a missing compiler', dict(RC_LLVM=os.path.join(tmp, 'nowhere')), 'clang'),
         ('a missing cmake', dict(PATH=base['PATH'].replace(fake, nocmake)), 'missing cmake'),
