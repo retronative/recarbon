@@ -111,7 +111,7 @@ ninja -C build/main ReCarbon
 ```
 
 Then install the game from your disc image (`build/main/runtime/ReCarbon --install <image.iso>`):
-see [docs/installation.md](docs/installation.md) and [docs/developers.mdx](docs/developers.mdx).
+see [docs/installation-advanced.md](docs/installation-advanced.md) and [docs/developers.mdx](docs/developers.mdx).
 
 To build the unit tests too, configure with `-DRECARBON_TESTS=ON` (needs `scripts/setup_tools.sh`
 first, like the game), then:

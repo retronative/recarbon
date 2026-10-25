@@ -1,0 +1,76 @@
+---
+title: Advanced installation
+description: Check ReCarbon's downloads, install the game from Terminal, the other installer commands, where ReCarbon keeps its files, and how the installer was tested.
+---
+
+For scripts, SSH sessions and troubleshooting. To install ReCarbon the usual way, follow
+[Installation](installation.md).
+
+## Check the downloads
+
+Each file on the [v0.1.0 release](https://github.com/retronative/recarbon/releases/tag/v0.1.0)
+has a `.sha256` file next to it. In Terminal, in the folder with both files:
+
+```sh
+shasum -a 256 -c ReCarbon-0.1.0-macos.dmg.sha256
+```
+
+It must print `ReCarbon-0.1.0-macos.dmg: OK`.
+
+| File | SHA-256 |
+|---|---|
+| `ReCarbon-0.1.0-macos.dmg` | `abc376fb04550842fe4a5a34d4feb75c8c9dd302a8b45db4f590be3018d60d9b` |
+| `ReCarbon-0.1.0-third-party-source.tar.xz` | `a0e805b44a4724acc445e18049ed5662946376c4a94f52d8ef311704cc19e883` |
+
+## Why macOS blocks ReCarbon
+
+ReCarbon is **signed ad hoc**: it isn't signed with an Apple Developer ID or notarized by Apple.
+So the first time you open a downloaded copy, macOS blocks it, and you allow it once
+([Installation](installation.md#3-if-macos-blocks-recarbon)). A build you make yourself on your
+own Mac isn't blocked.
+
+> [!CAUTION]
+> Don't turn Gatekeeper off (`spctl --master-disable`) and don't remove the download's quarantine
+> attribute (`xattr`). Allow only ReCarbon, only once, and only a copy you trust.
+
+## Install the game from Terminal
+
+The first-run installer also works from Terminal:
+
+```sh
+ReCarbon --install <image.iso or extracted folder> [--dest <folder>]
+```
+
+Without `--dest`, the game goes into ReCarbon's data folder:
+`~/Library/Application Support/ReCarbon/game`. Ctrl-C cancels cleanly and removes the partial
+copy. Other commands:
+
+| Command | Does |
+|---|---|
+| `ReCarbon --verify <image or folder>` | Hash-checks every file without copying |
+| `ReCarbon --find-images [folder…]` | Lists disc images in the usual places, or in these folders |
+| `ReCarbon --where` | Prints where the game install was found, and the data folders |
+| `ReCarbon --portable on` / `off` | Keeps the data and the game in ReCarbon's own folder (portable mode), or moves them back |
+
+## Where ReCarbon keeps things
+
+| What | Where |
+|---|---|
+| Settings | `~/Library/Application Support/ReCarbon/settings.toml` |
+| Saves, logs, installed game | `~/Library/Application Support/ReCarbon/` (`logs/`, `game/`) |
+| Caches (shaders, pipelines; safe to delete) | `~/Library/Caches/ReCarbon/` |
+
+## How the installer was tested
+
+The installer copies the files it needs from your disc image and checks each one against a
+manifest of hashes: 78 files, 5.74 GB. Nothing is downloaded.
+
+- In the release-candidate checks on a MacBook Air M5 (2026-10-25), the first-run installer
+  copied and verified the 78 files (5.74 GB) from an ISO in 49–86 seconds, in the main account and
+  on a fresh macOS account, and the game started.
+- In the earlier packaging check (2026-10-23), `--install` took 4 seconds, and when the install
+  folder had moved, the app found the game in the default folder and started.
+- An install on a MacBook Air M1 wasn't tested.
+
+The first race after a fresh install can hitch for a moment (up to about half a second) while
+ReCarbon fills its shader cache; later races are smoother ([Known issues](known-issues.md)).

@@ -1,125 +1,42 @@
 ---
 title: Download
-description: Download ReCarbon v0.1.0, the first playable alpha for Apple Silicon Macs, and install it with your own disc image.
+description: Download ReCarbon v0.1.0, the first playable alpha, for Apple Silicon Macs with macOS 27 or newer. Bring your own disc.
 ---
 
+ReCarbon is an unofficial native port of *Need for Speed: Carbon* (Xbox 360) to Apple Silicon
+Macs.
+
+**[Download ReCarbon v0.1.0 for Apple Silicon](https://github.com/retronative/recarbon/releases/download/v0.1.0/ReCarbon-0.1.0-macos.dmg)**
+(`ReCarbon-0.1.0-macos.dmg`, from the [v0.1.0 release](https://github.com/retronative/recarbon/releases/tag/v0.1.0))
 
 > [!WARNING]
 > **Alpha**
 >
-> ReCarbon v0.1.0 is the first playable alpha: races, career progress and saves work, but it is
-> not finished. Read [Known issues](known-issues.md) before you play.
+> v0.1.0 is the first playable alpha: races, career progress and saves work, but it is not
+> finished. Read [Known issues](known-issues.md) before you play.
 
-## What this is
+## You need
 
-ReCarbon is an unofficial native port of *Need for Speed: Carbon* (Xbox 360) to Apple Silicon
-Macs: the game's own executable, from **your** disc, statically recompiled to arm64 and run on
-SpeedBreaker's runtime with Vulkan on Metal (MoltenVK). This is the **first playable alpha**:
-races, career progress and saves work; it is not finished, and the issues below are known.
+- An **Apple Silicon** Mac with **macOS 27 or newer**.
+- **Your own** Xbox 360 disc of *Need for Speed: Carbon*, as a disc image (`.iso`) or extracted
+  folder. **No game files are included.**
+- About **5.7 GB** free for the game, plus about 70 MB for the app.
 
-**No game files are included.** You install the game from your own disc image.
+## How to install
 
-## What works (measured, and on which Mac)
+1. Download ReCarbon.
+2. Open the dmg and drag ReCarbon to Applications.
+3. If macOS blocks it, allow it once in System Settings > Privacy & Security.
+4. Choose your own disc image in ReCarbon's installer.
+5. Press Space at the "Cannot connect to Xbox Live!" message, and play.
 
-All measurements on a MacBook Air M5 (24 GB, macOS 27.0.1) unless marked M1.
+The details: [Installation](installation.md).
 
-- **Install from your disc image:** the first-run installer copied and verified 78 files
-  (5.74 GB) from an ISO in 49–86 s, then started the game; also on a brand-new macOS user account.
-- **Racing:** full Quick Races driven by hand on the keyboard. A 9.8-minute, 8-lap race averaged
-  50.8 fps with no slowdown over the race; 1st place against 7 AI opponents who all finished.
-  Driving physics feel normal to the tester (equivalence with the Xbox 360 version isn't
-  verified).
-- **Career and saves:** a career race won, with its progress kept after a restart; a new profile
-  created, then found and loaded after a relaunch.
-- **Audio and movies:** music, engine and movies with sound; no audio underruns in the race logs.
-- **Game Mode** turns on in fullscreen.
-- **Clean exit** with Quit Game; no crash, hang report or GPU device loss in any of the release
-  candidate's sessions. More numbers: [Performance](performance.md), [Supported hardware](hardware.md).
-- **MacBook Air M1** (supplementary): three full races finished; they start at about 30 fps and
-  slow down the longer you play (below).
+## More
 
-## Requirements
-
-- An **Apple Silicon** Mac (measured: MacBook Air M5; MacBook Air M1 with lower frame rates).
-- **macOS 27 or newer.**
-- Your own Xbox 360 disc of *Need for Speed: Carbon* as a disc image (`.iso`) or extracted folder.
-- About **5.7 GB** free for the installed game (5.74 GB as Finder counts it), plus the app (about
-  70 MB) and the shader cache.
-
-## Install
-
-1. Download `ReCarbon-0.1.0-macos.dmg` and its `.sha256` from the
-   [v0.1.0 release](https://github.com/retronative/recarbon/releases/tag/v0.1.0), and check it: `shasum -a 256 -c ReCarbon-0.1.0-macos.dmg.sha256`
-   (the expected SHA-256 is `abc376fb04550842fe4a5a34d4feb75c8c9dd302a8b45db4f590be3018d60d9b`). The `.dmg` file shows
-   macOS's generic disk-image icon; ReCarbon's icon appears once it is open.
-2. Open the dmg and drag **ReCarbon** onto **Applications**.
-3. **First launch:** ReCarbon is signed ad hoc and **not notarized**, so macOS blocks it the
-   first time. Open it once, choose **Done**, then go to **System Settings > Privacy & Security**,
-   choose **Open Anyway** next to the message about ReCarbon, and confirm. You do this once. Only
-   do it for a copy whose checksum matches, and never turn Gatekeeper off. Details:
-   [Installation](installation.md#2-install-recarbon-and-open-it-the-first-time).
-4. ReCarbon's installer opens: pick your disc image (or browse for it). It checks the image,
-   copies and verifies the files, then starts the game.
-5. At the main menu the game says **"Cannot connect to Xbox Live!"**: press **A** (**Space** on
-   the keyboard) once to continue. It does this at every launch.
-
-The full steps, the command-line installer and where ReCarbon keeps things are in
-[Installation](installation.md).
-
-## Controls (keyboard, the WASD preset)
-
-| Action | Key |
-|---|---|
-| Throttle / Brake | W / S |
-| Steer | A / D (or Left / Right) |
-| Handbrake (A) | Space |
-| Nitrous (B), on a car that has it | Backspace |
-| Speedbreaker (X) | Left Shift |
-| Change camera (RB) / Look back (LB) | E / Q |
-| Start, Pause / Back | Return / Escape |
-| Menus | Arrow keys, Space to accept, Backspace to go back |
-| ReCarbon's Settings | F1 (Fn+F1) or Cmd+, |
-
-An **Arrows** preset and custom profiles are in Settings > Controls ([Controls](controls.mdx)). A controller is read by
-position (a PlayStation pad's Cross is A), but **no physical controller has been tested**.
-Hand-tested: throttle, brake, steering, camera, handbrake, Speedbreaker and nitrous. Reverse,
-Look Back, Pause and the manual-gearbox gear keys were seen only on a virtual controller.
-
-## Known limitations
-
-The full list, with details: [Known issues](known-issues.md).
-
-
-- Occasional stalls of about **1 s** (the presenter waiting for a drawable while holding the GPU
-  queue lock), and shorter **250–600 ms** GPU-idle stalls with no known cause.
-- The **first race after a fresh install can hitch** (up to about 450 ms) while the shader cache
-  fills; later sessions are much smoother.
-- **MacBook Air M1:** races start at about 30 fps and fall to about 16–22 fps in long races. GPU
-  throttling is suspected, not confirmed. A sustained 30 fps isn't claimed on the M1, and this
-  release wasn't install-tested on an M1.
-- **Memory grows in long sessions:** textures aren't evicted while playing (about 500 MB over 7
-  laps). Restarting clears it. A fix is planned after the alpha.
-- The **Xbox Live notice** needs one press of A (Space) at every launch.
-- **Physical controllers** are untested. Keys not yet tried by hand: Reverse, Look Back, Pause,
-  and the gear keys with a manual gearbox (with an automatic car the tester saw K and ; shift
-  gears, not yet reconciled with the virtual-controller result). Once, the first Backspace press
-  didn't fire the nitrous; why isn't known.
-- The **Arrows preset** wasn't driven by hand, and a custom profile surviving a restart was
-  checked by scripts only.
-- **Non-Latin keyboard layouts** (e.g. Myanmar): Settings > Controls shows letter keys as "?".
-  Gameplay input is unaffected.
-- **Movies:** correct speed, uneven frame pacing.
-- **Physics** equivalence with the Xbox 360 version isn't verified.
-- Game Mode was verified in the tester's main account, not captured on the fresh account.
-- **macOS 27 or newer** only; render scaling and widescreen options are not in this alpha.
-
-## Reporting a problem
-
-Open Settings (F1), **Advanced > Save Bug Report** ([Troubleshooting](troubleshooting.md)): it writes one `.zip` to your Desktop (logs,
-crash or hang reports, version, system summary, settings, a screenshot); nothing is sent
-anywhere. Open an issue at `https://github.com/retronative/recarbon/issues` with what you did,
-what happened, your Mac and macOS version, and attach the `.zip` if you are comfortable sharing
-it. Never attach game files.
+[Performance](performance.md) · [Supported hardware](hardware.md) ·
+[Known issues](known-issues.md) · [Controls](controls.mdx) ·
+[Troubleshooting and bug reports](troubleshooting.md)
 
 ## Licenses and source
 
@@ -127,14 +44,14 @@ ReCarbon is free software under the GPL-3.0-or-later; the app carries every comp
 and license text in `ReCarbon.app/Contents/Resources/licenses/` ([License](../COPYING),
 [Notices](../NOTICE), [Third-party notices](../THIRD_PARTY_NOTICES.md)).
 
-**Source.** FFmpeg's libavcodec and libavutil and libmspack's LZX decoder (LGPL-2.1) are separate
-libraries in `ReCarbon.app/Contents/Frameworks/` that you can replace with your own builds; their
-complete source is on this page as `ReCarbon-0.1.0-third-party-source.tar.xz` (SHA-256
+FFmpeg's libavcodec and libavutil and libmspack's LZX decoder (LGPL-2.1) are separate libraries
+in `ReCarbon.app/Contents/Frameworks/` that you can replace with your own builds; their complete
+source is on the [release page](https://github.com/retronative/recarbon/releases/tag/v0.1.0) as
+`ReCarbon-0.1.0-third-party-source.tar.xz` (SHA-256
 `a0e805b44a4724acc445e18049ed5662946376c4a94f52d8ef311704cc19e883`, also in its `.sha256`), and
-the steps to replace one are in [Third-party notices](../THIRD_PARTY_NOTICES.md).
-ReCarbon's own source for this build is its repository at the tag `v0.1.0`
-(`https://github.com/retronative/recarbon/tree/v0.1.0`).
+the steps to replace one are in [Third-party notices](../THIRD_PARTY_NOTICES.md). ReCarbon's own
+source for this build is its repository at the tag
+[`v0.1.0`](https://github.com/retronative/recarbon/tree/v0.1.0).
 
 ReCarbon is not affiliated with or endorsed by Electronic Arts. "Need for Speed" and "Carbon" are
 trademarks of Electronic Arts Inc.
-

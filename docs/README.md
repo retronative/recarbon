@@ -5,8 +5,8 @@ The player documentation for ReCarbon. The same files build the website's docume
 
 **Start**
 - [Overview](index.md)
-- [Download](download.md): ReCarbon v0.1.0, requirements and install
-- [Installation](installation.md)
+- [Download](download.md): ReCarbon v0.1.0 and what you need
+- [Installation](installation.md): the five steps
 - [Supported hardware](hardware.md)
 
 **Play**
@@ -20,6 +20,7 @@ The player documentation for ReCarbon. The same files build the website's docume
 - [FAQ](faq.md)
 
 **Project**
+- [Advanced installation](installation-advanced.md): the Terminal installer, file locations
 - [Developers](developers.mdx)
 - [Credits](credits.md)
 - License: ReCarbon is GPL-3.0-or-later ([COPYING](../COPYING), [NOTICE](../NOTICE),

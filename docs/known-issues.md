@@ -18,7 +18,27 @@ checks (M8, 2026-10-26). Each is still open.
 | Key labels on a non-Latin keyboard layout | Under Myanmar or another non-Latin layout, Settings > Controls shows letter keys as '?', because the menu's font lacks the script. Binding such a key is refused safely and nothing is saved. Gameplay input is unaffected. |
 | "Cannot connect to Xbox Live!" at every launch | Once per launch, on first entering the main menu, the game shows this notice because Xbox Live isn't available. Accept it with **A** (**Space** on the keyboard) to continue; nothing is lost. ReCarbon doesn't dismiss it for you: it can't yet tell reliably when this notice is the one on screen, and it won't press buttons blindly. |
 | macOS 27 or newer only | Current builds link libraries built for macOS 27.0. |
+| No render scaling or widescreen options | Render scaling and widescreen options are not in this alpha. |
 | Movie frame pacing | Movies play at the right speed, but 20–28% of frames show for 1 or 3 refreshes instead of 2. Smoothing is deferred to polish. |
+
+## Tested for v0.1.0
+
+All on a MacBook Air M5 (24 GB, macOS 27.0.1) unless marked M1.
+
+- **Install from your disc image:** the first-run installer copied and verified 78 files
+  (5.74 GB) from an ISO in 49–86 s, then started the game; also on a brand-new macOS user account.
+- **Racing:** full Quick Races driven by hand on the keyboard. A 9.8-minute, 8-lap race averaged
+  50.8 fps with no slowdown over the race; 1st place against 7 AI opponents who all finished.
+  Driving physics feel normal to the tester (equivalence with the Xbox 360 version isn't
+  verified).
+- **Career and saves:** a career race won, with its progress kept after a restart; a new profile
+  created, then found and loaded after a relaunch.
+- **Audio and movies:** music, engine and movies with sound; no audio underruns in the race logs.
+- **Game Mode** turns on in fullscreen.
+- **Clean exit** with Quit Game; no crash, hang report or GPU device loss in any of the release
+  candidate's sessions. More numbers: [Performance](performance.md), [Supported hardware](hardware.md).
+- **MacBook Air M1** (supplementary): three full races finished; they start at about 30 fps and
+  slow down the longer you play (above).
 
 ## Still to be tested
 

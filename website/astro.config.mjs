@@ -83,6 +83,7 @@ export default defineConfig({
 				{
 					label: 'Project',
 					items: [
+						{ label: 'Advanced installation', slug: 'docs/installation-advanced' },
 						{ label: 'Developers', slug: 'docs/developers' },
 						{ label: 'Credits', slug: 'docs/credits' },
 						{

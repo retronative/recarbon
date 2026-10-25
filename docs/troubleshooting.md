@@ -11,14 +11,14 @@ description: Where ReCarbon's logs are, how to save a bug report, and what to ch
 ## macOS won't open ReCarbon
 
 ReCarbon isn't notarized, so macOS blocks a downloaded copy the first time. The steps are in
-[Installation](installation.md#2-install-recarbon-and-open-it-the-first-time). If they don't work:
+[Installation](installation.md#3-if-macos-blocks-recarbon). If they don't work:
 
 - **No "Open Anyway" button:** it appears only after you try to open ReCarbon and macOS blocks it.
   Open ReCarbon from Applications again, choose **Done**, then go straight to **System Settings >
   Privacy & Security** and scroll down to **Security**.
 - **"ReCarbon is damaged and can't be opened":** the download is incomplete or changed. Delete it,
-  download it again from the GitHub release, and check it:
-  `shasum -a 256 -c ReCarbon-0.1.0-macos.dmg.sha256` must print `ReCarbon-0.1.0-macos.dmg: OK`.
+  download it again from the GitHub release, and
+  [check it](installation.md#check-the-download-optional).
 - **Nothing happens, or the button doesn't stay:** quit System Settings, open ReCarbon again from
   Applications (not from inside the disc image), and repeat.
 - **A managed Mac** (work or school) may not allow apps that aren't notarized at all.
@@ -39,6 +39,12 @@ Open Settings (**F1**, **Fn+F1** or **Cmd+,**, or View + Menu on a controller), 
 Home-folder paths inside it read `~`. **Nothing is ever sent anywhere**: you choose whether to
 share the file.
 
+## Report a problem
+
+Open an issue at [github.com/retronative/recarbon/issues](https://github.com/retronative/recarbon/issues)
+with what you did, what happened, your Mac and macOS version, and attach the bug report's `.zip`
+if you are comfortable sharing it. Never attach game files.
+
 ## Logs
 
 Every session writes a log to `~/Library/Application Support/ReCarbon/logs/`, named by date and
@@ -53,7 +59,7 @@ time. The newest five sessions are kept.
 Run `ReCarbon --where` in Terminal: it prints where the game install was found and the data
 folders. If you moved the install, ReCarbon looks in the default folder,
 `~/Library/Application Support/ReCarbon/game`. To check an image or a folder without copying it:
-`ReCarbon --verify <image or folder>`. See [Installation](installation.md).
+`ReCarbon --verify <image or folder>`. See [Advanced installation](installation-advanced.md).
 
 ## Stutters
 

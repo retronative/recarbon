@@ -1,101 +1,75 @@
 ---
 title: Installation
-description: Install Need for Speed Carbon into ReCarbon from your own Xbox 360 disc image, with the first-run installer or the command line.
+description: Install ReCarbon in five steps. Download it, drag it to Applications, allow it once, choose your own disc image, and play.
 ---
 
-ReCarbon installs the game **from your own disc image**: it copies the files it needs and checks
-each one against a manifest of hashes. Nothing is downloaded.
+You need an Apple Silicon Mac with **macOS 27 or newer**, and an image of **your own** Xbox 360
+disc of *Need for Speed: Carbon*.
 
 > [!WARNING]
 > **Alpha**
 >
-> These steps install ReCarbon v0.1.0 ([Download](download.md)). A clean install from a disc image on a fresh macOS user account was tested on a MacBook
-> Air M5 (M8); an install on a MacBook Air M1 wasn't tested.
+> ReCarbon v0.1.0 is playable, but not finished: see [Known issues](known-issues.md).
 
-## 1. Make a disc image
+## 1. Download ReCarbon
 
-Make an image (`.iso`) of **your own** Xbox 360 disc of *Need for Speed: Carbon*, or extract it to a
-folder. This site doesn't explain how to obtain game files in any other way, and the project won't
-help with that.
+Download [`ReCarbon-0.1.0-macos.dmg`](https://github.com/retronative/recarbon/releases/download/v0.1.0/ReCarbon-0.1.0-macos.dmg)
+from the [v0.1.0 release](https://github.com/retronative/recarbon/releases/tag/v0.1.0). The file
+shows macOS's generic disk-image icon; ReCarbon's own icon appears once it is open.
 
-## 2. Install ReCarbon and open it the first time
+## 2. Drag ReCarbon to Applications
 
-ReCarbon is **signed ad hoc**: it isn't signed with an Apple Developer ID or notarized by Apple.
-So the first time you open a downloaded copy, macOS blocks it. You allow it once:
+Open the dmg and drag **ReCarbon** onto **Applications**.
 
-1. **Check the download.** Proceed only with a copy from ReCarbon's GitHub release whose checksum
-   matches. In Terminal, in the folder with the download:
-   `shasum -a 256 -c ReCarbon-0.1.0-macos.dmg.sha256` must print `ReCarbon-0.1.0-macos.dmg: OK`.
-2. Open `ReCarbon-0.1.0-macos.dmg` and drag **ReCarbon** onto **Applications**.
-3. Open **ReCarbon** from Applications. macOS says it can't verify the app (the wording varies with
-   the macOS version). Choose **Done** or **OK**, not **Move to Trash**.
-4. Open **System Settings > Privacy & Security** and scroll down to **Security**. Next to the
-   message about ReCarbon, choose **Open Anyway**.
-5. Confirm with **Open Anyway** (macOS may ask for your password). ReCarbon starts, and from then on
-   it opens normally.
+## 3. If macOS blocks ReCarbon
 
-**Open Anyway** appears only after a blocked attempt to open the app, and for a limited time. If you
-don't see it, see [Troubleshooting](troubleshooting.md#macos-wont-open-recarbon).
+ReCarbon isn't notarized by Apple, so macOS blocks it the first time. You allow it once:
+
+1. Open **ReCarbon** from Applications. When macOS says it can't verify the app, choose **Done**
+   (or **OK**), not **Move to Trash**.
+2. Open **System Settings > Privacy & Security** and scroll down to **Security**.
+3. Next to the message about ReCarbon, choose **Open Anyway**, then confirm with **Open Anyway**
+   (macOS may ask for your password).
+
+From then on, ReCarbon opens normally. **Open Anyway** appears only after a blocked attempt, and
+for a limited time; the wording varies with the macOS version. Don't see it? See
+[macOS won't open ReCarbon](troubleshooting.md#macos-wont-open-recarbon).
 
 > [!CAUTION]
-> Don't turn Gatekeeper off (`spctl --master-disable`) and don't remove the download's quarantine
-> attribute (`xattr`). Allow only ReCarbon, only once, and only a copy you trust.
+> Do this only for a copy you trust: one from ReCarbon's official release (you can
+> [check the download](#check-the-download-optional)). Never turn Gatekeeper off, and never remove
+> the download's quarantine attributes.
 
-A build you make yourself on your own Mac isn't blocked.
+## 4. Choose your disc image
 
-## 3. Install the game
+ReCarbon's installer opens. Choose your own disc image (`.iso`) or extracted folder: it looks in
+the usual places, or you browse for it. It copies and checks about **5.7 GB**, then starts the
+game. Nothing is downloaded.
 
-### With the first-run installer
-
-Start ReCarbon (step 2). If no installed game is found, the installer screen opens:
-
-1. It looks for disc images in the usual places, or you browse for yours.
-2. It checks the image.
-3. It copies and verifies the files, with progress: 78 files, 5.74 GB.
-4. Then the game starts.
-
-### From the command line
-
-The same installer works from Terminal, for scripts and SSH sessions:
-
-```sh
-ReCarbon --install <image.iso or extracted folder> [--dest <folder>]
-```
-
-Without `--dest`, the game goes into ReCarbon's data folder:
-`~/Library/Application Support/ReCarbon/game`. Ctrl-C cancels cleanly and removes the partial
-copy. Other commands:
-
-| Command | Does |
-|---|---|
-| `ReCarbon --verify <image or folder>` | Hash-checks every file without copying |
-| `ReCarbon --find-images [folder…]` | Lists disc images in the usual places, or in these folders |
-| `ReCarbon --where` | Prints where the game install was found, and the data folders |
-| `ReCarbon --portable on` / `off` | Keeps the data and the game in ReCarbon's own folder (portable mode), or moves them back |
-
-In the release-candidate checks on a MacBook Air M5 (2026-10-25), the first-run installer copied
-and verified the 78 files (5.74 GB) from an ISO in 49–86 seconds, in the main account and on a
-fresh macOS account, and the game started. In the earlier packaging check (2026-10-23),
-`--install` took 4 seconds, and when the install folder had moved, the app found the game in the
-default folder and started.
-
-## 4. First launch
-
-At the main menu, the game shows **"Cannot connect to Xbox Live!"** at every launch: press **A**
-(**Space** on the keyboard) to continue ([Known issues](known-issues.md)).
-
-The first race after a fresh install can hitch for a moment (up to about half a second) while
-ReCarbon fills its shader cache; later races are smoother.
+This site doesn't explain how to obtain game files in any other way, and the project won't help
+with that.
 
 ## 5. Play
 
-Start ReCarbon. Press **F1** (Fn+F1 on a Mac keyboard, or Cmd+,) for ReCarbon's Settings at any
-time; see [Controls](controls.mdx) and the [Garage](https://retronative.github.io/recarbon/garage/).
+At the main menu the game says **"Cannot connect to Xbox Live!"**: press **Space** (**A** on a
+controller) to continue. It does this at every launch.
 
-## Where ReCarbon keeps things
+Drive with **W** / **S** (throttle, brake) and **A** / **D** (steer). **Space** is the
+handbrake, **Backspace** the nitrous, and **F1** (Fn+F1) opens ReCarbon's Settings. All keys:
+[Controls](controls.mdx).
 
-| What | Where |
-|---|---|
-| Settings | `~/Library/Application Support/ReCarbon/settings.toml` |
-| Saves, logs, installed game | `~/Library/Application Support/ReCarbon/` (`logs/`, `game/`) |
-| Caches (shaders, pipelines; safe to delete) | `~/Library/Caches/ReCarbon/` |
+## Check the download (optional)
+
+In Terminal, in the folder with the download:
+
+```sh
+shasum -a 256 ReCarbon-0.1.0-macos.dmg
+```
+
+The code it prints must be
+`abc376fb04550842fe4a5a34d4feb75c8c9dd302a8b45db4f590be3018d60d9b`.
+
+## Advanced
+
+Installing from Terminal, the installer's other commands, and where ReCarbon keeps its files:
+[Advanced installation](installation-advanced.md).
