@@ -15,8 +15,8 @@ Read [Known issues](known-issues.md) before you play.
 ## You need
 
 - An **Apple Silicon** Mac with **macOS 27 or newer**.
-- **Your own** Xbox 360 disc of *Need for Speed: Carbon*, as a disc image (`.iso`) or extracted
-  folder. **No game files are included.**
+- ***Need for Speed: Carbon* (USA), Xbox 360:** your own disc image (`.iso`) or extracted
+  folder. **No game files are included.** Other versions won't work (PC, PlayStation, Wii, original Xbox, other regions or versions): only the USA Xbox 360 edition has been checked.
 - About **5.7 GB** free for the game, plus about 70 MB for the app.
 
 **[How to install →](installation.md)**

@@ -3,8 +3,8 @@ title: Installation
 description: Install ReCarbon in five steps. Download it, drag it to Applications, allow it once, choose your own disc image, and play.
 ---
 
-You need an Apple Silicon Mac with **macOS 27 or newer**, and an image of **your own** Xbox 360
-disc of *Need for Speed: Carbon*. One step at a time, with pictures: the
+You need an Apple Silicon Mac with **macOS 27 or newer**, and **your own** disc image of
+***Need for Speed: Carbon* (USA), Xbox 360**. One step at a time, with pictures: the
 [step-by-step guide](https://retronative.github.io/recarbon/docs/installation/step-1/).
 
 ReCarbon v0.1.0 is an early release: playable, but not finished. See [Known issues](known-issues.md).
@@ -40,8 +40,11 @@ for a limited time; the wording varies with the macOS version. Don't see it? See
 
 ## 4. Choose your disc image
 
-ReCarbon's installer opens. Choose your own disc image (`.iso`) or extracted folder: it looks in
-the usual places, or you browse for it. It copies and checks about **5.7 GB**, then starts the
+ReCarbon's installer opens. Choose your own disc image of ***Need for Speed: Carbon* (USA), Xbox
+360** (`.iso`) or its extracted folder: it looks in the usual places, or you browse for it.
+Other versions won't work (PC, PlayStation, Wii, original Xbox, other regions or versions): only the USA Xbox 360 edition has been checked.
+
+The installer copies and checks about **5.7 GB**, then starts the
 game. Nothing is downloaded.
 
 This site doesn't explain how to obtain game files in any other way, and the project won't help

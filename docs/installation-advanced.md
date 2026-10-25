@@ -62,8 +62,8 @@ copy. Other commands:
 
 ## How the installer was tested
 
-The installer copies the files it needs from your disc image and checks each one against a
-manifest of hashes: 78 files, 5.74 GB. Nothing is downloaded.
+The installer copies the files it needs from your disc image and checks each one against the
+file list of the USA Xbox 360 edition (a manifest of hashes): 78 files, 5.74 GB. Nothing is downloaded.
 
 - In the release-candidate checks on a MacBook Air M5 (2026-10-25), the first-run installer
   copied and verified the 78 files (5.74 GB) from an ISO in 49–86 seconds, in the main account and
