@@ -31,6 +31,9 @@ nothing to download.
 - Your own Xbox 360 disc of *Need for Speed: Carbon*, as a disc image (`.iso`) or an extracted
   folder.
 - About 5.7 GB of disk space for the installed game (78 files, 5.74 GB as Finder counts it).
+- To allow it once at its first launch: ReCarbon isn't notarized by Apple, so macOS blocks a
+  downloaded copy until you choose **Open Anyway** in **System Settings > Privacy & Security**.
+  Check the download's checksum first. Steps: [Installation](installation.md#2-install-recarbon-and-open-it-the-first-time).
 
 ## Developer builds
 

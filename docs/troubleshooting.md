@@ -8,6 +8,23 @@ description: Where ReCarbon's logs are, how to save a bug report, and what to ch
 >
 > This page grows with the alpha. Problems already known are on [Known issues](known-issues.md).
 
+## macOS won't open ReCarbon
+
+ReCarbon isn't notarized, so macOS blocks a downloaded copy the first time. The steps are in
+[Installation](installation.md#2-install-recarbon-and-open-it-the-first-time). If they don't work:
+
+- **No "Open Anyway" button:** it appears only after you try to open ReCarbon and macOS blocks it.
+  Open ReCarbon from Applications again, choose **Done**, then go straight to **System Settings >
+  Privacy & Security** and scroll down to **Security**.
+- **"ReCarbon is damaged and can't be opened":** the download is incomplete or changed. Delete it,
+  download it again from the GitHub release, and check its checksum.
+- **Nothing happens, or the button doesn't stay:** quit System Settings, open ReCarbon again from
+  Applications (not from inside the disc image), and repeat.
+- **A managed Mac** (work or school) may not allow apps that aren't notarized at all.
+- ReCarbon needs **macOS 27** or newer on an Apple Silicon Mac.
+
+Don't turn Gatekeeper off and don't remove quarantine attributes to get around this.
+
 ## Save a bug report
 
 Open Settings (**F1**, **Fn+F1** or **Cmd+,**, or View + Menu on a controller), go to

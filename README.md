@@ -56,6 +56,14 @@ See [reference/FEASIBILITY.md](reference/FEASIBILITY.md) and
 | App / executable | `ReCarbon.app` (`scripts/macos/make_app.py`; a build against `scripts/macos/build_deps.sh`'s libraries passes `check_app`; no release published) / `ReCarbon` |
 | Bundle ID | `org.retronative.recarbon` |
 
+## Installing
+
+ReCarbon is signed ad hoc and not notarized, so macOS blocks a downloaded copy the first time you
+open it. After a blocked attempt, choose **System Settings > Privacy & Security > Open Anyway** and
+confirm, once, and only for a copy whose checksum you've verified. Never turn Gatekeeper off. The
+full steps, including installing the game from your own disc image, are in
+[docs/installation.md](docs/installation.md).
+
 ## How it works
 
 ReCarbon is a static recompilation, not an emulator. XenonRecomp translates the
