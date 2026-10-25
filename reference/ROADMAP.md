@@ -209,7 +209,18 @@ Diagnosing a failure is progress. It does not pass a criterion.
   in the front end, and the intro movie's frame times in the log. Navigate by hand with a pad (deferred)
   and with the keyboard, scripted with `RECARBON_INPUT_SCRIPT` where possible.
 
-## M6 — First boot to free-roam / race load *(Open until M6.6 is done)*
+## M6 — First boot to free-roam / race load *(Accepted for the alpha 2026-10-26, by the user's decision: M6.6 closed on the fresh-account sessions, with open non-blocking limitations)*
+- **Status decision** (user, 2026-10-26): M6 is closed for the alpha. M6.6, the written
+  new-profile route, is accepted on the M8.4 fresh-account sessions (reference/M6_ACCEPTANCE.md).
+  These stay open and are **not** recorded as passed:
+  - free-roam in the same session as the new-profile route: not done. Free-roam stability rests
+    on M6.5 (hand test 3: 15 minutes, by the user, clean);
+  - the route's save hash: none was taken between the two sessions. Its presence and size are
+    recorded, and the relaunch found and opened it;
+  - Carbon's frame-time equivalent (the second half of the render-queue Do item): not found.
+    The render-queue fences are in (540970f).
+
+  The acceptance criteria below are unchanged.
 Input as in M5: SpeedBreaker's keyboard rebinding and `[keys]` keep working. No new
 customization.
 - **Do:**
@@ -233,13 +244,15 @@ customization.
     the prologue chase. The log shows no crash, hang report, strict stub or watchdog report, and
     a clean exit. Before that, the render-queue race was fixed (f4cf407), and two 16-minute
     soaks ran clean.
-  - Each criterion has evidence. M6 stays open until M6.6, the written new-profile route
+  - Each criterion has evidence. M6 stayed open until M6.6, the written new-profile route
     (user decision, 2026-10-23).
-  - **For the user's decision (2026-10-26):** the M8.4 sessions on a fresh macOS account
-    created a new profile save (`ALIAS_ABO`), loaded and drove a race, quit, and after a
-    relaunch found and opened the same save, with no watchdog hang report
-    (`reference/M8_ACCEPTANCE.md`). Whether that closes M6.6, and M6, is the user's call; M6
-    stays open until then.
+  - **M6.6 accepted for the alpha** (user decision, 2026-10-26): the M8.4 sessions on a fresh
+    macOS account (RC 282557c, 755b1c5 in the logs) installed the game from the ISO, created a
+    new profile save (`ALIAS_ABO`, 102.0 s), loaded and drove a race, and quit with Quit Game.
+    After a relaunch the game found and opened the same save, loaded a race again and exited
+    cleanly. The save is 286,764 B. Neither session has a watchdog hang report, strict stub,
+    device loss or crash; the only watchdog line is a 2.5 s "without a new frame" loading notice
+    right after the install. Free-roam wasn't in that route (above).
 
 ## M7 — Playable racing *(Accepted for the alpha 2026-10-25, by the user's decision: M7.1–M7.7 completed under the alpha criteria, with deferred limitations)*
 - **Status decision** (user, 2026-10-25): M7 is closed for the alpha. M7.1–M7.7 are completed
@@ -325,9 +338,9 @@ customization. The controls criterion is judged on the default mappings.
   - Physical controller: Deferred — not verified (not an alpha gate, user decision 2026-10-23). The
     virtual-controller and hot-unplug tests pass, but they don't show physical compatibility.
   - Release packaging: resolved for a build against `scripts/macos/build_deps.sh`'s libraries,
-    which `check_app` passes (M8, d780e34). Development builds still link Homebrew's libraries,
-    and no release is published (the LGPL source offer is needed before any binary is
-    distributed).
+    which `check_app` passes (M8, d780e34). Development builds still link Homebrew's libraries.
+    v0.1.0 (2026-10-26) is built against `build_deps.sh`'s libraries and carries the LGPL
+    source offer.
   - Key labels on a non-English keyboard layout: under Myanmar (or another non-Latin layout)
     Settings > Controls draws letter keys as '?' (U+FFFD), because the menu's font lacks the
     script. Binding such a key is refused safely and nothing is saved (verified, 4a68b32), but
@@ -360,31 +373,42 @@ customization. The controls criterion is judged on the default mappings.
     game's maximum) at 50.8 fps, with no second under 30 fps outside a 3 s Space switch the tester
     caused, and no degradation over the race (reference/M7_ACCEPTANCE.md).
 
-## M8 — Polish and distribution *(In progress: alpha packaging validated on the MacBook Air M5 2026-10-26, publication gated on the release gates; started 2026-10-23 by the user's approval, B1 packaging first)*
-- **State (2026-10-26):** testing ended by the user's decision; what wasn't verified is a known
-  limitation. The alpha packaging is validated on the M5: RCs 282557c and 94750af pass all 24
-  steps of `scripts/release_candidate.sh`, and 282557c was installed and played by hand in the
-  main account and in a fresh macOS account (M8.4). Nothing is published yet: gates G1–G4
-  are decided and the release is v0.1.0 (`reference/ALPHA_RELEASE_GATES.md`). Records: `reference/M8_ACCEPTANCE.md`,
-  `reference/M8_ALPHA_CHECKLIST.md`, draft notes `reference/ALPHA_RELEASE_NOTES.md`.
+## M8 — Polish and distribution *(Accepted for the alpha 2026-10-26, by the user's decision: Completed for Alpha, v0.1.0 released, with deferred and unverified limitations; started 2026-10-23 by the user's approval, B1 packaging first)*
+- **Status decision** (user, 2026-10-26): M8 is **Completed for Alpha**. No mandatory alpha
+  criterion remains (reference/M8_ACCEPTANCE.md). These stay open and are **not** recorded as
+  passed:
+  - **Deferred:** M8.3, render scaling and widescreen (optional);
+  - **Unverified:** the physical controller (deferred since M5; controller rebinding on hardware
+    with it), Game Mode on the fresh account (M8.4), and an install of a release candidate on
+    the MacBook Air M1.
+
+  Testing ended on 2026-10-26 by the user's decision; the acceptance criteria below are
+  unchanged.
+- **State (2026-10-26):** **v0.1.0 is released** as a GitHub pre-release
+  (https://github.com/retronative/recarbon/releases/tag/v0.1.0, published 2026-10-25T19:00:52Z):
+  tag v0.1.0 on 598a0ea, assets `ReCarbon-0.1.0-macos.dmg` (SHA-256 `abc376fb…0d9b`) and
+  `ReCarbon-0.1.0-third-party-source.tar.xz`, each with its `.sha256`. Gates G1–G4 are decided
+  (`reference/ALPHA_RELEASE_GATES.md`). Records: `reference/M8_ACCEPTANCE.md`,
+  `reference/M8_ALPHA_CHECKLIST.md`.
   - **M8.1 (installer): Completed.** The installer copied and verified Carbon's 78 files
     (5.74 GB) from the user's ISO into `~/Library/Application Support/ReCarbon/game` in both
     M5 accounts, and the game started.
+  - **M8.2 (app, notices, LGPL sources): Completed.** FFmpeg and the LZX decoder are replaceable
+    dylibs, and the third-party source archive is a release asset.
   - **M8.4 (fresh account): Completed on the M5** (account `gamtest`: ISO install, new profile,
     a race, the save reloaded after a relaunch, clean exits). Game Mode wasn't captured there;
     the first race hitched up to 450 ms while the empty shader cache compiled pipelines. Not
     done on the M1.
-  - **M8.2:** packaging and notices done; the LGPL source archive and offer wait on gate G2.
-  - **M8.11:** automated evidence only; the Arrows preset driving by hand and a custom profile
-    surviving a restart by hand are unverified (known limitations).
+  - **M8.11: Completed.** The Arrows preset driving the game is human-tested on the user's
+    report (2026-10-26), with no log of that session; WASD drove every hand-tested race. A
+    custom profile surviving a restart and switching without a restart are verified by
+    scripted runs and unit tests (B2 below), not by hand.
   - **M8.3:** optional, deferred.
   - **The M1** received both RCs with verified checksums (282557c installed), but its hand tests
     were cancelled: it is not install-validated for the alpha.
-  - Recommended alpha: 94750af (the same compiled code as 282557c plus the icons); only 282557c
-    was install-tested by a person. The user decides.
 - **License compliance:** `COPYING`, `NOTICE`, `THIRD_PARTY_NOTICES.md` and `LICENSES/` are kept
-  complete. Any binary release also needs the LGPL source offer (FFmpeg, libmspack). No binary
-  is published yet.
+  complete. Any binary release also needs the LGPL source offer (FFmpeg, libmspack): v0.1.0
+  carries it, with the third-party source archive on the release page.
 - **Status decision** (user, 2026-10-23): M8 started, packaging (B1) first. Input profiles (B2)
   wait for the user's approval of the revised preset tables. Decisions are in
   `reference/M8_PLAN.md`:

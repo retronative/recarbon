@@ -64,13 +64,13 @@ const MILESTONES = [
 	},
 	{
 		id: 'M6',
-		state: 'in-progress',
-		summary: 'Saves, race loading and free-roam stability each have evidence. Open until the written new-profile route is run.',
+		state: 'accepted',
+		summary: 'Accepted for the alpha: a new profile saves and reloads after a restart, a race loads, and free-roam held 15 minutes. The new-profile route ran on a fresh macOS account without free-roam in the same session, which the 15-minute test covers.',
 		criteria: [
 			{ id: 'M6.3', title: 'A new profile is created, saved, and reloads intact after a restart' },
 			{ id: 'M6.4', title: 'A race or free-roam loads from the front end to control of the car' },
 			{ id: 'M6.5', title: 'No deadlock or crash in 10 minutes of free-roam' },
-			{ id: 'M6.6', title: 'The written new-profile route, with logs and the save recorded' },
+			{ id: 'M6.6', title: 'The new-profile route: a new profile, a race load and a restart, with logs and the save recorded (free-roam covered by the 15-minute test)' },
 		],
 	},
 	{
@@ -89,8 +89,8 @@ const MILESTONES = [
 	},
 	{
 		id: 'M8',
-		state: 'in-progress',
-		summary: 'The current milestone: alpha packaging, validated on a MacBook Air M5. A release candidate passes every automated check and was installed and played by hand, including a clean install on a fresh macOS account. Testing for the alpha has ended, and v0.1.0, the first playable alpha, is released (2026-10-26).',
+		state: 'accepted',
+		summary: 'Completed for the alpha: v0.1.0, the first playable alpha, is released (2026-10-26). A release candidate passes every automated check and was installed and played by hand on a MacBook Air M5, including a clean install on a fresh macOS account. Deferred: render scaling and widescreen. Not verified: a physical controller, Game Mode on a fresh account, and an install on a MacBook Air M1.',
 		criteria: [
 			{ id: 'M8.7', title: 'Keyboard presets: WASD (the default) and Arrows' },
 			{ id: 'M8.8', title: 'Separate keyboard and controller profiles that persist' },
@@ -99,9 +99,10 @@ const MILESTONES = [
 			{ id: 'M8.12', title: 'Reset to default matches the M5 baseline' },
 			{ id: 'M8.6', title: 'The unit tests run in ctest' },
 			{ id: 'M8.5', title: 'The app bundle check (check_app.py) passes' },
-			{ id: 'M8.11', title: 'Both presets drive the game, by hand' },
+			{ id: 'M8.11', title: 'Both presets drive the game by hand (Arrows on the tester\'s report); custom profiles survive a restart and switching applies at once, in scripted runs' },
 			{ id: 'M8.4', title: 'A clean install from a disc image on a fresh macOS account' },
 			{ id: 'M8.1', title: 'The installer parametrized for Carbon' },
+			{ id: 'M8.2', title: 'The app packaged and released with its notices and third-party source archive' },
 			{ id: 'M8.3', title: 'Optional: render scaling and widescreen', state: 'deferred' },
 		],
 	},
@@ -139,8 +140,10 @@ const ISSUES = [
 
 // Pending human tests: reference/HUMAN_TEST_PLAN.md's sessions, by what they cover.
 const HUMAN_TESTS = [
-	{ title: 'Session 1: a new profile, both presets', covers: 'The new-profile route to a race load (M6.6); WASD and Arrows driving and switching without a restart (M8.11).', state: 'unverified' },
-	{ title: 'Session 2: restart and hand test 5', covers: 'The profile reloading intact (M6.6), and Reverse, Look Back, Pause and the gear keys with a manual gearbox on the keyboard (Handbrake, Nitrous, Speedbreaker and the camera were found by hand on 2026-10-25).', state: 'unverified' },
+	{ title: 'The new-profile route', covers: 'A new profile, a race load and the save found after a restart, run as the fresh-account install (M6.6, MacBook Air M5). Free-roam wasn\'t in that route; the 15-minute free-roam test covers it.', state: 'completed' },
+	{ title: 'The Arrows preset by hand', covers: 'The tester played the game on the Arrows preset and reports that it worked (M8.11, 2026-10-26). No log was kept of that session. WASD drove every hand-tested race.', state: 'completed' },
+	{ title: 'Profile switching and a restart, by hand', covers: 'Switching profiles without a restart, and a custom profile across a restart (M8.11). Verified in scripted runs and unit tests only.', state: 'unverified' },
+	{ title: 'Hand test 5: the remaining keys', covers: 'Reverse, Look Back, Pause and the gear keys with a manual gearbox on the keyboard (Handbrake, Nitrous, Speedbreaker and the camera were found by hand on 2026-10-25).', state: 'unverified' },
 	{ title: 'Sessions 3–5: the M7 route, 3 times', covers: 'Controls, physics, frame times, audio and picture over full races: three on a MacBook Air M1 and two on an M5 (M7.1, M7.2, M7.5–M7.7). Audio sync rests on the tester\'s report.', state: 'completed' },
 	{ title: 'Clean install on a fresh macOS account', covers: 'Installing from a disc image on a new user account, a new profile, a race, and the save found after a relaunch (M8.4, MacBook Air M5). Game Mode wasn\'t captured on that account.', state: 'completed' },
 	{ title: 'Release candidate on a MacBook Air M5', covers: 'Install from a disc image, Game Mode, a race to the results, the save kept after a relaunch, a clean quit (the main account).', state: 'completed' },
@@ -152,6 +155,7 @@ const HUMAN_TESTS = [
 // of these by its opening words; an unmatched one fails the run, so nothing
 // reaches the site unreviewed. The text shown is `text`.
 const ACHIEVEMENTS = [
+	{ starts: 'M6 and M8 closed for the alpha', text: 'M6 and M8 closed for the alpha: the new-profile route (a new profile, a race and the save found after a restart, on a fresh macOS account) and the alpha packaging, with v0.1.0 released. Not verified: a physical controller, Game Mode on a fresh account, an install on a MacBook Air M1.' },
 	{ starts: 'ReCarbon v0.1.0 alpha released', text: 'ReCarbon v0.1.0, the first playable alpha, is released for Apple Silicon Macs with macOS 27: a disk image to install with your own Xbox 360 disc image. Known limitations are on the Known issues page.' },
 	{ starts: 'M8 release candidates validated on the M5', text: 'Alpha packaging validated on a MacBook Air M5: two release candidates pass every automated check, and one was installed from a disc image and played by hand, in the main account and on a fresh macOS account, with its save found after a relaunch.' },
 	{ starts: 'ReCarbon app icon', text: 'ReCarbon has its own app icon, drawn from this website\'s mark, on the app and on the opened disk image.' },

@@ -27,6 +27,7 @@ All on a MacBook Air M5 (24 GB, macOS 27.0.1) unless marked M1.
 
 - **Install from your disc image:** the first-run installer copied and verified 78 files
   (5.74 GB) from an ISO in 49–86 s, then started the game; also on a brand-new macOS user account.
+- **Keyboard presets:** the races below were driven on the WASD keys, and the tester reports playing the game with the Arrows preset by hand too, and that it worked (2026-10-26). That rests on the report alone: no log of that session was kept, and the Mac wasn't recorded.
 - **Racing:** full Quick Races driven by hand on the keyboard. A 9.8-minute, 8-lap race averaged
   50.8 fps with no slowdown over the race; 1st place against 7 AI opponents who all finished.
   Driving physics feel normal to the tester (equivalence with the Xbox 360 version isn't
@@ -46,7 +47,7 @@ Testing for the first alpha ended on 2026-10-26. These weren't verified, and are
 
 - **A MacBook Air M1 install of the release candidate:** the M1 ran three full races of an earlier build (above), but the release candidate wasn't installed and played there.
 - **Game Mode on a fresh account:** Game Mode turned on in the tester's main account; on the fresh test account it wasn't captured.
-- **Keyboard profiles by hand:** the Arrows preset driving a race, and a custom profile surviving a restart, were checked by scripts and unit tests only.
+- **Keyboard profiles by hand:** a custom profile surviving a restart, and switching profiles without a restart, were checked by scripts and unit tests only. (The Arrows preset was played by hand: above.)
 - **Keyboard controls in a race:** the driving controls are hand-tested on the WASD keys: Throttle (W), Brake (S), Steering (A/D), Change Camera (E), Handbrake (Space), Speedbreaker (Left Shift) and Nitrous (Backspace, on a car that has nitrous) (2026-10-25). Once, the first Backspace press didn't trigger nitrous; why isn't known. Still to test by hand: Reverse, Look Back and Pause (so far seen only with the virtual controller), and which keys shift gears with a manual gearbox (with an automatic car, the tester saw gear down on K and gear up on the ; key; the virtual controller shifted a manual gearbox with the right stick's up and down, O and L on the keyboard).
 - **Vehicle physics** against the Xbox 360 version: the car drives normally by hand (1st place over 8 laps against 7 AI opponents who all finished, on a MacBook Air M5), but no lap time or top speed has been compared with the console. Equivalence with the Xbox 360 version isn't verified.
 - **Audio and video sync:** reported fine by hand on a MacBook Air M1 and an M5. That rests on the tester's reports alone: the audio logs show no underruns or gaps, but sync hasn't been measured with instruments.

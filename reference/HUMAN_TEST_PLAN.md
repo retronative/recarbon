@@ -7,7 +7,15 @@ Nothing here is PASS until the user has run it and the logs agree.
 
 *Status (2026-10-25):* the M7 part was run as the M7 races of 2026-10-25 (three on the M1, two on
 the M5), and M7 is closed for the alpha (`reference/M7_ACCEPTANCE.md`). Sessions 1, 2 and the
-M8.11 and M6.6 parts are still to run.
+M8.11 and M6.6 parts weren't run as written (below).
+
+*Status (2026-10-26):* testing ended by the user's decision, and sessions 1 and 2 weren't run as
+written. M6.6 is accepted for the alpha on the M8.4 fresh-account sessions instead (new profile,
+race load, restart, save found; free-roam covered by M6.5: `reference/M6_ACCEPTANCE.md`). For
+M8.11, the user reports playing with the Arrows preset by hand and that it worked (no log of
+that session); switching without a restart and a custom profile across a restart rest on
+scripted runs and unit tests. Hand test 5's remaining keys (Reverse, Look Back, Pause, the gear
+keys with a manual gearbox) stay untested by hand. M6 and M8 are closed for the alpha.
 
 ## Before each session (done by Claude, not the tester)
 - Nothing ReCarbon left running; the build commit and the binary's SHA-256 recorded.

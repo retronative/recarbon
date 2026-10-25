@@ -84,9 +84,9 @@
 		{
 			"id": "M6",
 			"title": "First boot to free-roam / race load",
-			"state": "in-progress",
-			"date": null,
-			"summary": "Saves, race loading and free-roam stability each have evidence. Open until the written new-profile route is run.",
+			"state": "accepted",
+			"date": "2026-10-26",
+			"summary": "Accepted for the alpha: a new profile saves and reloads after a restart, a race loads, and free-roam held 15 minutes. The new-profile route ran on a fresh macOS account without free-roam in the same session, which the 15-minute test covers.",
 			"criteria": [
 				{
 					"id": "M6.3",
@@ -105,8 +105,8 @@
 				},
 				{
 					"id": "M6.6",
-					"title": "The written new-profile route, with logs and the save recorded",
-					"state": "unverified"
+					"title": "The new-profile route: a new profile, a race load and a restart, with logs and the save recorded (free-roam covered by the 15-minute test)",
+					"state": "completed"
 				}
 			]
 		},
@@ -157,9 +157,9 @@
 		{
 			"id": "M8",
 			"title": "Polish and distribution",
-			"state": "in-progress",
-			"date": null,
-			"summary": "The current milestone: alpha packaging, validated on a MacBook Air M5. A release candidate passes every automated check and was installed and played by hand, including a clean install on a fresh macOS account. Testing for the alpha has ended, and v0.1.0, the first playable alpha, is released (2026-10-26).",
+			"state": "accepted",
+			"date": "2026-10-26",
+			"summary": "Completed for the alpha: v0.1.0, the first playable alpha, is released (2026-10-26). A release candidate passes every automated check and was installed and played by hand on a MacBook Air M5, including a clean install on a fresh macOS account. Deferred: render scaling and widescreen. Not verified: a physical controller, Game Mode on a fresh account, and an install on a MacBook Air M1.",
 			"criteria": [
 				{
 					"id": "M8.7",
@@ -198,8 +198,8 @@
 				},
 				{
 					"id": "M8.11",
-					"title": "Both presets drive the game, by hand",
-					"state": "in-progress"
+					"title": "Both presets drive the game by hand (Arrows on the tester's report); custom profiles survive a restart and switching applies at once, in scripted runs",
+					"state": "completed"
 				},
 				{
 					"id": "M8.4",
@@ -209,6 +209,11 @@
 				{
 					"id": "M8.1",
 					"title": "The installer parametrized for Carbon",
+					"state": "completed"
+				},
+				{
+					"id": "M8.2",
+					"title": "The app packaged and released with its notices and third-party source archive",
 					"state": "completed"
 				},
 				{
@@ -347,13 +352,23 @@
 	],
 	"humanTests": [
 		{
-			"title": "Session 1: a new profile, both presets",
-			"covers": "The new-profile route to a race load (M6.6); WASD and Arrows driving and switching without a restart (M8.11).",
+			"title": "The new-profile route",
+			"covers": "A new profile, a race load and the save found after a restart, run as the fresh-account install (M6.6, MacBook Air M5). Free-roam wasn't in that route; the 15-minute free-roam test covers it.",
+			"state": "completed"
+		},
+		{
+			"title": "The Arrows preset by hand",
+			"covers": "The tester played the game on the Arrows preset and reports that it worked (M8.11, 2026-10-26). No log was kept of that session. WASD drove every hand-tested race.",
+			"state": "completed"
+		},
+		{
+			"title": "Profile switching and a restart, by hand",
+			"covers": "Switching profiles without a restart, and a custom profile across a restart (M8.11). Verified in scripted runs and unit tests only.",
 			"state": "unverified"
 		},
 		{
-			"title": "Session 2: restart and hand test 5",
-			"covers": "The profile reloading intact (M6.6), and Reverse, Look Back, Pause and the gear keys with a manual gearbox on the keyboard (Handbrake, Nitrous, Speedbreaker and the camera were found by hand on 2026-10-25).",
+			"title": "Hand test 5: the remaining keys",
+			"covers": "Reverse, Look Back, Pause and the gear keys with a manual gearbox on the keyboard (Handbrake, Nitrous, Speedbreaker and the camera were found by hand on 2026-10-25).",
 			"state": "unverified"
 		},
 		{
@@ -383,6 +398,16 @@
 		}
 	],
 	"achievements": [
+		{
+			"date": "2026-10-26",
+			"text": "M6 and M8 closed for the alpha: the new-profile route (a new profile, a race and the save found after a restart, on a fresh macOS account) and the alpha packaging, with v0.1.0 released. Not verified: a physical controller, Game Mode on a fresh account, an install on a MacBook Air M1.",
+			"commits": [
+				{
+					"sha": "598a0eae31512e6ea66057eee8730f6512a2c65c",
+					"short": "598a0ea"
+				}
+			]
+		},
 		{
 			"date": "2026-10-26",
 			"text": "ReCarbon v0.1.0, the first playable alpha, is released for Apple Silicon Macs with macOS 27: a disk image to install with your own Xbox 360 disc image. Known limitations are on the Known issues page.",
@@ -456,11 +481,6 @@
 					"short": "ad04ab8"
 				}
 			]
-		},
-		{
-			"date": "2026-10-24",
-			"text": "ReCarbon's source and this website went public, with every page checked live: no broken links and no accessibility violations found by axe-core.",
-			"commits": []
 		}
 	]
 }

@@ -1,14 +1,23 @@
 # M8 acceptance record (alpha packaging)
 
-The state of each M8 criterion (ROADMAP M8) and its evidence, last updated 2026-10-26. Objective
+The state of each M8 criterion (ROADMAP M8) and its evidence, last updated 2026-10-26 (M8 closed). Objective
 checks and the tester's reports are kept apart. Testing ended on 2026-10-26 by the user's
 decision: what wasn't verified by then is listed as a limitation, not as passed.
 
-**State:** the alpha packaging is validated on the MacBook Air M5 (two release candidates pass
-every automated check; one was installed and played by hand in the main account and in a fresh
-macOS account). **Nothing is published yet.** Publication follows the gates in
-`reference/ALPHA_RELEASE_GATES.md` (G1–G4, all decided 2026-10-26; the release is v0.1.0).
-M8 stays in progress until the user closes it.
+**Decision (user, 2026-10-26): M8 is Completed for Alpha.** No mandatory alpha criterion
+remains. Not recorded as passed:
+- **Deferred:** M8.3, render scaling and widescreen (optional).
+- **Unverified:** the physical controller (and controller rebinding on it), Game Mode on the
+  fresh account (M8.4), and an install of a release candidate on the MacBook Air M1.
+
+**State:** the alpha packaging is validated on the MacBook Air M5, and **v0.1.0 is released**.
+Checked against the live GitHub Release on 2026-10-26 (`gh release view v0.1.0`): tag `v0.1.0`
+on 598a0ea (an annotated tag), a pre-release, not a draft, published 2026-10-25T19:00:52Z, with
+four assets: `ReCarbon-0.1.0-macos.dmg` (22,071,063 B, SHA-256
+`abc376fb04550842fe4a5a34d4feb75c8c9dd302a8b45db4f590be3018d60d9b`) and its `.sha256`, and
+`ReCarbon-0.1.0-third-party-source.tar.xz` (40,815,220 B, SHA-256 `a0e805b4…e883`) and its
+`.sha256`. The release was built as the final RC at 598a0ea (24/24 steps PASS, version 0.1.0,
+build 207; its `__TEXT,__text` identical to e8eb933's). Gates: `reference/ALPHA_RELEASE_GATES.md`.
 
 **Commit ids:** the RC folders, their `MANIFEST.json` and `Info.plist` name the commits they were
 built from before the unpublished commits' text was revised on 2026-10-26. The code is the same;
@@ -19,7 +28,7 @@ this record uses the new ids: 755b1c5 is now 282557c, b06e341 is 94750af, f6ce75
 | Criterion | Status | Evidence |
 |---|---|---|
 | M8.1 Installer parametrized for Carbon (manifest, title ID, ReCarbon names) | **Completed** | Carbon's manifest (title 0x454107EC, 78 files). RC 282557c on the M5: the first-run installer copied and verified 78 files (5.74 GB) from the user's ISO into `~/Library/Application Support/ReCarbon/game`, in the main account (86.2 s, session 2026-10-25_23-13-21) and in the fresh account `gamtest` (48.7 s, session 2026-10-25_23-47-12); the game started each time. Earlier: `ReCarbon --install` 78 files, and the game found in the default folder (2026-10-23). |
-| M8.2 `ReCarbon.app` with license notices and LGPL sources | **Completed in the final RC e8eb933** (publication gated) | The notices, license texts and each library's provenance are in `Contents/Resources/licenses/` (make_app.py; checked by the RC's gate). Bundle ID `org.retronative.recarbon`, version 0.0.1. Gate G2 (decided 2026-10-26): FFmpeg and libmspack's LZX decoder are replaceable dylibs in `Contents/Frameworks/` (check_app.py check 7), the notices carry the source offer and the replacement steps, and the third-party source archive is built locally (`build/release-src/`, `ALPHA_RELEASE_GATES.md`). Replacement verified on a copy of the RC (below). |
+| M8.2 `ReCarbon.app` with license notices and LGPL sources | **Completed** (released in v0.1.0, with the source archive as a release asset) | The notices, license texts and each library's provenance are in `Contents/Resources/licenses/` (make_app.py; checked by the RC's gate). Bundle ID `org.retronative.recarbon`, version 0.0.1. Gate G2 (decided 2026-10-26): FFmpeg and libmspack's LZX decoder are replaceable dylibs in `Contents/Frameworks/` (check_app.py check 7), the notices carry the source offer and the replacement steps, and the third-party source archive is built locally (`build/release-src/`, `ALPHA_RELEASE_GATES.md`). Replacement verified on a copy of the RC (below). |
 | M8.3 Optional: render scaling and widescreen hooks | **Deferred** (optional) | Not started. Not an alpha gate. |
 | M8.4 Clean install from a disc image on a fresh macOS account | **Completed on the M5** | Account `gamtest` (UID 502, created by the user), RC 282557c's app, no quarantine attribute. Session 1: ISO install, new profile save `ALIAS_ABO`, a race (3D mean 56.4 fps), Quit Game. Session 2: no "ended without quitting" notice, save `ALIAS_ABO` found and opened, a race (mean 54.5 fps, worst frame 100 ms), Quit Game. No hang report, strict stub, device loss or crash. **Not captured:** Game Mode in that account. **Seen:** the first race after the install hitched up to 450 ms while the empty shader cache compiled pipelines. Not done on the M1. |
 | M8.5 `check_app.py` passes | Completed | e8eb933, 282557c and 94750af: `check-app`, `check-dmg` and `check-extracted` PASS (and on the release app cd7dc02 / d780e34 before). |
@@ -28,7 +37,7 @@ this record uses the new ids: 755b1c5 is now 282557c, b06e341 is 94750af, f6ce75
 | M8.8 Persistent keyboard and controller profiles | Completed | Scripted restarts in isolated homes; `profile_store_test`. |
 | M8.9 Custom mappings, controller rebinding, switching, reset | Completed | Scripted runs and the virtual pad. The physical controller is not verified (deferred). |
 | M8.10 `[keys]` migrated, never dropped | Completed | `profile_store_test`; scripted first launch. |
-| M8.11 Presets drive the game; custom profiles survive a restart; switching without a restart | **In progress** (automated evidence only) | Scripted: custom profiles survive a restart, switching takes effect at once; each preset's D-pad keys resolve to D-pad buttons (`profiles_test`). The WASD preset drove every hand-tested race. **Unverified by hand:** the Arrows preset driving the game, and a custom profile surviving a restart. |
+| M8.11 Presets drive the game; custom profiles survive a restart; switching without a restart | **Completed** (presets by hand; persistence and switching automated) | **Human:** the WASD preset drove every hand-tested race; the user reports (2026-10-26) playing the game with the **Arrows** preset by hand and that it worked. No log of that session was collected, so it rests on the user's report. **Automated:** custom keyboard and controller profiles survive a restart and switching takes effect at once, in scripted runs in isolated homes (ROADMAP M8, B2); each preset's D-pad keys resolve to D-pad buttons (`profiles_test`). Not done by hand: a custom profile across a restart, and switching without a restart (ROADMAP's Verify line asks for unit tests and scripted sessions for these). |
 | M8.12 Reset to default matches M5's baseline | Completed | Label-only change approved by the user (2026-10-24); the baseline key, mapping and parse checks pass. |
 
 ## Release candidates
@@ -108,6 +117,7 @@ with FFmpeg shared; record SHA-256 `43eabd15…e8a3`), MoltenVK 1.4.2 pinned. Fo
 **Recommendation (the user decides):** 94750af as the alpha: the latest commit, with the icons,
 passing every automated check, and its compiled code identical to 282557c's. Only 282557c was
 install-tested by a person.
+(Superseded: v0.1.0 was built as the final RC at 598a0ea, above.)
 
 ## Signing
 
@@ -117,18 +127,14 @@ attribute, so Gatekeeper never prompted. A browser download would carry it (not 
 macOS blocks the first launch until the user allows it in System Settings > Privacy & Security
 (Open Anyway). Gate G3.
 
-## M6.6 (for the user's decision; M6 is not closed here)
+## M6.6
 
-M6.6 asks for the written new-profile route (new profile → free-roam/race load → restart → save
-reloaded, logs and save recorded, watchdog reports empty). The M8.4 sessions in `gamtest` give:
-a new profile save created (`ALIAS_ABO`, session 1, 102.0 s), a race loaded and driven, Quit Game,
-then a restart that found and opened the same save, with no watchdog hang report in either
-session. Free-roam wasn't part of that route (M6.5 covered free-roam). Whether this closes M6.6,
-and so M6, is the user's decision.
+Accepted for the alpha on the M8.4 sessions by the user's decision (2026-10-26), and M6 closed:
+`reference/M6_ACCEPTANCE.md`.
 
 ## Limitations carried into the alpha
 
 See `reference/M8_ALPHA_CHECKLIST.md` ("Known limitations") and `docs/known-issues.md`. New in
 M8: the first race after a fresh install can hitch (up to ~450 ms) while the shader cache warms;
-Game Mode unverified in the fresh account; the M1 not install-validated for either RC; M8.11's
-hand checks; M8.3 deferred.
+Game Mode unverified in the fresh account; the M1 not install-validated for any RC; M8.3 deferred.
+M8.11's custom-profile restart and switching checks are automated only (above).

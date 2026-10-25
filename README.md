@@ -30,8 +30,9 @@ Native recompilation of Need for Speed: Carbon (Xbox 360) for Apple Silicon.
   - movie judder, deferred to polish;
   - changing key bindings needs an English keyboard layout: on other layouts the Controls page
     shows letters as '?' and refuses new keys (gameplay input is unaffected).
-- **M6 (open):** it boots to free-roam and loads races. Free-roam held 15 minutes without a
-  crash in a hand test. The new-profile route test is still pending.
+- **M6 (accepted for the alpha, 2026-10-26):** it boots to free-roam and loads races.
+  Free-roam held 15 minutes without a crash in a hand test. On a fresh macOS account a new
+  profile was saved, a race loaded, and the save was found again after a restart.
 - **M7 (accepted for the alpha, 2026-10-25):** playable racing. The driving controls work on the
   keyboard by hand (including Handbrake, Speedbreaker and Nitrous), a full career race finishes
   against AI and progress survives a restart, and a 9.8-minute race on a MacBook Air M5 averaged
@@ -41,9 +42,12 @@ Native recompilation of Need for Speed: Carbon (Xbox 360) for Apple Silicon.
   - equivalence with the Xbox 360 version's physics, deferred and unverified;
   - audio and video sync, which rests on the tester's reports, not on measurement;
   - Reverse, Look Back, Pause and the gear keys with a manual gearbox, not yet tried by hand.
-- **M8 (in progress, current):** alpha packaging, validated on a MacBook Air M5: a release
-  candidate installed and played, including a clean install on a fresh macOS account. No alpha
-  build is published.
+- **M8 (completed for the alpha, 2026-10-26):** v0.1.0 is released. Alpha packaging,
+  validated on a MacBook Air M5: a release candidate installed and played, including a clean
+  install on a fresh macOS account. Still open, not recorded as passed:
+  - render scaling and widescreen, deferred;
+  - a physical controller, Game Mode on a fresh account and an install on a MacBook Air M1,
+    not verified.
 - **Known issues:** occasional stalls of about 1 s while racing, and shorter GPU-idle stalls
   (both unexplained). See ROADMAP M7.
 
