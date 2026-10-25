@@ -130,7 +130,7 @@
 				{
 					"id": "M7.1",
 					"title": "Steering, throttle, brake, handbrake, nitrous and camera on the keyboard",
-					"state": "unverified"
+					"state": "in-progress"
 				},
 				{
 					"id": "M7.2",
@@ -150,7 +150,7 @@
 				{
 					"id": "M7.7",
 					"title": "The written test route, repeated 3 times",
-					"state": "unverified"
+					"state": "in-progress"
 				}
 			]
 		},
@@ -344,7 +344,12 @@
 		{
 			"date": "2026-10-25",
 			"text": "Fewer long stalls when other apps keep the Mac busy: the game threads that drive each frame now run at a higher macOS priority. On a MacBook Air M1 under load, stalls of 100 ms or more went from 5.3 to 0.3 per race run, at the same frame rate.",
-			"commits": []
+			"commits": [
+				{
+					"sha": "4d521a7e985daf3360bc9b7e3324c6e21a257361",
+					"short": "4d521a7"
+				}
+			]
 		},
 		{
 			"date": "2026-10-24",
