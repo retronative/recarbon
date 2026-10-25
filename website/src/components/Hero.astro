@@ -267,7 +267,7 @@ const particles = [...studs, ...dust].map((p) => {
 			{
 				site.downloadUrl ? (
 					<>
-						<a class="btn" href={site.downloadUrl}>Download</a>
+						<a class="btn" href={url(site.downloadUrl)}>Download for Apple Silicon</a>
 						<a class="btn btn--ghost" href={url('docs/installation/')}>Get started</a>
 					</>
 				) : (
