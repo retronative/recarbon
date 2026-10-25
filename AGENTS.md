@@ -56,6 +56,11 @@ ninja -C build/main -j8    # build/main/runtime/ReCarbon (about 100 s clean, 2.6
   found in Carbon's image and documented with their evidence.
 - After adding or implementing a kernel/XAM import, rerun `scripts/gen_import_stubs.py`.
 - Files taken from SpeedBreaker keep their attribution. Mark ReCarbon changes in comments.
+- Temporary data (scratchpads, benchmark runs, test copies, experimental worktrees) follows
+  `../game-port-knowledge/general/data-retention-and-cleanup.md`. Mark what you create with a
+  `.retention.json` (owner, class, status). Never delete unmarked data. Delete only through a
+  reviewed manifest (`retention_cleanup.py scan`, then `apply --approve`), never with ad-hoc
+  `rm -rf`. Each machine (M5, M1) is cleaned on its own.
 - Milestones (`reference/ROADMAP.md`) are gated. Don't start the next one without the user's
   approval.
 

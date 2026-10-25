@@ -59,3 +59,6 @@ __pycache__/
 
 # Local debugging log (AGENTS.md)
 WORKLOG.local.md
+
+# Retention markers for local temporary data (general/data-retention-and-cleanup.md)
+.retention.json
