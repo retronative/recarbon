@@ -218,7 +218,7 @@ Diagnosing a failure is progress. It does not pass a criterion.
   - the route's save hash: none was taken between the two sessions. Its presence and size are
     recorded, and the relaunch found and opened it;
   - Carbon's frame-time equivalent (the second half of the render-queue Do item): not found.
-    The render-queue fences are in (f4cf407).
+    The render-queue fences are in (540970f).
 
   The acceptance criteria below are unchanged.
 Input as in M5: SpeedBreaker's keyboard rebinding and `[keys]` keep working. No new
