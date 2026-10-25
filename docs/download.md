@@ -9,6 +9,12 @@ description: ReCarbon has no public release yet. What a release will contain, an
 > ReCarbon publishes **no downloads yet**. This page will carry the release once there is one.
 > Nothing on this site links to game files or disc images, and nothing ever will.
 
+## Where it stands
+
+A release candidate of the first alpha is built and was installed and played on a MacBook Air M5,
+including a clean install on a fresh macOS account. **It is not published yet**, so there is
+nothing to download.
+
 ## What a release will contain
 
 - `ReCarbon.app`, the native app for Apple Silicon (bundle ID `org.retronative.recarbon`).
@@ -24,7 +30,7 @@ description: ReCarbon has no public release yet. What a release will contain, an
   source for it.
 - Your own Xbox 360 disc of *Need for Speed: Carbon*, as a disc image (`.iso`) or an extracted
   folder.
-- About 5.3 GB of disk space for the installed game (78 files in the install check).
+- About 5.7 GB of disk space for the installed game (78 files, 5.74 GB as Finder counts it).
 
 ## Developer builds
 

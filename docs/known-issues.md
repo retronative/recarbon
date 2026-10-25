@@ -3,12 +3,14 @@ title: Known issues
 description: ReCarbon alpha's known issues, from the project's roadmap. Kept in sync per release.
 ---
 
-From ReCarbon's `reference/ROADMAP.md` (M7, "Known issues for the alpha"). Each is still open.
+From ReCarbon's `reference/ROADMAP.md` (M7, "Known issues for the alpha") and the alpha packaging
+checks (M8, 2026-10-26). Each is still open.
 
 | Issue | Details |
 |---|---|
 | Occasional stalls of about 1 s | The presenter waits for a free drawable while holding the GPU queue lock. Being investigated; to revisit before a public release. |
 | GPU-idle stalls of 250–600 ms | No lock wait involved. Cause unknown. |
+| Hitches in the first race after a fresh install | With an empty shader cache, the first race compiles its pipelines as it goes: on a fresh macOS account the worst frame was 450 ms (a MacBook Air M5). The second session's worst was 100 ms. The cache is kept in `~/Library/Caches/ReCarbon/`, so deleting it brings the hitches back once. |
 | Frame rate falls during long races on a MacBook Air M1 | On the M1, races start at about 30 fps and fall as play goes on: to about 21 fps in a 9-minute race and about 16 fps in a 14-minute one, even after a cool-down. The M1 is limited by its GPU from the start, and the GPU's time per frame rises with time under load while macOS reports the thermal state as "fair". GPU throttling on the fanless M1 is the leading explanation but isn't confirmed. A sustained 30 fps isn't claimed on the M1. |
 | Texture cache grows during play | ReCarbon keeps every texture it has made until a setting that reloads them changes: nothing is evicted while playing. Driving grows it by roughly 500 MB over 7 laps or 20 minutes of free-roam, on every Mac tested. On current evidence it doesn't cause the frame-rate drop above, and no crash or corruption has been tied to it, but very long sessions use more memory, which matters most on 8 GB Macs. Restarting the game clears it. A fix (eviction once the GPU is known to be done with a texture) is planned after the alpha. |
 | Physical controller untested | Deferred: no real pad has been tested. The default mapping is pinned by a test, and a virtual controller drives the menus and a race. |
@@ -20,6 +22,11 @@ From ReCarbon's `reference/ROADMAP.md` (M7, "Known issues for the alpha"). Each 
 
 ## Still to be tested
 
+Testing for the first alpha ended on 2026-10-26. These weren't verified, and are left as they are:
+
+- **A MacBook Air M1 install of the release candidate:** the M1 ran three full races of an earlier build (above), but the release candidate wasn't installed and played there.
+- **Game Mode on a fresh account:** Game Mode turned on in the tester's main account; on the fresh test account it wasn't captured.
+- **Keyboard profiles by hand:** the Arrows preset driving a race, and a custom profile surviving a restart, were checked by scripts and unit tests only.
 - **Keyboard controls in a race:** the driving controls are hand-tested on the WASD keys: Throttle (W), Brake (S), Steering (A/D), Change Camera (E), Handbrake (Space), Speedbreaker (Left Shift) and Nitrous (Backspace, on a car that has nitrous) (2026-10-25). Once, the first Backspace press didn't trigger nitrous; why isn't known. Still to test by hand: Reverse, Look Back and Pause (so far seen only with the virtual controller), and which keys shift gears with a manual gearbox (with an automatic car, the tester saw gear down on K and gear up on the ; key; the virtual controller shifted a manual gearbox with the right stick's up and down, O and L on the keyboard).
 - **Vehicle physics** against the Xbox 360 version: the car drives normally by hand (1st place over 8 laps against 7 AI opponents who all finished, on a MacBook Air M5), but no lap time or top speed has been compared with the console. Equivalence with the Xbox 360 version isn't verified.
 - **Audio and video sync:** reported fine by hand on a MacBook Air M1 and an M5. That rests on the tester's reports alone: the audio logs show no underruns or gaps, but sync hasn't been measured with instruments.

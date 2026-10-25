@@ -18,9 +18,13 @@ once, the first time that version starts (it's built into the game: runtime/CMak
 - Full Quick Races play by hand on the keyboard. On the WASD keys, Space is the handbrake, Left
   Shift is Speedbreaker and Backspace fires the nitrous (on a car that has it), as the Controls
   page now documents.
+- The first-run installer copies and verifies the game's 78 files (5.74 GB) from your own disc
+  image, also on a brand-new macOS account, and the game starts.
+- ReCarbon has its own icon, on the app and on the opened disk image.
 - On a MacBook Air M5 a 9.8-minute race ran at about 51 fps on average. On a MacBook Air M1 races
   start at about 30 fps and slow down the longer you play.
 - Known issues: occasional stalls of about a second while racing, and shorter ones; the slowdown
   in long races on the M1; memory use that grows during long sessions; the "Cannot connect to Xbox
-  Live!" notice needs one press of A (Space) at every launch. A physical controller hasn't been
-  tested yet. It needs an Apple silicon Mac with macOS 27 or later.
+  Live!" notice needs one press of A (Space) at every launch; the first race after a fresh
+  install can hitch while the shader cache fills. A physical controller hasn't been tested yet.
+  It needs an Apple silicon Mac with macOS 27 or later.

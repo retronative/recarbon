@@ -10,7 +10,8 @@ each one against a manifest of hashes. Nothing is downloaded.
 > **Alpha**
 >
 > There is no public release yet ([Release status](download.md)). These steps describe the current
-> build. A clean install on a fresh macOS user account is still to be tested (M8).
+> build. A clean install from a disc image on a fresh macOS user account was tested on a MacBook
+> Air M5 (M8); an install on a MacBook Air M1 wasn't tested.
 
 ## 1. Make a disc image
 
@@ -26,7 +27,7 @@ Start ReCarbon. If no installed game is found, the installer screen opens:
 
 1. It looks for disc images in the usual places, or you browse for yours.
 2. It checks the image.
-3. It copies and verifies the files, with progress.
+3. It copies and verifies the files, with progress: 78 files, 5.74 GB.
 4. Then the game starts.
 
 ### From the command line
@@ -48,11 +49,27 @@ copy. Other commands:
 | `ReCarbon --where` | Prints where the game install was found, and the data folders |
 | `ReCarbon --portable on` / `off` | Keeps the data and the game in ReCarbon's own folder (portable mode), or moves them back |
 
-In the alpha packaging check (2026-10-23), `--install` copied and verified 78 files (5.3 GB) in
-4 seconds. When the install folder had moved, the app found the game in the default folder and
-started.
+In the release-candidate checks on a MacBook Air M5 (2026-10-25), the first-run installer copied
+and verified the 78 files (5.74 GB) from an ISO in 49–86 seconds, in the main account and on a
+fresh macOS account, and the game started. In the earlier packaging check (2026-10-23),
+`--install` took 4 seconds, and when the install folder had moved, the app found the game in the
+default folder and started.
 
-## 3. Play
+## 3. First launch
+
+ReCarbon's builds are signed ad hoc and not notarized by Apple. A copy that arrives through a
+browser download is blocked at its first launch: macOS says it can't check the app. Then open
+**System Settings > Privacy & Security**, find the message about ReCarbon, choose **Open Anyway**
+and confirm. You do this once. Don't turn Gatekeeper off. (A build made on your own Mac isn't
+blocked.)
+
+At the main menu, the game shows **"Cannot connect to Xbox Live!"** at every launch: press **A**
+(**Space** on the keyboard) to continue ([Known issues](known-issues.md)).
+
+The first race after a fresh install can hitch for a moment (up to about half a second) while
+ReCarbon fills its shader cache; later races are smoother.
+
+## 4. Play
 
 Start ReCarbon. Press **F1** (Fn+F1 on a Mac keyboard, or Cmd+,) for ReCarbon's Settings at any
 time; see [Controls](controls.mdx) and the [Garage](https://retronative.github.io/recarbon/garage/).

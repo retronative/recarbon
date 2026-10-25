@@ -8,8 +8,8 @@ was measured on.
 
 | Mac | macOS | What ran | Source |
 |---|---|---|---|
-| MacBook Air, Apple M5 (4P+6E), 24 GB | 27.0.1 | The main test machine: builds, every milestone run, the hand tests | ReCarbon FEASIBILITY §3–§6c |
-| MacBook Air, Apple M1 | 27.0.1 | The packaged app ran for 60 s from its bundle, reached frame 900 and exited cleanly (2026-10-23) | FEASIBILITY §6b, packaging check |
+| MacBook Air, Apple M5 (4P+6E), 24 GB | 27.0.1 | The main test machine: builds, every milestone run, the hand tests, and the alpha release candidate installed and played in the main account and on a fresh macOS account (2026-10-25) | ReCarbon FEASIBILITY §3–§6c, M7 and M8 acceptance records |
+| MacBook Air, Apple M1 | 27.0.1 | The packaged app from its bundle (2026-10-23), and three full races by hand that start at about 30 fps and slow down in long races (2026-10-25). The alpha release candidate wasn't installed and played there. | FEASIBILITY §6b, M7 acceptance record |
 
 **Everything else is untested**: other Apple Silicon Macs, Macs without Homebrew installed, and
 any macOS before 27 (current builds need 27 or newer: see [Release status](download.md)).
