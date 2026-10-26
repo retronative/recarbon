@@ -17,7 +17,7 @@ export const release = {
 		name: dmg,
 		url: `${assets}/${dmg}`,
 		sha256Url: `${assets}/${dmg}.sha256`,
-		sha256: '098e9441d75e61e601d01125fabd682287f060f62bbf26e8fc115fba96679065',
+		sha256: '7a43e99189cd809614c68c7dec0dc5dc046b0acd3f250a4c561123f590a55941',
 	},
 	thirdPartySource: {
 		name: `ReCarbon-${version}-third-party-source.tar.xz`,

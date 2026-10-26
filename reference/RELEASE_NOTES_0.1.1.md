@@ -1,7 +1,7 @@
 # ReCarbon v0.1.1: release notes (DRAFT, not published)
 
 > **Internal draft, 2026-10-26.** The text for the v0.1.1 release page, with the checksums of the
-> final RC `f5ea99b` (24/24 PASS, `build/rc/f5ea99b-20261026T144756Z`, with the new icons) and of
+> release build `80a7f3f` (24/24 PASS, `build/rc/80a7f3f-20261026T151956Z`; the tag v0.1.1) and of
 > the third-party source archive built beside it. Nothing is published without the user's approval.
 
 <!-- 8< ---------------- release page body starts here ---------------- -->
@@ -42,7 +42,7 @@ An Apple silicon Mac with macOS 27 or later, and your own disc image.
 
 | File | SHA-256 |
 |---|---|
-| `ReCarbon-0.1.1-macos.dmg` | `098e9441d75e61e601d01125fabd682287f060f62bbf26e8fc115fba96679065` |
+| `ReCarbon-0.1.1-macos.dmg` | `7a43e99189cd809614c68c7dec0dc5dc046b0acd3f250a4c561123f590a55941` |
 | `ReCarbon-0.1.1-third-party-source.tar.xz` | `74926bf1918b9853aecbe000bec48c2830d49dd431496d53ff09d4d881ada6a8` |
 
 Check the download with `shasum -a 256 -c ReCarbon-0.1.1-macos.dmg.sha256`. ReCarbon is signed ad

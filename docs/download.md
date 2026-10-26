@@ -30,7 +30,7 @@ shasum -a 256 ReCarbon-0.1.1-macos.dmg
 ```
 
 The code it prints must be
-`098e9441d75e61e601d01125fabd682287f060f62bbf26e8fc115fba96679065`. It's also in the release's
+`7a43e99189cd809614c68c7dec0dc5dc046b0acd3f250a4c561123f590a55941`. It's also in the release's
 [`ReCarbon-0.1.1-macos.dmg.sha256`](https://github.com/retronative/recarbon/releases/download/v0.1.1/ReCarbon-0.1.1-macos.dmg.sha256).
 
 ## More
