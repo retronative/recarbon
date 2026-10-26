@@ -60,11 +60,27 @@ measured on other Macs yet.
 Short stalls still happen: see [Known issues](known-issues.md). They are recorded honestly,
 not cut out of measurements.
 
+## Internal resolution on a MacBook Air M5, 2026-10-27
+
+Measured in hand-played sessions of v0.1.1, while driving:
+
+| Internal Resolution | 3D scene | Frame rate |
+|---|---|---|
+| 2x (1440p), what **Auto** picks on this Mac | 2560×1440 | about **60 fps** |
+| 3x (2160p, 4K) | 3840×2160 | about **30 fps** |
+
+- **4K means the 3D scene is drawn at 3840×2160.** The game's own textures and its movies stay at
+  their original resolution.
+- 4K rendering was checked on an external 4K monitor and on the MacBook's own display. On a
+  display with fewer pixels than 3840×2160, the picture is scaled down, which smooths edges.
+- At 3x the GPU needs about 30–35 ms a frame, so the game runs near 30 fps. **Auto (2x) is the
+  recommended setting on the MacBook Air M5.** Other Macs weren't measured.
+
 ## Settings that affect performance
 
 All in Settings (F1); see [Settings](settings.mdx):
 
-- **Internal Resolution:** the 3D scene's resolution. 1x is the console's 720p.
+- **Internal Resolution:** the 3D scene's resolution. 1x is the console's 720p; 3x is 2160p (4K).
 - **Frame Rate:** 60, 30, or Auto (60, or 30 while the device is hot or can't hold 60).
 - **Asynchronous Shaders:** skips an object for a frame or two while its shader compiles, instead
   of stuttering.
