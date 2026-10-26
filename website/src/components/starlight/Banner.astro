@@ -13,7 +13,7 @@ const { banner } = Astro.locals.starlightRoute.entry.data;
 			<Fragment set:html={banner.content} />
 		) : (
 			<>
-				<strong>ReCarbon v{site.docsVersion}</strong> is the first playable release: these pages
+				<strong>ReCarbon v{site.docsVersion}</strong> is the latest release: these pages
 				describe it. <a href={url('docs/known-issues/')}>Known issues</a>
 			</>
 		)
