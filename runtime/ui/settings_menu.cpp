@@ -96,10 +96,11 @@ namespace ui
             return true;
         }
 
-        // A key's name for a cell: on this keyboard's layout ("Z" on a
-        // French Mac for the position the file calls "w"), else SDL's name
-        // of the position (the platform's: "Left Option" on a Mac), else the
-        // file's. "none" for no key. Main thread.
+        // A key's name for a cell (keynames::Label): on this keyboard's
+        // layout ("Z" on a French Mac for the position the file calls "w"),
+        // else SDL's name of the position (the platform's: "Left Option" on a
+        // Mac; ReCarbon: also when the layout's name isn't ASCII, "W" under
+        // Myanmar), else the file's. "none" for no key. Main thread.
         std::string KeyLabel(double stored)
         {
             if (stored == double(settings::keynames::kNone))
@@ -107,12 +108,8 @@ namespace ui
             if (!(stored >= 1 && stored < double(SDL_SCANCODE_COUNT)))
                 return "?";
             SDL_Scancode sc = SDL_Scancode(int(stored));
-            const char* name = SDL_GetKeyName(SDL_GetKeyFromScancode(sc, SDL_KMOD_NONE, false));
-            if (!name || !name[0])
-                name = SDL_GetScancodeName(sc);
-            if (!name || !name[0])
-                name = settings::keynames::Token(uint16_t(stored));
-            return name && name[0] ? name : "?";
+            return settings::keynames::Label(uint16_t(stored), SDL_GetKeyName(SDL_GetKeyFromScancode(sc, SDL_KMOD_NONE, false)),
+                SDL_GetScancodeName(sc));
         }
 
         // A key the wait refused, for the help line.

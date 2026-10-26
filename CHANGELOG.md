@@ -10,6 +10,8 @@ once, the first time that version starts (it's built into the game: runtime/CMak
 - When the installer turns a disc image or folder down, it says why: another platform's disc (PC,
   PlayStation, Wii, original Xbox), another game, or another region or version of *Need for Speed:
   Carbon*. ReCarbon needs your own *Need for Speed: Carbon* (USA) disc for Xbox 360.
+- Settings > Controls names keys by their position ("W") under a keyboard layout in another
+  script, such as Myanmar, instead of showing "?".
 - The download opens on a ReCarbon window: the app on the left, Applications on the right and an
   arrow between them, so you drag one onto the other to install it.
 

@@ -4,12 +4,14 @@
 // only if the keyboard layout names it in printable ASCII. A layout in another
 // script (Myanmar, Thai) is refused, so no binding is saved under a name the
 // menu can't show. The names are what SDL gives on a layout (the Myanmar ones
-// as logged on the Mac, 2026-10-23). Header only: no SDL.
+// as logged on the Mac, 2026-10-23). And Label: what a Controls cell shows, the
+// key's position when the layout's name isn't ASCII. Header only: no SDL.
 // From the repo root:
 //   clang++ -std=c++20 -O2 -Iruntime tests/key_bindable_test.cpp -o build/key_bindable_test && build/key_bindable_test
 #include <user/key_names.h>
 
 #include <cstdio>
+#include <string_view>
 
 namespace
 {
@@ -68,6 +70,18 @@ int main()
     Check(!AsciiName("\t"), "a control character isn't printable");
     Check(!AsciiName("\x7F"), "DEL isn't printable");
     Check(AsciiName(" ~"), "space to tilde are");
+
+    printf("---- labels (Settings > Controls cells) ----\n");
+    using settings::keynames::Label;
+    auto same = [](const char* a, const char* b) { return std::string_view(a ? a : "") == b; };
+    Check(same(Label(kW, "W", "W"), "W"), "the layout's name when it is ASCII");
+    Check(same(Label(kW, "Z", "W"), "Z"), "a French layout's Z for the W position");
+    Check(same(Label(kW, "\xE1\x80\x90", "W"), "W"), "Myanmar W: the key's position, not a '?'");
+    Check(same(Label(kW, "\xE0\xB9\x84", "W"), "W"), "Thai: the position too");
+    Check(same(Label(kW, "", "W"), "W"), "no layout name: the position");
+    Check(same(Label(kW, "\xE1\x80\x90", ""), "w"), "no ASCII name at all: the settings file's token");
+    Check(same(Label(kW, "\xE1\x80\x90", "\xC3\x89"), "w"), "a non-ASCII position name isn't used either");
+    Check(same(Label(0x1FF, "", ""), "?"), "nothing to show: '?'");
 
     printf("---- %d failed checks ----\n", g_failures);
     return g_failures ? 1 : 0;

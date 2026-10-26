@@ -130,4 +130,18 @@ namespace settings::keynames
     {
         return code != kNone && Known(code) && AsciiName(layoutName);
     }
+
+    // ReCarbon: what a Controls cell shows for a key: the layout's name ("Z" on a French Mac for
+    // the position the file calls "w"); when the layout names it in a script the menu's font can't
+    // show (Myanmar, Thai), the key's position as SDL names it ("W"); else the file's token; "?"
+    // only when there is none. Only names that are printable ASCII are shown.
+    constexpr const char* Label(uint16_t code, const char* layoutName, const char* positionName)
+    {
+        if (layoutName && layoutName[0] && AsciiName(layoutName))
+            return layoutName;
+        if (positionName && positionName[0] && AsciiName(positionName))
+            return positionName;
+        const char* token = Token(code);
+        return token ? token : "?";
+    }
 }
