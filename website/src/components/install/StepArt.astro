@@ -115,9 +115,10 @@ const label = [
 	.step-art {
 		margin: 1.5rem 0;
 		padding: 1rem 1rem 0.5rem;
-		background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--rn-neon) 9%, transparent), transparent 65%), var(--rn-carbon);
+		background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--rn-red) 12%, transparent), transparent 65%), var(--rn-weave), var(--rn-carbon);
 		border: 1px solid var(--rn-graphite);
-		clip-path: polygon(0 0, calc(100% - var(--rn-cut)) 0, 100% var(--rn-cut), 100% 100%, var(--rn-cut) 100%, 0 calc(100% - var(--rn-cut)));
+		border-top: 2px solid var(--rn-red);
+		clip-path: var(--rn-clip-cut);
 	}
 	svg {
 		display: block;
@@ -150,7 +151,7 @@ const label = [
 		font-size: 15px;
 	}
 	.label {
-		fill: #c3cad6;
+		fill: var(--rn-silver);
 	}
 	.mono {
 		font-family: var(--rn-font-mono);
@@ -162,7 +163,7 @@ const label = [
 		stroke-width: 2;
 	}
 	.accent-line {
-		stroke: var(--rn-neon);
+		stroke: var(--rn-red-high);
 		stroke-width: 3;
 	}
 	.panel,
@@ -177,7 +178,7 @@ const label = [
 	}
 	.app {
 		fill: var(--rn-graphite);
-		stroke: var(--rn-neon);
+		stroke: var(--rn-red-high);
 		stroke-width: 2;
 	}
 	.app-mark {
@@ -185,23 +186,23 @@ const label = [
 		font-style: italic;
 		font-weight: 700;
 		font-size: 22px;
-		fill: var(--rn-neon);
+		fill: var(--rn-red-high);
 	}
 	.drag {
-		stroke: var(--rn-neon);
+		stroke: var(--rn-red-high);
 		stroke-width: 3;
 		stroke-dasharray: 6 7;
 	}
 	.folder {
-		fill: color-mix(in srgb, var(--rn-neon) 14%, var(--rn-carbon));
-		stroke: var(--rn-neon-soft);
+		fill: color-mix(in srgb, var(--rn-red-high) 14%, var(--rn-carbon));
+		stroke: var(--rn-red-high);
 		stroke-width: 2;
 	}
 	.bar {
 		fill: var(--rn-graphite);
 	}
 	.bar--on {
-		fill: color-mix(in srgb, var(--rn-neon) 22%, var(--rn-carbon));
+		fill: color-mix(in srgb, var(--rn-red-high) 22%, var(--rn-carbon));
 	}
 	.pad-body {
 		fill: var(--rn-asphalt);
@@ -213,12 +214,12 @@ const label = [
 		stroke-width: 5;
 	}
 	.pad-shine {
-		stroke: color-mix(in srgb, var(--rn-neon) 35%, transparent);
+		stroke: color-mix(in srgb, var(--rn-red-high) 35%, transparent);
 		stroke-width: 2;
 	}
 	.pad-guide {
 		fill: var(--rn-graphite);
-		stroke: var(--rn-neon-soft);
+		stroke: var(--rn-red-high);
 		stroke-width: 2;
 	}
 	.pad-stick {
@@ -228,7 +229,7 @@ const label = [
 	}
 	.pad-stick-top {
 		fill: var(--rn-carbon);
-		stroke: var(--rn-neon);
+		stroke: var(--rn-red-high);
 		stroke-width: 1.5;
 	}
 	.pad-dpad {
@@ -238,16 +239,16 @@ const label = [
 	}
 	.pad-btn {
 		fill: var(--rn-carbon);
-		stroke: var(--rn-neon-soft);
+		stroke: var(--rn-red-high);
 		stroke-width: 1.5;
 	}
 	.pad-btn--a {
-		fill: var(--rn-neon);
-		stroke: var(--rn-neon);
+		fill: var(--rn-red-high);
+		stroke: var(--rn-red-high);
 	}
 	.button {
-		fill: var(--rn-neon);
-		stroke: var(--rn-neon-soft);
+		fill: var(--rn-red-high);
+		stroke: var(--rn-red-high);
 		stroke-width: 4;
 		stroke-opacity: 0.35;
 	}
@@ -265,16 +266,16 @@ const label = [
 		fill: var(--rn-graphite);
 	}
 	.fill {
-		fill: var(--rn-neon);
+		fill: var(--rn-red-high);
 	}
 	.key {
-		fill: #191d24;
-		stroke: #313845;
+		fill: var(--kb-cap-bot);
+		stroke: var(--kb-cap-line);
 		stroke-width: 2;
 	}
 	.key-top {
-		fill: #262c36;
-		stroke: var(--rn-neon);
+		fill: var(--kb-cap-top);
+		stroke: var(--rn-red-high);
 		stroke-width: 2;
 	}
 	.key-text {

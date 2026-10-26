@@ -225,7 +225,7 @@ const descriptions = [
 		font-size: 0.78rem;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
-		color: var(--rn-neon-soft);
+		color: var(--rn-red-high);
 	}
 	.track ol {
 		display: grid;
@@ -249,11 +249,12 @@ const descriptions = [
 		transition: color var(--rn-fast) var(--rn-ease), border-color var(--rn-fast) var(--rn-ease);
 	}
 	.track .done a {
-		border-top-color: color-mix(in srgb, var(--rn-neon) 55%, var(--sl-color-gray-5));
+		border-top-color: color-mix(in srgb, var(--rn-red) 55%, var(--sl-color-gray-5));
 		color: var(--sl-color-gray-2);
 	}
 	.track .current a {
-		border-top-color: var(--rn-neon);
+		border-top-color: var(--rn-red);
+		background: linear-gradient(180deg, color-mix(in srgb, var(--rn-red) 14%, transparent), transparent 80%);
 		color: var(--sl-color-white);
 		font-weight: 600;
 	}
@@ -267,7 +268,7 @@ const descriptions = [
 		font-size: 1.1rem;
 	}
 	.current .num {
-		color: var(--rn-neon);
+		color: var(--rn-red-high);
 	}
 	@media (max-width: 36rem) {
 		/* Narrow screens: numbers only, plus the current step's name. */
@@ -308,6 +309,9 @@ const descriptions = [
 		color: var(--sl-color-gray-3);
 		overflow-wrap: anywhere;
 	}
+	.file a {
+		color: var(--sl-color-text-accent);
+	}
 	.hash {
 		overflow-wrap: anywhere;
 	}
@@ -332,8 +336,8 @@ const descriptions = [
 		align-items: center;
 		gap: 0.75rem;
 		padding: 0.5rem 0.75rem;
-		background: var(--sl-color-gray-6);
-		border-inline-start: 3px solid var(--rn-neon);
+		background: var(--rn-weave), var(--sl-color-gray-6);
+		border-inline-start: 3px solid var(--rn-red);
 	}
 	.keys .alt {
 		display: block;
@@ -365,18 +369,19 @@ const descriptions = [
 		gap: 0.15rem;
 		min-height: 44px;
 		padding: 0.75rem 1rem;
-		border: 1px solid var(--sl-color-gray-5);
+		border: 1px solid var(--rn-steel);
 		text-decoration: none;
 		color: var(--sl-color-white);
 		font-weight: 600;
-		clip-path: polygon(0 0, calc(100% - var(--rn-cut)) 0, 100% var(--rn-cut), 100% 100%, var(--rn-cut) 100%, 0 calc(100% - var(--rn-cut)));
+		background: var(--rn-weave), var(--rn-carbon);
+		clip-path: var(--rn-clip-cut);
 		transition: background-color var(--rn-fast) var(--rn-ease);
 	}
 	.pager .next {
 		text-align: end;
 	}
 	.pager a.btn:hover {
-		background: var(--sl-color-gray-6);
+		background: var(--rn-graphite);
 	}
 	.pager .disabled {
 		color: var(--sl-color-gray-4);
@@ -403,15 +408,22 @@ const descriptions = [
 		}
 	}
 	.pager .primary {
-		background: var(--sl-color-accent);
-		border-color: var(--sl-color-accent);
-		color: var(--rn-asphalt);
+		background: linear-gradient(180deg, rgb(255 255 255 / 0.16), transparent 55%), var(--rn-red);
+		border-color: var(--rn-red);
+		color: var(--rn-white);
 	}
 	.pager a.primary:hover {
-		background: var(--rn-neon-soft);
+		background-color: var(--rn-red-hover);
 	}
-	.pager .primary:focus-visible {
-		outline-color: var(--rn-asphalt);
+	/* Full white on red (4.97:1): no dimmed text there. */
+	.pager .primary :is(.dir, .note) {
+		opacity: 1;
+	}
+	.pager .primary .what {
+		font-family: var(--rn-font-display);
+		font-style: italic;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
 	}
 	.dir {
 		font-family: var(--rn-font-mono);
@@ -424,7 +436,7 @@ const descriptions = [
 	/* clip-path would cut the focus ring off: draw it inside. */
 	.pager .btn:focus-visible,
 	.track a:focus-visible {
-		outline: 2px solid var(--rn-neon-soft);
+		outline: 2px solid var(--rn-focus);
 		outline-offset: -4px;
 	}
 	.more .sep {
