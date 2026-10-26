@@ -3,7 +3,7 @@
 // change both at a release.
 import { site } from '../site.config';
 
-const version = '0.1.0';
+const version = '0.1.1';
 const tag = `v${version}`;
 const assets = `${site.repo.url}/releases/download/${tag}`;
 const dmg = `ReCarbon-${version}-macos.dmg`;
@@ -17,11 +17,11 @@ export const release = {
 		name: dmg,
 		url: `${assets}/${dmg}`,
 		sha256Url: `${assets}/${dmg}.sha256`,
-		sha256: 'abc376fb04550842fe4a5a34d4feb75c8c9dd302a8b45db4f590be3018d60d9b',
+		sha256: '44aa788e89062a04ea547a940e048f47294421b6c38fc4e39558b53c593cad5f',
 	},
 	thirdPartySource: {
 		name: `ReCarbon-${version}-third-party-source.tar.xz`,
-		sha256: 'a0e805b44a4724acc445e18049ed5662946376c4a94f52d8ef311704cc19e883',
+		sha256: '74926bf1918b9853aecbe000bec48c2830d49dd431496d53ff09d4d881ada6a8',
 	},
 };
 

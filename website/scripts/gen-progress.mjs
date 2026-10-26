@@ -129,13 +129,10 @@ const FEATURES = [
 const ISSUES = [
 	{ title: 'Occasional stalls of about 1 s', text: 'The presenter waits for a free drawable while holding the GPU queue lock. Why no drawable is free isn\'t known yet.', state: 'open' },
 	{ title: 'GPU-idle stalls of 250–600 ms', text: 'No lock wait is involved. The cause is unknown.', state: 'open' },
-	{ title: 'Movie frame pacing', text: 'Movies play at the right speed, but 20–28% of frames show for 1 or 3 refreshes instead of 2. Smoothing is deferred to polish.', state: 'deferred' },
 	{ title: 'Physical controller not yet tested', text: 'The virtual-controller and hot-unplug tests pass, but they don\'t show that a physical pad works.', state: 'deferred' },
 	{ title: 'Frame rate falls in long races on a MacBook Air M1', text: 'Races start at about 30 fps and fall with time under load, to 16–22 fps in 9- to 15-minute races. GPU throttling on the fanless M1 is a hypothesis, not a confirmed cause. The MacBook Air M5 held about 51 fps with no fall.', state: 'open' },
-	{ title: 'Texture cache grows during play', text: 'Textures are kept until a setting reloads them, so long sessions use more memory: about 500 MB over 7 laps. On current evidence it doesn\'t cause the M1 frame-rate drop. A fix is planned after the alpha.', state: 'deferred' },
+	{ title: 'Texture cache grows during play', text: 'Textures are kept until a setting reloads them, so long sessions use more memory: about 500 MB over 7 laps. On current evidence it doesn\'t cause the M1 frame-rate drop. An experimental eviction is in v0.1.1, off by default until a realistic budget is tested.', state: 'deferred' },
 	{ title: 'Hitches in the first race after a fresh install', text: 'With an empty shader cache the first race compiles its pipelines as it goes: the worst frame was 450 ms on a fresh macOS account (MacBook Air M5), and 100 ms in the next session.', state: 'open' },
-	{ title: '"Cannot connect to Xbox Live!" at every launch', text: 'The game shows this notice once per launch; accept it with A (Space on the keyboard). ReCarbon doesn\'t dismiss it for you.', state: 'open' },
-	{ title: 'Key labels on non-Latin keyboard layouts', text: 'Under a layout such as Myanmar, Settings > Controls draws letter keys as \'?\'. Binding such a key is refused safely; gameplay input is unaffected.', state: 'open' },
 ];
 
 // Pending human tests: reference/HUMAN_TEST_PLAN.md's sessions, by what they cover.

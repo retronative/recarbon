@@ -1,15 +1,15 @@
 ---
 title: Download
-description: Download ReCarbon v0.1.0, an early playable release, for Apple Silicon Macs with macOS 27 or newer. Bring your own disc.
+description: Download ReCarbon v0.1.1, an early playable release, for Apple Silicon Macs with macOS 27 or newer. Bring your own disc.
 ---
 
 ReCarbon is an unofficial native port of *Need for Speed: Carbon* (Xbox 360) to Apple Silicon
 Macs.
 
-**[Download ReCarbon v0.1.0 for Apple Silicon](https://github.com/retronative/recarbon/releases/download/v0.1.0/ReCarbon-0.1.0-macos.dmg)**
-(`ReCarbon-0.1.0-macos.dmg`, from the [v0.1.0 release](https://github.com/retronative/recarbon/releases/tag/v0.1.0))
+**[Download ReCarbon v0.1.1 for Apple Silicon](https://github.com/retronative/recarbon/releases/download/v0.1.1/ReCarbon-0.1.1-macos.dmg)**
+(`ReCarbon-0.1.1-macos.dmg`, from the [v0.1.1 release](https://github.com/retronative/recarbon/releases/tag/v0.1.1))
 
-v0.1.0 is an early release: races, career progress and saves work, but it is not finished.
+v0.1.1 is an early release: races, career progress and saves work, but it is not finished.
 Read [Known issues](known-issues.md) before you play.
 
 ## You need
@@ -26,12 +26,12 @@ Read [Known issues](known-issues.md) before you play.
 In Terminal, in the folder with the download:
 
 ```sh
-shasum -a 256 ReCarbon-0.1.0-macos.dmg
+shasum -a 256 ReCarbon-0.1.1-macos.dmg
 ```
 
 The code it prints must be
-`abc376fb04550842fe4a5a34d4feb75c8c9dd302a8b45db4f590be3018d60d9b`. It's also in the release's
-[`ReCarbon-0.1.0-macos.dmg.sha256`](https://github.com/retronative/recarbon/releases/download/v0.1.0/ReCarbon-0.1.0-macos.dmg.sha256).
+`44aa788e89062a04ea547a940e048f47294421b6c38fc4e39558b53c593cad5f`. It's also in the release's
+[`ReCarbon-0.1.1-macos.dmg.sha256`](https://github.com/retronative/recarbon/releases/download/v0.1.1/ReCarbon-0.1.1-macos.dmg.sha256).
 
 ## More
 
@@ -45,10 +45,10 @@ The code it prints must be
 ReCarbon is free software under the GPL-3.0-or-later ([License](../COPYING),
 [Notices](../NOTICE)). The source of its replaceable LGPL libraries
 ([Third-party notices](../THIRD_PARTY_NOTICES.md)) is on the
-[release page](https://github.com/retronative/recarbon/releases/tag/v0.1.0) as
-`ReCarbon-0.1.0-third-party-source.tar.xz` (SHA-256
-`a0e805b44a4724acc445e18049ed5662946376c4a94f52d8ef311704cc19e883`). ReCarbon's own source for
-this build is the tag [`v0.1.0`](https://github.com/retronative/recarbon/tree/v0.1.0).
+[release page](https://github.com/retronative/recarbon/releases/tag/v0.1.1) as
+`ReCarbon-0.1.1-third-party-source.tar.xz` (SHA-256
+`74926bf1918b9853aecbe000bec48c2830d49dd431496d53ff09d4d881ada6a8`). ReCarbon's own source for
+this build is the tag [`v0.1.1`](https://github.com/retronative/recarbon/tree/v0.1.1).
 
 ReCarbon is not affiliated with or endorsed by Electronic Arts. "Need for Speed" and "Carbon" are
 trademarks of Electronic Arts Inc.

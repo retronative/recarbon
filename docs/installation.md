@@ -7,12 +7,12 @@ You need an Apple Silicon Mac with **macOS 27 or newer**, and **your own** disc 
 ***Need for Speed: Carbon* (USA), Xbox 360**. One step at a time, with pictures: the
 [step-by-step guide](https://retronative.github.io/recarbon/docs/installation/step-1/).
 
-ReCarbon v0.1.0 is an early release: playable, but not finished. See [Known issues](known-issues.md).
+ReCarbon v0.1.1 is an early release: playable, but not finished. See [Known issues](known-issues.md).
 
 ## 1. Download ReCarbon
 
-Download [`ReCarbon-0.1.0-macos.dmg`](https://github.com/retronative/recarbon/releases/download/v0.1.0/ReCarbon-0.1.0-macos.dmg)
-from the [v0.1.0 release](https://github.com/retronative/recarbon/releases/tag/v0.1.0). The file
+Download [`ReCarbon-0.1.1-macos.dmg`](https://github.com/retronative/recarbon/releases/download/v0.1.1/ReCarbon-0.1.1-macos.dmg)
+from the [v0.1.1 release](https://github.com/retronative/recarbon/releases/tag/v0.1.1). The file
 shows macOS's generic disk-image icon; ReCarbon's own icon appears once it is open.
 
 ## 2. Drag ReCarbon to Applications
@@ -67,11 +67,11 @@ Optional: explore the controls and game features in the
 In Terminal, in the folder with the download:
 
 ```sh
-shasum -a 256 ReCarbon-0.1.0-macos.dmg
+shasum -a 256 ReCarbon-0.1.1-macos.dmg
 ```
 
 The code it prints must be
-`abc376fb04550842fe4a5a34d4feb75c8c9dd302a8b45db4f590be3018d60d9b`.
+`44aa788e89062a04ea547a940e048f47294421b6c38fc4e39558b53c593cad5f`.
 
 ## Advanced
 

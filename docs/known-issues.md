@@ -18,6 +18,17 @@ checks (M8, 2026-10-26). Each is still open.
 | macOS 27 or newer only | Current builds link libraries built for macOS 27.0. |
 | No render scaling or widescreen options | Render scaling and widescreen options are not in this alpha. |
 
+## Tested for v0.1.1
+
+On a MacBook Air M5, on top of the v0.1.0 tests below:
+
+- **Movies:** in the same 120 s of the boot and attract movies, frames shown for 1 or 3 refreshes
+  instead of 2 fell from 18.5% to 1.7%; the movies played for the same length.
+- **The release candidate:** every automated check passes (the unit tests, the app and disk-image
+  checks, the replaceable LGPL libraries, the checksums), and the disk image's window was checked
+  in Finder, with ReCarbon copied onto its Applications shortcut.
+- **Rebinding under a non-Latin layout:** unit tests only (above).
+
 ## Tested for v0.1.0
 
 All on a MacBook Air M5 (24 GB, macOS 27.0.1) unless marked M1.

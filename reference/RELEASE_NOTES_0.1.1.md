@@ -1,7 +1,7 @@
 # ReCarbon v0.1.1: release notes (DRAFT, not published)
 
-> **Internal draft, 2026-10-26.** The text for the v0.1.1 release page. **[DMG SHA-256]** is the
-> final RC's dmg SHA-256 (its `.sha256` file) and **[SOURCE SHA-256]** the third-party source
+> **Internal draft, 2026-10-26.** The text for the v0.1.1 release page. `44aa788e89062a04ea547a940e048f47294421b6c38fc4e39558b53c593cad5f` is the
+> final RC's dmg SHA-256 (its `.sha256` file) and `74926bf1918b9853aecbe000bec48c2830d49dd431496d53ff09d4d881ada6a8` the third-party source
 > archive's; both are filled in once the RC passes. Nothing is published without the user's approval.
 
 <!-- 8< ---------------- release page body starts here ---------------- -->
@@ -40,8 +40,8 @@ An Apple silicon Mac with macOS 27 or later, and your own disc image.
 
 | File | SHA-256 |
 |---|---|
-| `ReCarbon-0.1.1-macos.dmg` | **[DMG SHA-256]** |
-| `ReCarbon-0.1.1-third-party-source.tar.xz` | **[SOURCE SHA-256]** |
+| `ReCarbon-0.1.1-macos.dmg` | `44aa788e89062a04ea547a940e048f47294421b6c38fc4e39558b53c593cad5f` |
+| `ReCarbon-0.1.1-third-party-source.tar.xz` | `74926bf1918b9853aecbe000bec48c2830d49dd431496d53ff09d4d881ada6a8` |
 
 Check the download with `shasum -a 256 -c ReCarbon-0.1.1-macos.dmg.sha256`. ReCarbon is signed ad
 hoc and not notarized: macOS asks you to choose **Open Anyway** once (see Installation). The
