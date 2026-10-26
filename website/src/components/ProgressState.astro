@@ -35,12 +35,12 @@ const info = PROGRESS_STATES[state];
 	.icon {
 		font-weight: 700;
 	}
-	.pstate--completed { --c: var(--rn-volt); }
-	.pstate--accepted { --c: var(--rn-neon); }
-	.pstate--in-progress { --c: var(--rn-amber); }
-	.pstate--deferred { --c: #b6c2d6; border-style: dotted; }
+	.pstate--completed { --c: var(--rn-status-completed); }
+	.pstate--accepted { --c: var(--rn-status-accepted); }
+	.pstate--in-progress { --c: var(--rn-status-in-progress); }
+	.pstate--deferred { --c: var(--rn-status-deferred); border-style: dotted; }
 	.pstate--unverified {
-		--c: #ff8a6e;
+		--c: var(--rn-status-blocked);
 		border-style: dashed;
 		background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--c) 16%, transparent) 0 4px, transparent 4px 8px);
 	}

@@ -1,37 +1,104 @@
-/* ReCarbon design tokens (docs/PLAN.md §4). Shared by the custom pages and the docs. */
+/* ReCarbon design tokens: the one place for colour, type, cuts and glows. Shared by the
+   custom pages (RaceLayout) and the docs (Starlight's customCss). The site is dark-only
+   (decision D7). Contrast ratios (WCAG 2) are noted against --rn-asphalt / --rn-carbon. */
 :root {
-	--rn-asphalt: #0b0d10;
-	--rn-carbon: #15181d;
-	--rn-graphite: #232831;
-	--rn-steel: #3a4250;
-	--rn-neon: #19e3ff;
-	--rn-neon-soft: #7cf0ff;
-	--rn-ember: #ff4d2e;
+	/* Surfaces: black and charcoal. */
+	--rn-black: #050506;
+	--rn-asphalt: #0a0a0c; /* page background */
+	--rn-carbon: #141417; /* cards, panels */
+	--rn-graphite: #1d1e22; /* raised surfaces, hairlines */
+	--rn-steel: #3a3c43; /* strong borders */
+
+	/* Text: metallic silver tiers. */
+	--rn-white: #ffffff;
+	--rn-text: #e6e8ec; /* 16.4:1 on asphalt, 15.3:1 on carbon */
+	--rn-silver: #c2c6cd; /* 11.5:1 / 10.7:1 */
+	--rn-muted: #9a9ea7; /* 7.4:1 / 6.9:1; 6.2:1 on graphite */
+
+	/* Racing red. --rn-red is for fills, borders, large type and glows (white on it: 4.97:1;
+	   on asphalt 3.98:1, enough for UI parts and large text only). --rn-red-high is the red for
+	   small text and thin strokes (5.75:1 on asphalt, 5.35:1 on carbon, 4.84:1 on graphite). */
+	--rn-red: #e10600;
+	--rn-red-hover: #c40500; /* white on it: 6.0:1 */
+	--rn-red-press: #9e0400;
+	--rn-red-high: #ff4336;
+	--rn-red-low: #2a0806; /* tinted backgrounds */
+	--rn-red-glow: rgb(225 6 0 / 0.45);
+
+	/* Chrome: highlights, metallic type. */
+	--rn-chrome: linear-gradient(180deg, #ffffff 0%, #e4e7ec 40%, #9aa0aa 52%, #d9dde3 70%, #ffffff 100%);
+	--rn-chrome-line: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.55) 30%, rgb(255 255 255 / 0.15) 70%, transparent);
+	--rn-red-line: linear-gradient(90deg, transparent, var(--rn-red) 20%, var(--rn-red-high) 55%, transparent);
+
+	/* Carbon-fibre twill, drawn in CSS (no bitmap): layer it over a surface colour. */
+	--rn-weave:
+		repeating-linear-gradient(45deg, rgb(255 255 255 / 0.028) 0 2px, transparent 2px 4px),
+		repeating-linear-gradient(-45deg, rgb(0 0 0 / 0.32) 0 2px, transparent 2px 4px);
+
+	/* Focus: white, so it shows on red buttons too (4.97:1 on red, 19:1 on asphalt). */
+	--rn-focus: #ffffff;
+
+	/* Other accents, for status and diagrams only (never the brand accent). */
 	--rn-amber: #ffb02e;
 	--rn-volt: #c6ff3d;
-	--rn-text: #e9eef5;
-	--rn-muted: #8a94a6;
+	--rn-steel-blue: #6cb4ff; /* 8.4:1 on carbon */
 
 	--rn-font-display: 'Chakra Petch', 'Avenir Next Condensed', system-ui, sans-serif;
 	--rn-font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
 	--rn-font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
-	--rn-radius: 4px;
+	/* Type scale. */
+	--rn-fs-xs: 0.75rem;
+	--rn-fs-sm: 0.875rem;
+	--rn-fs-md: 1rem;
+	--rn-fs-lg: 1.2rem;
+	--rn-fs-xl: 1.5rem;
+	--rn-fs-h2: clamp(1.9rem, 4.5vw, 3rem);
+	--rn-fs-hero: clamp(1.5rem, 4.2vw, 2.75rem);
+
+	/* Spacing. */
+	--rn-space-1: 0.25rem;
+	--rn-space-2: 0.5rem;
+	--rn-space-3: 1rem;
+	--rn-space-4: 1.5rem;
+	--rn-space-5: 2.5rem;
+	--rn-space-6: 4rem;
+
+	/* Shape: diagonal cuts instead of rounded corners. */
+	--rn-radius: 2px;
+	--rn-cut-sm: 8px;
 	--rn-cut: 14px; /* diagonal corner cut on cards */
+	--rn-cut-lg: 24px;
+	--rn-slant: 12px; /* the parallelogram buttons' slant */
 	--rn-skew: -8deg;
+	--rn-clip-cut: polygon(0 0, calc(100% - var(--rn-cut)) 0, 100% var(--rn-cut), 100% 100%, var(--rn-cut) 100%, 0 calc(100% - var(--rn-cut)));
+	--rn-clip-slant: polygon(var(--rn-slant) 0, 100% 0, calc(100% - var(--rn-slant)) 100%, 0 100%);
+
+	/* Depth. */
+	--rn-shadow: 0 18px 40px -24px rgb(0 0 0 / 0.9);
+	--rn-glow: 0 0 24px var(--rn-red-glow);
+	--rn-glow-text: 0 0 18px var(--rn-red-glow);
+
 	--rn-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 	--rn-fast: 160ms;
 	--rn-slow: 280ms;
 	--rn-header-h: 4rem;
 
-	/* Status badges: each has an icon and text too, never colour alone. */
+	/* Status badges: each has an icon and text too, never colour alone. Red is the brand, so
+	   no status is red: "not verified" is orange and dashed. */
 	--rn-status-tested: var(--rn-volt);
 	--rn-status-automated: #8be08b;
-	--rn-status-hand-verified: var(--rn-neon);
+	--rn-status-hand-verified: var(--rn-steel-blue);
 	--rn-status-source: #b6c2d6;
-	--rn-status-pending: var(--rn-amber);
-	--rn-status-unverified: var(--rn-ember);
+	--rn-status-pending: #ffd23f;
+	--rn-status-unverified: #ff8a3d; /* 7.8:1 on carbon */
 	--rn-status-not-mapped: var(--rn-muted);
+	/* Milestones (Progress). */
+	--rn-status-completed: var(--rn-volt);
+	--rn-status-accepted: var(--rn-steel-blue);
+	--rn-status-in-progress: var(--rn-amber);
+	--rn-status-deferred: #b6c2d6;
+	--rn-status-blocked: #ff8a6e;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -41,54 +108,73 @@
 	}
 }
 
-/* Surfaces, text and diagram colours for the custom pages (landing, Garage).
-   The site is dark-only (decision D7). */
+/* Surfaces, text and diagram colours for the custom pages (landing, Garage). */
 :root {
-	--page-bg: #0b0d10;
-	--page-bg-deep: #08090c;
-	--surface: #15181d;
-	--surface-2: #12151a;
-	--line: #232831;
-	--line-strong: #3a4250;
-	--text: #e9eef5;
-	--text-2: #c3cad6;
-	--text-muted: #8a94a6;
-	--kbd-bg: #1c2129;
-	--mix-base: #161a20; /* what mode colours are tinted into */
-	--mode-drive: #19e3ff;
-	--mode-menu: #c6ff3d;
-	--mode-settings: #ff8a3d;
-	--link: #7cf0ff;
+	--page-bg: var(--rn-asphalt);
+	--page-bg-deep: var(--rn-black);
+	--surface: var(--rn-carbon);
+	--surface-2: #101013;
+	--line: var(--rn-graphite);
+	--line-strong: var(--rn-steel);
+	--text: var(--rn-text);
+	--text-2: var(--rn-silver);
+	--text-muted: var(--rn-muted);
+	--kbd-bg: #1b1c20;
+	--mix-base: #161619; /* what mode colours are tinted into */
+	--mode-drive: var(--rn-red-high);
+	--mode-menu: var(--rn-volt);
+	--mode-settings: var(--rn-steel-blue);
+	--link: var(--rn-red-high);
 
-	--kb-case: #0e1115;
-	--kb-case-line: #2a303a;
-	--kb-cap-top: #262c36;
-	--kb-cap-bot: #191d24;
-	--kb-cap-line: #313845;
-	--kb-legend: #d3d9e3;
+	--kb-case: #0d0d10;
+	--kb-case-line: #2b2c32;
+	--kb-cap-top: #26272c;
+	--kb-cap-bot: #18191d;
+	--kb-cap-line: #34353c;
+	--kb-legend: #d6d9de;
 	--kb-legend-strong: #fff;
 	--kb-dim-unused: 0.25;
 	--kb-dim-bound: 0.5;
 
-	--pad-body-top: #2a303b;
-	--pad-body-bot: #181c23;
-	--pad-line: #4a5363;
-	--pad-part: #2b313c;
-	--pad-part-line: #48505e;
-	--pad-stick: #20252d;
-	--pad-well: #12151a;
-	--pad-well-line: #353c48;
-	--pad-label: #c9d1dc;
-	--pad-off: #1a1e24;
-	--guide-line: #6b7486;
-	--guide-chip: #0f1216;
-	--guide-chip-line: #5a6377;
-	--guide-text: #e9eef5;
-	--guide-muted: #8a94a6;
+	--pad-body-top: #2b2c32;
+	--pad-body-bot: #18191d;
+	--pad-line: #4c4f58;
+	--pad-part: #2c2d33;
+	--pad-part-line: #4a4c55;
+	--pad-stick: #202126;
+	--pad-well: #121215;
+	--pad-well-line: #36383f;
+	--pad-label: #cbced5;
+	--pad-off: #1a1b1f;
+	--guide-line: #6e727c;
+	--guide-chip: #0f0f12;
+	--guide-chip-line: #5c5f69;
+	--guide-text: var(--rn-text);
+	--guide-muted: var(--rn-muted);
+
+	--ink-amber: var(--rn-amber);
+	color-scheme: dark;
 }
 
+/* Starlight (the docs) on the same tokens. */
+:root,
+::backdrop {
+	--sl-font: var(--rn-font-body);
+	--sl-font-mono: var(--rn-font-mono);
+	--sl-nav-height: var(--rn-header-h);
+	--sl-content-width: 48rem;
 
-:root {
-	--ink-amber: #ffb02e;
-	color-scheme: dark;
+	--sl-color-accent-low: var(--rn-red-low);
+	--sl-color-accent: var(--rn-red);
+	--sl-color-accent-high: var(--rn-red-high); /* links: 5.75:1 */
+	--sl-color-white: var(--rn-white);
+	--sl-color-gray-1: var(--rn-text);
+	--sl-color-gray-2: var(--rn-silver);
+	--sl-color-gray-3: var(--rn-muted);
+	--sl-color-gray-4: #4b4d55;
+	--sl-color-gray-5: var(--rn-graphite);
+	--sl-color-gray-6: var(--rn-carbon);
+	--sl-color-black: var(--rn-asphalt);
+	--sl-color-bg-nav: rgb(10 10 12 / 0.92);
+	--sl-color-hairline-shade: #000;
 }

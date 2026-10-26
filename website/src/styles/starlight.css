@@ -1,36 +1,26 @@
-/* Starlight restyled as ReCarbon's pit wall: night asphalt, neon accents, track-map sidebar. */
-:root,
-::backdrop {
-	--sl-font: var(--rn-font-body);
-	--sl-font-mono: var(--rn-font-mono);
-	--sl-nav-height: var(--rn-header-h);
-	--sl-content-width: 48rem;
-
-	--sl-color-accent-low: #072a33;
-	--sl-color-accent: #0fb8d0;
-	--sl-color-accent-high: var(--rn-neon-soft);
-	--sl-color-white: #ffffff;
-	--sl-color-gray-1: var(--rn-text);
-	--sl-color-gray-2: #c3cad6;
-	--sl-color-gray-3: var(--rn-muted);
-	--sl-color-gray-4: #4a5262;
-	--sl-color-gray-5: var(--rn-graphite);
-	--sl-color-gray-6: var(--rn-carbon);
-	--sl-color-black: var(--rn-asphalt);
-	--sl-color-bg-nav: rgb(11 13 16 / 0.92);
-	--sl-color-hairline-shade: #000;
-}
-
-/* Display type: Chakra Petch, upright letters on a slanted rhythm. */
+/* Starlight restyled as ReCarbon's pit wall: carbon and asphalt, racing-red accents, a
+   track-map sidebar. Its colour variables are mapped in tokens.css. */
+/* Display type: Chakra Petch, upright letters on a slanted rhythm; the page title in
+   chrome (its darkest stop is 7:1 on asphalt). */
 .sl-markdown-content :is(h1, h2, h3),
 h1#_top {
 	font-family: var(--rn-font-display);
 	font-weight: 700;
 	letter-spacing: 0.01em;
+	color: var(--sl-color-white);
 }
 h1#_top {
 	text-transform: uppercase;
 	font-style: italic;
+	background: var(--rn-chrome);
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+}
+/* The same focus ring as the custom pages. */
+:focus-visible {
+	outline: 2px solid var(--rn-focus);
+	outline-offset: 2px;
 }
 .sl-markdown-content h2 {
 	position: relative;
@@ -43,8 +33,9 @@ h1#_top {
 	inset-block-start: -1px;
 	inset-inline-start: 0;
 	width: 3rem;
-	height: 2px;
-	background: var(--sl-color-accent);
+	height: 3px;
+	background: var(--rn-red);
+	clip-path: polygon(0 0, 100% 0, calc(100% - 3px) 100%, 0 100%);
 }
 
 /* The docs' mobile menu toggle as the custom pages' square Menu button (race.css). */
@@ -52,8 +43,8 @@ h1#_top {
 	--sl-menu-button-size: 44px;
 }
 .sl-menu-button {
-	border: 1px solid var(--sl-color-gray-5);
-	border-radius: 3px;
+	border: 1px solid var(--rn-steel);
+	border-radius: var(--rn-radius);
 	background-color: transparent;
 	color: var(--sl-color-white);
 	box-shadow: none;
@@ -74,14 +65,14 @@ h1#_top {
 	background-color: var(--sl-color-gray-6);
 }
 
-/* Header: a race HUD bar with a speed-line underline. */
+/* Header: the custom pages' carbon bar (race.css .hud) with its red speed line. */
 header.header {
 	backdrop-filter: blur(8px);
 	border-bottom-color: transparent;
-	background-image: linear-gradient(90deg, transparent, var(--sl-color-accent) 20%, var(--rn-ember) 60%, transparent) !important;
-	background-size: 100% 1px !important;
-	background-repeat: no-repeat !important;
-	background-position: bottom !important;
+	background-image: var(--rn-red-line), var(--rn-weave) !important;
+	background-size: 100% 1px, auto !important;
+	background-repeat: no-repeat, repeat !important;
+	background-position: bottom, 0 0 !important;
 	background-color: var(--sl-color-bg-nav) !important;
 }
 
@@ -98,7 +89,7 @@ nav.sidebar .top-level {
 nav.sidebar .top-level > li > details > summary .group-label::before {
 	counter-increment: sector;
 	content: 'S' counter(sector) ' ';
-	color: var(--sl-color-accent);
+	color: var(--sl-color-accent-high);
 	font-size: 0.8em;
 	margin-inline-end: 0.25rem;
 }
@@ -107,8 +98,8 @@ nav.sidebar ul ul {
 }
 nav.sidebar a[aria-current='page'] {
 	background: linear-gradient(90deg, var(--sl-color-accent-low), transparent);
-	color: var(--sl-color-accent-high);
-	border-inline-start: 2px solid var(--sl-color-accent);
+	color: var(--sl-color-white);
+	border-inline-start: 2px solid var(--rn-red);
 	margin-inline-start: -2px;
 	font-weight: 600;
 }
@@ -116,7 +107,44 @@ nav.sidebar a[aria-current='page'] {
 /* Cards and asides: diagonal cut corners. */
 .sl-markdown-content .card,
 .starlight-aside {
-	clip-path: polygon(0 0, calc(100% - var(--rn-cut)) 0, 100% var(--rn-cut), 100% 100%, var(--rn-cut) 100%, 0 calc(100% - var(--rn-cut)));
+	clip-path: var(--rn-clip-cut);
+}
+.sl-markdown-content .card {
+	background: var(--rn-weave), var(--sl-color-gray-6);
+}
+
+/* Buttons as the custom pages' (race.css .btn): white on racing red, slanted. */
+.sl-link-button {
+	font-family: var(--rn-font-display);
+	font-weight: 700;
+	font-style: italic;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	border-radius: 0;
+	clip-path: var(--rn-clip-slant);
+	padding-inline: 1.6rem;
+}
+.sl-link-button.primary,
+.sl-link-button.primary:hover {
+	color: var(--rn-white);
+	background: linear-gradient(180deg, rgb(255 255 255 / 0.18), transparent 55%), var(--rn-red);
+	border-color: var(--rn-red);
+}
+.sl-link-button.primary:hover {
+	background-color: var(--rn-red-hover);
+}
+.sl-link-button:focus-visible {
+	outline: 2px solid var(--rn-focus);
+	outline-offset: -5px;
+}
+
+/* Links: red, with the underline a step darker. */
+.sl-markdown-content a:not(.sl-link-button) {
+	text-decoration-color: color-mix(in srgb, var(--rn-red-high) 55%, transparent);
+	text-underline-offset: 0.2em;
+}
+.sl-markdown-content a:not(.sl-link-button):hover {
+	text-decoration-color: currentColor;
 }
 
 .sl-markdown-content table {
