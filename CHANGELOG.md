@@ -3,7 +3,7 @@
 What changed in each ReCarbon version, newest first. The game shows the current version's entry
 once, the first time that version starts (it's built into the game: runtime/CMakeLists.txt).
 
-## Unreleased
+## v0.1.1
 
 ### What's new
 
@@ -17,6 +17,13 @@ once, the first time that version starts (it's built into the game: runtime/CMak
   (on a MacBook Air M5, uneven frames fell from 18.5% to 1.7%).
 - The download opens on a ReCarbon window: the app on the left, Applications on the right and an
   arrow between them, so you drag one onto the other to install it.
+- The "Cannot connect to Xbox Live!" notice at the main menu is the game's own notice that it
+  can't reach Xbox Live, not a ReCarbon error: press A (Space) once and play on. The FAQ explains it.
+- Known issues: occasional stalls of about a second while racing, and shorter ones; the slowdown
+  in long races on the M1; memory use that grows during long sessions; the first race after a
+  fresh install can hitch while the shader cache fills. Rebinding under a Myanmar or Thai layout
+  hasn't been tried in the game yet, and a physical controller hasn't been tested. It needs an
+  Apple silicon Mac with macOS 27 or later.
 
 ## v0.1.0
 
