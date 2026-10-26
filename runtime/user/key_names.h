@@ -107,16 +107,9 @@ namespace settings::keynames
         return code == kNone || Token(code) != nullptr;
     }
 
-    // ReCarbon (M5.15): the name the keyboard layout gives a key, as Settings >
-    // Controls shows it, must be printable ASCII for the menu to bind the key:
-    // "W", "Left Shift", "F5", "Keypad 1". A layout in another script names
-    // letter keys in it (Myanmar: U+1010 for W; Thai), which the menu's font
-    // can't show, and such a key is refused with kUnsupportedCharacter: no
-    // binding is saved for it. Bindings stay scancodes either way, and the
-    // game's input never looks at names. An empty name (the layout has none
-    // for the key) passes: the cell shows the key's position instead.
-    constexpr const char* kUnsupportedCharacter = "Unsupported key character. Switch to an English keyboard layout.";
-
+    // ReCarbon: a name the menu's font can show (printable ASCII: "W", "Left
+    // Shift", "F5", "Keypad 1"). A layout in another script names letter keys
+    // in it (Myanmar: U+1010 for W; Thai), which the font can't show.
     constexpr bool AsciiName(std::string_view name)
     {
         for (char c : name)
@@ -125,10 +118,14 @@ namespace settings::keynames
         return true;
     }
 
-    // May the menu bind this key (a code of the table, not "none"), named so?
-    constexpr bool Bindable(uint16_t code, std::string_view layoutName)
+    // May the menu bind this key (a code of the table, not "none")? A binding
+    // is the key's position (scancode), so the layout's name for it doesn't
+    // matter: ReCarbon v0.1.1 binds keys under Myanmar, Thai and other layouts
+    // in another script too (v0.1.0 refused them, ROADMAP M5.15); the cell
+    // shows the key's position name instead (Label).
+    constexpr bool Bindable(uint16_t code)
     {
-        return code != kNone && Known(code) && AsciiName(layoutName);
+        return code != kNone && Known(code);
     }
 
     // ReCarbon: what a Controls cell shows for a key: the layout's name ("Z" on a French Mac for

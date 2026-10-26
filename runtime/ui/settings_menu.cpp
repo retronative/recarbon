@@ -49,7 +49,6 @@ namespace ui
         // row (SettingsMenuTakesKey takes the press before ImGui sees it).
         Id s_waiting = Id::Count;    // the Key option a row waits for; Count: no wait
         SDL_Scancode s_refused = SDL_SCANCODE_UNKNOWN;  // a press the wait wouldn't take; the help line says so
-        bool s_refusedCharacter = false;  // ReCarbon: it was refused for its layout's name (keynames::Bindable)
         SDL_Scancode s_takenKey = SDL_SCANCODE_UNKNOWN;  // the key a wait took or refused, until its release
         Id s_slotRow = Id::Count;    // the row whose chosen cell s_slot is
         int s_slot = 0;              // 0: the row's first key, 1: its second
@@ -60,7 +59,6 @@ namespace ui
         {
             s_waiting = Id::Count;
             s_refused = SDL_SCANCODE_UNKNOWN;
-            s_refusedCharacter = false;
         }
 
         constexpr int kCategories = int(Category::Count);
@@ -407,7 +405,6 @@ namespace ui
             {
                 s_waiting = ids[s_slot];
                 s_refused = SDL_SCANCODE_UNKNOWN;
-                s_refusedCharacter = false;
             }
             else if (focused && s_waiting == Id::Count)
             {
@@ -830,9 +827,7 @@ namespace ui
                 if (s_waiting == e.id || s_waiting == e.id2)
                 {
                     PushAccentText();
-                    if (s_refusedCharacter)
-                        ImGui::Text("%s Esc or B cancels.", settings::keynames::kUnsupportedCharacter);
-                    else if (s_refused != SDL_SCANCODE_UNKNOWN)
+                    if (s_refused != SDL_SCANCODE_UNKNOWN)
                         ImGui::Text("%s can't be used here. Press another key; Esc or B cancels.", RefusedName(s_refused).c_str());
                     else
                         ImGui::Text("Press the key for %s. Esc or B cancels.", o.label);
@@ -1239,38 +1234,15 @@ namespace ui
         // toggle sees the comma before this does; the Cmd press before it
         // lands here and is refused.) Its repeats and release stay out of
         // ImGui like a taken key's: s_takenKey is already set.
-        if (key.scancode == SDL_SCANCODE_UNKNOWN || !settings::keynames::Known(uint16_t(key.scancode)) || (key.mod & SDL_KMOD_GUI))
+        if (key.scancode == SDL_SCANCODE_UNKNOWN || !settings::keynames::Bindable(uint16_t(key.scancode)) || (key.mod & SDL_KMOD_GUI))
         {
             s_refused = key.scancode;
-            s_refusedCharacter = false;
             fprintf(stderr, "[settings] menu: %s.%s: %s can't be used\n", o.table, o.key, RefusedName(key.scancode).c_str());
             return true;
         }
-        // ReCarbon (M5.15): the key's name on the active layout must be
-        // ASCII (keynames::Bindable), checked here and again just before the
-        // save; a refused key saves nothing and the wait goes on.
-        auto bindable = [&] {
-            const char* name = SDL_GetKeyName(SDL_GetKeyFromScancode(key.scancode, SDL_KMOD_NONE, false));
-            if (settings::keynames::Bindable(uint16_t(key.scancode), name ? name : ""))
-                return true;
-            std::string bytes;
-            for (const char* c = name; c && *c; c++)
-            {
-                char hex[4];
-                snprintf(hex, sizeof(hex), "%02X", static_cast<unsigned char>(*c));
-                bytes += (bytes.empty() ? "" : " ") + std::string(hex);
-            }
-            fprintf(stderr, "[settings] menu: %s.%s: %s refused: the keyboard layout names it [%s], not ASCII\n", o.table, o.key,
-                SDL_GetScancodeName(key.scancode), bytes.c_str());
-            s_refused = key.scancode;
-            s_refusedCharacter = true;
-            return false;
-        };
-        if (!bindable())
-            return true;
+        // ReCarbon: the binding is the key's position (its scancode), on any
+        // keyboard layout, Myanmar's and Thai's too (keynames::Bindable).
         double from = settings::GetStoredValue(o.id);
-        if (!bindable())
-            return true;
         LogChange(o, from, settings::Set(o.id, double(key.scancode)));
         EndWait();
         return true;
