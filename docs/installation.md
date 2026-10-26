@@ -71,7 +71,7 @@ shasum -a 256 ReCarbon-0.1.1-macos.dmg
 ```
 
 The code it prints must be
-`44aa788e89062a04ea547a940e048f47294421b6c38fc4e39558b53c593cad5f`.
+`098e9441d75e61e601d01125fabd682287f060f62bbf26e8fc115fba96679065`.
 
 ## Advanced
 

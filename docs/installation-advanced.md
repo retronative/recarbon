@@ -19,7 +19,7 @@ It must print `ReCarbon-0.1.1-macos.dmg: OK`.
 
 | File | SHA-256 |
 |---|---|
-| `ReCarbon-0.1.1-macos.dmg` | `44aa788e89062a04ea547a940e048f47294421b6c38fc4e39558b53c593cad5f` |
+| `ReCarbon-0.1.1-macos.dmg` | `098e9441d75e61e601d01125fabd682287f060f62bbf26e8fc115fba96679065` |
 | `ReCarbon-0.1.1-third-party-source.tar.xz` | `74926bf1918b9853aecbe000bec48c2830d49dd431496d53ff09d4d881ada6a8` |
 
 ## Why macOS blocks ReCarbon
