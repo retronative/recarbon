@@ -13,6 +13,8 @@ once, the first time that version starts (it's built into the game: runtime/CMak
 - Settings > Controls works under a keyboard layout in another script, such as Myanmar or Thai:
   it names keys by their position ("W") instead of showing "?", and you can rebind them. A
   binding is the key's position, as on any layout, so your existing bindings stay as they are.
+- Smoother movies: each frame of the intro and other movies now shows for an even two refreshes
+  (on a MacBook Air M5, uneven frames fell from 18.5% to 1.7%).
 - The download opens on a ReCarbon window: the app on the left, Applications on the right and an
   arrow between them, so you drag one onto the other to install it.
 

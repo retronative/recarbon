@@ -18,7 +18,6 @@ checks (M8, 2026-10-26). Each is still open.
 | "Cannot connect to Xbox Live!" at every launch | Once per launch, on first entering the main menu, the game shows this notice because Xbox Live isn't available. Accept it with **A** (**Space** on the keyboard) to continue; nothing is lost. ReCarbon doesn't dismiss it for you: it can't yet tell reliably when this notice is the one on screen, and it won't press buttons blindly. |
 | macOS 27 or newer only | Current builds link libraries built for macOS 27.0. |
 | No render scaling or widescreen options | Render scaling and widescreen options are not in this alpha. |
-| Movie frame pacing | Movies play at the right speed, but 20–28% of frames show for 1 or 3 refreshes instead of 2. Smoothing is deferred to polish. |
 
 ## Tested for v0.1.0
 

@@ -6,15 +6,17 @@
 // pacing) and stores into MW's data (the movie aspect at 0x8200FAC0). Those
 // addresses mean nothing in Carbon's image, so none of that code is built
 // here (reference/ARCHITECTURE.md). Carbon's own so far: the render-queue
-// fences (game/render_queue.cpp, ROADMAP M6). Until its view, frame-time and
-// movie equivalents are found this file reports exactly what the interface
+// fences (game/render_queue.cpp, ROADMAP M6) and movie pacing
+// (game/movie_pacing.cpp, v0.1.1, with its own state). Until its view and
+// frame-time equivalents are found this file reports exactly what the interface
 // headers define for a ppc/ without those hooks:
 //   - HooksActive()/TallHooksActive(): false, so the presenter shows the
 //     16:9 frame letterboxed or pillarboxed instead of stretching it
 //     (video/picture_fit.h), and the renderer's front-end detection, which
 //     needs a view scale below 1, never runs.
 //   - FrontEndScaleX/Y(): 0, "before the first front-end frame".
-//   - LastMovieFrameNs(): 0, "none yet": no movie pacing.
+//   - LastMovieFrameNs(): 0, "none yet" (the presenter's movie-quiet timing;
+//     the movie pacing hook doesn't feed it, so that stays as in v0.1.0).
 //   - GetFrameTimeStats(): zeros, as before the first game frame.
 // LogTitleHooks() says so in the log at startup.
 #include "frame_time.h"
@@ -39,8 +41,8 @@ namespace game
 {
     void LogTitleHooks()
     {
-        fprintf(stderr, "[title] NFS: Carbon: no title hooks yet (view scaling, movie pacing and frame-time stats "
-            "are inactive; the frame is shown at 16:9)\n");
+        fprintf(stderr, "[title] NFS: Carbon: movie pacing on; no view scaling or frame-time stats hooks yet "
+            "(the frame is shown at 16:9)\n");
     }
 
     void SetAspectScale(float scaleX, float scaleY)

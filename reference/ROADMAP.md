@@ -170,6 +170,10 @@ Diagnosing a failure is progress. It does not pass a criterion.
     is accepted as the correct cadence for M5. **Known limitation:** frame pacing isn't
     smooth. 20–28% of movie frames show for 1 or 3 vblanks instead of 2 (measured with a probe
     that may inflate it). Smoothing is deferred to polish unless it causes gameplay issues.
+    **v0.1.1 (2026-10-26):** without dumps the baseline was 18.5%; the cause is the swap
+    callback's timing scatter at a vblank (probe: target = count + 1 in all 1281 callbacks).
+    game/movie_pacing.cpp holds such frames a vblank (movie_hold_test replays the recorded
+    swaps): 1.7% on screen in the same 120 s run, playback length unchanged.
   - XMA decodes without errors (3,749 frames, 0 skipped). XMA1 against XMA2 isn't settled.
   - Hand test 2 (2026-10-23, by the user): keyboard navigation, `[keys]` rebinding in game
     surviving a restart, audio quality, movie lip-sync and audio latency on the built-in

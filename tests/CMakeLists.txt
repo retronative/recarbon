@@ -159,6 +159,9 @@ recarbon_test(audio_cadence_test)
 recarbon_test(memory_plan_test)
 # gpu/texture_eviction.h: which cached textures the renderer may destroy (Vulkan-free).
 recarbon_test(texture_eviction_test)
+# game/movie_hold.h: which movie frames wait a vblank more, on the swap callbacks recorded from
+# Carbon's movies (tests/data/carbon_movie_swaps.txt).
+recarbon_test(movie_hold_test ARGS ${CMAKE_CURRENT_SOURCE_DIR}/data/carbon_movie_swaps.txt)
 # The bug report's own deflate, PNG and zip writers (report/zip.cpp), against
 # published checksums and Python's zlib. From SpeedBreaker v0.1.8's (ReCarbon M8 tests).
 recarbon_test(report_zip_test SOURCES ${RT}/report/zip.cpp ARGS ${CMAKE_CURRENT_BINARY_DIR}/report_zip_out)
