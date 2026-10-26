@@ -22,6 +22,8 @@ install the game from your own *Need for Speed: Carbon* (USA) disc image for Xbo
 - **Clearer installer messages** when it turns a disc image or folder down: another platform's disc,
   another game, or another region or version.
 - **A new installer window** in the download: the app, an arrow and Applications, to drag onto.
+- **A new look in racing red and silver:** a new app icon (sharp at every size), the installer
+  window and the website.
 - The **"Cannot connect to Xbox Live!"** notice is the game's own and not a ReCarbon error: press
   **A** (**Space**) once at the main menu and play on.
 

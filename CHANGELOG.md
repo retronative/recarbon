@@ -17,6 +17,7 @@ once, the first time that version starts (it's built into the game: runtime/CMak
   (on a MacBook Air M5, uneven frames fell from 18.5% to 1.7%).
 - The download opens on a ReCarbon window: the app on the left, Applications on the right and an
   arrow between them, so you drag one onto the other to install it.
+- A new look in racing red and silver: ReCarbon's icon, the disk image's window and the website.
 - The "Cannot connect to Xbox Live!" notice at the main menu is the game's own notice that it
   can't reach Xbox Live, not a ReCarbon error: press A (Space) once and play on. The FAQ explains it.
 - Known issues: occasional stalls of about a second while racing, and shorter ones; the slowdown
