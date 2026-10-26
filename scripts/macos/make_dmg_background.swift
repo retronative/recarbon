@@ -65,18 +65,23 @@ func draw() {
     // red glow behind the icons' row.
     let full = NSRect(x: 0, y: 0, width: width, height: height)
     NSGradient(starting: color(0x0A0A0C), ending: color(0x1D1E22))!.draw(in: full, angle: 90)
+    // 45-degree bands 6 points apart horizontally (whole pixels at 1x and 2x), so the pattern
+    // repeats exactly and the PNGs stay small.
     let cg = NSGraphicsContext.current!.cgContext, period: CGFloat = 6
-    for (angle, shade) in [(CGFloat.pi / 4, color(0xFFFFFF, 0.02)), (-CGFloat.pi / 4, color(0x000000, 0.22))] {
-        cg.saveGState()
-        cg.translateBy(x: width / 2, y: height / 2)
-        cg.rotate(by: angle)
+    for (slope, shade) in [(CGFloat(1), color(0xFFFFFF, 0.02)), (CGFloat(-1), color(0x000000, 0.22))] {
         cg.setFillColor(shade.cgColor)
-        var x = -width
-        while x < width {
-            cg.fill(CGRect(x: x, y: -width, width: period / 2, height: 2 * width))
+        var x = -height
+        while x < width + height {
+            let band = CGMutablePath()
+            band.move(to: CGPoint(x: x, y: 0))
+            band.addLine(to: CGPoint(x: x + period / 2, y: 0))
+            band.addLine(to: CGPoint(x: x + period / 2 + slope * height, y: height))
+            band.addLine(to: CGPoint(x: x + slope * height, y: height))
+            band.closeSubpath()
+            cg.addPath(band)
+            cg.fillPath()
             x += period
         }
-        cg.restoreGState()
     }
     let row = flip(NSPoint(x: width / 2, y: app.y))
     NSGradient(starting: color(0xE10600, 0.14), ending: color(0xE10600, 0))!
@@ -150,18 +155,37 @@ func draw() {
          colour: color(0xE6E8EC, 0.45), centreX: width / 2, top: 344)
 }
 
+// 16-bit RGBA to an 8-bit PNG, each channel rounded (no dithering: smooth gradients, small files),
+// `width` x `height` points (72 dpi at 1x, 144 at 2x: the same size in points).
+func toPNG(_ wide: NSBitmapImageRep) -> Data {
+    let w = wide.pixelsWide, h = wide.pixelsHigh
+    let narrow = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: w, pixelsHigh: h, bitsPerSample: 8,
+                                  samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
+                                  bytesPerRow: w * 4, bitsPerPixel: 32)!.retagging(with: .sRGB)!
+    let src = wide.bitmapData!.withMemoryRebound(to: UInt16.self, capacity: wide.bytesPerRow / 2 * h) { $0 }
+    let dst = narrow.bitmapData!
+    let srcRow = wide.bytesPerRow / 2
+    for y in 0..<h {
+        for x in 0..<w * 4 {
+            dst[y * w * 4 + x] = UInt8((UInt32(src[y * srcRow + x]) * 255 + 32767) / 65535)
+        }
+    }
+    narrow.size = NSSize(width: width, height: height)
+    return narrow.representation(using: .png, properties: [:])!
+}
+
 for scale in [1, 2] {
     let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(width) * scale, pixelsHigh: Int(height) * scale,
-                               bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                               bitsPerSample: 16, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
                                colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!.retagging(with: .sRGB)!
-    rep.size = NSSize(width: width, height: height)  // 72 dpi at 1x, 144 at 2x: the same size in points
+    rep.size = NSSize(width: width, height: height)
     NSGraphicsContext.saveGraphicsState()
     NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
     NSGraphicsContext.current!.imageInterpolation = .high
     draw()
     NSGraphicsContext.restoreGraphicsState()
     let file = outputDir.appendingPathComponent(scale == 1 ? "DmgBackground.png" : "DmgBackground@2x.png")
-    guard let png = rep.representation(using: .png, properties: [:]) else { exit(1) }
+    let png = toPNG(rep)
     try png.write(to: file)
     print("\(file.path): \(rep.pixelsWide) x \(rep.pixelsHigh)")
 }
