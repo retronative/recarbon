@@ -1,8 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 40" width="64" height="40" fill="none">
   <title>ReCarbon</title>
-  <path d="M12 4h40l-8 32H4z" fill="#15181D" stroke="#19E3FF" stroke-width="2" stroke-linejoin="round"/>
-  <path d="M19 30l5-20h13c5 0 7 3 6 7-1 3-3 5-6 5h-7l-2 8z" fill="#E9EEF5"/>
-  <path d="M30 22h7l4 8h-7z" fill="#19E3FF"/>
-  <path d="M29.5 14.5h7c1.6 0 2.2 1 1.9 2.2-.3 1.1-1.2 1.8-2.6 1.8h-7.3z" fill="#15181D"/>
-  <path d="M46 12h12M43 20h17M40 28h10" stroke="#FF4D2E" stroke-width="2" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="chrome" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset=".45" stop-color="#E4E7EC"/>
+      <stop offset=".55" stop-color="#9AA0AA"/>
+      <stop offset="1" stop-color="#D9DDE3"/>
+    </linearGradient>
+  </defs>
+  <path d="M12 4h40l-8 32H4z" fill="#141417" stroke="url(#chrome)" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M13 32 19 8h16l3.75 5-1.5 6-5.13 4.5h-10.5L19.5 32zM24.12 13.5h7l.76 1-.63 2.5-1.25 1h-7z" fill="url(#chrome)" fill-rule="evenodd"/>
+  <path d="M24.75 25h6.5L35 32h-6.5z" fill="#E10600"/>
+  <path d="M47 12h11M44 20h16M41 28h10" stroke="#FF4336" stroke-width="3" stroke-linecap="round"/>
 </svg>
