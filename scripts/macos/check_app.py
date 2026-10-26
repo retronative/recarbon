@@ -16,7 +16,8 @@
 #      And in a dmg (1e), make_app.py's Finder window: .background holds only background.tiff, the picture at
 #      the window's size and twice it (Retina); the volume's .DS_Store opens it in icon view at that size with
 #      no toolbar, sidebar, path, status or tab bar, the icons at their size and the app's and Applications'
-#      at their places, and the picture's alias names that file on this volume. Reading the .DS_Store needs
+#      at their places, and the picture's alias names that file on this volume, mounted at /Volumes/ReCarbon
+#      (no build machine's folder in the .DS_Store: /private/, /var/folders/, /tmp/, /Users/). Reading it needs
 #      ds_store and mac_alias in tools/dmg-python (scripts/setup_tools.sh).
 #   2. Every Mach-O in the app: arm64 only, built for that macOS or an older one; the game for exactly it.
 #   3. Loads nothing outside the app or the system: every library @rpath/ or /usr/lib/ or /System/, and
@@ -439,7 +440,10 @@ DMG_TITLE_BAR = 32
 DMG_ICON_SIZE = 128
 DMG_ICONS = {'ReCarbon.app': (170, 190), 'Applications': (470, 190)}
 DMG_BACKGROUND = '.background/background.tiff'
+DMG_MOUNT = '/Volumes/ReCarbon'
 DMG_PYTHON = os.path.join(ROOT, 'tools/dmg-python')
+# A build machine's folders, as the alias and bookmark would hold them (UTF-8, and UTF-16 for names).
+BUILD_FOLDERS = [p.encode(e) for p in ('/private/', '/var/folders/', '/tmp/', '/Users/') for e in ('utf-8', 'utf-16-be')]
 HIDDEN_BARS = ('ShowToolbar', 'ShowSidebar', 'ShowPathbar', 'ShowStatusBar', 'ShowTabView')
 
 
@@ -489,14 +493,18 @@ def dmg_layout_problems(volume):
                             f'{icvp.get("arrangeBy")})')
         try:
             alias = mac_alias.Alias.from_bytes(icvp['backgroundImageAlias'])
-            named = (alias.volume.name, alias.target.filename, alias.target.cnid)
+            named = (alias.volume.name, alias.volume.posix_path, alias.target.filename, alias.target.cnid)
         except Exception as e:  # a missing or malformed alias
             named = f'no readable alias ({e})'
-        if named != ('ReCarbon', os.path.basename(background), os.stat(background).st_ino):
+        if named != ('ReCarbon', DMG_MOUNT, os.path.basename(background), os.stat(background).st_ino):
             problems.append(f'the picture\'s alias is {named}, not this volume\'s {DMG_BACKGROUND}')
         for name, position in DMG_ICONS.items():
             if record(name, 'Iloc') != position:
                 problems.append(f'{name} is at {record(name, "Iloc")}, not {position}')
+    with open(store, 'rb') as f:
+        data = f.read()
+    if any(p in data for p in BUILD_FOLDERS):
+        problems.append(f'.DS_Store names a build machine\'s folder (the layout was written outside {DMG_MOUNT})')
     return problems
 
 

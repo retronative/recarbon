@@ -164,6 +164,10 @@ DMG_TITLE_BAR = 32  # Finder's window bounds include its title bar (32 points on
 DMG_ICON_SIZE = 128
 DMG_ICONS = {'ReCarbon.app': (170, 190), 'Applications': (470, 190)}
 DMG_BACKGROUND = '.background/background.tiff'
+# Where the read-write volume is mounted while its layout is written: where a player's Mac mounts
+# the dmg. The picture's alias and bookmark record the volume's path, so it's this one, not a
+# folder of the build machine's.
+DMG_MOUNT = '/Volumes/ReCarbon'
 DMG_BACKGROUND_PNGS = [os.path.join(ROOT, 'scripts/macos', f) for f in ('DmgBackground.png', 'DmgBackground@2x.png')]
 # ds_store and mac_alias (scripts/macos/dmg-requirements.txt), from scripts/setup_tools.sh.
 DMG_PYTHON = os.path.join(ROOT, 'tools/dmg-python')
@@ -543,7 +547,7 @@ def finder_layout(volume):
         d['.']['icvp'] = {
             'viewOptionsVersion': 1, 'backgroundType': 2,
             'backgroundImageAlias': mac_alias.Alias.for_file(background).to_bytes(),
-            'backgroundColorRed': 0.0, 'backgroundColorGreen': 0.0, 'backgroundColorBlue': 0.0,
+            'backgroundColorRed': 0.039, 'backgroundColorGreen': 0.047, 'backgroundColorBlue': 0.059,  # the picture's bottom
             'iconSize': float(DMG_ICON_SIZE), 'textSize': 13.0, 'labelOnBottom': True, 'arrangeBy': 'none',
             'gridSpacing': 100.0, 'gridOffsetX': 0.0, 'gridOffsetY': 0.0, 'showIconPreview': False,
             'showItemInfo': False, 'scrollPositionX': 0.0, 'scrollPositionY': 0.0,
@@ -568,8 +572,8 @@ def dmg_with_diskutil(stage, dmg, tmp):
     disk = attached_disks(diskutil('image', 'attach', '--plist', '--noMount', '--nobrowse', blank))[0][0]
     try:
         # Mac OS Extended, not journaled, as hdiutil's -fs HFS+. It mounts the
-        # new volume in /Volumes for a moment; it's filled at a mount point of
-        # our own, out of Finder's sight.
+        # new volume in /Volumes for a moment; it's filled at DMG_MOUNT, out of
+        # Finder's sight (nobrowse).
         diskutil('partitionDisk', '/dev/' + disk, '1', 'GPT', 'HFS+', 'ReCarbon', '100%')
         volume = disk + 's1'
         info = plistlib.loads(diskutil('info', '-plist', volume).encode())
@@ -577,9 +581,10 @@ def dmg_with_diskutil(stage, dmg, tmp):
             raise SystemExit(f'make_app.py: {volume} is {info.get("FilesystemType")} "{info.get("VolumeName")}", not hfs "ReCarbon"')
         if info.get('MountPoint'):
             diskutil('unmount', volume)
-        mnt = os.path.join(tmp, 'volume')
-        os.makedirs(mnt)
-        diskutil('mount', 'nobrowse', '-mountPoint', mnt, volume)
+        diskutil('mount', 'nobrowse', volume)
+        mnt = plistlib.loads(diskutil('info', '-plist', volume).encode()).get('MountPoint')
+        if mnt != DMG_MOUNT:
+            raise SystemExit(f'make_app.py: {volume} mounted at {mnt}, not {DMG_MOUNT}')
         run('ditto', stage, mnt)
         os.chmod(mnt, stat.S_IMODE(os.stat(stage).st_mode))  # the volume's root as hdiutil makes it
         set_custom_icon(mnt)
@@ -597,10 +602,11 @@ def dmg_with_hdiutil(stage, dmg, tmp):
     rw = os.path.join(tmp, 'rw.dmg')
     run('hdiutil', 'create', '-quiet', '-volname', 'ReCarbon', '-srcfolder', stage, '-fs', 'HFS+',
         '-format', 'UDRW', '-ov', rw)
-    mnt = os.path.join(tmp, 'rw-volume')
-    os.makedirs(mnt)
-    run('hdiutil', 'attach', '-quiet', '-nobrowse', '-noautoopen', '-mountpoint', mnt, rw)
+    entities = plistlib.loads(run('hdiutil', 'attach', '-plist', '-nobrowse', '-noautoopen', rw).encode())
+    mnt = next(e['mount-point'] for e in entities['system-entities'] if e.get('mount-point'))
     try:
+        if mnt != DMG_MOUNT:
+            raise SystemExit(f'make_app.py: the read-write volume mounted at {mnt}, not {DMG_MOUNT}')
         set_custom_icon(mnt)
         finder_layout(mnt)
         shutil.rmtree(os.path.join(mnt, '.fseventsd'), ignore_errors=True)  # the event log macOS starts at mount
@@ -670,6 +676,9 @@ def make_dmg(app, version):
         os.makedirs(os.path.dirname(os.path.join(stage, DMG_BACKGROUND)))
         make_dmg_background(os.path.join(stage, DMG_BACKGROUND))
         dmg_libraries()  # before anything is made
+        if os.path.lexists(DMG_MOUNT):
+            raise SystemExit(f'make_app.py: {DMG_MOUNT} exists (a ReCarbon dmg is open?): eject it first, the dmg\'s '
+                             f'layout is written there')
         for f in (dmg, versioned):
             if os.path.exists(f):
                 os.remove(f)
