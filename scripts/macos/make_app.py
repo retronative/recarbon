@@ -547,7 +547,7 @@ def finder_layout(volume):
         d['.']['icvp'] = {
             'viewOptionsVersion': 1, 'backgroundType': 2,
             'backgroundImageAlias': mac_alias.Alias.for_file(background).to_bytes(),
-            'backgroundColorRed': 0.039, 'backgroundColorGreen': 0.047, 'backgroundColorBlue': 0.059,  # the picture's bottom
+            'backgroundColorRed': 0.039, 'backgroundColorGreen': 0.039, 'backgroundColorBlue': 0.047,  # the picture's bottom (#0A0A0C)
             'iconSize': float(DMG_ICON_SIZE), 'textSize': 13.0, 'labelOnBottom': True, 'arrangeBy': 'none',
             'gridSpacing': 100.0, 'gridOffsetX': 0.0, 'gridOffsetY': 0.0, 'showIconPreview': False,
             'showItemInfo': False, 'scrollPositionX': 0.0, 'scrollPositionY': 0.0,
