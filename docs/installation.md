@@ -42,7 +42,7 @@ for a limited time; the wording varies with the macOS version. Don't see it? See
 
 ReCarbon's installer opens. Choose your own disc image of ***Need for Speed: Carbon* (USA), Xbox
 360** (`.iso`) or its extracted folder: it looks in the usual places, or you browse for it.
-Other versions won't work (PC, PlayStation, Wii, original Xbox, other regions or versions): only the USA Xbox 360 edition has been checked. Its details and hashes: [Supported disc images](disc-images.md).
+Other versions won't work (PC, PlayStation, Wii, original Xbox, other regions or versions): only the USA Xbox 360 edition has been checked. [See disc requirement details.](disc-images.md)
 
 The installer copies and checks about **5.7 GB**, then starts the
 game. Nothing is downloaded.
