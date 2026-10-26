@@ -13,6 +13,11 @@
 #   1. Info.plist: LSMinimumSystemVersion is that macOS. The icon: CFBundleIconFile names AppIcon, and
 #      Contents/Resources/AppIcon.icns has every size macOS asks for (16 to 512 at @1x and @2x); in a
 #      dmg, the volume's icon is the same file (.VolumeIcon.icns) with the root's custom-icon flag set.
+#      And in a dmg (1e), make_app.py's Finder window: .background holds only background.tiff, the picture at
+#      the window's size and twice it (Retina); the volume's .DS_Store opens it in icon view at that size with
+#      no toolbar, sidebar, path, status or tab bar, the icons at their size and the app's and Applications'
+#      at their places, and the picture's alias names that file on this volume. Reading the .DS_Store needs
+#      ds_store and mac_alias in tools/dmg-python (scripts/setup_tools.sh).
 #   2. Every Mach-O in the app: arm64 only, built for that macOS or an older one; the game for exactly it.
 #   3. Loads nothing outside the app or the system: every library @rpath/ or /usr/lib/ or /System/, and
 #      rpaths only @executable_path/../Frameworks and @loader_path; no build machine's folders in the files
@@ -426,6 +431,75 @@ def volume_icon_problems(volume, app):
     return problems
 
 
+# --- 1e: the dmg's Finder window ---------------------------------------------------------------------
+# make_app.py's DMG_WINDOW, DMG_TITLE_BAR, DMG_ICON_SIZE, DMG_ICONS and DMG_BACKGROUND (tests/
+# dmg_layout_test.py checks they agree).
+DMG_WINDOW = (640, 400)
+DMG_TITLE_BAR = 32
+DMG_ICON_SIZE = 128
+DMG_ICONS = {'ReCarbon.app': (170, 190), 'Applications': (470, 190)}
+DMG_BACKGROUND = '.background/background.tiff'
+DMG_PYTHON = os.path.join(ROOT, 'tools/dmg-python')
+HIDDEN_BARS = ('ShowToolbar', 'ShowSidebar', 'ShowPathbar', 'ShowStatusBar', 'ShowTabView')
+
+
+def tiff_sizes(path):
+    """Each image's (width, height) in a TIFF file, in order; [] if it isn't one."""
+    r = subprocess.run(['tiffutil', '-info', path], capture_output=True, text=True)
+    return [(int(w), int(h)) for w, h in re.findall(r'Image Width: (\d+) Image Length: (\d+)', r.stdout)]
+
+
+def dmg_layout_problems(volume):
+    background = os.path.join(volume, DMG_BACKGROUND)
+    folder = os.path.dirname(background)
+    if os.path.islink(folder) or not os.path.isdir(folder) or os.listdir(folder) != [os.path.basename(background)]:
+        return [f'{os.path.dirname(DMG_BACKGROUND)} doesn\'t hold just {os.path.basename(background)}']
+    problems = []
+    w, h = DMG_WINDOW
+    if os.path.islink(background) or tiff_sizes(background) != [(w, h), (2 * w, 2 * h)]:
+        problems.append(f'{DMG_BACKGROUND} is not one TIFF of {w} x {h} and {2 * w} x {2 * h} '
+                        f'({tiff_sizes(background)})')
+    store = os.path.join(volume, '.DS_Store')
+    if os.path.islink(store) or not os.path.isfile(store):
+        return problems + ['no .DS_Store at the volume\'s root (Finder opens it with its own defaults)']
+    if DMG_PYTHON not in sys.path:
+        sys.path.insert(0, DMG_PYTHON)
+    try:
+        import ds_store, mac_alias
+    except ImportError:
+        return problems + [f'no ds_store and mac_alias in {DMG_PYTHON} to read .DS_Store: run scripts/setup_tools.sh']
+    with ds_store.DSStore.open(store, 'r') as d:
+        def record(name, code):
+            try:
+                return d[name][code]
+            except KeyError:
+                return None
+        bwsp, icvp = record('.', 'bwsp') or {}, record('.', 'icvp') or {}
+        bounds = re.fullmatch(r'\{\{-?\d+, -?\d+\}, \{(\d+), (\d+)\}\}', bwsp.get('WindowBounds', ''))
+        if not bounds or (int(bounds[1]), int(bounds[2])) != (w, h + DMG_TITLE_BAR):
+            problems.append(f'the window is {bwsp.get("WindowBounds")}, not {w} x {h + DMG_TITLE_BAR} '
+                            f'(the picture and the title bar)')
+        shown = [b for b in HIDDEN_BARS if bwsp.get(b) is not False]
+        if shown:
+            problems.append(f'the window doesn\'t hide {", ".join(shown)}')
+        if (record('.', 'icvl') or (None, None))[1] != b'icnv' or icvp.get('backgroundType') != 2 \
+                or icvp.get('iconSize') != DMG_ICON_SIZE or icvp.get('arrangeBy') != 'none':
+            problems.append(f'not icon view with a picture, {DMG_ICON_SIZE} pt icons, not arranged '
+                            f'({record(".", "icvl")}, {icvp.get("backgroundType")}, {icvp.get("iconSize")}, '
+                            f'{icvp.get("arrangeBy")})')
+        try:
+            alias = mac_alias.Alias.from_bytes(icvp['backgroundImageAlias'])
+            named = (alias.volume.name, alias.target.filename, alias.target.cnid)
+        except Exception as e:  # a missing or malformed alias
+            named = f'no readable alias ({e})'
+        if named != ('ReCarbon', os.path.basename(background), os.stat(background).st_ino):
+            problems.append(f'the picture\'s alias is {named}, not this volume\'s {DMG_BACKGROUND}')
+        for name, position in DMG_ICONS.items():
+            if record(name, 'Iloc') != position:
+                problems.append(f'{name} is at {record(name, "Iloc")}, not {position}')
+    return problems
+
+
 def check(app, minimum, sdk):
     """-> (every check passed, the code of each Mach-O)."""
     ok = True
@@ -505,6 +579,9 @@ def main():
             vol = volume_icon_problems(os.path.dirname(app), app)
             print(f'1d. the dmg volume\'s icon: {"ok (.VolumeIcon.icns, the custom-icon flag)" if not vol else "FAIL " + "; ".join(vol)}')
             ok &= not vol
+            layout = dmg_layout_problems(os.path.dirname(app))
+            print(f'1e. the dmg\'s Finder window: {"ok (the background, the window, the icons\' places)" if not layout else "FAIL " + "; ".join(layout)}')
+            ok &= not layout
     if OPTS.get('same-code-as'):
         ref = os.path.abspath(OPTS['same-code-as'])
         with opened(ref) as other:

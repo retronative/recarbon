@@ -149,6 +149,27 @@ def gate_tests(tmp):
     check(any('.VolumeIcon.icns' in p and 'regular file' in p for p in rc.volume_problems(vol)),
           'a volume icon that is a symbolic link fails')
     os.remove(os.path.join(vol, '.VolumeIcon.icns'))
+    # The Finder layout: .DS_Store, and .background holding only the window's picture.
+    write(os.path.join(vol, '.DS_Store'), 'Bud1')
+    write(os.path.join(vol, '.background/background.tiff'), 'tiff')
+    check(rc.volume_problems(vol) == [], f'a dmg volume with its Finder layout passes ({rc.volume_problems(vol)})')
+    write(os.path.join(vol, '.background/notes.txt'), 'x')
+    check(any(p.startswith('.background') for p in rc.volume_problems(vol)), 'anything else in .background fails')
+    os.remove(os.path.join(vol, '.background/notes.txt'))
+    with open(os.path.join(vol, '.background/background.tiff'), 'wb') as f:
+        f.truncate(9 << 20)
+    check(any('background.tiff' in p and 'over its bound' in p for p in rc.volume_problems(vol)),
+          'an oversized background fails')
+    os.remove(os.path.join(vol, '.background/background.tiff'))
+    os.symlink('/etc/hosts', os.path.join(vol, '.background/background.tiff'))
+    check(any('background.tiff' in p and 'regular file' in p for p in rc.volume_problems(vol)),
+          'a background that is a symbolic link fails')
+    os.remove(os.path.join(vol, '.background/background.tiff'))
+    os.rmdir(os.path.join(vol, '.background'))
+    with open(os.path.join(vol, '.DS_Store'), 'wb') as f:
+        f.truncate(1 << 20)
+    check(any('.DS_Store' in p and 'over its bound' in p for p in rc.volume_problems(vol)), 'an oversized .DS_Store fails')
+    os.remove(os.path.join(vol, '.DS_Store'))
     write(os.path.join(vol, 'default.xex'), 'x')
     check(any(p.startswith('default.xex') for p in rc.volume_problems(vol)), 'a stray file on the volume fails')
     os.remove(os.path.join(vol, 'default.xex'))

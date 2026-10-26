@@ -225,6 +225,10 @@ add_test(NAME release_candidate_test COMMAND Python3::Interpreter ${CMAKE_CURREN
 # scripts/macos/make_app.py's app icon (AppIcon.icns) and dmg volume icon (the custom-icon flag),
 # and check_app.py's checks of both (macOS: sips, iconutil, xattr; no build).
 add_test(NAME app_icon_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/app_icon_test.py)
+# scripts/macos/make_app.py's dmg Finder layout (the background, the .DS_Store) on a scratch HFS+
+# volume, and check_app.py's check of it (macOS; skipped without tools/dmg-python: setup_tools.sh).
+add_test(NAME dmg_layout_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/dmg_layout_test.py)
+set_tests_properties(dmg_layout_test PROPERTIES SKIP_RETURN_CODE 77)
 # Alpha gate G2: check_app.py's check that FFmpeg and libmspack's LZX decoder are separate dylibs in
 # the app, never linked statically again, on stand-in apps built with clang (macOS; no build).
 add_test(NAME lgpl_dylibs_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/lgpl_dylibs_test.py)

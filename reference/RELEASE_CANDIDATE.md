@@ -23,7 +23,8 @@ Needs (checked before any work, nothing is written when one is missing):
   found any of them (`deps-guard`).
 - Homebrew's MoltenVK at the SHA-256 the commit's `make_app.py` pins.
 - The extracted disc: `game/files` (read only), or `RC_GAME=<folder>`, with `default.xex`.
-- Network for downloads only: XenonRecomp and extract-xiso from GitHub (`setup_tools.sh`).
+- Network for downloads only: XenonRecomp and extract-xiso from GitHub, ds_store and mac_alias (the
+  dmg's Finder layout, pinned by hash in `scripts/macos/dmg-requirements.txt`) from PyPI (`setup_tools.sh`).
   `run_instr_tests.sh` uses Xenia's tests only when `tools/xenia-tests` exists, which no script
   of this commit fetches, so an RC runs `tests/instr/*.s` alone. FFmpeg's archive is copied from this repo's
   `tools/ffmpeg-src/` when there (`setup_tools.sh` checks its pinned SHA-256 either way).

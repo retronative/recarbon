@@ -1,0 +1,142 @@
+#!/usr/bin/env swift
+// ReCarbon. GPL-3.0-or-later (see COPYING).
+//
+// make_dmg_background.swift [output dir]: the background of the dmg's Finder window,
+// scripts/macos/DmgBackground.png (640 x 400) and DmgBackground@2x.png (1280 x 800, for Retina
+// screens), which make_app.py joins into one TIFF. Drawn from the project's own mark
+// (website/public/favicon.svg) and its colours (the dark #15181D, the cyan #19E3FF, the white
+// #E9EEF5 and the speed lines' #FF4D2E), never the game's or SpeedBreaker's art: a dark
+// gradient with a few slanted speed streaks, the mark and "ReCarbon" at the top, an arrow from
+// the app's icon to the Applications shortcut, a light plate under each icon's name, and "Drag
+// ReCarbon onto Applications" below them.
+// The window's size and the two icons' centres are make_app.py's DMG_WINDOW and DMG_ICONS
+// (tests/dmg_layout_test.py checks the images' sizes against them).
+// Needs only macOS (AppKit draws the SVG, macOS 14+).
+// From the repo root: swift scripts/macos/make_dmg_background.swift
+import AppKit
+
+let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+let outputDir = CommandLine.arguments.count > 1 ? URL(fileURLWithPath: CommandLine.arguments[1])
+                                                 : root.appendingPathComponent("scripts/macos")
+let svg = root.appendingPathComponent("website/public/favicon.svg").path
+guard let mark = NSImage(contentsOfFile: svg), mark.size.width > 0 else {
+    FileHandle.standardError.write("make_dmg_background.swift: can't read \(svg)\n".data(using: .utf8)!)
+    exit(1)
+}
+
+func color(_ hex: UInt32, _ alpha: CGFloat = 1) -> NSColor {
+    NSColor(srgbRed: CGFloat(hex >> 16 & 0xFF) / 255, green: CGFloat(hex >> 8 & 0xFF) / 255,
+            blue: CGFloat(hex & 0xFF) / 255, alpha: alpha)
+}
+
+// In points, from the window's top left, as Finder places icons: make_app.py's DMG_WINDOW and DMG_ICONS.
+let width: CGFloat = 640, height: CGFloat = 400
+let app = NSPoint(x: 170, y: 190), applications = NSPoint(x: 470, y: 190)
+let iconSize: CGFloat = 128
+// The centre of the names Finder writes under the icons (13 pt, below the 128 pt icons).
+let labelCentre: CGFloat = 273
+
+// AppKit draws from the bottom left.
+func flip(_ p: NSPoint) -> NSPoint { NSPoint(x: p.x, y: height - p.y) }
+
+// A parallelogram slanted like the mark (its sides lean right by `lean` over its height).
+func slanted(_ rect: NSRect, lean: CGFloat) -> NSBezierPath {
+    let path = NSBezierPath()
+    path.move(to: NSPoint(x: rect.minX, y: rect.minY))
+    path.line(to: NSPoint(x: rect.maxX, y: rect.minY))
+    path.line(to: NSPoint(x: rect.maxX + lean, y: rect.maxY))
+    path.line(to: NSPoint(x: rect.minX + lean, y: rect.maxY))
+    path.close()
+    return path
+}
+
+func text(_ string: String, size: CGFloat, weight: NSFont.Weight, colour: NSColor, centreX: CGFloat, top: CGFloat,
+          kern: CGFloat = 0) {
+    let attributes: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: size, weight: weight),
+                                                     .foregroundColor: colour, .kern: kern]
+    let s = NSAttributedString(string: string, attributes: attributes)
+    let bounds = s.size()
+    s.draw(at: NSPoint(x: centreX - bounds.width / 2, y: height - top - bounds.height))
+}
+
+func draw() {
+    // The ground: dark, lighter towards the top, with a cyan glow behind the icons' row.
+    let full = NSRect(x: 0, y: 0, width: width, height: height)
+    NSGradient(starting: color(0x0A0C0F), ending: color(0x1A1E25))!.draw(in: full, angle: 90)
+    let row = flip(NSPoint(x: width / 2, y: app.y))
+    NSGradient(starting: color(0x19E3FF, 0.10), ending: color(0x19E3FF, 0))!
+        .draw(fromCenter: row, radius: 0, toCenter: row, radius: 300, options: [])
+
+    // Speed streaks, slanted like the mark: top right and bottom left, faint.
+    let streaks: [(NSRect, UInt32, CGFloat)] = [
+        (NSRect(x: 452, y: 356, width: 150, height: 3), 0xFF4D2E, 0.55),
+        (NSRect(x: 500, y: 344, width: 118, height: 3), 0x19E3FF, 0.35),
+        (NSRect(x: 478, y: 332, width: 90, height: 2), 0xFF4D2E, 0.30),
+        (NSRect(x: 30, y: 30, width: 120, height: 3), 0x19E3FF, 0.30),
+        (NSRect(x: 54, y: 20, width: 160, height: 3), 0xFF4D2E, 0.45),
+        (NSRect(x: 18, y: 10, width: 96, height: 2), 0x19E3FF, 0.20),
+    ]
+    for (rect, hex, alpha) in streaks {
+        NSGradient(starting: color(hex, 0), ending: color(hex, alpha))!.draw(in: slanted(rect, lean: 2), angle: 0)
+    }
+
+    // A thin cyan line under the icons' row: the track's edge.
+    let track = NSRect(x: 60, y: height - 300, width: width - 120, height: 1)
+    NSGradient(colors: [color(0x19E3FF, 0), color(0x19E3FF, 0.35), color(0x19E3FF, 0)])!.draw(in: track, angle: 0)
+
+    // A light plate under each icon's name: Finder writes the names in black over a picture,
+    // whatever the appearance, so they need a light ground to be read on this dark one.
+    for centre in [app, applications] {
+        let plate = NSRect(x: centre.x - 58, y: height - labelCentre - 11, width: 112, height: 22)
+        color(0xE9EEF5, 0.92).setFill()
+        slanted(plate, lean: 4).fill()
+    }
+
+    // The mark and the name, at the top.
+    let markHeight: CGFloat = 26, markWidth = markHeight * mark.size.width / mark.size.height
+    let name = NSAttributedString(string: "ReCarbon", attributes: [
+        .font: NSFont.systemFont(ofSize: 22, weight: .heavy), .foregroundColor: color(0xE9EEF5), .kern: 0.5])
+    let nameSize = name.size(), gap: CGFloat = 10
+    let left = (width - markWidth - gap - nameSize.width) / 2, middle = height - 44
+    mark.draw(in: NSRect(x: left, y: middle - markHeight / 2, width: markWidth, height: markHeight))
+    name.draw(at: NSPoint(x: left + markWidth + gap, y: middle - nameSize.height / 2))
+
+    // The arrow: three slanted chevrons, brighter towards Applications, between the two icons.
+    let start = app.x + iconSize / 2 + 24, end = applications.x - iconSize / 2 - 24
+    let y = height - app.y, step = (end - start) / 3
+    for i in 0..<3 {
+        let x = start + CGFloat(i) * step + 6
+        let chevron = NSBezierPath()
+        chevron.move(to: NSPoint(x: x, y: y + 18))
+        chevron.line(to: NSPoint(x: x + 12, y: y + 18))
+        chevron.line(to: NSPoint(x: x + 30, y: y))
+        chevron.line(to: NSPoint(x: x + 12, y: y - 18))
+        chevron.line(to: NSPoint(x: x, y: y - 18))
+        chevron.line(to: NSPoint(x: x + 18, y: y))
+        chevron.close()
+        color(0x19E3FF, 0.35 + 0.30 * CGFloat(i)).setFill()
+        chevron.fill()
+    }
+
+    // What to do, below the icons' names.
+    text("Drag ReCarbon onto Applications to install it", size: 14, weight: .semibold,
+         colour: color(0xE9EEF5, 0.85), centreX: width / 2, top: 318)
+    text("Need for Speed: Carbon, native on Apple silicon. Unofficial fan project.", size: 11, weight: .regular,
+         colour: color(0xE9EEF5, 0.45), centreX: width / 2, top: 344)
+}
+
+for scale in [1, 2] {
+    let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(width) * scale, pixelsHigh: Int(height) * scale,
+                               bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                               colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!.retagging(with: .sRGB)!
+    rep.size = NSSize(width: width, height: height)  // 72 dpi at 1x, 144 at 2x: the same size in points
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+    NSGraphicsContext.current!.imageInterpolation = .high
+    draw()
+    NSGraphicsContext.restoreGraphicsState()
+    let file = outputDir.appendingPathComponent(scale == 1 ? "DmgBackground.png" : "DmgBackground@2x.png")
+    guard let png = rep.representation(using: .png, properties: [:]) else { exit(1) }
+    try png.write(to: file)
+    print("\(file.path): \(rep.pixelsWide) x \(rep.pixelsHigh)")
+}

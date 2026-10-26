@@ -12,9 +12,10 @@
 # - xexsurvey (survey/xexsurvey.cpp), linked against XenonRecomp's libraries,
 #   into tools/survey/xexsurvey.
 # - FFmpeg's XMA decoder (scripts/build_ffmpeg_xma.sh) into tools/ffmpeg-xma.
+# - ds_store and mac_alias (the dmg's Finder layout) into tools/dmg-python.
 #
 # Needs: git, cmake, ninja, clang 18+ (Homebrew LLVM on macOS, the system
-# clang elsewhere; override with LLVM=<bin dir>), make, curl.
+# clang elsewhere; override with LLVM=<bin dir>), make, curl, Python 3 with pip.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TOOLS="$ROOT/tools"
@@ -102,6 +103,21 @@ if [ $ffmpeg_ok = 0 ]; then
   # FFmpeg's license texts, kept next to the source for packaging.
   tar -xf "ffmpeg-$FFMPEG_VERSION.tar.xz" "ffmpeg-$FFMPEG_VERSION/COPYING.LGPLv2.1" "ffmpeg-$FFMPEG_VERSION/LICENSE.md"
   cd "$ROOT"
+fi
+
+# The dmg's Finder layout (make_app.py --dmg): ds_store and mac_alias, pure Python, at the
+# versions and hashes in scripts/macos/dmg-requirements.txt, into tools/dmg-python (make_app.py
+# and check_app.py import them from there). Reinstalled when that file changes.
+DMG_PY="$TOOLS/dmg-python"
+if ! cmp -s "$ROOT/scripts/macos/dmg-requirements.txt" "$DMG_PY/requirements.txt"; then
+  PY="${PY:-$(command -v /opt/homebrew/bin/python3 || command -v python3)}"
+  rm -rf "$DMG_PY.part"
+  "$PY" -m pip install -q --disable-pip-version-check --no-deps --only-binary=:all: --require-hashes \
+    --target "$DMG_PY.part" -r "$ROOT/scripts/macos/dmg-requirements.txt"
+  cp "$ROOT/scripts/macos/dmg-requirements.txt" "$DMG_PY.part/requirements.txt"
+  rm -rf "$DMG_PY"
+  mv "$DMG_PY.part" "$DMG_PY"
+  echo "installed tools/dmg-python (ds_store, mac_alias)"
 fi
 
 # Xenia's instruction tests aren't needed until later milestones.

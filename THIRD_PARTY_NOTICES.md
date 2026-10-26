@@ -95,6 +95,9 @@ use **Open Anyway** in System Settings > Privacy & Security as for the release.
 - **XenonRecomp** (above): hedge-dev and contributors, MIT. (**XenosRecomp**, hedge-dev, MIT, which
   SpeedBreaker lists, is not used by ReCarbon: its shaders are translated while the game runs.)
 - **extract-xiso**: for developers unpacking their own disc image.
+- **ds_store** and **mac_alias** (dmgbuild): Copyright (c) 2014 Alastair Houghton (mac_alias also
+  2022 Russell Keith-Magee), MIT. They write the download's Finder window layout (its
+  `.DS_Store`); no code of theirs is in the dmg.
 - **Instruction tests** (`tests/`): SpeedBreaker's generated tests and ReCarbon's hand-computed ones.
 
 ## Thanks

@@ -8,7 +8,8 @@
 #                                                  like game data or generated sources, and on any file
 #                                                  outside the bundle layout make_app.py writes
 #   rc_manifest.py gate-volume <mounted dmg>       the dmg's top level (the app, the Applications
-#                                                  shortcut, the volume icon, the file system's own
+#                                                  shortcut, the volume icon, the Finder layout's
+#                                                  .DS_Store and .background, the file system's own
 #                                                  entries), then gate-app on the app in it
 #   rc_manifest.py deps-guard <CMakeCache.txt> <prefix>
 #                                                  every bundled library the build found is the deps
@@ -40,12 +41,16 @@ ALLOWED = [
     (r'Contents/Resources/vulkan/icd\.d/[^/]+\.json', 64 * 1024),
     (r'Contents/Resources/licenses/(?:[^/]+/)*' + LICENSE_FILE, 1 * MiB),
 ]
-# A mounted dmg's top level: make_app.py's app, Applications shortcut and volume icon (a regular
-# file within its bound: the app's AppIcon.icns), and what macOS itself keeps on a volume (not
-# looked into).
-VOLUME_ENTRIES = {'ReCarbon.app', 'Applications', '.VolumeIcon.icns'}
+# A mounted dmg's top level: make_app.py's app, Applications shortcut, volume icon (a regular
+# file within its bound: the app's AppIcon.icns) and Finder layout (.DS_Store, and .background
+# holding only the window's picture, each a regular file within its bound), and what macOS itself
+# keeps on a volume (not looked into).
+VOLUME_ENTRIES = {'ReCarbon.app', 'Applications', '.VolumeIcon.icns', '.DS_Store', '.background'}
 VOLUME_ICON_LIMIT = 4 * MiB
-VOLUME_SYSTEM = {'.fseventsd', '.Trashes', '.DS_Store', '.Spotlight-V100', '.TemporaryItems', '.background',
+DS_STORE_LIMIT = 64 * 1024
+BACKGROUND = 'background.tiff'
+BACKGROUND_LIMIT = 8 * MiB
+VOLUME_SYSTEM = {'.fseventsd', '.Trashes', '.Spotlight-V100', '.TemporaryItems',
                  '.HFS+ Private Directory Data\r', '.journal', '.journal_info_block'}
 
 # The CMake cache entries of what the game links or bundles: each must lie in the deps prefix.
@@ -91,6 +96,13 @@ def bundle_problems(app):
     return problems
 
 
+def regular_file_problems(path, name, limit):
+    st = os.lstat(path)
+    if not stat.S_ISREG(st.st_mode):
+        return [f'{name}: not a regular file']
+    return [f'{name}: {st.st_size} bytes, over its bound of {limit}'] if st.st_size > limit else []
+
+
 def volume_problems(volume):
     problems = []
     for name in sorted(os.listdir(volume)):
@@ -100,12 +112,14 @@ def volume_problems(volume):
         if name == 'Applications':
             if not (os.path.islink(path) and os.readlink(path) == '/Applications'):
                 problems.append('Applications: not the shortcut to /Applications')
-        elif name == '.VolumeIcon.icns':
-            st = os.lstat(path)
-            if not stat.S_ISREG(st.st_mode):
-                problems.append('.VolumeIcon.icns: not a regular file')
-            elif st.st_size > VOLUME_ICON_LIMIT:
-                problems.append(f'.VolumeIcon.icns: {st.st_size} bytes, over its bound of {VOLUME_ICON_LIMIT}')
+        elif name in ('.VolumeIcon.icns', '.DS_Store'):
+            problems += regular_file_problems(path, name, VOLUME_ICON_LIMIT if name == '.VolumeIcon.icns' else DS_STORE_LIMIT)
+        elif name == '.background':
+            if os.path.islink(path) or not os.path.isdir(path) or os.listdir(path) != [BACKGROUND]:
+                problems.append(f'.background: not a folder holding only {BACKGROUND}')
+            else:
+                problems += regular_file_problems(os.path.join(path, BACKGROUND), f'.background/{BACKGROUND}',
+                                                  BACKGROUND_LIMIT)
         elif name == 'ReCarbon.app' and os.path.isdir(path) and not os.path.islink(path):
             problems += ['ReCarbon.app/' + p for p in bundle_problems(path)]
         else:

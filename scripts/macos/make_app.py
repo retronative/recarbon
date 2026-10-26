@@ -76,6 +76,15 @@
 # image, then converted). The .dmg file itself gets no icon of its own: that
 # would be a resource fork, which leaves its SHA-256 alone but is lost on the
 # way to a player (a browser download, scp), so the dmg shows macOS's own.
+# The volume opens in a Finder window laid out for the drag (DMG_WINDOW and
+# DMG_ICONS): the app on the left, Applications on the right, a dark
+# background with an arrow between them (.background/background.tiff, from
+# DmgBackground.png and its @2x, drawn by scripts/macos/make_dmg_background.swift),
+# no toolbar, sidebar, path or status bar. That's the volume's .DS_Store,
+# written on the read-write image by ds_store and mac_alias (dmgbuild's
+# libraries, pinned in scripts/macos/dmg-requirements.txt, installed by
+# scripts/setup_tools.sh into tools/dmg-python): no Finder scripting, nothing
+# but Finder needed to install.
 # The dmg is an HFS+ volume (Mac OS Extended) on a GPT disk, compressed
 # (UDZO), made by hdiutil (read-write, then converted) while it works:
 # macOS 27 deprecates hdiutil's create, attach, detach and imageinfo (they
@@ -145,6 +154,19 @@ ICON_SIZES = (16, 32, 128, 256, 512)  # each at @1x and @2x
 # offset 8, kHasCustomIcon among them.
 FINDER_INFO = 'com.apple.FinderInfo'
 HAS_CUSTOM_ICON = 0x0400
+# The dmg's Finder window (its layout in the volume's .DS_Store): the content's size in points,
+# where it opens on screen, the icons' size, and each icon's centre from the content's top left.
+# scripts/macos/make_dmg_background.swift draws the background (DmgBackground.png, @2x for
+# Retina) to these: the arrow between the two icons. check_app.py checks a dmg against them.
+DMG_WINDOW = (640, 400)
+DMG_WINDOW_ORIGIN = (200, 120)
+DMG_TITLE_BAR = 32  # Finder's window bounds include its title bar (32 points on macOS 27)
+DMG_ICON_SIZE = 128
+DMG_ICONS = {'ReCarbon.app': (170, 190), 'Applications': (470, 190)}
+DMG_BACKGROUND = '.background/background.tiff'
+DMG_BACKGROUND_PNGS = [os.path.join(ROOT, 'scripts/macos', f) for f in ('DmgBackground.png', 'DmgBackground@2x.png')]
+# ds_store and mac_alias (scripts/macos/dmg-requirements.txt), from scripts/setup_tools.sh.
+DMG_PYTHON = os.path.join(ROOT, 'tools/dmg-python')
 
 
 def run(*args):
@@ -482,10 +504,60 @@ def attached_disks(plist_text):
     return disks
 
 
+def dmg_libraries():
+    """ds_store and mac_alias, from tools/dmg-python."""
+    if DMG_PYTHON not in sys.path:
+        sys.path.insert(0, DMG_PYTHON)
+    try:
+        import ds_store, mac_alias
+    except ImportError:
+        raise SystemExit(f'make_app.py: no ds_store and mac_alias in {DMG_PYTHON} (the dmg\'s Finder layout): '
+                         f'run scripts/setup_tools.sh')
+    return ds_store, mac_alias
+
+
+def make_dmg_background(tiff):
+    """The window's background: DmgBackground.png and its @2x in one TIFF, which Finder shows at
+    the screen's resolution."""
+    run('tiffutil', '-cathidpicheck', *DMG_BACKGROUND_PNGS, '-out', tiff)
+
+
+def finder_layout(volume):
+    """The Finder window of the mounted volume at `volume`, in its .DS_Store: icon view at
+    DMG_WINDOW's size, no toolbar, sidebar, path or status bar, the background picture, and the
+    app and Applications icons at DMG_ICONS. The background's alias and bookmark name the file on
+    this volume (its name, creation date and the file's ID), so they're made here, on the
+    read-write volume, not in the stage."""
+    ds_store, mac_alias = dmg_libraries()
+    background = os.path.join(volume, DMG_BACKGROUND)
+    (x, y), (w, h) = DMG_WINDOW_ORIGIN, (DMG_WINDOW[0], DMG_WINDOW[1] + DMG_TITLE_BAR)
+    with ds_store.DSStore.open(os.path.join(volume, '.DS_Store'), 'w+') as d:
+        d['.']['vSrn'] = ('long', 1)
+        d['.']['icvl'] = ('type', b'icnv')
+        d['.']['vstl'] = ('type', b'icnv')
+        d['.']['bwsp'] = {
+            'WindowBounds': f'{{{{{x}, {y}}}, {{{w}, {h}}}}}', 'ShowToolbar': False, 'ShowSidebar': False,
+            'ContainerShowSidebar': False, 'ShowPathbar': False, 'ShowStatusBar': False, 'ShowTabView': False,
+            'PreviewPaneVisibility': False, 'SidebarWidth': 0,
+        }
+        d['.']['icvp'] = {
+            'viewOptionsVersion': 1, 'backgroundType': 2,
+            'backgroundImageAlias': mac_alias.Alias.for_file(background).to_bytes(),
+            'backgroundColorRed': 0.0, 'backgroundColorGreen': 0.0, 'backgroundColorBlue': 0.0,
+            'iconSize': float(DMG_ICON_SIZE), 'textSize': 13.0, 'labelOnBottom': True, 'arrangeBy': 'none',
+            'gridSpacing': 100.0, 'gridOffsetX': 0.0, 'gridOffsetY': 0.0, 'showIconPreview': False,
+            'showItemInfo': False, 'scrollPositionX': 0.0, 'scrollPositionY': 0.0,
+        }
+        d['.']['pBBk'] = mac_alias.Bookmark.for_file(background)
+        for name, position in DMG_ICONS.items():
+            d[name]['Iloc'] = position
+
+
 def dmg_with_diskutil(stage, dmg, tmp):
     """The dmg hdiutil makes from `stage`, made with `diskutil image`: a blank
     image, a GPT disk with one HFS+ volume named ReCarbon on it, the
-    stage copied in, then converted to UDZO."""
+    stage copied in, the volume icon's flag and the Finder layout set, then
+    converted to UDZO."""
     size = 0
     for root, dirs, files in os.walk(stage):
         for n in dirs + files:
@@ -511,6 +583,7 @@ def dmg_with_diskutil(stage, dmg, tmp):
         run('ditto', stage, mnt)
         os.chmod(mnt, stat.S_IMODE(os.stat(stage).st_mode))  # the volume's root as hdiutil makes it
         set_custom_icon(mnt)
+        finder_layout(mnt)
         shutil.rmtree(os.path.join(mnt, '.fseventsd'), ignore_errors=True)  # the event log macOS starts at mount
         diskutil('unmount', volume)
     finally:
@@ -520,7 +593,7 @@ def dmg_with_diskutil(stage, dmg, tmp):
 
 def dmg_with_hdiutil(stage, dmg, tmp):
     """The dmg of `stage` made by hdiutil: read-write, the volume icon's flag
-    set on it, then converted to UDZO."""
+    and the Finder layout set on it, then converted to UDZO."""
     rw = os.path.join(tmp, 'rw.dmg')
     run('hdiutil', 'create', '-quiet', '-volname', 'ReCarbon', '-srcfolder', stage, '-fs', 'HFS+',
         '-format', 'UDRW', '-ov', rw)
@@ -529,26 +602,38 @@ def dmg_with_hdiutil(stage, dmg, tmp):
     run('hdiutil', 'attach', '-quiet', '-nobrowse', '-noautoopen', '-mountpoint', mnt, rw)
     try:
         set_custom_icon(mnt)
+        finder_layout(mnt)
         shutil.rmtree(os.path.join(mnt, '.fseventsd'), ignore_errors=True)  # the event log macOS starts at mount
     finally:
         run('hdiutil', 'detach', '-quiet', mnt)
     run('hdiutil', 'convert', '-quiet', rw, '-format', 'UDZO', '-imagekey', 'zlib-level=9', '-ov', '-o', dmg)
 
 
-def check_dmg_contents(dmg, app, tmp):
+def check_dmg_contents(dmg, app, background, tmp):
     """The dmg, mounted read-only: the app and the Applications shortcut, the
     app's icon as the volume's (.VolumeIcon.icns and the root's custom-icon
-    flag), and the app's code signature checks every file in it."""
+    flag), the Finder layout (`background` as .background's only file, the
+    .DS_Store placing both icons), and the app's code signature checks every
+    file in it."""
     mnt = os.path.join(tmp, 'check')
     os.makedirs(mnt)
     disks = attached_disks(diskutil('image', 'attach', '--plist', '--readOnly', '--nobrowse', '--mountPoint', mnt, dmg))
     try:
         top = sorted(os.listdir(mnt))
         link = os.path.join(mnt, 'Applications')
-        if top != ['.VolumeIcon.icns', 'Applications', 'ReCarbon.app'] or not os.path.islink(link) \
-                or os.readlink(link) != '/Applications':
-            raise SystemExit(f'make_app.py: {dmg} holds {top}, not ReCarbon.app, a shortcut to /Applications '
-                             f'and .VolumeIcon.icns')
+        if top != ['.DS_Store', '.VolumeIcon.icns', '.background', 'Applications', 'ReCarbon.app'] \
+                or not os.path.islink(link) or os.readlink(link) != '/Applications':
+            raise SystemExit(f'make_app.py: {dmg} holds {top}, not ReCarbon.app, a shortcut to /Applications, '
+                             f'.VolumeIcon.icns, .background and .DS_Store')
+        folder = os.path.dirname(os.path.join(mnt, DMG_BACKGROUND))
+        with open(os.path.join(mnt, DMG_BACKGROUND), 'rb') as a, open(background, 'rb') as b:
+            if os.listdir(folder) != [os.path.basename(DMG_BACKGROUND)] or a.read() != b.read():
+                raise SystemExit(f'make_app.py: {dmg}\'s {os.path.dirname(DMG_BACKGROUND)} is not just the background')
+        ds_store, _ = dmg_libraries()
+        with ds_store.DSStore.open(os.path.join(mnt, '.DS_Store'), 'r') as d:
+            placed = {name: d[name]['Iloc'] for name in DMG_ICONS}
+        if placed != DMG_ICONS:
+            raise SystemExit(f'make_app.py: {dmg}\'s icons are at {placed}, not {DMG_ICONS}')
         with open(os.path.join(mnt, '.VolumeIcon.icns'), 'rb') as a, \
                 open(os.path.join(app, 'Contents/Resources/AppIcon.icns'), 'rb') as b:
             if a.read() != b.read():
@@ -560,19 +645,20 @@ def check_dmg_contents(dmg, app, tmp):
         subprocess.run(['diskutil', 'eject', disks[0][0]], capture_output=True)
 
 
-def check_dmg_with_diskutil(dmg, app, tmp):
+def check_dmg_with_diskutil(dmg, app, background, tmp):
     """hdiutil verify's place when diskutil made the dmg: a compressed GPT +
     HFS+ image, then its contents."""
     info = plistlib.loads(diskutil('image', 'info', '--plist', dmg).encode())
     hints = [p.get('content-hint') for p in info.get('Partitions', [])]
     if info.get('Image Format') != 'UDZO' or hints != ['GUID_partition_scheme', 'Apple_HFS']:
         raise SystemExit(f'make_app.py: {dmg} is {info.get("Image Format")} {hints}, not UDZO with one HFS+ volume')
-    check_dmg_contents(dmg, app, tmp)
+    check_dmg_contents(dmg, app, background, tmp)
 
 
 def make_dmg(app, version):
     """ReCarbon-macos.dmg: the app and a shortcut to Applications, with the
-    app's icon as the volume's. Returns it and the tool that made it."""
+    app's icon as the volume's and the Finder layout (finder_layout). Returns
+    it and the tool that made it."""
     dmg = os.path.join(OUT, 'ReCarbon-macos.dmg')
     versioned = os.path.join(OUT, f'ReCarbon-{version}-macos.dmg')
     with tempfile.TemporaryDirectory() as tmp:
@@ -581,6 +667,9 @@ def make_dmg(app, version):
         run('ditto', app, os.path.join(stage, 'ReCarbon.app'))
         os.symlink('/Applications', os.path.join(stage, 'Applications'))
         shutil.copyfile(os.path.join(app, 'Contents/Resources/AppIcon.icns'), os.path.join(stage, '.VolumeIcon.icns'))
+        os.makedirs(os.path.dirname(os.path.join(stage, DMG_BACKGROUND)))
+        make_dmg_background(os.path.join(stage, DMG_BACKGROUND))
+        dmg_libraries()  # before anything is made
         for f in (dmg, versioned):
             if os.path.exists(f):
                 os.remove(f)
@@ -611,9 +700,9 @@ def make_dmg(app, version):
                 out.write(f'{digest}  {os.path.basename(f)}\n')  # sha256sum -c / shasum -a 256 -c
         if tool == 'hdiutil':
             run('hdiutil', 'verify', '-quiet', dmg)
-            check_dmg_contents(dmg, app, tmp)
+            check_dmg_contents(dmg, app, os.path.join(stage, DMG_BACKGROUND), tmp)
         else:
-            check_dmg_with_diskutil(dmg, app, tmp)
+            check_dmg_with_diskutil(dmg, app, os.path.join(stage, DMG_BACKGROUND), tmp)
     return dmg, tool
 
 

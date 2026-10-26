@@ -110,7 +110,8 @@ Then, from the repository root:
 
 ```sh
 scripts/setup_tools.sh     # XenonRecomp (pinned + patches/xenonrecomp), extract-xiso, xexsurvey,
-                           # FFmpeg 7.1.1's XMA decoder (patches/ffmpeg) into tools/
+                           # FFmpeg 7.1.1's XMA decoder (patches/ffmpeg), ds_store and mac_alias
+                           # (the dmg's Finder layout) into tools/
 scripts/survey.sh          # analyse default.xex, regenerate config/, recompile to ppc/, validate
 tests/run_instr_tests.sh   # instruction tests for the patched XenonRecomp
 
