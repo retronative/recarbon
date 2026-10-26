@@ -13,6 +13,16 @@ import ByOrg from '../ByOrg.astro';
 	</div>
 	<div class="search print:hidden">
 		<Search />
+		<!-- The ⌘K / Ctrl K hint is decoration (the button has aria-keyshortcuts): its keys are drawn
+		     from data-key in CSS, so the button's only visible text is "Search", its accessible name. -->
+		<script is:inline>
+			document.querySelectorAll('site-search button[data-open-modal] > kbd').forEach((hint) => {
+				hint.querySelectorAll('kbd').forEach((key) => {
+					key.dataset.key = key.textContent;
+					key.textContent = '';
+				});
+			});
+		</script>
 	</div>
 	<nav aria-label="Site" class="main-nav">
 		<SiteNav />
@@ -40,6 +50,9 @@ import ByOrg from '../ByOrg.astro';
 	}
 	.search {
 		margin-inline-start: auto;
+	}
+	.search :global(kbd[data-key])::before {
+		content: attr(data-key);
 	}
 	/* From 50rem the mobile menu (and its nav) is gone, so the nav shows here:
 	   title left; search, then the links, on the right. */

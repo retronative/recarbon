@@ -144,8 +144,10 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 				</p>
 				<a class="btn" href={url('garage/')}>Open the Garage</a>
 			</div>
-			<a class="teaser-board cut" href={url('garage/')} data-mode="driving" aria-label="Open the Garage: interactive controls">
-				<Keyboard />
+			<a class="teaser-board cut" href={url('garage/')} data-mode="driving">
+				<!-- The keyboard is a picture of the Garage: its key legends aren't the link's name. -->
+				<span class="sr-only">Open the Garage: interactive controls</span>
+				<div aria-hidden="true"><Keyboard /></div>
 			</a>
 		</div>
 	</section>
