@@ -18,6 +18,7 @@
 #include "depth24_glsl.h"
 #include "depth_only.h"
 #include "render_scale.h"
+#include "texture_eviction.h"
 #include "shared_memory_glsl.h"
 #include "xenos/registers.h"
 
@@ -3441,7 +3442,17 @@ void main()
             // frame it was last checked in.
             std::vector<uint64_t> verifyHashes;
             uint64_t verifyFrame = 0;
+            // ReCarbon: when it was last used (sampled, or stored into by a
+            // resolve), for the eviction (EvictTextures).
+            uint64_t lastFrame = 0, lastSubmission = 0;
         };
+        // The next submission too: a submit in the middle of a draw (the ring
+        // full, a shadow wait) moves the draw that looked the texture up into it.
+        void Touch(Texture& t)
+        {
+            t.lastFrame = s_frame;
+            t.lastSubmission = s_submissionCounter + 1;
+        }
         void LoadScaledTexture(Texture& t, uint32_t base, uint32_t pitchBlocks, uint32_t endian);
         bool ScaledTextureValid(uint32_t base, uint32_t size);
         std::unordered_map<uint64_t, std::unique_ptr<Texture>> s_textures;
@@ -3727,6 +3738,7 @@ void main()
 
         VkImageView TextureView(Texture& t, uint32_t swizzle)
         {
+            Touch(t);
             auto& view = t.views[swizzle];
             if (view)
                 return view;
@@ -4306,6 +4318,7 @@ void main()
             if (state == TextureEntryState::kValid)
             {
                 c.hits++;
+                Touch(*e.texture);
                 if (s_textureVerify)
                     VerifyTexture(*e.texture, epoch);
                 if (!c.verify)
@@ -5333,8 +5346,10 @@ void main()
                     {
                         // Each direct texture holding the destination, the
                         // nearest start first, until one takes it: textures
-                        // are kept (dead ones too) until the cache is dropped,
-                        // so an older one may start inside a larger one. Why
+                        // are kept (dead ones too) until the cache is dropped
+                        // or they are evicted (EvictTextures; an evicted one
+                        // takes its address's map entries with it), so an
+                        // older one may start inside a larger one. Why
                         // not: the nearest's reason, or the nearest's that
                         // could take its words at all (unfit).
                         Texture* why = nullptr;
@@ -5412,6 +5427,7 @@ void main()
                     }
                     if (fused)
                     {
+                        Touch(*fused);
                         rc.texWrite = 1;
                         rc.texEndian = fused->endian;
                         rc.texConvert = fused->convert;
@@ -6603,6 +6619,78 @@ void main()
                 vkDestroyImageView(s_dev, t.storeView, nullptr);
             t.storeView = VK_NULL_HANDLE;
             DestroyImage(t.image);
+        }
+
+        // ReCarbon: the texture cache's eviction (gpu/texture_eviction.h).
+        // RECARBON_TEXTURE_BUDGET_MB=<MB> keeps the cached textures' bytes
+        // near it while playing; unset or 0: off, every texture is kept
+        // until a setting reloads them, as before. Off until a long run has
+        // shown it safe (no wrong textures, no device loss, frame times as
+        // before). Every 60 frames, at most 64 textures, each unused for 600
+        // frames and done with on the GPU (its last submission completed:
+        // no flush needed).
+        const uint64_t s_textureBudget = [] {
+            const char* v = std::getenv("RECARBON_TEXTURE_BUDGET_MB");
+            return v ? std::strtoull(v, nullptr, 10) << 20 : 0ull;
+        }();
+        uint64_t s_evictedTextures = 0, s_evictedTextureBytes = 0;
+
+        // Every submission up to this one has completed.
+        uint64_t CompletedSubmission()
+        {
+            std::lock_guard lock(s_submitMutex);
+            return s_inFlight.empty() ? s_submissionCounter - 1 : s_submissions[s_inFlight.front()].number - 1;
+        }
+
+        void EvictTextures()
+        {
+            if (!s_textureBudget || s_frame % 60 != 0)
+                return;
+            uint64_t used = 0;
+            for (const auto& [key, t] : s_textures)
+                used += t->image.bytes;
+            if (used <= s_textureBudget)
+                return;
+            std::vector<gpu::eviction::Candidate> candidates;
+            candidates.reserve(s_textures.size());
+            for (const auto& [key, t] : s_textures)
+                candidates.push_back({ key, t->image.bytes, t->lastFrame, t->lastSubmission, t->scaled,
+                    t->uploaded && writewatch::WrittenSince(t->guestStart, t->guestSize, t->loadedSequence) });
+            std::vector<uint64_t> keys = gpu::eviction::Select(candidates, { .frame = s_frame,
+                .completedSubmission = CompletedSubmission(), .usedBytes = used, .budgetBytes = s_textureBudget,
+                .minIdleFrames = 600, .maxPerFrame = 64 });
+            if (keys.empty())
+                return;
+            // The lookup cache's entries for them go first: a hit there
+            // reads the texture before anything else checks it.
+            std::set<const Texture*> gone;
+            for (uint64_t key : keys)
+                gone.insert(s_textures.at(key).get());
+            TextureCache& c = *s_textureCache;
+            for (auto& row : c.slots)
+                for (TextureCacheEntry& e : row)
+                    if (gone.count(e.texture))
+                        e.generation = 0;
+            for (TextureCacheEntry& e : c.recent)
+                if (gone.count(e.texture))
+                    e.generation = 0;
+            uint64_t bytes = 0;
+            for (uint64_t key : keys)
+            {
+                auto it = s_textures.find(key);
+                bytes += it->second->image.bytes;
+                DestroyTexture(*it->second);
+                s_textures.erase(it);
+            }
+            // A destroyed view's handle can come back for a new one: the
+            // bound state must not take it for what it bound before.
+            s_stateEpoch++;
+            s_evictedTextures += keys.size();
+            s_evictedTextureBytes += bytes;
+            fprintf(stderr, "[texture] frame %llu: evicted %zu (%llu KB), cache %llu MB of %llu, %llu evicted in all\n",
+                (unsigned long long)s_frame, keys.size(), (unsigned long long)(bytes >> 10),
+                (unsigned long long)((used - bytes) >> 20), (unsigned long long)(s_textureBudget >> 20),
+                (unsigned long long)s_evictedTextures);
         }
 
         // Drops the cached textures `which` picks (the GPU idle); returns how many.
@@ -9095,6 +9183,8 @@ void main()
             writewatch::SetWriterFrame(frame);
         }
         s_frame = frame;
+        if (s_vk)
+            EvictTextures();
         if (s_zpdOn)
             ZpdOnSwap(frame);
         if (s_logShadowMap)

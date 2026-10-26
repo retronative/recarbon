@@ -157,6 +157,8 @@ recarbon_test(audio_cadence_test)
 # header only), checked against the M5's and M1's logged plans. The Mac's part
 # of SpeedBreaker v0.1.8's (ReCarbon M8 tests).
 recarbon_test(memory_plan_test)
+# gpu/texture_eviction.h: which cached textures the renderer may destroy (Vulkan-free).
+recarbon_test(texture_eviction_test)
 # The bug report's own deflate, PNG and zip writers (report/zip.cpp), against
 # published checksums and Python's zlib. From SpeedBreaker v0.1.8's (ReCarbon M8 tests).
 recarbon_test(report_zip_test SOURCES ${RT}/report/zip.cpp ARGS ${CMAKE_CURRENT_BINARY_DIR}/report_zip_out)
