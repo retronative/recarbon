@@ -49,6 +49,6 @@ export const site = {
 		path: 'og/recarbon.jpg',
 		width: 1200,
 		height: 630,
-		alt: 'ReCarbon, Need for Speed Carbon on modern Mac: a red and black car drifts on a night mountain road above a city.',
+		alt: 'The ReCarbon wordmark, "Re" in brushed silver and "Carbon" in red carbon fibre, over a winding night canyon road with a city skyline.',
 	},
 };

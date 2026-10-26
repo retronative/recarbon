@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 40" width="64" height="40" fill="none">
   <title>ReCarbon</title>
-  <path d="M12 4h40l-8 32H4z" fill="#15181D" stroke="#19E3FF" stroke-width="2" stroke-linejoin="round"/>
-  <path d="M19 30l5-20h13c5 0 7 3 6 7-1 3-3 5-6 5h-7l-2 8z" fill="#E9EEF5"/>
-  <path d="M30 22h7l4 8h-7z" fill="#19E3FF"/>
-  <path d="M29.5 14.5h7c1.6 0 2.2 1 1.9 2.2-.3 1.1-1.2 1.8-2.6 1.8h-7.3z" fill="#15181D"/>
-  <path d="M46 12h12M43 20h17M40 28h10" stroke="#FF4D2E" stroke-width="2" stroke-linecap="round"/>
+  <path d="M12 4h40l-8 32H4z" fill="#141417" stroke="#E10600" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M19 30l5-20h13c5 0 7 3 6 7-1 3-3 5-6 5h-7l-2 8z" fill="#E6E8EC"/>
+  <path d="M30 22h7l4 8h-7z" fill="#FF4336"/>
+  <path d="M29.5 14.5h7c1.6 0 2.2 1 1.9 2.2-.3 1.1-1.2 1.8-2.6 1.8h-7.3z" fill="#141417"/>
+  <path d="M46 12h12M43 20h17M40 28h10" stroke="#C2C6CD" stroke-width="2" stroke-linecap="round"/>
 </svg>
