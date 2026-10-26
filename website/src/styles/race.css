@@ -113,16 +113,9 @@ a {
 .hud-menu .site-nav {
 	flex-direction: column;
 }
-/* As the docs header: no version chip on a phone, and between 50 and 72rem
-   the logo stands alone. */
-@media (max-width: 30rem) {
-	.hud > .version-chip {
-		display: none;
-	}
-}
+/* As the docs header: between 50 and 72rem the logo stands alone. */
 @media (min-width: 50rem) and (max-width: 72rem) {
-	.brand span,
-	.hud > .version-chip {
+	.brand span {
 		display: none;
 	}
 }
