@@ -43,4 +43,12 @@ export const site = {
 	// D5 audio: the optional full video with sound. Null: no "Watch trailer"
 	// button. Only set once its audio is licensed or original.
 	trailer: null as null | { src: string; type: string; captions?: string },
+
+	// The link preview image (Open Graph, X): a file in public/, 1200x630.
+	ogImage: {
+		path: 'og/recarbon.jpg',
+		width: 1200,
+		height: 630,
+		alt: 'ReCarbon, Need for Speed Carbon on modern Mac: a red and black car drifts on a night mountain road above a city.',
+	},
 };

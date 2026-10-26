@@ -6,6 +6,7 @@ import { licensePages } from './src/lib/licenses.mjs';
 import { satteri } from '@astrojs/markdown-satteri';
 import { docsMarkdownPlugin } from './src/lib/docs-markdown.mjs';
 import { trailingSlashRedirect } from './src/lib/trailing-slash.mjs';
+import { site as siteConfig } from './src/site.config.ts';
 
 // Hosting (D1) and domain (D2): GitHub Pages of the retronative/recarbon
 // repository, which holds the runtime and this site (in website/):
@@ -16,6 +17,10 @@ const PUBLISHED = 'https://retronative.github.io/recarbon/';
 // a custom domain would set SITE_URL and BASE_PATH=/. See docs/DEPLOY.md.
 const site = process.env.SITE_URL || 'http://127.0.0.1:4321';
 const base = process.env.BASE_PATH || '/';
+// The docs pages' link preview image; the custom pages set theirs in RaceLayout.
+const og = siteConfig.ogImage;
+/** @type {(property: string, content: string) => { tag: 'meta', attrs: { property: string, content: string } }} */
+const ogMeta = (property, content) => ({ tag: 'meta', attrs: { property, content } });
 
 export default defineConfig({
 	site,
@@ -44,6 +49,12 @@ export default defineConfig({
 			// The title text next to it names the link (kept for screen readers when hidden), so the mark is decorative.
 			logo: { src: './src/assets/recarbon-mark.svg', alt: '' },
 			favicon: '/favicon.svg',
+			head: [
+				ogMeta('og:image', new URL(base.replace(/\/?$/, '/') + og.path, site).href),
+				ogMeta('og:image:width', String(og.width)),
+				ogMeta('og:image:height', String(og.height)),
+				ogMeta('og:image:alt', og.alt),
+			],
 			// Keeps the Installation entry current on every page of the guide.
 			routeMiddleware: './src/starlightRouteData.ts',
 			customCss: ['./src/styles/fonts.css', './src/styles/tokens.css', './src/styles/starlight.css'],

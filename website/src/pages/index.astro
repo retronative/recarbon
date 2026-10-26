@@ -4,6 +4,7 @@ import Hero from '../components/Hero.astro';
 import Keyboard from '../components/garage/Keyboard.astro';
 import { site } from '../site.config';
 import { url } from '../lib/url';
+import { release } from '../data/release';
 
 // Measured figures only, each with its date and conditions (PLAN §4).
 const stats = [
@@ -22,13 +23,41 @@ const works = [
 	{ m: 'M7', title: 'Racing', state: 'evidence', text: 'Accepted for the alpha: full races driven by hand on the keyboard, about 51 fps on a MacBook Air M5. A physical controller is still untested.' },
 	{ m: 'M8', title: 'Alpha packaging', state: 'evidence', text: 'Completed for the alpha: v0.1.0 released, installed and played on a MacBook Air M5, including on a fresh macOS account. Not verified: a physical controller, a MacBook Air M1 install.' },
 ];
+// Structured data for search engines: the site and the app, published by RetroNative
+// (the organization the RetroNative site describes under the same @id).
+const home = new URL(url(), Astro.site).href;
+const description = 'ReCarbon is an unofficial native port of Need for Speed: Carbon (Xbox 360) to Apple Silicon Macs. v0.1.0, the first playable alpha, is out. Bring your own disc.';
+const org = { '@type': 'Organization', '@id': `${site.orgUrl}#organization`, name: site.org, url: site.orgUrl };
+const jsonLd = [
+	{ '@context': 'https://schema.org', '@type': 'WebSite', '@id': `${home}#website`, name: site.name, url: home, description, inLanguage: 'en', publisher: org },
+	{
+		'@context': 'https://schema.org',
+		'@type': 'SoftwareApplication',
+		'@id': `${home}#app`,
+		name: site.name,
+		url: home,
+		description,
+		image: new URL(url(site.ogImage.path), Astro.site).href,
+		applicationCategory: 'GameApplication',
+		operatingSystem: 'macOS 27 or newer, Apple Silicon',
+		softwareVersion: release.version,
+		downloadUrl: release.dmg.url,
+		license: 'https://www.gnu.org/licenses/gpl-3.0.html',
+		isAccessibleForFree: true,
+		offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+		publisher: org,
+	},
+];
 const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence in', progress: 'In progress', open: 'Not yet' };
 ---
 
 <RaceLayout
 	title={`${site.name}: Need for Speed: Carbon, native on Apple Silicon (unofficial fan port)`}
-	description="ReCarbon is an unofficial native port of Need for Speed: Carbon (Xbox 360) to Apple Silicon Macs. v0.1.0, the first playable alpha, is out. Bring your own disc."
+	description={description}
 >
+	<Fragment slot="head">
+		{jsonLd.map((d) => <script type="application/ld+json" set:html={JSON.stringify(d)} />)}
+	</Fragment>
 	<Hero />
 
 	<section class="section how" aria-labelledby="how-title">
