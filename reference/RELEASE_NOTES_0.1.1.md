@@ -27,6 +27,12 @@ install the game from your own *Need for Speed: Carbon* (USA) disc image for Xbo
 - The **"Cannot connect to Xbox Live!"** notice is the game's own and not a ReCarbon error: press
   **A** (**Space**) once at the main menu and play on.
 
+## Human-tested on MacBook Air M5
+
+The published v0.1.1 was played by hand: two Quick Races to the finish (one won, one lost), about
+9 minutes of driving, smooth with no noticeable issues. The logs show mostly 55–60 fps, smoother
+movies (1.5% of frames off the even cadence, against 18.5% before) and a clean exit.
+
 ## Known issues
 
 Occasional stalls of about a second while racing, and shorter GPU-idle ones; the slowdown in long
