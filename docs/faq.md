@@ -36,6 +36,12 @@ uses XenonRecomp, and Xenia's research on the Xbox 360. See [Credits](credits.md
 
 ReCarbon targets **Apple Silicon Macs**. Nothing else is planned or tested.
 
+## Why does the game say "Cannot connect to Xbox Live!"?
+
+It's the Xbox 360 game's own notice when it can't connect to Xbox Live, which ReCarbon doesn't
+provide: it isn't a ReCarbon error. Press **A** (**Space** on the keyboard) once at the main menu
+and play on; nothing is lost. The online modes aren't available.
+
 ## Can I use a controller?
 
 Yes, through SDL3, but **no physical controller has been tested yet**. See the

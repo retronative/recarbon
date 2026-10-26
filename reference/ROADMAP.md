@@ -334,7 +334,9 @@ customization. The controls criterion is judged on the default mappings.
     memory cost in long sessions. Any eviction must first establish GPU in-flight lifetime, fences
     and safe destruction (reference/M7_ACCEPTANCE.md).
   - The game's "Cannot connect to Xbox Live!" notice at every launch needs one OK (a known alpha
-    limitation, user decision 2026-10-25). An automatic one-shot acknowledgement needs a reliable
+    limitation, user decision 2026-10-25). **Reclassified 2026-10-26 (user): not an issue, the
+    Xbox 360 game's normal offline behaviour** (docs/faq.md). A probe reporting no network
+    (XNET_GET_XNADDR_NONE) instead of the static address showed the same notice at the same time. An automatic one-shot acknowledgement needs a reliable
     dialog-open signal; a bounded instrumented investigation (4 scripted startups on the M1) found
     that the dialog doesn't read its text or key (hash 0x91CC47DC) from the language table and builds
     its own UTF-16 text when it opens, but identified no open or close signal. No workaround (timer,
