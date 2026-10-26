@@ -26,11 +26,15 @@ const { banner } = Astro.locals.starlightRoute.entry.data;
 		font-size: var(--sl-text-sm);
 		text-align: center;
 		text-wrap: balance;
-		color: var(--rn-asphalt);
-		background: repeating-linear-gradient(-45deg, var(--rn-amber) 0 18px, #f5a623 18px 36px);
+		color: var(--rn-text);
+		background: var(--rn-weave), var(--rn-red-low);
+		border-bottom: 1px solid color-mix(in srgb, var(--rn-red) 60%, transparent);
+	}
+	.sl-banner strong {
+		color: var(--rn-white);
 	}
 	.sl-banner a {
-		color: inherit;
+		color: var(--rn-red-high);
 		font-weight: 600;
 	}
 </style>

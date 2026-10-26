@@ -114,10 +114,11 @@ const details = [
 		position: relative;
 		padding: 1.5rem 1.5rem 1.25rem;
 		background:
-			linear-gradient(105deg, color-mix(in srgb, var(--rn-neon) 10%, transparent), transparent 55%),
+			linear-gradient(105deg, color-mix(in srgb, var(--rn-red) 16%, transparent), transparent 55%),
+			var(--rn-weave),
 			var(--rn-carbon);
-		border-top: 2px solid var(--rn-neon);
-		clip-path: polygon(0 0, calc(100% - var(--rn-cut)) 0, 100% var(--rn-cut), 100% 100%, var(--rn-cut) 100%, 0 calc(100% - var(--rn-cut)));
+		border-top: 2px solid var(--rn-red);
+		clip-path: var(--rn-clip-cut);
 	}
 	.version {
 		margin: 0;
@@ -125,7 +126,7 @@ const details = [
 		font-size: 0.78rem;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
-		color: var(--rn-neon-soft);
+		color: var(--rn-red-high);
 	}
 	.get-title {
 		margin: 0.35rem 0 0.25rem;
@@ -133,6 +134,7 @@ const details = [
 		font-style: italic;
 		font-size: clamp(1.4rem, 4vw, 1.9rem);
 		line-height: 1.15;
+		text-transform: uppercase;
 		color: var(--sl-color-white);
 	}
 	.pitch {
@@ -155,6 +157,9 @@ const details = [
 		color: var(--sl-color-gray-3);
 		overflow-wrap: anywhere;
 	}
+	.file a {
+		color: var(--sl-color-text-accent);
+	}
 	.needs {
 		display: flex;
 		flex-wrap: wrap;
@@ -175,7 +180,7 @@ const details = [
 		width: 20px;
 		height: 20px;
 		fill: none;
-		stroke: var(--rn-neon);
+		stroke: var(--rn-red-high);
 		stroke-width: 1.7;
 		stroke-linejoin: round;
 	}
@@ -215,15 +220,15 @@ const details = [
 		align-items: center;
 		min-height: 44px;
 		padding: 0.25rem 0.9rem;
-		border: 1px solid var(--sl-color-gray-5);
-		border-radius: 3px;
+		border: 1px solid var(--rn-steel);
+		border-radius: var(--rn-radius);
 		text-decoration: none;
 		color: var(--sl-color-gray-1);
 		font-size: var(--sl-text-sm);
 		font-weight: 600;
 	}
 	.links a:hover {
-		border-color: var(--rn-neon);
+		border-color: var(--rn-red-high);
 		color: var(--sl-color-white);
 	}
 	.hash {
