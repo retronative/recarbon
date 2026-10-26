@@ -13,6 +13,8 @@ npm run build      # checks the generated data against ReCarbon's source, then b
 npm run preview    # serves that dist/ on http://127.0.0.1:4321/, as GitHub Pages does
 npm run check:urls # after a build: unslashed URLs ("/docs") redirect, in preview and dev
 npm run check      # type-checks the .astro and .ts files
+npm run test:a11y  # after a build: axe (WCAG A/AA) on the main pages at 1440 and 390 px, in your
+                   # installed Google Chrome; fails on any serious or critical violation
 
 # The GitHub Pages build, for https://retronative.github.io/recarbon/:
 npm run build:pages          # SITE_URL and BASE_PATH=/recarbon/ set

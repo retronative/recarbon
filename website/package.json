@@ -16,7 +16,8 @@
     "preview": "node scripts/preview.mjs",
     "preview:pages": "BASE_PATH=/recarbon/ node scripts/preview.mjs",
     "astro": "astro",
-    "check:urls": "node scripts/check-urls.mjs"
+    "check:urls": "node scripts/check-urls.mjs",
+    "test:a11y": "node scripts/a11y.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "0.4.5",
@@ -33,6 +34,8 @@
   },
   "devDependencies": {
     "@astrojs/check": "0.9.12",
+    "axe-core": "4.14.0",
+    "playwright-core": "1.64.1",
     "typescript": "6.0.3"
   }
 }
