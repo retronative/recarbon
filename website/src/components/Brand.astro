@@ -1,0 +1,54 @@
+---
+// The header's logo link, on the custom pages and the docs: the mark and the
+// name as the new wordmark has it, "Re" in silver and "Carbon" in red. Between
+// 50 and 72rem the mark stands alone (the name stays as the link's text).
+import mark from '../assets/recarbon-mark.svg?url';
+import { site } from '../site.config';
+import { url } from '../lib/url';
+---
+
+<a class="brand" href={url()}>
+	<img src={mark} alt="" width="48" height="30" />
+	<span class="brand-name" translate="no"><span class="re">{site.name.slice(0, 2)}</span><span class="carbon">{site.name.slice(2)}</span></span>
+</a>
+
+<style>
+	.brand {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+		flex: none;
+		font-family: var(--rn-font-display);
+		font-weight: 700;
+		font-style: italic;
+		font-size: 1.3rem;
+		letter-spacing: 0.04em;
+		line-height: 1;
+		text-transform: uppercase;
+		text-decoration: none;
+	}
+	.brand img {
+		display: block;
+	}
+	.re {
+		background: var(--rn-chrome);
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+		padding-inline-end: 0.04em;
+	}
+	.carbon {
+		color: var(--rn-red-high);
+		text-shadow: var(--rn-glow-text);
+	}
+	@media (min-width: 50rem) and (max-width: 72rem) {
+		.brand-name {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip: rect(0 0 0 0);
+			white-space: nowrap;
+		}
+	}
+</style>

@@ -9,7 +9,7 @@ import Disclaimer from '../components/Disclaimer.astro';
 import RepoLinks from '../components/RepoLinks.astro';
 import ByOrg from '../components/ByOrg.astro';
 import OrgCredit from '../components/OrgCredit.astro';
-import mark from '../assets/recarbon-mark.svg?url';
+import Brand from '../components/Brand.astro';
 import { site } from '../site.config';
 import { url } from '../lib/url';
 
@@ -30,7 +30,7 @@ const ogImage = new URL(url(site.ogImage.path), Astro.site);
 		<title>{title}</title>
 		<meta name="description" content={description} />
 		<meta name="color-scheme" content="dark" />
-		<meta name="theme-color" content="#0b0d10" />
+		<meta name="theme-color" content="#0a0a0c" />
 		<link rel="canonical" href={canonical} />
 		<link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
 		<meta property="og:title" content={title} />
@@ -50,10 +50,7 @@ const ogImage = new URL(url(site.ogImage.path), Astro.site);
 	<body>
 		<a class="skip" href="#main">Skip to content</a>
 		<header class="hud">
-			<a class="brand" href={url()} aria-label={site.name}>
-				<img src={mark} alt="" width="48" height="30" />
-				<span>{site.name}</span>
-			</a>
+			<Brand />
 			<ByOrg />
 			<nav aria-label="Main" class="hud-nav">
 				<SiteNav />

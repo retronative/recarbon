@@ -63,7 +63,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	<section class="section how" aria-labelledby="how-title">
 		<div class="wrap">
 			<p class="eyebrow">Under the hood</p>
-			<h2 id="how-title" class="display h2">How it works</h2>
+			<h2 id="how-title" class="display h2 chrome">How it works</h2>
 			<ol class="how-grid">
 				<li class="how-item cut">
 					<h3>Static recompilation</h3>
@@ -93,7 +93,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	<section class="section stats" aria-labelledby="stats-title">
 		<div class="wrap">
 			<p class="eyebrow">Telemetry</p>
-			<h2 id="stats-title" class="display h2">Native on Apple Silicon</h2>
+			<h2 id="stats-title" class="display h2 chrome">Native on Apple Silicon</h2>
 			<ul class="stat-grid">
 				{
 					stats.map((s) => (
@@ -114,7 +114,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	<section class="section" aria-labelledby="works-title">
 		<div class="wrap">
 			<p class="eyebrow">Season progress</p>
-			<h2 id="works-title" class="display h2">What works now</h2>
+			<h2 id="works-title" class="display h2 chrome">What works now</h2>
 			<ol class="cards">
 				{
 					works.map((w) => (
@@ -137,7 +137,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 		<div class="wrap teaser-grid">
 			<div>
 				<p class="eyebrow">Garage</p>
-				<h2 id="garage-title" class="display h2">Know your controls</h2>
+				<h2 id="garage-title" class="display h2 chrome">Know your controls</h2>
 				<p>
 					Keyboard or controller, in a race, the menus or ReCarbon's own Settings: every default, where it comes from, and
 					how it was verified. Actions not yet tested in a race say so.
@@ -153,7 +153,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	<section class="section" aria-labelledby="start-title">
 		<div class="wrap">
 			<p class="eyebrow">Grid</p>
-			<h2 id="start-title" class="display h2">Get started in 3 steps</h2>
+			<h2 id="start-title" class="display h2 chrome">Get started in 3 steps</h2>
 			<ol class="steps">
 				<li class="step cut">
 					<svg class="arc" viewBox="0 0 60 36" aria-hidden="true"><path d="M5 32 A25 25 0 0 1 55 32" pathLength="3" class="arc-1"></path></svg>
@@ -181,7 +181,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	<section class="section issues" aria-labelledby="issues-title">
 		<div class="wrap">
 			<p class="eyebrow">Pit wall</p>
-			<h2 id="issues-title" class="display h2">Known issues</h2>
+			<h2 id="issues-title" class="display h2 chrome">Known issues</h2>
 			<ul class="issue-list">
 				<li>Occasional stalls of about a second while driving.</li>
 				<li>Shorter GPU-idle stalls (250–600 ms), cause unknown.</li>
@@ -227,8 +227,8 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	}
 	.how-item {
 		padding: 1.25rem;
-		background: var(--surface);
-		border-top: 2px solid var(--rn-ember);
+		background: var(--rn-weave), var(--surface);
+		border-top: 2px solid var(--rn-red);
 	}
 	.how-item h3 {
 		margin: 0 0 0.4rem;
@@ -252,8 +252,8 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	}
 	.stat {
 		padding: 1.25rem 1.25rem 1rem;
-		background: var(--surface);
-		border-top: 2px solid var(--mode-drive);
+		background: linear-gradient(180deg, color-mix(in srgb, var(--rn-red) 9%, transparent), transparent 60%), var(--rn-weave), var(--surface);
+		border-top: 2px solid var(--rn-red);
 	}
 	.lap {
 		display: flex;
@@ -271,7 +271,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	}
 	.unit {
 		font-size: 0.9rem;
-		color: var(--mode-drive);
+		color: var(--rn-red-high);
 		text-transform: uppercase;
 	}
 	.stat-label {
@@ -295,17 +295,17 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	.card {
 		--c: var(--text-muted);
 		padding: 1.25rem;
-		background: var(--surface);
+		background: var(--rn-weave), var(--surface);
 		border-inline-start: 3px solid var(--c);
 	}
 	.state-done {
-		--c: var(--mode-menu);
+		--c: var(--rn-status-completed);
 	}
 	.state-evidence {
-		--c: var(--mode-drive);
+		--c: var(--rn-status-accepted);
 	}
 	.state-progress {
-		--c: var(--ink-amber);
+		--c: var(--rn-status-in-progress);
 	}
 	.card-top {
 		display: flex;
@@ -353,7 +353,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 		--mode-color: var(--mode-drive);
 		display: block;
 		padding: 1.25rem;
-		background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--mode-drive) 10%, transparent), transparent 60%), var(--surface-2);
+		background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--mode-drive) 10%, transparent), transparent 60%), var(--rn-weave), var(--surface-2);
 		border: 1px solid var(--line);
 		transition: transform var(--rn-slow) var(--rn-ease);
 	}
@@ -373,7 +373,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	.step {
 		position: relative;
 		padding: 1.25rem;
-		background: var(--surface);
+		background: var(--rn-weave), var(--surface);
 		counter-increment: step;
 	}
 	.step::after {
@@ -394,7 +394,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 		stroke-linecap: round;
 	}
 	.arc path {
-		stroke: var(--mode-drive);
+		stroke: var(--rn-red-high);
 		stroke-dasharray: 3;
 	}
 	.arc-1 {
@@ -405,7 +405,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	}
 	.arc-3 {
 		stroke-dashoffset: 0;
-		stroke: var(--rn-ember) !important;
+		stroke: var(--rn-white) !important;
 	}
 	.step h3 {
 		margin: 0.5rem 0 0.25rem;
@@ -445,7 +445,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 	}
 	.issue-list li {
 		padding: 0.75rem 1rem;
-		background: repeating-linear-gradient(-45deg, rgb(255 176 46 / 0.06) 0 10px, transparent 10px 20px), var(--surface);
+		background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--rn-amber) 6%, transparent) 0 10px, transparent 10px 20px), var(--surface);
 		border-inline-start: 3px solid var(--rn-amber);
 	}
 

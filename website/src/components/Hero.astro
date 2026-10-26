@@ -1,266 +1,51 @@
 ---
-// The landing hero (PLAN §5). Until real ReCarbon footage is approved (D8),
-// the backdrop is an original illustration, labelled as one: a night city,
-// canyon ridges, a wet road with oncoming headlights and distant pursuit
-// lights. No gameplay, HUD or car is invented. With `site.heroVideo` set, the
-// poster shows first and the muted loop is attached by JS after load, only
-// when the visitor hasn't asked for reduced motion or Save-Data and isn't on
-// a slow connection; it pauses offscreen and in background tabs.
-// `site.trailer` (D5) adds the sound-on video in a dialog, loaded on demand.
+// The landing hero (PLAN §5): ReCarbon's wordmark artwork (the night canyon road
+// and the city; no gameplay, HUD or car), labelled as artwork, above the copy.
+// With `site.heroVideo` set, its poster shows behind the artwork first and the
+// muted loop is attached by JS after load, only when the visitor hasn't asked for
+// reduced motion or Save-Data and isn't on a slow connection; it pauses offscreen
+// and in background tabs, and a button pauses it. `site.trailer` (D5) adds the
+// sound-on video in a dialog, loaded on demand.
 import { site } from '../site.config';
 import { url } from '../lib/url';
 
 const video = site.heroVideo;
 const trailer = site.trailer;
 
-// The illustration's skyline and road, laid out once at build time from a
-// fixed seed (the same every build).
-let seed = 7;
-const rand = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
-const HORIZON = 520;
-const VP = { x: 1060, y: HORIZON };
-const buildings: { x: number; w: number; h: number }[] = [];
-for (let x = -20; x < 860; ) {
-	const w = 38 + Math.round(rand() * 70);
-	const h = 90 + Math.round(rand() * (x < 520 ? 260 : 140));
-	buildings.push({ x, w, h });
-	x += w + Math.round(rand() * 6);
-}
-const windows = buildings.flatMap((b) => {
-	const out: { x: number; y: number; c: string; o: number }[] = [];
-	for (let y = HORIZON - b.h + 12; y < HORIZON - 10; y += 14)
-		for (let x = b.x + 6; x < b.x + b.w - 8; x += 11)
-			if (rand() < 0.22) out.push({ x, y, c: rand() < 0.75 ? '#ffd27a' : '#7cf0ff', o: 0.35 + rand() * 0.55 });
-	return out;
-});
-// Centre-line dashes, closer together and shorter towards the horizon.
-const dashes = Array.from({ length: 9 }, (_, i) => {
-	const t0 = (i + 0.15) / 9;
-	const t1 = (i + 0.55) / 9;
-	const at = (t: number) => ({ x: VP.x + (930 - VP.x) * t * t, y: VP.y + (900 - VP.y) * t * t });
-	return { a: at(t0), b: at(t1), w: 1 + 9 * t1 };
-});
-// Motion toward the viewer: short pieces on rays from the vanishing point,
-// scaled about it (see .flow in the styles). Scaling about the VP moves a
-// piece out along its ray and lengthens it, which is perspective. Each ray
-// runs from the VP to E; a piece starts T0 of the way there.
-const T0 = 0.035;
-const along = (e: { x: number; y: number }, t: number) => ({ x: VP.x + (e.x - VP.x) * t, y: VP.y + (e.y - VP.y) * t });
-const DASH_DUR = 0.95;
-const flowDashes = Array.from({ length: 6 }, (_, i) => {
-	const e = { x: 930, y: 900 };
-	const a = along(e, T0);
-	const b = along(e, T0 + 0.022);
-	const len = Math.hypot(e.x - VP.x, e.y - VP.y);
-	const n = { x: ((e.y - VP.y) / len) * 0.45, y: (-(e.x - VP.x) / len) * 0.45 };
-	return {
-		points: `${a.x - n.x},${a.y - n.y} ${a.x + n.x},${a.y + n.y} ${b.x + n.x},${b.y + n.y} ${b.x - n.x},${b.y - n.y}`,
-		delay: (-(i * DASH_DUR) / 6).toFixed(2),
-	};
-});
-// Road particles: dust and small reflective details on the road and its
-// shoulders, each on its own ray with its own size, brightness, duration and
-// start offset, so they never reset together and the loop can't be seen.
-// Each piece starts T0 of the way out; at full scale it has passed the
-// bottom edge (or gone under the car, drawn on top of them).
-const studs = [300, 1560].flatMap((x, side) =>
-	Array.from({ length: 5 }, (_, i) => ({ x: x + (side ? 30 : -30) * rand(), r: 0.16, kind: 'stud', dur: 1.3, delay: -((i * 1.3) / 5 + rand() * 0.08) })),
-);
-const dust = Array.from({ length: 34 }, () => {
-	const dur = 0.85 + rand() * 1.3;
-	return { x: 120 + rand() * 1560, r: 0.05 + rand() * 0.08, kind: rand() < 0.2 ? 'glint' : 'dust', dur, delay: -rand() * dur };
-});
-const particles = [...studs, ...dust].map((p) => {
-	const c = along({ x: p.x, y: 900 }, T0 + rand() * 0.01);
-	return {
-		cx: c.x.toFixed(2),
-		cy: c.y.toFixed(2),
-		r: p.r.toFixed(3),
-		kind: p.kind,
-		style: `--dur:${p.dur.toFixed(2)}s;--delay:${p.delay.toFixed(2)}s;--peak:${(p.kind === 'dust' ? 0.14 + rand() * 0.22 : 0.75).toFixed(2)}`,
-	};
-});
+// The artwork (public/brand/), 2.4:1: AVIF, with a JPEG fallback.
+const art = (w: number, ext: string) => `${url(`brand/recarbon-hero-${w}.${ext}`)} ${w}w`;
+const artSizes = '(min-width: 100rem) 96rem, 100vw';
 ---
 
 <section class="hero" aria-labelledby="hero-title" data-hero data-video={video ? JSON.stringify(video) : undefined}>
 	<div class="backdrop" aria-hidden="true">
 		{video && <img class="poster" src={video.poster} alt="" fetchpriority="high" decoding="async" />}
-		{
-			!video && (
-				<svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice">
-					<defs>
-						<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-							<stop offset="0" stop-color="#04060a" />
-							<stop offset="0.45" stop-color="#0b1020" />
-							<stop offset="0.58" stop-color="#2a1428" />
-						</linearGradient>
-						<radialGradient id="city-glow" cx="0.5" cy="1" r="0.6">
-							<stop offset="0" stop-color="#ff9a3d" stop-opacity="0.35" />
-							<stop offset="1" stop-color="#ff9a3d" stop-opacity="0" />
-						</radialGradient>
-						<linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
-							<stop offset="0" stop-color="#140d16" />
-							<stop offset="0.3" stop-color="#07080c" />
-						</linearGradient>
-						<linearGradient id="road" x1="0" y1="0" x2="0" y2="1">
-							<stop offset="0" stop-color="#151922" />
-							<stop offset="1" stop-color="#06070a" />
-						</linearGradient>
-						<radialGradient id="lamp" r="0.5">
-							<stop offset="0" stop-color="#ffffff" />
-							<stop offset="0.25" stop-color="#d9f3ff" stop-opacity="0.9" />
-							<stop offset="1" stop-color="#7cf0ff" stop-opacity="0" />
-						</radialGradient>
-						<radialGradient id="siren-red" r="0.5">
-							<stop offset="0" stop-color="#ff2b3a" stop-opacity="0.9" />
-							<stop offset="1" stop-color="#ff2b3a" stop-opacity="0" />
-						</radialGradient>
-						<radialGradient id="siren-blue" r="0.5">
-							<stop offset="0" stop-color="#2b6bff" stop-opacity="0.9" />
-							<stop offset="1" stop-color="#2b6bff" stop-opacity="0" />
-						</radialGradient>
-						<linearGradient id="trail" x1="0" y1="0" x2="0" y2="1">
-							<stop offset="0" stop-color="#ff2b3a" stop-opacity="0.55" />
-							<stop offset="1" stop-color="#ff2b3a" stop-opacity="0" />
-						</linearGradient>
-						<radialGradient id="lamp-reflection" r="0.5">
-							<stop offset="0" stop-color="#d9f3ff" stop-opacity="0.22" />
-							<stop offset="1" stop-color="#d9f3ff" stop-opacity="0" />
-						</radialGradient>
-						<linearGradient id="wet" x1="0" y1="0" x2="0" y2="1">
-							<stop offset="0" stop-color="#7cf0ff" stop-opacity="0.22" />
-							<stop offset="1" stop-color="#7cf0ff" stop-opacity="0" />
-						</linearGradient>
-						<linearGradient id="wet-amber" x1="0" y1="0" x2="0" y2="1">
-							<stop offset="0" stop-color="#ffb02e" stop-opacity="0.2" />
-							<stop offset="1" stop-color="#ffb02e" stop-opacity="0" />
-						</linearGradient>
-					</defs>
-
-					<rect width="1600" height="900" fill="url(#sky)" />
-					<rect y={HORIZON} width="1600" height={900 - HORIZON} fill="url(#ground)" />
-					<ellipse cx="380" cy={HORIZON} rx="560" ry="260" fill="url(#city-glow)" />
-
-					{/* Canyon ridges, rim-lit by the city. */}
-					<path
-						class="ridge far"
-						d={`M 700 ${HORIZON} L 820 410 L 905 445 L 1010 330 L 1110 390 L 1215 300 L 1330 372 L 1450 318 L 1600 360 L 1600 ${HORIZON} Z`}
-					/>
-					<path
-						class="ridge near"
-						d={`M 980 ${HORIZON} L 1120 455 L 1240 470 L 1360 400 L 1480 438 L 1600 410 L 1600 ${HORIZON} Z`}
-					/>
-
-					{/* Night city. */}
-					<g class="city">
-						{buildings.map((b) => (
-							<rect x={b.x} y={HORIZON - b.h} width={b.w} height={b.h} />
-						))}
-					</g>
-					<g class="windows">
-						{windows.map((w) => (
-							<rect x={w.x} y={w.y} width="5" height="7" fill={w.c} opacity={w.o.toFixed(2)} />
-						))}
-					</g>
-
-					{/* Pursuit lights far down the road: a slow alternating glow. */}
-					<g class="pursuit">
-						<ellipse class="siren red" cx={VP.x - 52} cy={VP.y - 6} rx="110" ry="46" fill="url(#siren-red)" />
-						<ellipse class="siren blue" cx={VP.x + 52} cy={VP.y - 6} rx="110" ry="46" fill="url(#siren-blue)" />
-					</g>
-
-					{/* The road, wet, vanishing between the city and the canyon. */}
-					<path d={`M ${VP.x - 14} ${VP.y} L ${VP.x + 14} ${VP.y} L 1640 900 L 220 900 Z`} fill="url(#road)" />
-					<rect x="300" y={HORIZON + 30} width="40" height="370" fill="url(#wet-amber)" transform={`skewX(-28)`} opacity="0.7" />
-					<rect x="560" y={HORIZON + 20} width="26" height="380" fill="url(#wet)" transform={`skewX(-20)`} />
-					<rect x="760" y={HORIZON + 10} width="18" height="390" fill="url(#wet-amber)" transform={`skewX(-10)`} />
-					<path class="edge" d={`M ${VP.x - 14} ${VP.y} L 220 900 M ${VP.x + 14} ${VP.y} L 1640 900`} />
-					<g class="dashes static">
-						{dashes.map((d) => (
-							<line x1={d.a.x} y1={d.a.y} x2={d.b.x} y2={d.b.y} stroke-width={d.w} />
-						))}
-					</g>
-
-					{/* Forward motion: lane dashes, dust and road studs flowing out of the VP. */}
-					<g class="motion">
-						{flowDashes.map((d) => (
-							<polygon class="flow dash" points={d.points} style={`--dur:${DASH_DUR}s;--delay:${d.delay}s`} />
-						))}
-						{particles.map((p) => (
-							<circle class={`flow particle ${p.kind}`} cx={p.cx} cy={p.cy} r={p.r} style={p.style} />
-						))}
-					</g>
-
-					{/* An oncoming car's headlights far down the road, with a faint reflection below them; no car is drawn. */}
-					<g class="oncoming">
-						<ellipse cx={VP.x} cy={VP.y + 32} rx="34" ry="9" fill="url(#lamp-reflection)" />
-						<circle cx={VP.x - 11} cy={VP.y + 16} r="16" fill="url(#lamp)" />
-						<circle cx={VP.x + 11} cy={VP.y + 16} r="16" fill="url(#lamp)" />
-					</g>
-
-				</svg>
-			)
-		}
-		{
-			!video && (
-				<>
-					{/* The player's headlights: one soft radial glow on the road, like the
-					    pursuit glows at the horizon, brightest just ahead of the car (its
-					    centre is under the car) and fading smoothly outwards, stretched and
-					    tilted along the lane. Its own static layer, blended onto the road and
-					    the particles below; it never moves, as the car doesn't. */}
-					<svg class="scene beam-layer" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice">
-						<defs>
-							<radialGradient id="headlight" r="0.5">
-								<stop offset="0" stop-color="#f4f1e6" stop-opacity="0.3" />
-								<stop offset="0.45" stop-color="#f4f1e6" stop-opacity="0.13" />
-								<stop offset="1" stop-color="#f4f1e6" stop-opacity="0" />
-							</radialGradient>
-						</defs>
-						<ellipse cx="1106" cy="705" rx="190" ry="150" fill="url(#headlight)" transform="rotate(-13 1106 705)" />
-					</svg>
-					<svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice">
-						{/* A stylized car seen from behind, pulling away: generic shapes, no real model. */}
-						<g class="car">
-							<path class="trail" d="M 992 752 L 1052 752 L 1004 900 L 900 900 Z" fill="url(#trail)" />
-							<path class="trail" d="M 1192 752 L 1252 752 L 1352 900 L 1248 900 Z" fill="url(#trail)" />
-							<ellipse cx="1122" cy="802" rx="170" ry="14" fill="#000" opacity="0.55" />
-							<rect x="988" y="782" width="46" height="20" rx="4" fill="#050608" />
-							<rect x="1210" y="782" width="46" height="20" rx="4" fill="#050608" />
-							<path
-								class="body"
-								d="M 976 788 L 980 748 Q 984 732 1004 728 L 1046 722 Q 1066 692 1096 686 L 1148 686 Q 1178 692 1198 722 L 1240 728 Q 1260 732 1264 748 L 1268 788 Q 1268 798 1258 798 L 986 798 Q 976 798 976 788 Z"
-							/>
-							<path class="glass" d="M 1066 720 Q 1080 698 1100 694 L 1144 694 Q 1164 698 1178 720 Z" />
-							<rect class="wing" x="994" y="711" width="256" height="6" rx="3" />
-							<rect x="1036" y="716" width="5" height="10" fill="#0b0d12" />
-							<rect x="1203" y="716" width="5" height="10" fill="#0b0d12" />
-							<ellipse cx="1022" cy="748" rx="70" ry="26" fill="url(#siren-red)" opacity="0.7" />
-							<ellipse cx="1222" cy="748" rx="70" ry="26" fill="url(#siren-red)" opacity="0.7" />
-							<rect class="tail" x="990" y="744" width="64" height="8" rx="4" />
-							<rect class="tail" x="1190" y="744" width="64" height="8" rx="4" />
-							<rect x="1084" y="758" width="76" height="16" rx="2" fill="#0b0d12" stroke="#2a303a" />
-						</g>
-					</svg>
-				</>
-			)
-		}
-		<div class="scrim"></div>
-		<div class="hud-frame">
-			<span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
-		</div>
+		<div class="speed"></div>
 	</div>
+
+	<h1 id="hero-title" class="title">
+		<picture class="art">
+			<source type="image/avif" srcset={[art(768, 'avif'), art(1152, 'avif'), art(1536, 'avif')].join(', ')} sizes={artSizes} />
+			<img
+				src={url('brand/recarbon-hero-1536.jpg')}
+				srcset={[art(768, 'jpg'), art(1536, 'jpg')].join(', ')}
+				sizes={artSizes}
+				width="1536"
+				height="640"
+				alt={site.name}
+				fetchpriority="high"
+				decoding="async"
+			/>
+		</picture>
+		<span class="sr-only">: an unofficial native port of </span>
+		<span class="wrap game-line"><span class="game">Need for Speed: Carbon</span></span>
+	</h1>
 
 	<div class="content wrap">
 		<p class="chips">
 			<span class="chip chip--fan">Unofficial fan port</span>
 			<span class="chip">{site.org}</span>
 		</p>
-		<h1 id="hero-title" class="title">
-			<span class="wordmark display"><span class="re">Re</span>Carbon</span>
-			<span class="sr-only">: an unofficial native port of </span>
-			<span class="game">Need for Speed: Carbon</span>
-		</h1>
 		<p class="platform">The Xbox 360 game, running natively on Apple Silicon Macs.</p>
 		<p class="status"><span class="dot" aria-hidden="true"></span>v0.1.1: smoother movies and keyboard fixes for the first playable release.</p>
 		<div class="ctas">
@@ -303,11 +88,16 @@ const particles = [...studs, ...dust].map((p) => {
 		</ul>
 	</div>
 
-	<p class="caption">{video ? video.caption : 'Illustration — not gameplay'}</p>
+	<p class="caption">{video ? video.caption : 'Logo artwork — not gameplay'}</p>
 
-	<button class="motion-toggle" type="button" data-motion-toggle aria-pressed="false" aria-label="Pause background animation">
-		<span aria-hidden="true" class="ico-pause">❚❚</span><span aria-hidden="true" class="ico-play">▶</span>
-	</button>
+	{
+		video && (
+			<button class="motion-toggle" type="button" data-motion-toggle aria-pressed="false" aria-label="Pause background video">
+				<span aria-hidden="true" class="ico-pause">❚❚</span>
+				<span aria-hidden="true" class="ico-play">▶</span>
+			</button>
+		)
+	}
 
 	{
 		trailer && (
@@ -328,13 +118,14 @@ const particles = [...studs, ...dust].map((p) => {
 <style>
 	.hero {
 		position: relative;
-		display: grid;
-		align-items: center;
-		min-height: min(92vh, 56rem);
-		min-height: min(92svh, 56rem);
 		overflow: hidden;
 		isolation: isolate;
-		background: #05070b;
+		padding-block: clamp(0.5rem, 2vw, 1.5rem) clamp(4.5rem, 8vw, 6rem);
+		text-align: center;
+		background:
+			radial-gradient(70% 55% at 50% 30%, rgb(40 62 102 / 0.32), transparent 70%),
+			radial-gradient(60% 35% at 50% 100%, rgb(225 6 0 / 0.16), transparent 70%),
+			var(--rn-black);
 	}
 	.backdrop,
 	.backdrop > * {
@@ -345,296 +136,123 @@ const particles = [...studs, ...dust].map((p) => {
 		z-index: -1;
 	}
 	.poster,
-	.backdrop :global(video),
-	.scene {
+	.backdrop :global(video) {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+		opacity: 0.35;
 	}
-
-	/* The illustration. */
-	.ridge.far {
-		fill: #0d0f18;
-		stroke: rgb(255 120 70 / 0.35);
-		stroke-width: 2;
-	}
-	.ridge.near {
-		fill: #090b11;
-		stroke: rgb(255 120 70 / 0.2);
-		stroke-width: 1.5;
-	}
-	.city rect {
-		fill: #080a10;
-	}
-	.edge {
-		stroke: rgb(233 238 245 / 0.35);
-		stroke-width: 3;
-		fill: none;
-	}
-	.dashes line {
-		stroke: rgb(255 210 122 / 0.75);
-		stroke-linecap: butt;
-	}
-	.siren {
-		mix-blend-mode: screen;
-		animation: siren 3.2s ease-in-out infinite;
-	}
-	.siren.blue {
-		animation-delay: -1.6s;
-	}
-	@keyframes siren {
-		0%,
-		100% {
-			opacity: 0.15;
-		}
-		50% {
-			opacity: 0.85;
-		}
-	}
-	.oncoming {
-		transform-box: view-box;
-		transform-origin: 1060px 536px;
-		animation: approach 7s cubic-bezier(0.5, 0, 0.9, 0.6) infinite;
-	}
-	@keyframes approach {
-		0% {
-			transform: scale(0.6);
-			opacity: 0;
-		}
-		20% {
-			opacity: 1;
-		}
-		90% {
-			opacity: 1;
-		}
-		100% {
-			transform: scale(1.35);
-			opacity: 0;
-		}
-	}
-
-	.car .body {
-		fill: #0b0d13;
-		stroke: rgb(124 240 255 / 0.35);
-		stroke-width: 1.5;
-	}
-	.car .glass {
-		fill: #141a26;
-		stroke: rgb(124 240 255 / 0.25);
-	}
-	.car .wing {
-		fill: #0b0d13;
-		stroke: rgb(124 240 255 / 0.3);
-	}
-	.car .tail {
-		fill: #ff4757;
-	}
-	.trail {
-		animation: trail 2.4s ease-in-out infinite alternate;
-	}
-	@keyframes trail {
-		from {
-			opacity: 0.55;
-		}
-		to {
-			opacity: 1;
-		}
-	}
-
-	/* Perspective flow: scale about the vanishing point on a 1/distance
-	   curve, so pieces creep out of the horizon and rush past at the edges. */
-	.flow {
-		transform-box: view-box;
-		transform-origin: 1060px 520px;
-		opacity: 0;
-		animation: approach-flow var(--dur) linear var(--delay) infinite;
-		will-change: transform, opacity;
-	}
-	.dash {
-		fill: rgb(255 210 122 / 0.8);
-		--peak: 0.85;
-	}
-	.particle.dust {
-		fill: #b9c1cd;
-	}
-	.particle.glint {
-		fill: #f4f1e6;
-	}
-	.particle.stud {
-		fill: #ffd27a;
-	}
-	.beam-layer {
-		mix-blend-mode: screen;
-	}
-	/* Fewer particles on a phone: lighter, and the hero is mostly text there. */
-	@media (max-width: 40rem) {
-		.particle:nth-of-type(3n) {
-			display: none;
-		}
-	}
-	@keyframes approach-flow {
-		0% {
-			transform: scale(1);
-			opacity: 0;
-		}
-		20% {
-			transform: scale(1.24);
-			opacity: var(--peak);
-		}
-		45% {
-			transform: scale(1.77);
-		}
-		70% {
-			transform: scale(3.07);
-		}
-		85% {
-			transform: scale(5.5);
-			opacity: var(--peak);
-		}
-		94% {
-			transform: scale(11.8);
-		}
-		100% {
-			transform: scale(27);
-			opacity: 0;
-		}
-	}
-	/* The motion replaces the painted dashes; with reduced motion, those stay. */
-	.dashes.static {
-		display: none;
-	}
-	.scrim {
-		/* keeps the text ≥ 4.5:1 over any frame, footage included */
+	/* Speed lines: faint, static streaks at the edges. */
+	.speed {
 		background:
-			linear-gradient(90deg, rgb(5 7 11 / 0.94) 0%, rgb(5 7 11 / 0.78) 40%, rgb(5 7 11 / 0.1) 75%, transparent 100%),
-			linear-gradient(0deg, var(--rn-asphalt) 0%, transparent 25%);
+			repeating-linear-gradient(-18deg, transparent 0 22px, rgb(255 255 255 / 0.035) 22px 23px, transparent 23px 61px),
+			repeating-linear-gradient(-18deg, transparent 0 140px, rgb(225 6 0 / 0.08) 140px 142px);
+		mask-image: linear-gradient(90deg, #000, transparent 30%, transparent 70%, #000);
 	}
-	@media (max-width: 52rem) {
-		.scrim {
-			background: linear-gradient(180deg, rgb(5 7 11 / 0.55) 0%, rgb(5 7 11 / 0.85) 45%, var(--rn-asphalt) 100%);
-		}
+
+	.title {
+		display: grid;
+		justify-items: center;
+		margin: 0;
 	}
-	.hud-frame {
-		inset: clamp(0.75rem, 3vw, 2rem);
-		pointer-events: none;
+	/* The artwork, whole, as wide as the screen allows (never taller than 54% of it),
+	   its edges fading into the page. */
+	.art {
+		display: block;
+		width: min(100%, 96rem, calc(54svh * 2.4));
 	}
-	.corner {
-		position: absolute;
-		width: 28px;
-		height: 28px;
-		border: 2px solid rgb(25 227 255 / 0.6);
+	.art img {
+		display: block;
+		width: 100%;
+		height: auto;
+		-webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent), linear-gradient(180deg, #000 78%, transparent);
+		-webkit-mask-composite: source-in;
+		mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent), linear-gradient(180deg, #000 78%, transparent);
+		mask-composite: intersect;
 	}
-	.tl {
-		top: 0;
-		left: 0;
-		border-right: 0;
-		border-bottom: 0;
+	/* The game's name in the site's own type: upright, plain, no logo treatment. */
+	.game-line {
+		display: block;
+		margin-top: clamp(-4rem, -5vw, -0.5rem);
 	}
-	.tr {
-		top: 0;
-		right: 0;
-		border-left: 0;
-		border-bottom: 0;
-	}
-	.bl {
-		bottom: 0;
-		left: 0;
-		border-right: 0;
-		border-top: 0;
-	}
-	.br {
-		bottom: 0;
-		right: 0;
-		border-left: 0;
-		border-top: 0;
+	.game {
+		display: inline-block;
+		padding-bottom: 0.4rem;
+		font-family: var(--rn-font-display);
+		font-weight: 700;
+		font-size: var(--rn-fs-hero);
+		line-height: 1.1;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--rn-text);
+		text-shadow: 0 2px 12px rgb(0 0 0 / 0.9);
+		border-bottom: 3px solid var(--rn-red);
 	}
 
 	/* Copy. */
 	.content {
 		position: relative;
-		padding-block: 4.5rem 6.5rem;
+		display: grid;
+		justify-items: center;
+		padding-top: 1.25rem;
 	}
 	.chips {
 		display: flex;
 		flex-wrap: wrap;
+		justify-content: center;
 		gap: 0.5rem;
-		margin: 0 0 1.25rem;
+		margin: 0;
 	}
 	.chip {
-		padding: 0.2rem 0.75rem;
+		padding: 0.2rem 0.85rem;
 		font-family: var(--rn-font-mono);
 		font-size: 0.75rem;
 		letter-spacing: 0.12em;
 		text-transform: uppercase;
 		color: var(--rn-text);
-		border: 1px solid rgb(233 238 245 / 0.35);
-		background: rgb(11 13 16 / 0.6);
+		border: 1px solid rgb(230 232 236 / 0.35);
+		background: rgb(10 10 12 / 0.6);
+		clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
 	}
 	.chip--fan {
-		color: var(--rn-asphalt);
-		background: var(--rn-amber);
-		border-color: var(--rn-amber);
+		color: var(--rn-white);
+		background: var(--rn-red);
+		border-color: var(--rn-red);
 		font-weight: 700;
-	}
-	.title {
-		display: grid;
-		gap: 0.4rem;
-		margin: 0;
-	}
-	.wordmark {
-		font-size: clamp(3.2rem, 12vw, 8.5rem);
-		background: linear-gradient(100deg, #fff 30%, var(--rn-neon-soft) 60%, var(--rn-neon));
-		-webkit-background-clip: text;
-		background-clip: text;
-		color: transparent;
-		filter: drop-shadow(0 4px 24px rgb(25 227 255 / 0.25));
-	}
-	.wordmark .re {
-		color: var(--rn-ember);
-		-webkit-text-fill-color: var(--rn-ember);
-	}
-	/* The game's name in the site's own type: upright, plain, no logo treatment. */
-	.game {
-		justify-self: start;
-		padding-bottom: 0.35rem;
-		font-family: var(--rn-font-display);
-		font-weight: 700;
-		font-size: clamp(1.5rem, 4.2vw, 2.75rem);
-		line-height: 1.1;
-		letter-spacing: 0.04em;
-		text-transform: uppercase;
-		color: var(--rn-text);
-		border-bottom: 3px solid var(--rn-neon);
 	}
 	.platform {
 		margin: 1rem 0 0;
 		font-size: clamp(1.05rem, 2vw, 1.25rem);
-		color: #d3d9e3;
+		color: var(--rn-silver);
 	}
 	.status {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.6rem;
-		margin: 1.25rem 0 0;
-		padding: 0.45rem 0.9rem;
+		margin: 1.1rem 0 0;
+		padding: 0.45rem 1rem;
 		font-weight: 600;
 		font-size: 0.95rem;
+		text-align: start;
 		color: var(--rn-text);
-		background: rgb(255 176 46 / 0.12);
-		border: 1px solid rgb(255 176 46 / 0.55);
+		background: var(--rn-weave), var(--rn-carbon);
+		border: 1px solid var(--rn-steel);
+		border-inline-start: 3px solid var(--rn-red);
 	}
 	.dot {
+		flex: none;
 		width: 0.6rem;
 		height: 0.6rem;
 		border-radius: 50%;
-		background: var(--rn-amber);
-		box-shadow: 0 0 10px var(--rn-amber);
+		background: var(--rn-red-high);
+		box-shadow: 0 0 10px var(--rn-red);
 	}
 	.ctas {
 		display: flex;
 		flex-wrap: wrap;
+		justify-content: center;
 		gap: 0.75rem;
-		margin-top: 1.75rem;
+		margin-top: 1.5rem;
 	}
 	.soon {
 		display: inline-flex;
@@ -648,9 +266,9 @@ const particles = [...studs, ...dust].map((p) => {
 		font-size: 0.95rem;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
-		color: #d3d9e3;
-		border: 1px dashed rgb(233 238 245 / 0.4);
-		clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+		color: var(--rn-silver);
+		border: 1px dashed rgb(230 232 236 / 0.4);
+		clip-path: var(--rn-clip-slant);
 	}
 	.soon-label {
 		color: var(--rn-muted);
@@ -660,17 +278,17 @@ const particles = [...studs, ...dust].map((p) => {
 	}
 	.soon a {
 		color: inherit;
-		text-underline-offset: 0.2em;
 	}
 	.reqs {
 		display: flex;
 		flex-wrap: wrap;
+		justify-content: center;
 		gap: 0.5rem 1.5rem;
-		margin: 1.75rem 0 0;
+		margin: 1.5rem 0 0;
 		padding: 0;
 		list-style: none;
 		font-size: 0.92rem;
-		color: #d3d9e3;
+		color: var(--rn-silver);
 	}
 	.reqs li {
 		display: inline-flex;
@@ -681,7 +299,7 @@ const particles = [...studs, ...dust].map((p) => {
 		width: 1.15rem;
 		height: 1.15rem;
 		fill: none;
-		stroke: var(--rn-neon);
+		stroke: var(--rn-red-high);
 		stroke-width: 1.8;
 		stroke-linecap: round;
 	}
@@ -689,26 +307,26 @@ const particles = [...studs, ...dust].map((p) => {
 	.caption {
 		position: absolute;
 		right: clamp(1rem, 3vw, 2.25rem);
-		bottom: clamp(1rem, 3vw, 2.25rem);
+		bottom: clamp(1rem, 2vw, 1.5rem);
 		margin: 0;
 		padding: 0.25rem 0.7rem;
 		font-family: var(--rn-font-mono);
 		font-size: 0.72rem;
 		letter-spacing: 0.06em;
-		color: var(--rn-text);
-		background: rgb(5 7 11 / 0.75);
-		border: 1px solid rgb(233 238 245 / 0.3);
+		color: var(--rn-silver);
+		background: rgb(5 5 6 / 0.75);
+		border: 1px solid rgb(230 232 236 / 0.25);
 	}
 
 	.motion-toggle {
 		position: absolute;
 		left: clamp(1rem, 3vw, 2.25rem);
-		bottom: clamp(1rem, 3vw, 2.25rem);
+		bottom: clamp(1rem, 2vw, 1.5rem);
 		width: 44px;
 		height: 44px;
 		color: var(--rn-text);
-		background: rgb(11 13 16 / 0.6);
-		border: 1px solid rgb(233 238 245 / 0.3);
+		background: rgb(10 10 12 / 0.6);
+		border: 1px solid rgb(230 232 236 / 0.3);
 		border-radius: 50%;
 		cursor: pointer;
 	}
@@ -718,9 +336,6 @@ const particles = [...studs, ...dust].map((p) => {
 	}
 	.hero.paused .motion-toggle .ico-play {
 		display: inline;
-	}
-	.hero.paused :is(.siren, .oncoming, .trail, .flow) {
-		animation-play-state: paused;
 	}
 
 	.trailer {
@@ -742,30 +357,8 @@ const particles = [...studs, ...dust].map((p) => {
 		right: 0.5rem;
 		z-index: 1;
 	}
-	.sr-only {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		overflow: hidden;
-		clip: rect(0 0 0 0);
-		white-space: nowrap;
-	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.siren,
-		.oncoming,
-		.trail {
-			animation: none;
-		}
-		.siren {
-			opacity: 0.45;
-		}
-		.motion {
-			display: none;
-		}
-		.dashes.static {
-			display: inline;
-		}
 		.motion-toggle {
 			display: none;
 		}
@@ -775,7 +368,7 @@ const particles = [...studs, ...dust].map((p) => {
 <script>
 	const hero = document.querySelector<HTMLElement>('[data-hero]');
 	if (hero) {
-		const toggle = hero.querySelector<HTMLButtonElement>('[data-motion-toggle]')!;
+		const toggle = hero.querySelector<HTMLButtonElement>('[data-motion-toggle]');
 		let video: HTMLVideoElement | null = null;
 		let visible = true;
 		const paused = () => hero.classList.contains('paused');
@@ -784,11 +377,11 @@ const particles = [...studs, ...dust].map((p) => {
 			if (visible && !paused() && !document.hidden) video.play().catch(() => {});
 			else video.pause();
 		};
-		toggle.addEventListener('click', () => {
+		toggle?.addEventListener('click', () => {
 			hero.classList.toggle('paused');
 			const p = paused();
 			toggle.setAttribute('aria-pressed', String(p));
-			toggle.setAttribute('aria-label', p ? 'Play background animation' : 'Pause background animation');
+			toggle.setAttribute('aria-label', p ? 'Play background video' : 'Pause background video');
 			sync();
 		});
 

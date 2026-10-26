@@ -1,14 +1,14 @@
 ---
 // The docs header as the race HUD bar: logo, the site's links, search.
 import Search from '@astrojs/starlight/components/Search.astro';
-import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
+import Brand from '../Brand.astro';
 import SiteNav from '../SiteNav.astro';
 import ByOrg from '../ByOrg.astro';
 ---
 
 <div class="hud">
 	<div class="title-wrapper">
-		<SiteTitle />
+		<Brand />
 		<ByOrg />
 	</div>
 	<div class="search print:hidden">
@@ -35,23 +35,6 @@ import ByOrg from '../ByOrg.astro';
 		padding: 0.25rem;
 		margin: -0.25rem;
 	}
-	/* Logo and wordmark sized as on the custom pages (RaceLayout's .brand). */
-	.title-wrapper :global(.site-title) {
-		gap: 0.6rem;
-	}
-	.title-wrapper :global(.site-title img) {
-		width: 48px;
-		height: 30px;
-	}
-	.title-wrapper :global(.site-title span) {
-		font-family: var(--rn-font-display);
-		font-style: italic;
-		font-weight: 700;
-		font-size: 1.25rem;
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
-		color: var(--sl-color-white);
-	}
 	.main-nav {
 		display: none;
 	}
@@ -65,16 +48,13 @@ import ByOrg from '../ByOrg.astro';
 			display: block;
 		}
 	}
-	@media (min-width: 50rem) and (max-width: 72rem) {
-		/* Hidden visually only: it is the logo link's name. */
-		.title-wrapper :global(.site-title span) {
-			position: absolute;
-			width: 1px;
-			height: 1px;
-			overflow: hidden;
-			clip: rect(0 0 0 0);
-			white-space: nowrap;
+	/* Where the search and the links leave no room for it: the footer credits RetroNative. */
+	@media (min-width: 50rem) and (max-width: 64rem) {
+		.title-wrapper :global(.by-org) {
+			display: none;
 		}
+	}
+	@media (min-width: 50rem) and (max-width: 72rem) {
 		.main-nav :global(a) {
 			padding-inline: 0.5rem;
 		}
