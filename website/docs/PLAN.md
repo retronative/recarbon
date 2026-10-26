@@ -141,23 +141,53 @@ The site never upgrades a badge without a commit that does it in `controls.json`
 
 - **Mood:** night city, wet asphalt, carbon fibre, light trails. ReCarbon's identity, not EA's:
   no NFS logo, typeface, UI chrome or artwork, and no copied "Carbon" lettering.
-- **Palette (tokens):**
-  - `--rn-asphalt #0B0D10`, `--rn-carbon #15181D`, `--rn-graphite #232831`
-  - `--rn-neon #19E3FF` (primary accent), `--rn-ember #FF4D2E` (secondary, warnings),
-    `--rn-volt #C6FF3D` (verified badge)
-  - `--rn-text #E9EEF5`, `--rn-muted #8A94A6`
-  - Every text pair checked ≥ 4.5:1. Neon is used for accents only, never for long text.
+- **Palette (tokens, `src/styles/tokens.css`):** racing red, metallic silver and carbon black.
+  Ratios are WCAG 2, against asphalt / carbon.
+  - Surfaces: `--rn-black #050506`, `--rn-asphalt #0A0A0C` (page), `--rn-carbon #141417`
+    (cards, panels), `--rn-graphite #1D1E22` (raised surfaces, hairlines), `--rn-steel #3A3C43`
+    (strong borders).
+  - Text, in silver tiers: `--rn-white #FFFFFF`, `--rn-text #E6E8EC` (16.4:1 / 15.3:1),
+    `--rn-silver #C2C6CD` (11.5:1 / 10.7:1), `--rn-muted #9A9EA7` (7.4:1 / 6.9:1; 6.2:1 on
+    graphite).
+  - Red: `--rn-red #E10600` for fills, borders, glows and large type only (white on it 4.97:1;
+    3.98:1 on asphalt, enough for UI parts and large text, not body text); `--rn-red-high
+    #FF4336` for small text, links and thin strokes (5.75:1 / 5.35:1; 4.84:1 on graphite).
+    Also `--rn-red-hover #C40500` (white on it 6.0:1), `--rn-red-press #9E0400`, `--rn-red-low
+    #2A0806` (tinted backgrounds), `--rn-red-glow` (red at 45%).
+  - Focus: `--rn-focus #FFFFFF`, a 2px ring, so it shows on red buttons too (4.97:1 on red,
+    19:1 on asphalt).
+  - Starlight's accent and gray scale are mapped to the same tokens (accent `--rn-red`, links
+    `--rn-red-high`), so the docs and the custom pages share one palette.
+  - **Red is the brand, never a status.** Status badges always carry an icon and text too;
+    their colours: tested `--rn-volt #C6FF3D`, automated `#8BE08B`, hand-verified
+    `--rn-steel-blue #6CB4FF` (8.4:1 on carbon), from source `#B6C2D6`, pending `#FFD23F`,
+    not verified `#FF8A3D` (orange, dashed; 7.8:1 on carbon), not mapped `--rn-muted`.
+    Milestones: completed volt, accepted steel blue, in progress `--rn-amber #FFB02E`, deferred
+    `#B6C2D6`, blocked `#FF8A6E`. These accents are for status and diagrams only.
   - RetroNative's own brand marks, if any exist, override these (D3).
-- **Type (OFL):** display "Chakra Petch" or "Orbitron" (choose in the mockup); UI/body "Inter"
-  or "Barlow"; mono "JetBrains Mono" for commands. Italic-slanted display headings (CSS
-  `skewX(-8deg)` on blocks, not text) give the speed feel.
+- **Type (OFL, self-hosted from @fontsource):** display "Chakra Petch" 700 italic, upper case
+  (also 500 and 700 upright); body "Inter" (variable); mono "JetBrains Mono" 400 for commands.
+  Headings slant through the italic itself; the big ones are chrome (below).
 - **Motifs:**
-  - speed lines as CSS gradients on section edges;
+  - cuts instead of rounded corners: cards use `--rn-clip-cut` (a 14px diagonal cut on two
+    corners; `--rn-cut-sm` 8px, `--rn-cut-lg` 24px), buttons are parallelograms
+    (`--rn-clip-slant`, 12px slant) in red with a white sheen, and docs h2s carry a short red
+    cut bar;
+  - carbon fibre: `--rn-weave`, a CSS twill (two 45° repeating gradients, no bitmap) layered
+    over a surface colour on panels, the header and the footer;
+  - chrome: `--rn-chrome`, a silver gradient (#FFFFFF, #E4E7EC, #9AA0AA, #D9DDE3, #FFFFFF)
+    clipped to the text of display headings (its darkest stop is 7:1 on asphalt), plus
+    `--rn-chrome-line` and `--rn-red-line` hairlines;
+  - speed lines as CSS gradients on section edges (steel, red at the centre);
   - HUD frames (corner brackets, tick-mark rulers, a tachometer-style progress arc for
     install steps);
-  - diagonal cut cards (`clip-path`);
   - subtle parallax on the hero only;
   - "lap time" style counters for stats (builds, fps).
+- **Artwork:** the hero is the ReCarbon wordmark artwork ("Re" in brushed silver, "Carbon" in
+  red carbon fibre, over a night canyon road and skyline), 2.4:1, in `public/brand/`: AVIF at
+  768, 1152 and 1536 px wide with a JPEG fallback at 768 and 1536, its alt text the site name.
+  The link preview (Open Graph, X) is `public/og/recarbon.jpg`, 1200x630, the same artwork,
+  set in `src/site.config.ts` (`ogImage`, with its alt text). Neither carries a ™.
 - **Motion rules:** transitions are 150–300 ms, transform and opacity only. Parallax and
   looping motion are off under `prefers-reduced-motion: reduce`, which also swaps the video
   for its poster. Nothing flashes more than three times a second, and nothing autoplays with
