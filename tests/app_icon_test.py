@@ -2,7 +2,8 @@
 # ReCarbon tests. GPL-3.0-or-later (see COPYING).
 #
 # The app's icon and the dmg's volume icon, without a build: scripts/macos/make_app.py's
-# make_icns (the committed AppIcon.png at every size macOS asks for) and set_custom_icon (the
+# make_icns (the committed AppIcon.iconset: every size macOS asks for, each drawn at its own pixel
+# size and dpi, refused when one is missing or the wrong size) and set_custom_icon (the
 # volume root's custom-icon flag, the rest of its Finder info kept), and scripts/macos/
 # check_app.py's checks of both (CFBundleIconFile and AppIcon.icns, .VolumeIcon.icns and the
 # flag). macOS only (sips, iconutil, xattr). Everything runs in a scratch folder.
@@ -43,18 +44,35 @@ def finder_info(path):
 
 
 def icon_tests(tmp):
-    png = make_app.ICON
-    check(os.path.isfile(png), f'{png} is committed')
-    dims = subprocess.run(['sips', '-g', 'pixelWidth', '-g', 'pixelHeight', '-g', 'hasAlpha', png],
-                          capture_output=True, text=True).stdout.split()
-    check(dims[-6:] == ['pixelWidth:', '1024', 'pixelHeight:', '1024', 'hasAlpha:', 'yes'],
-          f'AppIcon.png is 1024 x 1024 with alpha ({dims[-6:]})')
+    iconset = make_app.ICON
+    check(os.path.isdir(iconset), f'{iconset} is committed')
+    check(sorted(os.listdir(iconset)) == sorted(make_app.ICON_FILES), f'the iconset holds exactly {make_app.ICON_FILES}')
+    for name, (pixels, dpi) in make_app.ICON_FILES.items():
+        dims = subprocess.run(['sips', '-g', 'pixelWidth', '-g', 'pixelHeight', '-g', 'dpiWidth', '-g', 'hasAlpha',
+                               os.path.join(iconset, name)], capture_output=True, text=True).stdout.split()
+        check(dims[-8:] == ['pixelWidth:', str(pixels), 'pixelHeight:', str(pixels), 'dpiWidth:', f'{dpi}.000',
+                            'hasAlpha:', 'yes'], f'{name} is {pixels} x {pixels} at {dpi} dpi with alpha ({dims[-8:]})')
+    check(make_app.iconset_problems(iconset) == [], f'make_app.py accepts it ({make_app.iconset_problems(iconset)})')
     icns = os.path.join(tmp, 'AppIcon.icns')
-    make_app.make_icns(png, icns)
+    make_app.make_icns(iconset, icns)
     types = check_app.icns_types(icns) if os.path.isfile(icns) else None
     check(types is not None and set(check_app.ICNS_TYPES) <= types,
           f'make_icns gives every size, 16 to 512 @1x/@2x ({sorted(types or [])})')
-    check(len(check_app.ICNS_TYPES) == 2 * len(make_app.ICON_SIZES), 'check_app.py expects make_app.py\'s sizes')
+    check(len(check_app.ICNS_TYPES) == len(make_app.ICON_FILES), 'check_app.py expects make_app.py\'s sizes')
+
+    # A set missing a size, or with one at the wrong size, is refused before iconutil sees it.
+    broken = os.path.join(tmp, 'broken.iconset')
+    shutil.copytree(iconset, broken)
+    os.remove(os.path.join(broken, 'icon_16x16.png'))
+    check(any('icon_16x16.png' in p for p in make_app.iconset_problems(broken)), 'a missing size is refused')
+    subprocess.run(['sips', '-z', '30', '30', os.path.join(iconset, 'icon_32x32.png'), '--out',
+                    os.path.join(broken, 'icon_16x16.png')], capture_output=True)
+    check(any('icon_16x16.png' in p for p in make_app.iconset_problems(broken)), 'a wrong size is refused')
+    try:
+        make_app.make_icns(broken, os.path.join(tmp, 'broken.icns'))
+        check(False, 'make_icns refuses a broken set')
+    except SystemExit:
+        pass
 
     # check_app.py's icon check, on an app holding that icon.
     app = os.path.join(tmp, 'ReCarbon.app')
@@ -66,7 +84,7 @@ def icon_tests(tmp):
     check(check_app.icon_problems(app, {}) != [], 'no CFBundleIconFile fails')
     small = os.path.join(tmp, 'small.iconset')
     os.makedirs(small)
-    subprocess.run(['sips', '-z', '32', '32', png, '--out', os.path.join(small, 'icon_32x32.png')], capture_output=True)
+    shutil.copy(os.path.join(iconset, 'icon_32x32.png'), os.path.join(small, 'icon_32x32.png'))
     subprocess.run(['iconutil', '-c', 'icns', small, '-o', os.path.join(app, 'Contents/Resources/AppIcon.icns')],
                    capture_output=True)
     check(any('ic10' in p for p in check_app.icon_problems(app, plist)), 'an icns missing sizes fails')

@@ -2,7 +2,7 @@
 # ReCarbon. GPL-3.0-or-later (see COPYING).
 # From SpeedBreaker's scripts/macos/make_app.py (GPL-3.0-or-later). ReCarbon
 # changes: the names, the bundle ID org.retronative.recarbon, the notices,
-# and ReCarbon's own icon (SpeedBreaker's is not used): scripts/macos/AppIcon.png,
+# and ReCarbon's own icon (SpeedBreaker's is not used): scripts/macos/AppIcon.iconset,
 # made from the website's mark (website/public/favicon.svg) by
 # scripts/macos/make_icon.swift, as the app's icon and the dmg's volume icon.
 #
@@ -22,7 +22,7 @@
 #                                    version only with MOLTENVK_VERSION=<it>)
 #   Contents/Resources/vulkan/icd.d/ MoltenVK's manifest (the Vulkan loader
 #                                    looks for drivers in the app's bundle)
-#   Contents/Resources/AppIcon.icns  from scripts/macos/AppIcon.png, every
+#   Contents/Resources/AppIcon.icns  from scripts/macos/AppIcon.iconset, every
 #                                    size macOS asks for (16 to 512 @1x/@2x)
 #   Contents/Resources/licenses/     COPYING, NOTICE, THIRD_PARTY_NOTICES.md,
 #                                    LICENSES/, and each bundled library's
@@ -148,8 +148,11 @@ OWN_LIBRARIES = [
      + [(os.path.join('patches/ffmpeg', f), f) for f in sorted(os.listdir(os.path.join(ROOT, 'patches/ffmpeg')))
         if f.endswith('.patch')]),
 ]
-ICON = os.path.join(ROOT, 'scripts/macos/AppIcon.png')
-ICON_SIZES = (16, 32, 128, 256, 512)  # each at @1x and @2x
+ICON = os.path.join(ROOT, 'scripts/macos/AppIcon.iconset')
+# The iconset's files: each size macOS asks for at @1x and @2x, as (pixels, dpi); make_icon.swift
+# draws each at its own pixel size.
+ICON_FILES = {f'icon_{size}x{size}' + ('@2x' if scale == 2 else '') + '.png': (size * scale, 72 * scale)
+              for size in (16, 32, 128, 256, 512) for scale in (1, 2)}
 # A folder's Finder info: 32 bytes, its Finder flags the big-endian 16 bits at
 # offset 8, kHasCustomIcon among them.
 FINDER_INFO = 'com.apple.FinderInfo'
@@ -177,17 +180,26 @@ def run(*args):
     return subprocess.run(args, check=True, capture_output=True, text=True).stdout
 
 
-def make_icns(png, icns):
-    """The .icns of `png` at every size macOS asks for (icon_<n>x<n>[@2x].png)."""
-    with tempfile.TemporaryDirectory() as tmp:
-        iconset = os.path.join(tmp, 'AppIcon.iconset')
-        os.makedirs(iconset)
-        for size in ICON_SIZES:
-            for scale in (1, 2):
-                px = size * scale
-                name = f'icon_{size}x{size}' + ('@2x' if scale == 2 else '') + '.png'
-                run('sips', '-z', str(px), str(px), png, '--out', os.path.join(iconset, name))
-        run('iconutil', '-c', 'icns', iconset, '-o', icns)
+def iconset_problems(iconset):
+    """What's wrong with an iconset: a file of ICON_FILES missing, or not its pixel size."""
+    problems = []
+    for name, (pixels, _) in ICON_FILES.items():
+        path = os.path.join(iconset, name)
+        if not os.path.isfile(path):
+            problems.append(f'{name}: missing')
+            continue
+        dims = run('sips', '-g', 'pixelWidth', '-g', 'pixelHeight', path).split()
+        if dims[-4:] != ['pixelWidth:', str(pixels), 'pixelHeight:', str(pixels)]:
+            problems.append(f'{name}: {" ".join(dims[-4:])}, not {pixels} x {pixels}')
+    return problems
+
+
+def make_icns(iconset, icns):
+    """The .icns of `iconset` (ICON_FILES, each at its own size: nothing is scaled here)."""
+    problems = iconset_problems(iconset)
+    if problems:
+        raise SystemExit(f'make_app.py: {iconset}: {"; ".join(problems)} (swift scripts/macos/make_icon.swift makes it)')
+    run('iconutil', '-c', 'icns', iconset, '-o', icns)
 
 
 def finder_info(path):
@@ -797,7 +809,7 @@ def main():
                 '        "api_version": "1.4.0",\n        "is_portability_driver": true\n    }\n}\n')
 
     # The icon, every size macOS asks for.
-    if not os.path.isfile(ICON):
+    if not os.path.isdir(ICON):
         raise SystemExit(f'make_app.py: no {ICON} (swift scripts/macos/make_icon.swift makes it)')
     make_icns(ICON, os.path.join(resources, 'AppIcon.icns'))
 
