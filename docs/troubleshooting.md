@@ -71,6 +71,9 @@ If the installer turns your disc image or folder down, its message says why:
   again.
 - **Incomplete or damaged**: a file is missing or doesn't match the disc. Dump the disc again.
 
+The supported disc's identity and hashes, and the image formats the installer reads, are in
+[Supported disc images](disc-images.md).
+
 ## Stutters
 
 Brief stalls of up to about a second are a known issue of the alpha: see

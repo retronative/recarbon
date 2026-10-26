@@ -52,6 +52,9 @@ copy. Other commands:
 | `ReCarbon --where` | Prints where the game install was found, and the data folders |
 | `ReCarbon --portable on` / `off` | Keeps the data and the game in ReCarbon's own folder (portable mode), or moves them back |
 
+The disc these commands check for, its hashes and the image formats they read:
+[Supported disc images](disc-images.md).
+
 ## Where ReCarbon keeps things
 
 | What | Where |
