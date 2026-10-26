@@ -17,7 +17,7 @@ const roadmap = repo ? `${repo.url}/blob/main/reference/ROADMAP.md` : null;
 	<section class="section intro-band">
 		<div class="wrap">
 			<p class="eyebrow">Telemetry · Development progress</p>
-			<h1 class="display title">Race to playable</h1>
+			<h1 class="display title chrome">Race to playable</h1>
 			<p class="intro">
 				Where ReCarbon stands, milestone by milestone. Every state here comes from the{' '}
 				{roadmap ? <a href={roadmap}>roadmap</a> : 'roadmap'} and its recorded evidence: no percentages, no dates promised,
@@ -61,7 +61,7 @@ const roadmap = repo ? `${repo.url}/blob/main/reference/ROADMAP.md` : null;
 	<section class="section" aria-labelledby="milestones-title">
 		<div class="wrap">
 			<p class="eyebrow">Season</p>
-			<h2 id="milestones-title" class="display h2">Milestones</h2>
+			<h2 id="milestones-title" class="display h2 chrome">Milestones</h2>
 			<ul class="legend" aria-label="States">
 				{(Object.keys(PROGRESS_STATES) as State[]).map((s) => (
 					<li>
@@ -104,7 +104,7 @@ const roadmap = repo ? `${repo.url}/blob/main/reference/ROADMAP.md` : null;
 	<section class="section" aria-labelledby="features-title">
 		<div class="wrap">
 			<p class="eyebrow">Dyno sheet</p>
-			<h2 id="features-title" class="display h2">Verified features</h2>
+			<h2 id="features-title" class="display h2 chrome">Verified features</h2>
 			<p class="lede">
 				What has been observed, and how: <StatusBadge status="hand-verified" /> by a person in a hand test, or
 				<StatusBadge status="automated" /> in scripted runs and unit tests.
@@ -132,7 +132,7 @@ const roadmap = repo ? `${repo.url}/blob/main/reference/ROADMAP.md` : null;
 		<div class="wrap split-grid">
 			<div>
 				<p class="eyebrow ember">Pit board</p>
-				<h2 id="issues-title" class="display h2">Known gameplay issues</h2>
+				<h2 id="issues-title" class="display h2 chrome">Known gameplay issues</h2>
 				<ul class="rows" aria-labelledby="issues-title">
 					{
 						ISSUES.map((i) => (
@@ -154,7 +154,7 @@ const roadmap = repo ? `${repo.url}/blob/main/reference/ROADMAP.md` : null;
 			</div>
 			<div>
 				<p class="eyebrow amber">Next on track</p>
-				<h2 id="tests-title" class="display h2">Pending hand tests</h2>
+				<h2 id="tests-title" class="display h2 chrome">Pending hand tests</h2>
 				<ul class="rows" aria-labelledby="tests-title">
 					{
 						HUMAN_TESTS.map((t) => (
@@ -174,7 +174,7 @@ const roadmap = repo ? `${repo.url}/blob/main/reference/ROADMAP.md` : null;
 	<section class="section" aria-labelledby="recent-title">
 		<div class="wrap">
 			<p class="eyebrow">Lap times</p>
-			<h2 id="recent-title" class="display h2">Recent achievements</h2>
+			<h2 id="recent-title" class="display h2 chrome">Recent achievements</h2>
 			<p class="lede">The latest {ACHIEVEMENTS.length}, newest first.</p>
 			<ol class="laps">
 				{
@@ -232,7 +232,7 @@ const roadmap = repo ? `${repo.url}/blob/main/reference/ROADMAP.md` : null;
 		margin: 0 0 1.5rem;
 	}
 	.eyebrow.ember {
-		color: var(--rn-ember);
+		color: var(--rn-red-high);
 	}
 	.eyebrow.amber {
 		color: var(--rn-amber);
@@ -242,8 +242,9 @@ const roadmap = repo ? `${repo.url}/blob/main/reference/ROADMAP.md` : null;
 	.intro-band {
 		overflow: hidden;
 		background:
-			radial-gradient(60rem 22rem at 85% -10%, rgb(25 227 255 / 0.14), transparent 70%),
-			radial-gradient(40rem 18rem at 0% 110%, rgb(255 77 46 / 0.12), transparent 70%),
+			radial-gradient(60rem 22rem at 85% -10%, color-mix(in srgb, var(--rn-red) 16%, transparent), transparent 70%),
+			radial-gradient(40rem 18rem at 0% 110%, rgb(40 62 102 / 0.22), transparent 70%),
+			var(--rn-weave),
 			var(--page-bg);
 	}
 	.intro-band::after {
@@ -251,7 +252,7 @@ const roadmap = repo ? `${repo.url}/blob/main/reference/ROADMAP.md` : null;
 		position: absolute;
 		inset: 0;
 		pointer-events: none;
-		background: repeating-linear-gradient(100deg, transparent 0 46px, rgb(233 238 245 / 0.025) 46px 47px);
+		background: repeating-linear-gradient(100deg, transparent 0 46px, rgb(230 232 236 / 0.025) 46px 47px);
 	}
 	.intro-band .wrap {
 		position: relative;
@@ -266,7 +267,7 @@ const roadmap = repo ? `${repo.url}/blob/main/reference/ROADMAP.md` : null;
 	.readout div {
 		padding: 0.75rem 1rem;
 		background: color-mix(in srgb, var(--surface) 85%, transparent);
-		border-left: 3px solid var(--rn-neon);
+		border-left: 3px solid var(--rn-red);
 	}
 	.readout dt {
 		font-family: var(--rn-font-mono);
@@ -337,9 +338,9 @@ const roadmap = repo ? `${repo.url}/blob/main/reference/ROADMAP.md` : null;
 		text-transform: uppercase;
 		color: var(--c);
 	}
-	.s-completed { --c: var(--rn-volt); }
-	.s-accepted { --c: var(--rn-neon); }
-	.s-in-progress { --c: var(--rn-amber); }
+	.s-completed { --c: var(--rn-status-completed); }
+	.s-accepted { --c: var(--rn-status-accepted); }
+	.s-in-progress { --c: var(--rn-status-in-progress); }
 
 	.legend {
 		display: flex;
@@ -400,9 +401,9 @@ const roadmap = repo ? `${repo.url}/blob/main/reference/ROADMAP.md` : null;
 		background: linear-gradient(160deg, color-mix(in srgb, var(--c) 9%, var(--surface)), var(--surface) 45%);
 		border-left: 3px solid var(--c);
 	}
-	.m-completed { --c: var(--rn-volt); }
-	.m-accepted { --c: var(--rn-neon); }
-	.m-in-progress { --c: var(--rn-amber); }
+	.m-completed { --c: var(--rn-status-completed); }
+	.m-accepted { --c: var(--rn-status-accepted); }
+	.m-in-progress { --c: var(--rn-status-in-progress); }
 	.m-head {
 		display: flex;
 		flex-wrap: wrap;
@@ -481,8 +482,9 @@ const roadmap = repo ? `${repo.url}/blob/main/reference/ROADMAP.md` : null;
 	}
 	.feature {
 		padding: 1rem 1.25rem 1.2rem;
-		background: var(--surface);
+		background: var(--rn-weave), var(--surface);
 		border: 1px solid var(--line);
+		clip-path: var(--rn-clip-cut);
 	}
 	.f-top {
 		display: flex;
@@ -525,8 +527,8 @@ const roadmap = repo ? `${repo.url}/blob/main/reference/ROADMAP.md` : null;
 		line-height: 1.5;
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
-		color: #ff8a6e;
-		border: 1px solid color-mix(in srgb, #ff8a6e 70%, transparent);
+		color: var(--rn-status-blocked);
+		border: 1px solid color-mix(in srgb, var(--rn-status-blocked) 70%, transparent);
 		clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
 	}
 	.more,
@@ -556,7 +558,7 @@ const roadmap = repo ? `${repo.url}/blob/main/reference/ROADMAP.md` : null;
 	.lap-n {
 		font-size: 1.4rem;
 		font-weight: 700;
-		color: var(--rn-neon);
+		color: var(--rn-red-high);
 		opacity: 0.8;
 	}
 	.lap time {
