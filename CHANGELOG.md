@@ -14,8 +14,9 @@ once, the first time that version starts (it's built into the game: runtime/CMak
   frame, and 1.5-2 fps more with each. At 2x frame times didn't change; at 1x neither applies.
 - Known issues: as in v0.1.1. Occasional stalls of about a second while racing, and shorter
   ones; the slowdown in long races on the M1; memory use that grows during long sessions; the
-  first race after a fresh install can hitch while the shader cache fills. These changes haven't
-  been measured on an M1 yet. It needs an Apple silicon Mac with macOS 27 or later.
+  first race after a fresh install can hitch while the shader cache fills. The GPU changes were
+  measured on a MacBook Air M5 only: not yet on an M1 or other Macs. It needs an Apple silicon
+  Mac with macOS 27 or later.
 
 ## v0.1.1
 
