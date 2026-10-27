@@ -155,6 +155,11 @@ int main()
     index.Clear();
     Check(index.Find(0x00400000).empty(), "cleared (a scale change drops every scaled texture)");
 
+    printf("---- the default ----\n");
+    Check(On(nullptr), "RECARBON_SCALED_FUSE unset: on");
+    Check(On("1") && On(""), "=1 or empty: on");
+    Check(!On("0"), "=0: off (every scaled texture untiled)");
+
     printf("---- %d failed checks ----\n", g_failures);
     return g_failures ? 1 : 0;
 }

@@ -67,6 +67,11 @@ int main()
     Check(!gpu::scaledwanted::Keep(true, never, 0x100000, 0x10000, 1000), "on: an unread resolve writes 1x only");
     Check(gpu::scaledwanted::Keep(true, one, 0x100000, 0x10000, 60), "on: a read one keeps them");
 
+    printf("---- the default ----\n");
+    Check(gpu::scaledwanted::On(nullptr), "RECARBON_SCALED_WANTED unset: on");
+    Check(gpu::scaledwanted::On("1") && gpu::scaledwanted::On(""), "=1 or empty: on");
+    Check(!gpu::scaledwanted::On("0"), "=0: off (every resolve keeps its samples)");
+
     printf("---- %d failed checks ----\n", g_failures);
     return g_failures ? 1 : 0;
 }

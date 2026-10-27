@@ -21,6 +21,9 @@
 
 namespace gpu::scaledfuse
 {
+    // On unless RECARBON_SCALED_FUSE (`env`) starts with 0.
+    inline bool On(const char* env) { return !env || env[0] != '0'; }
+
     struct Texture
     {
         bool uploaded = false;  // its untile ran

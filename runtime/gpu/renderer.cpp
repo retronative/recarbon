@@ -3485,7 +3485,7 @@ void main()
         // at 2x no change in GPU time or frame pacing. RECARBON_SCALED_FUSE_1X=1 (off by default, no
         // measured gain): a scaled resolve also stores its 1x words into a direct 1x texture, as a 1x
         // resolve does.
-        const bool s_scaledFuse = [] { const char* v = std::getenv("RECARBON_SCALED_FUSE"); return !v || v[0] != '0'; }();
+        const bool s_scaledFuse = gpu::scaledfuse::On(std::getenv("RECARBON_SCALED_FUSE"));
         const bool s_scaledFuse1x = [] { const char* v = std::getenv("RECARBON_SCALED_FUSE_1X"); return v && v[0] == '1'; }();
         gpu::scaledfuse::BasicIndex<Texture> s_scaledIndex;  // scaled textures with a store view (RECARBON_SCALED_FUSE)
         // Direct textures by their first guest byte (the latest made there),
@@ -5825,10 +5825,10 @@ void main()
             uint64_t wanted = 0;
         };
         std::unordered_map<uint64_t, ScaledCheck> s_scaledChecks;
-        // RECARBON_SCALED_WANTED=1: a scaled resolve keeps its samples only where a scaled reader
-        // asked for that memory lately (gpu/scaled_wanted.h); off (the default): every scaled
-        // resolve keeps them, as before.
-        const bool s_scaledWantedOnly = [] { const char* v = std::getenv("RECARBON_SCALED_WANTED"); return v && v[0] == '1'; }();
+        // ScaledWanted (on by default; RECARBON_SCALED_WANTED=0 turns it off): a scaled resolve keeps
+        // its samples only where a scaled reader asked for that memory lately (gpu/scaled_wanted.h);
+        // off: every scaled resolve keeps them, as before.
+        const bool s_scaledWantedOnly = gpu::scaledwanted::On(std::getenv("RECARBON_SCALED_WANTED"));
         bool ScaledWanted(uint32_t base, uint32_t size)
         {
             return gpu::scaledwanted::Keep(s_scaledWantedOnly, s_scaledChecks, base, size, s_frame);
@@ -5988,7 +5988,7 @@ void main()
             fprintf(stderr, "[renderer] scaled resolve memory: %u slots of %u KB (%llu MB), scale %s, %s writes, textures %s, %s, %s (%.1f ms)\n",
                 s_scaled.slots, s_scaled.slotWords / 256, (unsigned long long)(poolSize >> 20), gpu::ScaleName(s_scaled.scale).c_str(),
                 s_scaled.coalesce ? "coalesced" : "per-thread", s_scaled.direct ? "stored directly" : "through a scratch buffer",
-                s_scaledWantedOnly ? "only where a scaled reader asks (RECARBON_SCALED_WANTED=1)" : "every resolve kept",
+                s_scaledWantedOnly ? "only where a scaled reader asks" : "every resolve kept (RECARBON_SCALED_WANTED=0)",
                 s_scaledFuse ? (s_scaled.direct ? "resolves stored into scaled textures too" : "SCALED_FUSE on, but no store views")
                              : "resolves stored into no scaled texture (RECARBON_SCALED_FUSE=0)",
                 std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count());

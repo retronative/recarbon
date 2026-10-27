@@ -7,9 +7,10 @@
 // and those pages then read as 1x, as after any 1x write. Upstream's case: the scene's depth strips
 // were stored at host resolution every frame for no reader. A reader that starts asking reads 1x
 // for the frame its memory takes to be resolved again.
-// ReCarbon: off by default (RECARBON_SCALED_WANTED=1 turns it on), so every scaled resolve keeps
-// its samples as before until a comparison shows it is safe. Vulkan-free:
-// tests/scaled_wanted_test.cpp checks it alone.
+// ReCarbon: on by default (RECARBON_SCALED_WANTED=0 turns it off: every scaled resolve keeps its
+// samples, as before). Verified on a MacBook Air M5 at 3x with SCALED_FUSE (2026-10-27): the same
+// picture (pixel-identical in a still scene) for 1.0-1.6 ms less GPU time a frame, 31-63 MB fewer
+// resolved a frame. Vulkan-free: tests/scaled_wanted_test.cpp checks it alone.
 #pragma once
 #include <cstdint>
 #include <utility>
@@ -17,6 +18,9 @@
 namespace gpu::scaledwanted
 {
     constexpr uint64_t kWantFrames = 120;
+
+    // On unless RECARBON_SCALED_WANTED (`env`) starts with 0.
+    inline bool On(const char* env) { return !env || env[0] != '0'; }
 
     // A reader's range and when it last asked: frame + 1 (0: never).
     struct Want
