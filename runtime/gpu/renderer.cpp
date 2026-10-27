@@ -20,6 +20,7 @@
 #include "render_scale.h"
 #include "texture_eviction.h"
 #include "scaled_wanted.h"
+#include "scaled_fuse.h"
 #include "shared_memory_glsl.h"
 #include "xenos/registers.h"
 
@@ -3155,6 +3156,7 @@ namespace gpu::renderer
             std::vector<uint32_t> dirty;     // pages whose table entry changed
             uint64_t allocations = 0, evictions = 0, textures = 0, fallbacks = 0;
             uint64_t loads = 0, untiledBytes = 0, resolvedBytes = 0;  // for the [perf] line
+            uint64_t hosted = 0, hostedLost = 0;  // resolves stored into a scaled texture (RECARBON_SCALED_FUSE); kept, or loaded again
             uint32_t hostPageGuestPages = 1;  // guest pages per host page (write sequences are per host page)
         } s_scaled;
 
@@ -3446,6 +3448,8 @@ void main()
             // ReCarbon: when it was last used (sampled, or stored into by a
             // resolve), for the eviction (EvictTextures).
             uint64_t lastFrame = 0, lastSubmission = 0;
+            // ReCarbon (RECARBON_SCALED_FUSE): a scaled texture's guest size (width, height are its host size).
+            uint32_t guestWidth = 0, guestHeight = 0;
         };
         // The next submission too: a submit in the middle of a draw (the ring
         // full, a shadow wait) moves the draw that looked the texture up into it.
@@ -3472,6 +3476,15 @@ void main()
         // each, and were untiled again between passes every frame (3.7 MB
         // each), on every platform.
         const bool s_fusePartial = [] { const char* v = std::getenv("RECARBON_FUSE_PARTIAL"); return v ? v[0] == '1' : kFewerPasses; }();
+        // ReCarbon (SpeedBreaker v0.1.9's SCALED_FUSE, its write-through half; gpu/scaled_fuse.h).
+        // RECARBON_SCALED_FUSE=1: a scaled resolve also stores its samples into the cached scaled
+        // texture holding its destination (as its untile from the scaled memory would), which is then
+        // current without that untile; the scaled memory stays the truth. RECARBON_SCALED_FUSE_1X=1: a
+        // scaled resolve also stores its 1x words into a direct 1x texture, as a 1x resolve does. Both
+        // off by default: every scaled texture is untiled, and scaled resolves store into no texture.
+        const bool s_scaledFuse = [] { const char* v = std::getenv("RECARBON_SCALED_FUSE"); return v && v[0] == '1'; }();
+        const bool s_scaledFuse1x = [] { const char* v = std::getenv("RECARBON_SCALED_FUSE_1X"); return v && v[0] == '1'; }();
+        gpu::scaledfuse::BasicIndex<Texture> s_scaledIndex;  // scaled textures with a store view (RECARBON_SCALED_FUSE)
         // Direct textures by their first guest byte (the latest made there),
         // for resolves into part of one (Resolve): every one with
         // RECARBON_FUSE_PARTIAL, the cubes with RECARBON_DIRECT_CUBE alone; and the
@@ -4007,6 +4020,19 @@ void main()
                             s_maxDirectSize = std::max(s_maxDirectSize, t.guestSize);
                         }
                     }
+                    else
+                    {
+                        // ReCarbon (RECARBON_SCALED_FUSE): a scaled one's layout (tiled, 32 bits a
+                        // texel: ScaledFormat), for a resolve that stores into it.
+                        t.tiled = true;
+                        t.pitch = pitchAligned;
+                        t.bpbLog2 = 2;
+                        t.endian = uint32_t(f.endianness);
+                        t.guestWidth = width;
+                        t.guestHeight = height;
+                        if (s_scaledFuse)
+                            s_scaledIndex.Add(base, size, &t);
+                    }
                 }
                 if (!t.image.image)
                     t.image = CreateImage(volume ? VK_IMAGE_TYPE_3D : VK_IMAGE_TYPE_2D, fi.vk, { t.width, t.height, depth }, layers,
@@ -4389,7 +4415,9 @@ void main()
         // The same for a source of another scale denominator ([coalesced][den x - 1][den y - 1]: 1.5x is 3/2), made
         // at the first resolve that needs it (ResolvePipeline); [..][0][0] are the two above.
         VkPipeline s_resolveDenPipelines[2][2][2] = {};
-        VkPipeline ResolvePipeline(bool coalesced, const gpu::RenderScale& scale);
+        // ReCarbon (RECARBON_SCALED_FUSE): the same with SCALED_FUSE, for scaled resolves.
+        VkPipeline s_resolveFusePipelines[2][2][2] = {};
+        VkPipeline ResolvePipeline(bool coalesced, const gpu::RenderScale& scale, bool fuse = false);
 
         // Coalesced scaled resolves: 2.8 -> 1.1 ms of scaled resolves a frame
         // on the Steam Machine (RADV), but 2.6-3.4 -> 4.1-4.4 ms on an M1 Pro
@@ -4410,9 +4438,9 @@ void main()
                 return;
             VkPhysicalDeviceProperties props;
             vkGetPhysicalDeviceProperties(s_vk->physical, &props);
-            ResolvePipeline(false, scale);
+            ResolvePipeline(false, scale, s_scaledFuse);
             if (ScaledCoalesce(props))
-                ResolvePipeline(true, scale);
+                ResolvePipeline(true, scale, s_scaledFuse);
         }
         VkPipelineLayout s_resolveLayout = VK_NULL_HANDLE;
         VkDescriptorSetLayout s_resolveSetLayout = VK_NULL_HANDLE;
@@ -4435,6 +4463,10 @@ void main()
             // RECARBON_DIRECT_CUBE; pushed only with either, see s_resolvePush).
             uint32_t texWrite, texEndian, texConvert, texWidth, texHeight;
             uint32_t texX, texY;
+            // ReCarbon (RECARBON_SCALED_FUSE; pushed only to the SCALED_FUSE pipelines): also each host
+            // sample into a cached scaled texture (binding 5) where its untile would put it: its texel
+            // of the destination's 0,0 (whole tiles), its guest size, its endianness.
+            uint32_t hostWrite, hostX, hostY, hostWidth, hostHeight, hostEndian;
         };
         // The constants pushed to the resolve shader: without RECARBON_FUSE_PARTIAL
         // and RECARBON_DIRECT_CUBE, those before texX, as before them, and the
@@ -4449,6 +4481,9 @@ layout(set = 0, binding = 1) uniform texture2D src;
 layout(std430, set = 0, binding = 2) buffer ScaledPool { uint s_pool[]; };
 layout(std430, set = 0, binding = 3) readonly buffer ScaledTable { uint s_table[]; };
 layout(set = 0, binding = 4, r32ui) writeonly uniform uimage2D t_image;
+#ifdef SCALED_FUSE
+layout(set = 0, binding = 5, r32ui) writeonly uniform uimage2D h_image;
+#endif
 layout(push_constant) uniform P
 {
     ivec2 origin;
@@ -4462,6 +4497,9 @@ layout(push_constant) uniform P
     uint texWrite, texEndian, texConvert, texWidth, texHeight;  // also into a cached texture (binding 4)
 #ifdef TEX_OFFSET
     uint texX, texY;    // the destination's texel 0,0 in it (whole tiles)
+#endif
+#ifdef SCALED_FUSE
+    uint hostWrite, hostX, hostY, hostWidth, hostHeight, hostEndian;  // also into a cached scaled texture (binding 5)
 #endif
 } p;
 )" GLSL_SCALE_CODE R"(
@@ -4638,10 +4676,18 @@ void main()
                         v *= p.expScale;
                         if ((p.flags & 1u) != 0u) v = v.bgra;
                     }
+                    uint word32 = swapWord(pack32(v), p.endian);
 #ifdef COALESCED
-                    g_samples[lb * s + j * p.scale.x + i] = swapWord(pack32(v), p.endian);
+                    g_samples[lb * s + j * p.scale.x + i] = word32;
 #else
-                    s_pool[o + j * p.scale.x + i] = swapWord(pack32(v), p.endian);
+                    s_pool[o + j * p.scale.x + i] = word32;
+#endif
+#ifdef SCALED_FUSE
+                    // ReCarbon: and into the cached scaled texture, at the host texel its untile
+                    // fills with this sample (sbReaderHost), with its endianness.
+                    if (p.hostWrite != 0u && x + p.hostX < p.hostWidth && y + p.hostY < p.hostHeight)
+                        imageStore(h_image, ivec2(int(sbReaderHost(x + p.hostX, subX, i, p.scale.x, kDen.x)),
+                            int(sbReaderHost(y + p.hostY, subY, j, p.scale.y, kDen.y))), uvec4(swapWord(word32, p.hostEndian), 0u, 0u, 0u));
 #endif
                 }
         }
@@ -5321,7 +5367,7 @@ void main()
                     bool partial = false;
                     uint32_t layer = 0, texX = 0, texY = 0;  // partial: the face, and the destination's texel 0,0 in it
                     // Why not (RECARBON_LOG_UPLOADS).
-                    const char* unfused = !s_resolveToTexture ? "off" : scaledWrite ? "scaled resolve" : bl != 2 ? "not 32-bit"
+                    const char* unfused = !s_resolveToTexture ? "off" : scaledWrite && !s_scaledFuse1x ? "scaled resolve" : bl != 2 ? "not 32-bit"
                         : "no direct texture there";
                     // Whether `t` can take this resolve's words as its texels at all.
                     auto unfit = [&](const Texture& t) -> const char* {
@@ -5331,7 +5377,7 @@ void main()
                             : t.offX != 0 || t.offY != 0 ? "texture offset"
                             : nullptr;
                     };
-                    if (!scaledWrite && bl == 2 && s_resolveToTexture)
+                    if ((!scaledWrite || s_scaledFuse1x) && bl == 2 && s_resolveToTexture)
                         if (auto it = s_directByBase.find(rc.destBase); it != s_directByBase.end())
                         {
                             Texture& t = *(direct = it->second);
@@ -5344,7 +5390,7 @@ void main()
                             if (!unfused)
                                 fused = &t;
                         }
-                    if (!fused && !scaledWrite && bl == 2 && s_resolveToTexture && (s_fusePartial || s_directCube))
+                    if (!fused && (!scaledWrite || s_scaledFuse1x) && bl == 2 && s_resolveToTexture && (s_fusePartial || s_directCube))
                     {
                         // Each direct texture holding the destination, the
                         // nearest start first, until one takes it: textures
@@ -5444,11 +5490,49 @@ void main()
                                 fused->width, fused->height, fused->cube ? " cube" : "", rc.destBase, texX, texY);
                     }
 
+                    // ReCarbon (RECARBON_SCALED_FUSE, gpu/scaled_fuse.h): the cached scaled texture
+                    // holding the destination that is its untile's now and will be after (current, and
+                    // the whole rectangle in it) takes the samples too, and is then current without
+                    // its untile. The nearest start first; none: as before.
+                    Texture* hosted = nullptr;
+                    const bool fusePipeline = scaledWrite && s_scaledFuse;
+                    if (fusePipeline)
+                    {
+                        const gpu::scaledfuse::Resolve want{ rc.destBase, rc.destPitch, rangeBase, rangeBytes, rc.originX, rc.originY,
+                            rc.width, rc.height, source->scale.x.den == 1 && source->scale.y.den == 1 };
+                        gpu::scaledfuse::Place at;
+                        for (Texture* t : s_scaledIndex.Find(rc.destBase))
+                        {
+                            gpu::scaledfuse::Texture view{ t->uploaded, t->scaled, t->storeView != VK_NULL_HANDLE, t->tiled, false, t->bpbLog2,
+                                t->guestStart, t->guestSize, t->pitch, t->guestWidth, t->guestHeight };
+                            view.current = t->uploaded && !writewatch::WrittenSince(t->guestStart, t->guestSize, t->loadedSequence) &&
+                                ScaledRangeValid(t->guestStart, t->guestSize);
+                            if (!gpu::scaledfuse::Refusal(view, want, at))
+                            {
+                                hosted = t;
+                                break;
+                            }
+                        }
+                        if (hosted)
+                        {
+                            Touch(*hosted);
+                            rc.hostWrite = 1;
+                            rc.hostX = at.hostX;
+                            rc.hostY = at.hostY;
+                            rc.hostWidth = hosted->guestWidth;
+                            rc.hostHeight = hosted->guestHeight;
+                            rc.hostEndian = hosted->endian;
+                            s_scaled.hosted++;
+                            LogOnce(0x2A00, "scaled resolves store into their scaled textures too (the first: %ux%u at %08X, texels from %u,%u)",
+                                hosted->guestWidth, hosted->guestHeight, rc.destBase, at.hostX, at.hostY);
+                        }
+                    }
                     VkDescriptorImageInfo ii{ VK_NULL_HANDLE, source->sampleView, VK_IMAGE_LAYOUT_GENERAL };
                     VkDescriptorImageInfo ti{ VK_NULL_HANDLE, fused ? fused->storeViews[layer] : s_dummyStorage.view, VK_IMAGE_LAYOUT_GENERAL };
+                    VkDescriptorImageInfo hi{ VK_NULL_HANDLE, hosted ? hosted->storeView : s_dummyStorage.view, VK_IMAGE_LAYOUT_GENERAL };
                     VkDescriptorBufferInfo pool = DummyStorage(s_scaled.pool);
                     VkDescriptorBufferInfo table = DummyStorage(s_scaled.table);
-                    VkWriteDescriptorSet w[8]{};
+                    VkWriteDescriptorSet w[9]{};
                     w[0] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, VK_NULL_HANDLE, 0, 0, 1,
                         VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nullptr, &s_sharedInfo[0], nullptr };
                     w[1] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, VK_NULL_HANDLE, 1, 0, 1,
@@ -5459,11 +5543,14 @@ void main()
                         VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nullptr, &table, nullptr };
                     w[4] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, VK_NULL_HANDLE, 4, 0, 1,
                         VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, &ti, nullptr, nullptr };
+                    w[5] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, VK_NULL_HANDLE, 5, 0, 1,
+                        VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, &hi, nullptr, nullptr };
                     s_stateEpoch++;
                     bool coalesced = scaledWrite && s_scaled.coalesce;  // 32x2 pixels a group
-                    vkCmdBindPipeline(s_cmd, VK_PIPELINE_BIND_POINT_COMPUTE, ResolvePipeline(coalesced, source->scale));
-                    s_pushDescriptorSet(s_cmd, VK_PIPELINE_BIND_POINT_COMPUTE, s_resolveLayout, 0, AddSharedParts(w, 5), w);
-                    vkCmdPushConstants(s_cmd, s_resolveLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, s_resolvePush, &rc);
+                    vkCmdBindPipeline(s_cmd, VK_PIPELINE_BIND_POINT_COMPUTE, ResolvePipeline(coalesced, source->scale, fusePipeline));
+                    s_pushDescriptorSet(s_cmd, VK_PIPELINE_BIND_POINT_COMPUTE, s_resolveLayout, 0, AddSharedParts(w, s_scaledFuse ? 6 : 5), w);
+                    vkCmdPushConstants(s_cmd, s_resolveLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0,
+                        fusePipeline ? uint32_t(sizeof(ResolveConstants)) : s_resolvePush, &rc);
                     uint32_t perWord = bl >= 2 ? 1 : (4 >> bl);
                     if (!(s_exp & 2))
                         vkCmdDispatch(s_cmd, coalesced ? (rc.width + 31) / 32 : (rc.width / perWord + 7) / 8,
@@ -5518,6 +5605,19 @@ void main()
                             fprintf(stderr, "[upload] frame %llu resolve dest %08X: stored into %08X, but the texture was written outside "
                                 "it meanwhile: loaded again\n", (unsigned long long)s_frame, rc.destBase, fused->guestStart);
                         }
+                    }
+                    // ReCarbon (RECARBON_SCALED_FUSE): the scaled texture holds this write as its untile
+                    // would: its sequence moves on to it, by the fused rule above (its pages outside the
+                    // range unwritten since its load; Quiesce first). Otherwise it loads again, as before.
+                    if (hosted)
+                    {
+                        writewatch::Quiesce();
+                        bool keepHosted = !writewatch::WrittenSince(hosted->guestStart, rangeBase - hosted->guestStart, hosted->loadedSequence) &&
+                            !writewatch::WrittenSince(rangeEnd, hosted->guestStart + hosted->guestSize - rangeEnd, hosted->loadedSequence);
+                        if (written && keepHosted)
+                            hosted->loadedSequence = written;
+                        else
+                            s_scaled.hostedLost++;
                     }
                     // CPU writes must fault to move the sequence on (and so
                     // retire the scaled copy), whatever else protects the pages.
@@ -6098,12 +6198,15 @@ void main()
 
         // The resolve shader for sources whose scale has these denominators
         // (1 or 2 each; the shader's SB_DEN_X, SB_DEN_Y), into `out`.
-        void MakeResolvePipeline(bool coalesced, uint32_t denX, uint32_t denY, VkPipeline* out)
+        void MakeResolvePipeline(bool coalesced, uint32_t denX, uint32_t denY, VkPipeline* out, bool fuse = false)
         {
             std::string log;
             std::string preamble = coalesced ? "#define COALESCED\n" : "";
-            if (s_resolvePush != offsetof(ResolveConstants, texX))
+            // (A SCALED_FUSE one takes every constant: TEX_OFFSET's too, so the host ones line up.)
+            if (fuse || s_resolvePush != offsetof(ResolveConstants, texX))
                 preamble += "#define TEX_OFFSET\n";
+            if (fuse)
+                preamble += "#define SCALED_FUSE\n";
             if (denX != 1)
                 preamble += std::format("#define SB_DEN_X {}u\n", denX);
             if (denY != 1)
@@ -6122,37 +6225,40 @@ void main()
             Check(vkCreateComputePipelines(s_dev, s_pipelineCache, 1, &cpci, nullptr, out), "resolve pipeline");
         }
 
-        // The resolve pipeline for a source at `scale` (see s_resolveDenPipelines).
-        VkPipeline ResolvePipeline(bool coalesced, const gpu::RenderScale& scale)
+        // The resolve pipeline for a source at `scale` (see s_resolveDenPipelines); `fuse`: a scaled
+        // resolve's with SCALED_FUSE (RECARBON_SCALED_FUSE, s_resolveFusePipelines).
+        VkPipeline ResolvePipeline(bool coalesced, const gpu::RenderScale& scale, bool fuse)
         {
             const uint32_t dx = std::clamp(scale.x.den, 1u, 2u), dy = std::clamp(scale.y.den, 1u, 2u);
-            VkPipeline& slot = s_resolveDenPipelines[coalesced][dx - 1][dy - 1];
+            VkPipeline& slot = (fuse ? s_resolveFusePipelines : s_resolveDenPipelines)[coalesced][dx - 1][dy - 1];
             if (!slot)
             {
                 auto start = std::chrono::steady_clock::now();
-                MakeResolvePipeline(coalesced, dx, dy, &slot);
-                fprintf(stderr, "[renderer] resolve pipeline for scale denominators %ux%u%s made (%.1f ms)\n", dx, dy,
-                    coalesced ? ", coalesced" : "", std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count());
+                MakeResolvePipeline(coalesced, dx, dy, &slot, fuse);
+                fprintf(stderr, "[renderer] resolve pipeline for scale denominators %ux%u%s%s made (%.1f ms)\n", dx, dy,
+                    coalesced ? ", coalesced" : "", fuse ? ", storing into scaled textures" : "",
+                    std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count());
             }
             return slot;
         }
 
         void CreateResolvePipeline()
         {
-            VkDescriptorSetLayoutBinding b[5] = {
+            VkDescriptorSetLayoutBinding b[6] = {
                 { 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr },
                 { 1, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr },
                 { 2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr },  // scaled pool
                 { 3, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr },  // scaled page table
                 { 4, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr },   // a cached texture (or a dummy)
+                { 5, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr },   // a cached scaled one (RECARBON_SCALED_FUSE)
             };
-            auto bindings = WithSharedParts(b, 5);
+            auto bindings = WithSharedParts(b, s_scaledFuse ? 6 : 5);
             VkDescriptorSetLayoutCreateInfo dslci{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
             dslci.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR;
             dslci.bindingCount = uint32_t(bindings.size());
             dslci.pBindings = bindings.data();
             Check(vkCreateDescriptorSetLayout(s_dev, &dslci, nullptr, &s_resolveSetLayout), "resolve set layout");
-            VkPushConstantRange range{ VK_SHADER_STAGE_COMPUTE_BIT, 0, s_resolvePush };
+            VkPushConstantRange range{ VK_SHADER_STAGE_COMPUTE_BIT, 0, s_scaledFuse ? uint32_t(sizeof(ResolveConstants)) : s_resolvePush };
             VkPipelineLayoutCreateInfo plci{ VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
             plci.setLayoutCount = 1;
             plci.pSetLayouts = &s_resolveSetLayout;
@@ -6630,6 +6736,7 @@ void main()
 
         void DestroyTexture(Texture& t)
         {
+            s_scaledIndex.Erase(t.guestStart, &t);  // (RECARBON_SCALED_FUSE)
             if (auto it = s_directByBase.find(t.guestStart); it != s_directByBase.end() && it->second == &t)
                 s_directByBase.erase(it);
             if (auto it = s_directByStart.find(t.guestStart); it != s_directByStart.end() && it->second == &t)
@@ -9587,7 +9694,7 @@ void main()
     ScaledStats GetScaledStats()
     {
         return { s_scaled.loads, s_scaled.untiledBytes, s_scaled.resolvedBytes, s_scaled.allocations, s_scaled.evictions,
-            s_scaled.fallbacks };
+            s_scaled.fallbacks, s_scaled.hosted, s_scaled.hostedLost };
     }
 
     Stats GetStats()

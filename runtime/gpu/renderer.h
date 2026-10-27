@@ -92,6 +92,7 @@ namespace gpu::renderer
     struct ScaledStats
     {
         uint64_t loads, untiledBytes, resolvedBytes, allocations, evictions, fallbacks;
+        uint64_t hosted, hostedLost;  // ReCarbon (RECARBON_SCALED_FUSE): resolves stored into a scaled texture; of them loaded again
     };
     ScaledStats GetScaledStats();
     // Device memory held now, in bytes: the renderer's render targets,

@@ -109,7 +109,11 @@
     uint sbSampleWord(uint w, uint i, uint j, uint numX, uint numY, uint denX, uint denY)                        \
     {                                                                                                            \
         return sbBlockIndex(w, denX, denY) * (numX * numY) + j * numX + i;                                       \
-    }
+    }                                                                                                            \
+    /* ReCarbon (SpeedBreaker v0.1.9's SCALED_FUSE): a writer's sample i (from its block's corner) of a */       \
+    /* reader's texel t (sub in its block, t counted from the reader's own first texel): the reader's host */    \
+    /* pixel the untile fills with it (a resolve storing straight into a scaled texture). */                     \
+    uint sbReaderHost(uint t, uint sub, uint i, uint num, uint den) { return sbHostEdge(t - sub, num, den) + i; }
 
 #define SB_SCALE_STRINGIFY_(...) #__VA_ARGS__
 #define SB_SCALE_STRINGIFY(...) SB_SCALE_STRINGIFY_(__VA_ARGS__)

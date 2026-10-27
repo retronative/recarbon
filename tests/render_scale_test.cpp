@@ -255,17 +255,54 @@ struct Pool
     }
 };
 
+// ReCarbon (SpeedBreaker v0.1.9's test, SCALED_FUSE): a cached scaled
+// texture a resolve stores into as well: the destination's texel 0,0 is its
+// (texX, texY); guest size w x h; its host image, row by row (host width hw).
+struct Hosted
+{
+    uint32_t texX = 0, texY = 0, w = 0, h = 0, hw = 0;
+    std::vector<uint32_t>* image = nullptr;
+    // Stores per host texel this resolve (each host texel is one sample's:
+    // a second store is a race between threads on the GPU), and stores
+    // outside the image.
+    std::vector<uint8_t>* stores = nullptr;
+    uint32_t* outside = nullptr;
+};
+
+// The shader's store into the hosted texture of sample (i, j) of the
+// destination's texel (x, y) (sub in its block).
+static void HostStore(const Hosted* t, const RenderScale& r, uint32_t x, uint32_t y, uint32_t subX, uint32_t subY, uint32_t i, uint32_t j,
+    uint32_t v)
+{
+    if (!t)
+        return;
+    uint32_t tx = x + t->texX, ty = y + t->texY;
+    if (tx >= t->w || ty >= t->h)
+        return;
+    uint32_t hx = G.sbReaderHost(tx, subX, i, r.x.num, r.x.den), hy = G.sbReaderHost(ty, subY, j, r.y.num, r.y.den);
+    if (hx >= t->hw || size_t(hy) * t->hw + hx >= t->image->size())
+    {
+        ++*t->outside;
+        return;
+    }
+    (*t->image)[size_t(hy) * t->hw + hx] = v;
+    (*t->stores)[size_t(hy) * t->hw + hx]++;
+}
+
 // A resolve of guest rectangle [x0, x1) x [y0, y1) (of a host picture
 // `src`, srcW wide, at the pool's scale) into the tiled surface at `base`,
 // `pitch`: the shader's scaled writes, per thread (coalesced false) or a
-// 32x2 group at a time through shared memory (coalesced true).
+// 32x2 group at a time through shared memory (coalesced true). `hosted`:
+// also into a cached scaled texture (SCALED_FUSE); srcY0: the rectangle's
+// first row in the picture when the destination base isn't the picture's
+// (a strip resolved through a base tile rows in; default y0).
 static void Resolve(Pool& pool, const std::vector<uint32_t>& src, uint32_t srcW, uint32_t base, uint32_t pitch, uint32_t x0, uint32_t y0,
-    uint32_t x1, uint32_t y1, bool coalesced)
+    uint32_t x1, uint32_t y1, bool coalesced, const Hosted* hosted = nullptr, uint32_t srcY0 = ~0u)
 {
     const RenderScale& r = pool.scale;
     const uint32_t nx = r.x.num, ny = r.y.num, dx = r.x.den, dy = r.y.den, s = nx * ny;
     const uint32_t slotWords = r.SlotWords();
-    const int32_t originX = int32_t(r.x.Edge(x0)), originY = int32_t(r.y.Edge(y0));
+    const int32_t originX = int32_t(r.x.Edge(x0)), originY = int32_t(r.y.Edge(srcY0 == ~0u ? y0 : srcY0));
     auto thread = [&](uint32_t gx, uint32_t gy, uint32_t l, std::vector<uint32_t>* samples, std::vector<uint32_t>* offsets) {
         bool inside = gx < x1 - x0 && gy < y1 - y0;
         uint32_t x = x0 + gx, y = y0 + gy;
@@ -288,6 +325,7 @@ static void Resolve(Pool& pool, const std::vector<uint32_t>& src, uint32_t srcW,
                         (*samples)[lb * s + j * nx + i] = v;
                     else
                         pool.words[o + j * nx + i] = v;
+                    HostStore(hosted, r, x, y, subX, subY, i, j, v);
                 }
         }
         if (offsets && subX == 0 && subY == 0)
@@ -378,6 +416,74 @@ static void TestRoundTrip()
         }
 }
 
+// ReCarbon (SpeedBreaker v0.1.9's test): a scaled resolve storing straight
+// into its cached scaled texture (the shader's SCALED_FUSE, sbReaderHost):
+// the texture's host image afterwards is exactly what its untile would read
+// from the pool, every host texel, at every scale, through both resolve
+// paths, with the scene resolved in strips and halves, and in strips whose
+// destination base is whole tile rows into the texture (texY). Each host
+// texel is stored once (no race between threads), none outside the image.
+static void TestHostedTexture()
+{
+    printf("scaled resolves stored straight into their scaled texture: the untile's texels\n");
+    const uint32_t W = 1280, H = 720, pitch = 1280;
+    for (const RenderScale& r : { RenderScale{ kHalf, kHalf }, RenderScale{ kHalf, { 1, 1 } }, RenderScale{ { 2, 1 }, kHalf },
+             RenderScale::Whole(2, 2), RenderScale::Whole(3, 2) })
+        for (bool coalesced : { false, true })
+            for (bool offsetStrips : { false, true })
+            {
+                const uint32_t HW = r.x.Size(W), HH = r.y.Size(H);
+                std::vector<uint32_t> src(size_t(HW) * HH);
+                for (uint32_t j = 0; j < HH; j++)
+                    for (uint32_t i = 0; i < HW; i++)
+                        src[size_t(j) * HW + i] = (j << 16) | i;
+                Pool pool(r, 1024);
+                const uint32_t base = 0x00400000;
+                std::vector<uint32_t> image(size_t(HW) * HH, 0xDEADBEEF);
+                std::vector<uint8_t> stores(image.size(), 0);
+                uint32_t outside = 0;
+                Hosted t{ 0, 0, W, H, HW, &image, &stores, &outside };
+                Resolve(pool, src, HW, base, pitch, 0, 0, W, 256, coalesced, &t);
+                if (offsetStrips)
+                {
+                    // Rows 256 and 512 through bases 8 and 16 tile rows in
+                    // (40 tiles a row), each rectangle from its row 0.
+                    Hosted t2 = t, t3 = t;
+                    t2.texY = 256;
+                    t3.texY = 512;
+                    Resolve(pool, src, HW, base + 8 * 40 * 4096, pitch, 0, 0, W, 256, coalesced, &t2, 256);
+                    Resolve(pool, src, HW, base + 16 * 40 * 4096, pitch, 0, 0, W, H - 512, coalesced, &t3, 512);
+                }
+                else
+                {
+                    Resolve(pool, src, HW, base, pitch, 0, 256, 640, 512, coalesced, &t);
+                    Resolve(pool, src, HW, base, pitch, 640, 256, W, 512, coalesced, &t);
+                    Resolve(pool, src, HW, base, pitch, 0, 512, W, H, coalesced, &t);
+                }
+                const char* how = offsetStrips ? ", strips through offset bases" : "";
+                uint32_t wrong = 0, first = ~0u;
+                for (uint32_t j = 0; j < HH; j++)
+                    for (uint32_t i = 0; i < HW; i++)
+                        if (image[size_t(j) * HW + i] != Read(pool, base, pitch, i, j) && wrong++ == 0)
+                            first = (j << 16) | i;
+                CHECK(wrong == 0, "%s %s%s: %u of %ux%u host texels differ from the untile's, the first at %u,%u (%08X, untile %08X)",
+                    gpu::ScaleName(r).c_str(), coalesced ? "coalesced" : "per thread", how, wrong, HW, HH, first & 0xFFFF, first >> 16,
+                    first == ~0u ? 0 : image[size_t(first >> 16) * HW + (first & 0xFFFF)],
+                    first == ~0u ? 0 : Read(pool, base, pitch, first & 0xFFFF, first >> 16));
+                uint32_t twice = 0;
+                for (uint8_t n : stores)
+                    twice += n > 1;
+                CHECK(twice == 0 && outside == 0, "%s %s%s: %u host texels stored more than once, %u stores outside the image",
+                    gpu::ScaleName(r).c_str(), coalesced ? "coalesced" : "per thread", how, twice, outside);
+                wrong = 0;
+                for (uint32_t j = 0; j < HH; j++)
+                    for (uint32_t i = 0; i < HW; i++)
+                        wrong += image[size_t(j) * HW + i] != src[size_t(j) * HW + i];
+                CHECK(wrong == 0, "%s %s%s: %u host texels aren't the picture's", gpu::ScaleName(r).c_str(),
+                    coalesced ? "coalesced" : "per thread", how, wrong);
+            }
+}
+
 static void TestParse()
 {
     printf("RECARBON_RENDER_SCALE and the setting's half steps\n");
@@ -456,6 +562,7 @@ int main(int argc, char** argv)
     TestBoxFilter();
     TestSlotLayout();
     TestRoundTrip();
+    TestHostedTexture();
     TestParse();
     if (argc > 1)
         TestShaders(argv[1]);

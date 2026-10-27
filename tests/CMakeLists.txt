@@ -161,6 +161,9 @@ recarbon_test(memory_plan_test)
 recarbon_test(texture_eviction_test)
 # gpu/scaled_wanted.h: which scaled resolves keep their samples (SpeedBreaker v0.2.0's ScaledWanted).
 recarbon_test(scaled_wanted_test)
+# gpu/scaled_fuse.h: which scaled texture a scaled resolve may store into, and the index of them
+# (SpeedBreaker v0.1.9's SCALED_FUSE, write-through).
+recarbon_test(scaled_fuse_test)
 # game/movie_hold.h: which movie frames wait a vblank more, on the swap callbacks recorded from
 # Carbon's movies (tests/data/carbon_movie_swaps.txt).
 recarbon_test(movie_hold_test ARGS ${CMAKE_CURRENT_SOURCE_DIR}/data/carbon_movie_swaps.txt)
