@@ -19,6 +19,7 @@
 #include "depth_only.h"
 #include "render_scale.h"
 #include "texture_eviction.h"
+#include "scaled_wanted.h"
 #include "shared_memory_glsl.h"
 #include "xenos/registers.h"
 
@@ -3455,6 +3456,7 @@ void main()
         }
         void LoadScaledTexture(Texture& t, uint32_t base, uint32_t pitchBlocks, uint32_t endian);
         bool ScaledTextureValid(uint32_t base, uint32_t size);
+        bool ScaledWanted(uint32_t base, uint32_t size);
         std::unordered_map<uint64_t, std::unique_ptr<Texture>> s_textures;
         // Direct 1x 2D textures by guest address (the latest made there), for
         // resolves that store into them too (DestroyTexture drops its entry).
@@ -5280,7 +5282,7 @@ void main()
                     uint32_t lastPage = std::min<uint32_t>((rangeBase + rangeBytes - 1) >> 12, kGuestPages - 1);
                     // A 32-bit resolve from a scaled target keeps its samples.
                     bool scaledWrite = !source->scale.IsOne() && wholeBlocks && bl == 2 && !destInfo.copy_dest_array &&
-                        EnsureScaledMemory() && source->scale == s_scaled.scale;
+                        EnsureScaledMemory() && source->scale == s_scaled.scale && ScaledWanted(rangeBase, rangeBytes);
                     if (scaledWrite)
                     {
                         std::vector<std::pair<uint32_t, uint32_t>> fresh;
@@ -5714,8 +5716,28 @@ void main()
         {
             uint64_t epoch = ~0ull;
             bool valid = false;
+            // ReCarbon (SpeedBreaker v0.2.0's ScaledWanted, gpu/scaled_wanted.h): the range a
+            // scaled reader asked for, and s_frame + 1 when it last did (0: never).
+            uint32_t base = 0, size = 0;
+            uint64_t wanted = 0;
         };
         std::unordered_map<uint64_t, ScaledCheck> s_scaledChecks;
+        // RECARBON_SCALED_WANTED=1: a scaled resolve keeps its samples only where a scaled reader
+        // asked for that memory lately (gpu/scaled_wanted.h); off (the default): every scaled
+        // resolve keeps them, as before.
+        const bool s_scaledWantedOnly = [] { const char* v = std::getenv("RECARBON_SCALED_WANTED"); return v && v[0] == '1'; }();
+        bool ScaledWanted(uint32_t base, uint32_t size)
+        {
+            return gpu::scaledwanted::Keep(s_scaledWantedOnly, s_scaledChecks, base, size, s_frame);
+        }
+        // The front buffer asks for its memory at host resolution, as a scaled texture does.
+        void WantScaled(uint32_t base, uint32_t size)
+        {
+            ScaledCheck& check = s_scaledChecks[(uint64_t(base) << 32) | size];
+            check.base = base;
+            check.size = size;
+            check.wanted = s_frame + 1;
+        }
 
         // The pool, page table and scratch buffer (the caller has the GPU idle).
         void FreeScaledBuffers()
@@ -5860,9 +5882,10 @@ void main()
             FullBarrier();
             s_scaled.enabled = true;
             s_textureCache->generation++;  // lookups decided without the scaled path
-            fprintf(stderr, "[renderer] scaled resolve memory: %u slots of %u KB (%llu MB), scale %s, %s writes, textures %s (%.1f ms)\n",
+            fprintf(stderr, "[renderer] scaled resolve memory: %u slots of %u KB (%llu MB), scale %s, %s writes, textures %s, %s (%.1f ms)\n",
                 s_scaled.slots, s_scaled.slotWords / 256, (unsigned long long)(poolSize >> 20), gpu::ScaleName(s_scaled.scale).c_str(),
                 s_scaled.coalesce ? "coalesced" : "per-thread", s_scaled.direct ? "stored directly" : "through a scratch buffer",
+                s_scaledWantedOnly ? "only where a scaled reader asks (RECARBON_SCALED_WANTED=1)" : "every resolve kept",
                 std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count());
             return true;
         }
@@ -5871,6 +5894,9 @@ void main()
         {
             uint64_t epoch = writewatch::WriteEpoch();
             ScaledCheck& check = s_scaledChecks[(uint64_t(base) << 32) | size];
+            check.base = base;
+            check.size = size;
+            check.wanted = s_frame + 1;
             if (check.epoch != epoch)
             {
                 check.epoch = epoch;
@@ -9029,6 +9055,8 @@ void main()
         // At host resolution when a scaled resolve wrote it (the game's frames;
         // movies and loading screens drawn at 1x use the 1x image). At 1.5x
         // only a front buffer of whole blocks (even; 1280x720 is).
+        if (pc.tiled && !showTexture[0] && s_scaled.enabled)
+            WantScaled(pc.base, frontBytes);
         bool scaled = pc.tiled && !showTexture[0] && s_scaled.enabled && s_scaled.scale.Exact(width, height) &&
             ScaledRangeValid(pc.base, frontBytes);
         uint32_t outW = scaled ? s_scaled.scale.x.Size(width) : width, outH = scaled ? s_scaled.scale.y.Size(height) : height;
