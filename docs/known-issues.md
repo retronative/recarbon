@@ -18,6 +18,16 @@ checks (M8, 2026-10-26). Each is still open.
 | macOS 27 or newer only | Current builds link libraries built for macOS 27.0. |
 | No render scaling or widescreen options | Render scaling and widescreen options are not in this alpha. |
 
+## Tested for v0.1.2
+
+On a MacBook Air M5, on top of the v0.1.1 tests below:
+
+- **The GPU changes at 3x:** each was turned on and off in the same session, in a still scene
+  (the same picture, byte for byte) and in Quick Races driven by hand:
+  no corruption, cache mismatches or GPU errors. See [Performance](performance.md).
+- **At 2x:** no change in GPU time or frame pacing.
+- **Not tested:** a MacBook Air M1 or any other GPU.
+
 ## Tested for v0.1.1
 
 On a MacBook Air M5, on top of the v0.1.0 tests below:

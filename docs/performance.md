@@ -76,6 +76,27 @@ Measured in hand-played sessions of v0.1.1, while driving:
 - At 3x the GPU needs about 30–35 ms a frame, so the game runs near 30 fps. **Auto (2x) is the
   recommended setting on the MacBook Air M5.** Other Macs weren't measured.
 
+## Higher internal resolutions in v0.1.2, 2026-10-27
+
+v0.1.2 does less GPU work when the 3D scene is drawn above 1x: a resolve drawn at a higher
+resolution also goes straight into the texture that reads it, and only what something reads is
+kept at that resolution. Each change was turned on and off every 10–25 seconds in the same session,
+and each "on" stretch was compared with the "off" stretches next to it. MacBook Air M5,
+Internal Resolution 3x (2160p):
+
+| Change | GPU time a frame | Frame rate | Conditions |
+|---|---|---|---|
+| Resolves stored into the textures that read them | **1.7 ms less** (median, 9 of 9 comparisons) | +1.6 fps | Quick Races driven by hand |
+| Same, still scene | 3.3 ms less (9 of 10) | | the same picture, byte for byte |
+| Then, on top of it: only what's read kept at 3x | **1.6 ms less** (median, 18 of 19) | +1.9 fps | about 10 minutes of Quick Races driven by hand |
+| Same, still scene | 1.0 ms less (9 of 11) | | the same picture, byte for byte |
+
+- **3x still runs at about 30–35 fps** on this Mac, not 60. Auto (2x) stays the recommended setting.
+- At 2x the first change made no difference to GPU time or frame pacing; at 1x neither applies.
+- The two were measured one after the other, so the totals aren't simply added up.
+- No corruption, cache mismatches or GPU errors in these sessions.
+- **Measured on one MacBook Air M5 only.** Not yet tested on a MacBook Air M1 or any other GPU.
+
 ## Settings that affect performance
 
 All in Settings (F1); see [Settings](settings.mdx):

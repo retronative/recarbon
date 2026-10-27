@@ -1,7 +1,9 @@
 # ReCarbon v0.1.2: release notes (DRAFT, not published)
 
 > **Internal draft, 2026-10-27.** The text for the v0.1.2 release page, from `release/v0.1.2`.
-> The checksums come from the release candidate. Nothing is published without the user's approval.
+> Checksums of the release candidate `8fb6b5f` (24/24 PASS, `build/rc/8fb6b5f-20261027T134054Z`, the
+> commit to tag v0.1.2) and of the third-party source archive built beside it. Nothing is published
+> without the user's approval.
 
 <!-- 8< ---------------- release page body starts here ---------------- -->
 
@@ -45,16 +47,21 @@ An Apple silicon Mac with macOS 27 or later, and your own disc image.
 
 | File | SHA-256 |
 |---|---|
-| `ReCarbon-0.1.2-macos.dmg` | (from the release candidate) |
-| `ReCarbon-0.1.2-third-party-source.tar.xz` | (from the release candidate) |
+| `ReCarbon-0.1.2-macos.dmg` | `f64507d34cd786c0cb82ef03627d1661c7015ffd5c4d3d45be74c46b0f4ae021` |
+| `ReCarbon-0.1.2-third-party-source.tar.xz` | `24531544d1c9524e5fa0d73a89d8bb42a9ae5325d7a5f9248cf1dcc8c648cba9` |
+
+Check the download with `shasum -a 256 -c ReCarbon-0.1.2-macos.dmg.sha256`. ReCarbon is signed ad
+hoc and not notarized: macOS asks you to choose **Open Anyway** once (see Installation). The
+third-party source archive holds the source of the LGPL parts (FFmpeg's decoders and libmspack's
+LZX decoder), which are separate, replaceable libraries in the app.
 
 <!-- 8< ---------------- release page body ends here ---------------- -->
 
 ## Before release (internal)
 
 - [x] `chore(release): version 0.1.2` (`CMakeLists.txt`), the CHANGELOG entry, these notes.
-- [ ] Docs and website on v0.1.2; `scripts/release_candidate.sh <commit>` on the M5: every step
-      PASS; the third-party source archive; checksums here and on the pages.
+- [x] Docs and website on v0.1.2; `scripts/release_candidate.sh 8fb6b5f` on the M5: 24/24 PASS;
+      the third-party source archive; checksums here and on the pages.
 - [ ] Hand checks (`reference/RELEASE_CANDIDATE.md`) on the M5; the M1 needs the user's approval
       (it is reserved for other work).
 - [ ] Merge, tag, push, upload, deploy: the user's approval for each.

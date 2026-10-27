@@ -13,7 +13,7 @@ export const site = {
 
 	// Release versioning: the docs describe this release (starlight-versions
 	// later, docs/RELEASING.md).
-	docsVersion: '0.1.1',
+	docsVersion: '0.1.2',
 
 	// The source repository (D1: the runtime and this site, published together).
 	// Its links stay hidden or disabled until REPO_PUBLIC (above) is true; nothing
