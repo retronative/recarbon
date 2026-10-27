@@ -10,7 +10,7 @@
 // pitch, the destination whole 4 KB tiles in (32-bit texels make a 4 KB tile, so the destination's
 // texel x, y is the texture's x + hostX, y + hostY), the resolve's range and its whole rectangle
 // inside it (a texel past its edge would change the scaled memory alone), at a whole scale.
-// RECARBON_SCALED_FUSE=1 turns it on; off (the default), every scaled texture is untiled as before.
+// On by default; RECARBON_SCALED_FUSE=0 turns it off, and every scaled texture is untiled as before.
 // Vulkan-free: tests/scaled_fuse_test.cpp checks it alone.
 #pragma once
 #include <cstdint>

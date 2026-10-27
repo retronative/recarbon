@@ -3477,12 +3477,15 @@ void main()
         // each), on every platform.
         const bool s_fusePartial = [] { const char* v = std::getenv("RECARBON_FUSE_PARTIAL"); return v ? v[0] == '1' : kFewerPasses; }();
         // ReCarbon (SpeedBreaker v0.1.9's SCALED_FUSE, its write-through half; gpu/scaled_fuse.h).
-        // RECARBON_SCALED_FUSE=1: a scaled resolve also stores its samples into the cached scaled
-        // texture holding its destination (as its untile from the scaled memory would), which is then
-        // current without that untile; the scaled memory stays the truth. RECARBON_SCALED_FUSE_1X=1: a
-        // scaled resolve also stores its 1x words into a direct 1x texture, as a 1x resolve does. Both
-        // off by default: every scaled texture is untiled, and scaled resolves store into no texture.
-        const bool s_scaledFuse = [] { const char* v = std::getenv("RECARBON_SCALED_FUSE"); return v && v[0] == '1'; }();
+        // SCALED_FUSE (on by default; RECARBON_SCALED_FUSE=0 turns it off): a scaled resolve also
+        // stores its samples into the cached scaled texture holding its destination (as its untile from
+        // the scaled memory would), which is then current without that untile; the scaled memory stays
+        // the truth. Verified on a MacBook Air M5 (2026-10-27): at 3x the same picture (pixel-identical
+        // in a still scene) for 1.7-3.3 ms less GPU time a frame, texture untiles 158 -> 32 MB a frame;
+        // at 2x no change in GPU time or frame pacing. RECARBON_SCALED_FUSE_1X=1 (off by default, no
+        // measured gain): a scaled resolve also stores its 1x words into a direct 1x texture, as a 1x
+        // resolve does.
+        const bool s_scaledFuse = [] { const char* v = std::getenv("RECARBON_SCALED_FUSE"); return !v || v[0] != '0'; }();
         const bool s_scaledFuse1x = [] { const char* v = std::getenv("RECARBON_SCALED_FUSE_1X"); return v && v[0] == '1'; }();
         gpu::scaledfuse::BasicIndex<Texture> s_scaledIndex;  // scaled textures with a store view (RECARBON_SCALED_FUSE)
         // Direct textures by their first guest byte (the latest made there),
@@ -5982,10 +5985,12 @@ void main()
             FullBarrier();
             s_scaled.enabled = true;
             s_textureCache->generation++;  // lookups decided without the scaled path
-            fprintf(stderr, "[renderer] scaled resolve memory: %u slots of %u KB (%llu MB), scale %s, %s writes, textures %s, %s (%.1f ms)\n",
+            fprintf(stderr, "[renderer] scaled resolve memory: %u slots of %u KB (%llu MB), scale %s, %s writes, textures %s, %s, %s (%.1f ms)\n",
                 s_scaled.slots, s_scaled.slotWords / 256, (unsigned long long)(poolSize >> 20), gpu::ScaleName(s_scaled.scale).c_str(),
                 s_scaled.coalesce ? "coalesced" : "per-thread", s_scaled.direct ? "stored directly" : "through a scratch buffer",
                 s_scaledWantedOnly ? "only where a scaled reader asks (RECARBON_SCALED_WANTED=1)" : "every resolve kept",
+                s_scaledFuse ? (s_scaled.direct ? "resolves stored into scaled textures too" : "SCALED_FUSE on, but no store views")
+                             : "resolves stored into no scaled texture (RECARBON_SCALED_FUSE=0)",
                 std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count());
             return true;
         }
