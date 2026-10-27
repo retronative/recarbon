@@ -3,6 +3,20 @@
 What changed in each ReCarbon version, newest first. The game shows the current version's entry
 once, the first time that version starts (it's built into the game: runtime/CMakeLists.txt).
 
+## v0.1.2
+
+### What's new
+
+- Less GPU work at higher internal resolutions, with the same picture. A resolve the game renders
+  at a higher resolution now also goes straight into the texture that reads it, and only what
+  something reads is kept at that resolution. On a MacBook Air M5 at 3x (2160p), measured while
+  driving one change after the other: about 1.7 ms and then a further 1.6 ms less GPU time a
+  frame, and 1.5-2 fps more with each. At 2x frame times didn't change; at 1x neither applies.
+- Known issues: as in v0.1.1. Occasional stalls of about a second while racing, and shorter
+  ones; the slowdown in long races on the M1; memory use that grows during long sessions; the
+  first race after a fresh install can hitch while the shader cache fills. These changes haven't
+  been measured on an M1 yet. It needs an Apple silicon Mac with macOS 27 or later.
+
 ## v0.1.1
 
 ### What's new
