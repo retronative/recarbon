@@ -10,7 +10,7 @@ stands in for the console's kernel, GPU (Vulkan on Metal through MoltenVK), XMA 
 controllers (SDL3). There is no emulator, no Wine or CrossOver, and no runtime CPU emulation.
 
 > [!NOTE]
-> ReCarbon **v0.1.2**, an update to the first playable release, is out; it is not finished yet: [Download](download.md).
+> ReCarbon **v0.1.3**, a performance and stability update, is out; it is not finished yet: [Download](download.md).
 > Read [Known issues](known-issues.md) before anything else.
 
 ## Where things stand
@@ -28,7 +28,7 @@ Source: ReCarbon's `reference/ROADMAP.md`.
 
 ## Start here
 
-- [Download](download.md): ReCarbon v0.1.2, what you need and how to install it.
+- [Download](download.md): ReCarbon v0.1.3, what you need and how to install it.
 - [Installation](installation.md): installing the game from your own disc image.
 - [Controls](controls.mdx) and the interactive [Garage](https://retronative.github.io/recarbon/garage/).
 - [Settings](settings.mdx): every option of the in-game Settings overlay (F1).

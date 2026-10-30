@@ -27,7 +27,7 @@ const works = [
 // Structured data for search engines: the site and the app, published by RetroNative
 // (the organization the RetroNative site describes under the same @id).
 const home = new URL(url(), Astro.site).href;
-const description = 'ReCarbon is an unofficial native port of Need for Speed: Carbon (Xbox 360) to Apple Silicon Macs. v0.1.2, an update to the first playable alpha, is out. Bring your own disc.';
+const description = 'ReCarbon is an unofficial native port of Need for Speed: Carbon (Xbox 360) to Apple Silicon Macs. v0.1.3, a performance and stability update to the playable alpha, is out. Bring your own disc.';
 const org = { '@type': 'Organization', '@id': `${site.orgUrl}#organization`, name: site.org, url: site.orgUrl };
 const jsonLd = [
 	{ '@context': 'https://schema.org', '@type': 'WebSite', '@id': `${home}#website`, name: site.name, url: home, description, inLanguage: 'en', publisher: org },
@@ -175,7 +175,7 @@ const stateLabel: Record<string, string> = { done: 'Passed', evidence: 'Evidence
 				</li>
 			</ol>
 			<p class="more">
-				<a href={url('docs/download/')}>Download v0.1.2 →</a> · <a href={url('docs/installation/')}>Installation guide</a> ·
+				<a href={url('docs/download/')}>Download v0.1.3 →</a> · <a href={url('docs/installation/')}>Installation guide</a> ·
 				<a href={url('docs/developers/')}>build from source</a>
 			</p>
 		</div>

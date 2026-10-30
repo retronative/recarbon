@@ -63,7 +63,7 @@ advisory once a fixed release is out. Tell us if you'd like to be credited.
 Every release publishes a SHA-256 checksum next to the `.dmg`. Check it before opening the app:
 
 ```sh
-shasum -a 256 -c ReCarbon-0.1.2-macos.dmg.sha256
+shasum -a 256 -c ReCarbon-0.1.3-macos.dmg.sha256
 ```
 
 Download ReCarbon only from [github.com/retronative/recarbon/releases](https://github.com/retronative/recarbon/releases).

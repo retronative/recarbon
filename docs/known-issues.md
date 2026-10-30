@@ -17,6 +17,23 @@ checks (M8, 2026-10-26). Each is still open.
 | Development builds link Homebrew's libraries | A build against `scripts/macos/build_deps.sh`'s libraries passes `check_app` (M8). Development builds still name `/opt/homebrew` paths, so Vulkan layers installed there could be picked up. The v0.1.0 release is built against `build_deps.sh`'s libraries. |
 | macOS 27 or newer only | Current builds link libraries built for macOS 27.0. |
 | No render scaling or widescreen options | Render scaling and widescreen options are not in this alpha. |
+| Thermal judder at 2x and above | A fanless Mac throttles within a few minutes at 2x and above; races then run at about 52-56 fps with frames shown twice until it cools. v0.1.3 does not hold a sustained 60 fps at 2x in that state. |
+| Game Mode banner without the ReCarbon icon | Seen on a development Mac with many old registrations of the app: a stale icon cache, not the app bundle. Clearing the per-user icon cache (`com.apple.iconservices` under the user cache folder) and relaunching restores it. |
+
+## Tested for v0.1.3
+
+On a MacBook Air M5, on top of the v0.1.2 tests below:
+
+- **The GPU-wait change, against v0.1.2 at 2x:** matched 7-minute launches on a quiet Mac (frame pacing
+  level, the main thread's CPU use down by more than half), the change switched on and off inside one
+  session (the presents' timing identical), and a 9-minute play-test by hand (six Quick Races: no errors,
+  no audio gaps, a clean exit). See [Performance](performance.md).
+- **Correctness runs:** the movies and menus at 1x, a race at Frame Rate 30 (every frame at the
+  two-refresh cadence), the pause menu, a race at 3x.
+- **The installed app:** the app read back from the disk image launched into the front end with the
+  game data; the release checks (unit tests, app and disk-image checks, the replaceable LGPL libraries,
+  the checksums) pass.
+- **Not tested:** a MacBook Air M1 or any other GPU.
 
 ## Tested for v0.1.2
 
