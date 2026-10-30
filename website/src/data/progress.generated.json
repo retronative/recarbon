@@ -386,7 +386,16 @@
 		{
 			"date": "2026-10-31",
 			"text": "ReCarbon v0.1.3, a performance and stability update: the game's waits for the GPU no longer spin a CPU core, so races on a MacBook Air M5 use less than half the CPU on the main thread and the Mac throttles later; vertex data up to 128 KB is copied with its draw, removing a stall; the Frame Rate setting explains each choice. Thermal judder at 2x on a fanless Mac remains a known limitation.",
-			"commits": []
+			"commits": [
+				{
+					"sha": "a9e24086e027c26feb1ed23f71b41684f700c4c7",
+					"short": "a9e2408"
+				},
+				{
+					"sha": "d32fc884bdb8b7352ea37983a20484322924eb03",
+					"short": "d32fc88"
+				}
+			]
 		},
 		{
 			"date": "2026-10-26",
