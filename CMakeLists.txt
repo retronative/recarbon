@@ -43,7 +43,7 @@ endif()
 # log's [build] line, Settings > Advanced, bug reports' names and, once there
 # are releases, the release tag (v<version>). CHANGELOG.md has an entry for
 # each version (the in-game "What's new" note is built from it).
-project(ReCarbon VERSION 0.1.2 LANGUAGES C CXX)
+project(ReCarbon VERSION 0.1.3 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

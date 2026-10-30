@@ -12,8 +12,9 @@ Native recompilation of Need for Speed: Carbon (Xbox 360) for Apple Silicon.
 > metadata from analysing the game's executable: function and jump-table addresses (`config/`),
 > the installer's list of disc files with their sizes and SHA-256 hashes
 > (`runtime/install/manifest.inc`), and the names of the system functions the game imports
-> (`runtime/kernel/import_stubs.cpp`). The recompiled code is generated on your Mac from your own
-> copy and is never committed. Please don't ask for, or share, game files or disc images.
+> (`runtime/kernel/import_stubs.cpp`). The recompiled code (`ppc/`) is never committed to this
+> repository. ReCarbon needs your own, legally obtained Xbox 360 copy of the game; game assets and
+> disc images are not distributed. Please don't ask for, or share, game files or disc images.
 
 ## Status
 
@@ -131,6 +132,10 @@ first, like the game), then:
 ninja -C build/main
 ctest --test-dir build/main
 ```
+
+`scripts/verify.sh` runs the whole gate in order (build, the unit tests with the timing-sensitive
+ones alone at the end, the instruction tests, `validate_recomp.py`) and stops at the first failure;
+`ninja -C build/main recarbon_tests` builds the tests alone, without the game.
 
 The build links Homebrew's libraries, whose bottles are built for the macOS they were made on.
 So the macOS deployment target defaults to your own macOS (`MACOSX_DEPLOYMENT_TARGET` when set,

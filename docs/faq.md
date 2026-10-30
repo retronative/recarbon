@@ -11,14 +11,15 @@ trademarks of Electronic Arts Inc. and are used only to describe the game.
 
 ## Where do I get the game?
 
-From **your own Xbox 360 disc**. ReCarbon includes no game files, code, assets or executables,
-and no code generated from them. Please don't ask for, or share, game files or disc images. See
+From **your own, legally obtained Xbox 360 copy** of *Need for Speed: Carbon* (the supported USA
+disc). ReCarbon does not include the game's assets or any disc image: the installer copies what it
+needs from your disc. Please don't ask for, or share, game files or disc images. See
 [Installation](installation.md).
 
 ## Why isn't there a download of the game?
 
-Because the game belongs to its publisher. ReCarbon only replaces the console underneath it: the
-recompiled code is made on your Mac from your own disc's files, and never distributed.
+Because the game belongs to its publisher. You must provide your own legally obtained copy;
+ownership does not grant permission to redistribute the game's files.
 
 ## Is it an emulator?
 

@@ -5,14 +5,17 @@
 // (BSD license); comments name the rule where it isn't obvious.
 #include "shader_translator.h"
 #include "shared_memory_glsl.h"
+#include "sm3_mul_glsl.h"
 
 #include "xenos/ucode.h"
 
 #include <cfloat>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <format>
 #include <set>
+#include <string_view>
 
 namespace gpu
 {
@@ -1058,7 +1061,19 @@ vec3 cubeDirection(vec3 c)
         return enabled;
     }
 
-    TranslatedShader TranslateShader(ShaderStage stage, const uint32_t* ucode, size_t dwordCount)
+    bool SelectMulEnabled()
+    {
+        static const bool enabled = [] {
+            const char* v = std::getenv("RECARBON_SELECT_MUL");
+            const bool on = v && v[0] == '1';
+            if (on)
+                fprintf(stderr, "[gpu] RECARBON_SELECT_MUL=1: shaders multiply with selects (the same results)\n");
+            return on;
+        }();
+        return enabled;
+    }
+
+    TranslatedShader TranslateShader(ShaderStage stage, const uint32_t* ucode, size_t dwordCount, bool selectMul)
     {
         Translator t;
         t.stage = stage;
@@ -1073,6 +1088,12 @@ vec3 cubeDirection(vec3 c)
         result.registerCount = regCount;
 
         std::string g = ShaderCommonGlsl();
+        if (selectMul)
+        {
+            const std::string_view current = sm3::kXmulGlslCurrent;
+            if (const size_t at = g.find(current); at != std::string::npos)  // always (tests/sm3_mul_test.cpp)
+                g.replace(at, current.size(), sm3::kXmulGlslSelect);
+        }
         g += kHelpers;
         g += std::format("#define R_COUNT {}\n", regCount);
         for (uint32_t n = 0; n < 32; n++)

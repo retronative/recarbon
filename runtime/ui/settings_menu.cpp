@@ -19,6 +19,7 @@
 #include <user/key_names.h>  // a key's name in the file, when SDL has none
 #include <user/profiles.h>   // ReCarbon (M8): the keyboard profile row
 #include <video/frame_rate.h>
+#include <video/frame_rate_help.h>
 #include <video/presenter.h>
 
 #include <imgui.h>
@@ -845,6 +846,11 @@ namespace ui
                     also.empty() ? "" : "  Also: ", also.c_str(), also.empty() ? "" : ".");
                 return;
             }
+            // ReCarbon: Frame Rate's choices each get a line of their own
+            // (video/frame_rate_help.h), for the value the row shows, above
+            // the notes below (an override, what Auto runs at now).
+            if (o.id == Id::FrameRate)
+                ImGui::TextWrapped("%s", video::FrameRateDescription(int32_t(settings::GetStoredValue(o.id))));
             if (o.id == Id::Fullscreen && video::FullscreenLocked())
             {
                 ImGui::TextDisabled("Always on in Game Mode: Steam sets the resolution (Properties > Game Resolution).");

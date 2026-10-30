@@ -75,6 +75,12 @@ set_target_properties(pad_map_test PROPERTIES SKIP_BUILD_RPATH OFF)
 # getGradients (fetch opcode 18) in the shader translator: Carbon's road shader
 # (gpu/shader_translator.cpp, gpu/xenos/ucode.cpp; ReCarbon M5: see-through road).
 recarbon_test(shader_gradients_test SOURCES ${RT}/gpu/shader_translator.cpp ${RT}/gpu/xenos/ucode.cpp)
+# gpu/sm3_mul_glsl.h: the Shader Model 3 multiply, bit by bit (+-0, denormals, Inf, NaN), the current
+# and the select form (RECARBON_SELECT_MUL=1) alike, and the translator's output unchanged with the
+# flag off; both outputs compiled by glslangValidator when it is installed.
+recarbon_test(sm3_mul_test SOURCES ${RT}/gpu/shader_translator.cpp ${RT}/gpu/xenos/ucode.cpp
+    ARGS ${CMAKE_CURRENT_BINARY_DIR}/sm3_mul_glsl)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/sm3_mul_glsl)
 # Returning freed guest pages to zero touches no byte outside the range on a
 # 16 KB host (kernel/vmem.h ResetHostRange, header only; from SpeedBreaker v0.1.8).
 recarbon_test(vmem_host_pages_test)
@@ -101,6 +107,9 @@ recarbon_test(update_check_test SOURCES ${RT}/update/check.cpp)
 # renderer.cpp's shaders splice the shared code. From SpeedBreaker v0.1.8's,
 # with generic resolve pieces instead of MW's scene (ReCarbon M8 tests).
 recarbon_test(render_scale_test ARGS ${RT}/gpu/renderer.cpp)
+# gpu/dynamic_scale.h: RECARBON_DYNAMIC_SCALE's policy (the ladder of rungs, stepping down fast and up slowly, the
+# dwells, the thermal and loading-screen guards) on fake samples.
+recarbon_test(dynamic_scale_test)
 # Where the picture goes on a screen of any shape, letterboxed (Carbon has no
 # view-scaling hooks: game/title_hooks.cpp is linked to check), and Auto
 # internal resolution at a Mac's budgets (video/picture_fit.cpp). From
@@ -110,6 +119,9 @@ recarbon_test(picture_fit_test SOURCES ${RT}/video/picture_fit.cpp ${RT}/game/ti
 # From SpeedBreaker v0.1.8's, with Carbon's draw counts, and two rules
 # upstream's cases didn't pin (ReCarbon M8 tests).
 recarbon_test(frame_rate_policy_test SOURCES ${RT}/video/frame_rate_policy.cpp)
+# video/frame_rate_help.h: the Frame Rate row's help line for each value (Auto, 60, 30), word for
+# word, and nothing for any other value (ReCarbon's own, header only).
+recarbon_test(frame_rate_help_test)
 # When the presenter builds its swapchain again and at what size, and the UI's
 # display size (video/swapchain_policy.cpp): the Mac's scenarios of
 # SpeedBreaker v0.1.8's, plus fullscreen as the M5 logged it (ReCarbon M8 tests).
@@ -164,6 +176,27 @@ recarbon_test(scaled_wanted_test)
 # gpu/scaled_fuse.h: which scaled texture a scaled resolve may store into, and the index of them
 # (SpeedBreaker v0.1.9's SCALED_FUSE, write-through).
 recarbon_test(scaled_fuse_test)
+# gpu/vertex_copy.h: which vertex ranges a draw copies (128 KB, or 64 KB) and which the write watch guards.
+recarbon_test(vertex_copy_test)
+# video/aa_gate.h: when the presenter skips its AA pass (RECARBON_AA_DOWNSCALE_GATE=1, a picture
+# shrunk 1.5x or more along both axes), and that with the gate off it runs as before.
+recarbon_test(aa_gate_test)
+# gpu/pass_profile.h: RECARBON_PASS_PROFILE_SPLIT's value, when a profiled pass ends, and the draws a
+# slice lists.
+recarbon_test(pass_profile_test)
+# kernel/sleep0_backoff.h: the macOS back-off for the game's Sleep(0) polls (RECARBON_SLEEP0_BACKOFF=1), on a fake
+# clock: when a run of polls yields or sleeps, and the late-sleep fallback.
+recarbon_test(sleep0_backoff_test)
+# kernel/gpu_wait_backoff.h: the back-off for Direct3D's GPU-wait polls (RECARBON_GPU_WAIT_BACKOFF=1), on a fake
+# clock: spin, then sleep, the gap that starts a new wait, and the late-sleep fallback to yielding.
+recarbon_test(gpu_wait_backoff_test)
+# kernel/sleep0_trace.h: RECARBON_SLEEP0_TRACE's core layout check, duration histogram and per-thread waits.
+recarbon_test(sleep0_trace_test)
+# kernel/sleep0_schedule.h: RECARBON_SLEEP0_BACKOFF_AT's switch times, phases, per-poll steps, one switch line under racing threads.
+recarbon_test(sleep0_schedule_test)
+# kernel/sleep0_predict.h: RECARBON_SLEEP0_BACKOFF=2's predicted wake on a fake clock: learning, hits, early and late ends, dropped frames,
+# re-anchoring, the sleep clamp, oversleep, the fixed policy's decisions kept, independent threads.
+recarbon_test(sleep0_predict_test)
 # game/movie_hold.h: which movie frames wait a vblank more, on the swap callbacks recorded from
 # Carbon's movies (tests/data/carbon_movie_swaps.txt).
 recarbon_test(movie_hold_test ARGS ${CMAKE_CURRENT_SOURCE_DIR}/data/carbon_movie_swaps.txt)
@@ -219,6 +252,11 @@ if(RECARBON_GLSLANG_VALIDATOR)
             ${CMAKE_CURRENT_BINARY_DIR}/fsr1_glsl/${shader} -o ${CMAKE_CURRENT_BINARY_DIR}/fsr1_glsl/${shader}.spv)
         set_tests_properties(fsr1_glsl_check_${shader} PROPERTIES DEPENDS fsr1_test)
     endforeach()
+    foreach(variant off on)
+        add_test(NAME sm3_mul_glsl_check_${variant} COMMAND ${RECARBON_GLSLANG_VALIDATOR} -V --target-env vulkan1.2 -S frag
+            ${CMAKE_CURRENT_BINARY_DIR}/sm3_mul_glsl/sm3_mul_${variant}.frag -o ${CMAKE_CURRENT_BINARY_DIR}/sm3_mul_glsl/sm3_mul_${variant}.spv)
+        set_tests_properties(sm3_mul_glsl_check_${variant} PROPERTIES DEPENDS sm3_mul_test)
+    endforeach()
 endif()
 recarbon_test(settings_scaling_test SOURCES ${RT}/user/settings.cpp ${RT}/user/atomic_file.cpp
     ARGS ${CMAKE_CURRENT_BINARY_DIR}/settings_scaling_scratch)
@@ -229,6 +267,10 @@ find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
 add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/frame_times_test.py)
 # scripts/run_attempt.sh's retention marker for game/m3 (written once, never changed).
 add_test(NAME run_attempt_marker_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_attempt_marker_test.py)
+# scripts/run_attempt.sh's mandatory deadline and scripts/bench/'s refusals and stops (thermal level 2+,
+# memory, swap, monitor and logging failures, a dead watchdog, the hard limit), with a stub game
+# and fake probes in a scratch tree (no game, about 30 s).
+add_test(NAME bench_safety_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/bench_safety_test.py)
 # scripts/release_candidate.sh's preflight, rc_manifest.py's content gate and manifest, and
 # scripts/rc_transfer.sh's refusals, in a scratch tree (no build, no game files, no network).
 add_test(NAME release_candidate_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/release_candidate_test.py)
@@ -261,3 +303,51 @@ add_test(NAME lgpl_dylibs_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOUR
 # vblank_timer_test, vblank_lock_sim: timing-sensitive (scheduler latency).
 # movie_cadence_sim.py: MW's movie cadence (not a ctest in SpeedBreaker either).
 # launcher_prime_test.sh: needs scripts/steamos/bundle/speedbreaker.sh, which ReCarbon doesn't have.
+
+# How scripts/verify.sh runs them. Label unit: no wall-clock check, no real scheduler or QoS
+# behaviour, no child processes, no shared volume, so they run together (ctest -L unit -j N).
+# Everything else runs alone, one at a time, after them (ctest -LE unit -j 1): the tests with
+# timing checks (update_check's best-of-3, swapchain_use's 100 ms wait and work guard,
+# write_watch's 1 s store, guest_time's suspensions, system_time_monotonic's 5 s of readers),
+# real QoS classes (thread_priority, frame_thread_qos), signals and child processes (clean_exit),
+# scripts/bench/'s own polling and kill waits (bench_safety), and /Volumes/ReCarbon (dmg_layout).
+# A new test is serial until it is listed here. Every test gets a timeout, so a hang fails the
+# gate instead of stalling it; the long ones have their own.
+set(RECARBON_PARALLEL_TESTS
+    block_ranges_test version_check_test key_names_test settings_keys_test key_map_test
+    raise_exception_test ring_state_test edram_format_test critical_section_test pad_map_test
+    shader_gradients_test sm3_mul_test vmem_host_pages_test key_bindable_test profiles_test
+    profile_store_test render_scale_test dynamic_scale_test picture_fit_test frame_rate_policy_test
+    swapchain_policy_test quit_game_test depth24_pack_test depth_only_test zpd_report_test
+    pipeline_cache_header_test display_tone_test present_schedule_test fullscreen_policy_test
+    cursor_idle_test audio_cadence_test memory_plan_test texture_eviction_test scaled_wanted_test
+    scaled_fuse_test vertex_copy_test aa_gate_test pass_profile_test sleep0_backoff_test
+    sleep0_trace_test sleep0_schedule_test sleep0_predict_test movie_hold_test report_zip_test
+    install_folder_test portable_test disc_check_test switch_tables_test refresh_fit_test fsr1_test
+    settings_scaling_test frame_times_test run_attempt_marker_test release_candidate_test
+    app_icon_test lgpl_dylibs_test
+    fsr1_glsl_check_easu.comp fsr1_glsl_check_rcas.frag fsr1_glsl_check_rcas_tone.frag
+    sm3_mul_glsl_check_off sm3_mul_glsl_check_on)
+get_directory_property(_recarbon_tests TESTS)
+foreach(t ${_recarbon_tests})
+    if(t IN_LIST RECARBON_PARALLEL_TESTS)
+        set_tests_properties(${t} PROPERTIES LABELS unit)
+    else()
+        set_tests_properties(${t} PROPERTIES LABELS serial RUN_SERIAL TRUE)
+    endif()
+    get_test_property(${t} TIMEOUT _timeout)
+    if(NOT _timeout)
+        set_tests_properties(${t} PROPERTIES TIMEOUT 120)
+    endif()
+endforeach()
+set_tests_properties(bench_safety_test PROPERTIES TIMEOUT 300)
+set_tests_properties(guest_time_test PROPERTIES TIMEOUT 150)  # its own watchdog gives up at 120 s
+set_tests_properties(dmg_layout_test PROPERTIES RESOURCE_LOCK volumes_recarbon)
+# The tests alone, without the game and ppc/ (ninja recarbon_tests): the tests don't link the
+# recompiled game, and a test-only build folder needn't compile it.
+add_custom_target(recarbon_tests)
+foreach(t ${_recarbon_tests})
+    if(TARGET ${t})
+        add_dependencies(recarbon_tests ${t})
+    endif()
+endforeach()

@@ -97,12 +97,49 @@ Internal Resolution 3x (2160p):
 - No corruption, cache mismatches or GPU errors in these sessions.
 - **Measured on one MacBook Air M5 only.** Not yet tested on a MacBook Air M1 or any other GPU.
 
+## Smoother races in v0.1.3, 2026-10-30
+
+v0.1.3 stops the game's own waits for the GPU from spinning a CPU core: between polls the thread
+sleeps for 50 microseconds instead. Measured on the harness's Quick Race route at Internal
+Resolution 2x (1440p), Frame Rate 60, on a MacBook Air M5, 7-minute launches on a quiet Mac,
+v0.1.2 against v0.1.3 (the same build apart from this change):
+
+| | v0.1.2 (best of 3 launches) | v0.1.3 |
+|---|---|---|
+| Frame rate while racing, Mac cool | 59.5 fps | 59.8 fps |
+| Frame rate while racing, Mac throttled (level 2) | 31-37 fps (the player's own v0.1.2 sessions) | 52-56 fps (the play-test's races 2-6) |
+| Frames within (99 of 100) | 19.0 ms | 18.9 ms |
+| Frames over 33 ms, per minute of racing | 11 | 5 |
+| Refreshes shown late or repeated, per minute | 26 | 8 |
+| Hitch reports | 26 | 14 |
+| CPU on the game's main thread | 867 ms a second | 337 ms a second |
+| macOS thermal throttling (level 2) | 116 s | 136 s |
+
+- The same change was also tried with a second one, a sleep in the game's `Sleep(0)` polls, which
+  cut CPU further but cost frame pacing at 2x; it stays off (`RECARBON_SLEEP0_BACKOFF=3` turns it on).
+- At 3x (2160p) the main thread fell from a full core to about an eighth of one and throttling came
+  about two and a half minutes later; 3x still runs at about 40-50 fps on this Mac.
+- Launches right after a heavy build on the same Mac run worse in both versions (the GPU starts
+  throttled): the numbers above are from launches with the Mac idle for 20 minutes or more.
+- A 9.5-minute play-test of the candidate by hand at 2x (six Quick Races): the first race before
+  throttling ran 59.8 fps with 99 of 100 frames within 18.5 ms; once macOS throttled the GPU (level 2
+  at 111 s) the later races ran 52-56 fps at 14-15 ms of GPU a frame, with four to seven doubled
+  refreshes a second: the Mac's thermal limit at 2x, the same in both versions. No errors or audio gaps.
+- Known limitation: a fanless Mac throttles within a few minutes at 2x; after that, races run at
+  52-56 fps with visible judder (four to seven doubled refreshes a second) until it cools. v0.1.3
+  does not hold a sustained 60 fps at 2x in that state and does not remove all stuttering.
+- No GPU errors, audio gaps or hangs in any of these launches. **Measured on one MacBook Air M5
+  only**, not yet on a MacBook Air M1 or any other GPU.
+
 ## Settings that affect performance
 
 All in Settings (F1); see [Settings](settings.mdx):
 
 - **Internal Resolution:** the 3D scene's resolution. 1x is the console's 720p; 3x is 2160p (4K).
-- **Frame Rate:** 60, 30, or Auto (60, or 30 while the device is hot or can't hold 60).
+- **Frame Rate:** 60, 30, or Auto (60, or 30 while the device is hot or can't hold 60). 30 shows
+  one game frame every second display refresh, for steadier pacing where 60 isn't held (3x on the
+  M5); Auto switches between the two during play. The menu's help line says what the chosen value
+  does.
 - **Asynchronous Shaders:** skips an object for a frame or two while its shader compiles, instead
   of stuttering.
 - **Performance Overlay:** shows the frame rate and frame time in a corner.

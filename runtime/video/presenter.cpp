@@ -25,6 +25,7 @@
 #include "display_tone.h"
 #include "fsr1.h"
 #include "upscale.h"
+#include "aa_gate.h"
 #include <ui/ui.h>
 #if defined(__APPLE__) && TARGET_OS_IOS
 #include <platform/ios_ui.h>
@@ -125,6 +126,15 @@ namespace video
         // each pass's post-processing GPU time per frame (anti-aliasing and
         // the UI included, as in [perf]): the same scenes, the same clocks.
         const bool s_upscaleAb = [] { const char* v = std::getenv("RECARBON_UPSCALE_AB"); return v && v[0] == '1'; }();
+        // RECARBON_AA_DOWNSCALE_GATE=1 (an experiment, off by default): no AA pass on a picture shrunk
+        // by 1.5x or more along both axes (video/aa_gate.h).
+        const bool s_aaGate = [] {
+            const char* v = std::getenv("RECARBON_AA_DOWNSCALE_GATE");
+            const bool on = v && v[0] == '1';
+            if (on)
+                fprintf(stderr, "[video] RECARBON_AA_DOWNSCALE_GATE=1: no anti-aliasing on a picture shrunk 1.5x or more\n");
+            return on;
+        }();
         uint64_t s_abFrames[3]{}, s_abNs[3]{}, s_abAaNs[3]{};  // by upscale::Pass; main thread
         std::vector<VkSemaphore> s_renderDone;  // one per swapchain image
         std::mutex s_queueMutex;
@@ -3693,7 +3703,18 @@ void main()
                     f.timed = true;
                 }
 
-                if (AaEnabled())
+                const bool aa = aagate::RunAa(AaEnabled(), s_aaGate, w, h, dw, dh);
+                if (s_aaGate)
+                {
+                    static int lastAa = -1, lines = 0;
+                    if (int(aa) != lastAa && lines < 32)
+                    {
+                        lines++;
+                        fprintf(stderr, "[video] anti-aliasing gate: %s, %ux%u -> %dx%d\n", aa ? "AA" : "no AA", w, h, dw, dh);
+                    }
+                    lastAa = int(aa);
+                }
+                if (aa)
                 {
                     EnsureAaImage(w, h);
                     Barrier(cmd, s_post.aaImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, VK_ACCESS_SHADER_READ_BIT,

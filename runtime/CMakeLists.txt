@@ -103,10 +103,15 @@ add_library(imgui STATIC ${IMGUI}/imgui.cpp ${IMGUI}/imgui_draw.cpp ${IMGUI}/img
     ${IMGUI}/backends/imgui_impl_sdl3.cpp ${IMGUI}/backends/imgui_impl_vulkan.cpp)
 target_include_directories(imgui PUBLIC ${IMGUI} ${IMGUI}/backends)
 target_link_libraries(imgui PUBLIC SDL3::SDL3 Vulkan::Vulkan)
-# The UI font, compiled in as a byte array (generated/ui_font.inc).
+# The UI font, compiled in as a byte array (generated/ui_font.inc). ReCarbon
+# change: written through configure_file, which leaves an unchanged file
+# alone, so a reconfigure (any CMakeLists edit) no longer recompiles ui.cpp
+# and relinks the game; an edit of the font reconfigures.
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${IMGUI}/fonts/Roboto-Medium.ttf)
 file(READ ${IMGUI}/fonts/Roboto-Medium.ttf UI_FONT_HEX HEX)
 string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\1," UI_FONT_BYTES "${UI_FONT_HEX}")
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/generated/ui_font.inc "${UI_FONT_BYTES}\n")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/generated/ui_font.inc.new "${UI_FONT_BYTES}\n")
+configure_file(${CMAKE_CURRENT_BINARY_DIR}/generated/ui_font.inc.new ${CMAKE_CURRENT_BINARY_DIR}/generated/ui_font.inc COPYONLY)
 # AMD FidelityFX Super Resolution 1 (thirdparty/fsr1, vendored, unmodified):
 # the text of its two headers, compiled in (generated/fsr1_headers.inc) for
 # Upscaling's FSR 1 shaders, which glslang compiles while the game runs
@@ -185,10 +190,11 @@ if(TARGET glslang::SPIRV)
     target_link_libraries(ReCarbon PRIVATE glslang::SPIRV)
 endif()
 # platform/apple/*.mm (iOS: linked by scripts/ios/build.sh): Foundation, and
-# on macOS AppKit (file_dialog.mm) and CoreFoundation (install/placement.cpp:
-# is a folder in iCloud Drive).
+# on macOS AppKit (file_dialog.mm), CoreFoundation (install/placement.cpp:
+# is a folder in iCloud Drive) and IOKit.
 if(APPLE AND NOT IOS)
-    target_link_libraries(ReCarbon PRIVATE "-framework Foundation" "-framework AppKit" "-framework CoreFoundation")
+    target_link_libraries(ReCarbon PRIVATE "-framework Foundation" "-framework AppKit" "-framework CoreFoundation"
+        "-framework IOKit")  # kernel/imports_sync.cpp: RECARBON_SLEEP0_TRACE's core clusters
 endif()
 target_include_directories(ReCarbon SYSTEM PRIVATE ${FFMPEG_INCLUDE_DIR} ${XR}/thirdparty/tomlplusplus/include)
 # Assertions stay on in every build type: ported code marks its unhandled

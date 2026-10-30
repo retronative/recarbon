@@ -32,7 +32,8 @@ listed here as equivalent, unbuildable or missed.
 |---|---|---|
 | render_scale | Generic resolve pieces (one rectangle, strips, a grid, side-by-side halves) instead of MW's scene | 9/9 |
 | picture_fit | Carbon has no view hooks: the letterbox cases only, tied to `title_hooks.cpp`; Auto at a Mac's budgets (4, 9); the M5/M1 picture sizes and choices as logged | 9/9 |
-| frame_rate_policy | Carbon's draw counts (hand04: race median 2250, front end 55); the Steam Frame case dropped; two added cases | 12/12 |
+| frame_rate_policy | Carbon's draw counts (hand04: race median 2250, front end 55); the Steam Frame case dropped; two added cases; the Frame Rate options' audit added the M5 at 3x (tries at 180/360/720/1440 s, the back-off's cap) and the M1 throttling while macOS says "fair" | 12/12, then 9/10 (the rise path's dwell is equivalent: its cooldown and try wait both exceed the dwell) |
+| frame_rate_help | ReCarbon's own: the Frame Rate row's help line per value, word for word | 4/4 |
 | swapchain_policy | The Mac's scenarios only; fullscreen as the M5 logged it; each watch trigger on its own | 10/11 (1 equivalent within the test's tolerance), plus 7 planted rules |
 | quit_game | The prompt's name | 4/4 |
 | clean_exit | The crash report's first line | 7/7 |

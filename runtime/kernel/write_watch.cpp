@@ -54,6 +54,8 @@ namespace writewatch
         std::vector<uint32_t> s_rearm;
         // RECARBON_LOG_GUARD=1: what each guest page was guarded for, logged on stalls.
         const bool s_logGuard = std::getenv("RECARBON_LOG_GUARD") != nullptr;
+        void GuardSite(const char* tag, const void* function, const char* name, bool write, uint32_t address, uint32_t base, uint32_t size,
+            uint64_t us);
         std::unique_ptr<std::atomic<const char*>[]> s_gpuTag;
         std::unique_ptr<std::atomic<uint32_t>[]> s_gpuRange[2];
         std::atomic<uint64_t> s_stalls{ 0 }, s_stallUs{ 0 }, s_faults{ 0 }, s_opened{ 0 };
@@ -748,12 +750,82 @@ namespace writewatch
                 static std::atomic<uint32_t> logged{ 0 };
                 Dl_info dl{};
                 dladdr(t_faultPc, &dl);
-                if (logged++ < 400)
+                if (logged++ < 100)
                     fprintf(stderr, "[guard] stall %llu us (%s %08X): %s %08X+%X (submission %llu%s) in %s\n", (unsigned long long)us,
                         t_faultWrite ? "write" : "read", t_faultPhysical, s_gpuTag[sub].load(), s_gpuRange[0][sub].load(),
                         s_gpuRange[1][sub].load(), (unsigned long long)use, done ? "" : ", gave up", dl.dli_sname ? dl.dli_sname : "?");
+                GuardSite(s_gpuTag[sub].load(), dl.dli_saddr, dl.dli_sname, t_faultWrite, t_faultPhysical, s_gpuRange[0][sub].load(),
+                    s_gpuRange[1][sub].load(), us);
             }
             return done;
+        }
+
+        // RECARBON_LOG_GUARD: the stalls by site (the GPU use's tag, the faulting function, read or
+        // write), every 300 stalls since the last summary: count, time, the longest, the last
+        // address and guarded range. A fixed table under a spin flag: no allocation in the handler.
+        struct Site
+        {
+            const char* tag;
+            const void* function;
+            const char* name;
+            bool write;
+            uint64_t count, us, maxUs;
+            uint32_t address, base, size;
+            uint64_t outside, outsideUs;  // faults outside the guarded range (another part of its page)
+            int32_t minOffset, maxOffset;  // fault address - guarded base, over the window
+        };
+        Site s_sites[64];
+        uint32_t s_siteCount = 0, s_siteStalls = 0;
+        std::atomic_flag s_siteLock = ATOMIC_FLAG_INIT;
+
+        void GuardSite(const char* tag, const void* function, const char* name, bool write, uint32_t address, uint32_t base, uint32_t size,
+            uint64_t us)
+        {
+            while (s_siteLock.test_and_set(std::memory_order_acquire))
+                ;
+            Site* site = nullptr;
+            for (uint32_t i = 0; i < s_siteCount && !site; i++)
+                if (s_sites[i].tag == tag && s_sites[i].function == function && s_sites[i].write == write)
+                    site = &s_sites[i];
+            if (!site && s_siteCount < 64)
+                site = &(s_sites[s_siteCount++] = { tag, function, name, write, 0, 0, 0, 0, 0, 0, 0, 0, INT32_MAX, INT32_MIN });
+            if (site)
+            {
+                const int32_t offset = int32_t(address - base);
+                if (address < base || address - base >= size)
+                {
+                    site->outside++;
+                    site->outsideUs += us;
+                }
+                site->minOffset = std::min(site->minOffset, offset);
+                site->maxOffset = std::max(site->maxOffset, offset);
+                site->count++;
+                site->us += us;
+                site->maxUs = std::max(site->maxUs, us);
+                site->address = address;
+                site->base = base;
+                site->size = size;
+            }
+            if (++s_siteStalls >= 300)
+            {
+                fprintf(stderr, "[guard] %u stalls by site:\n", s_siteStalls);
+                for (uint32_t i = 0; i < s_siteCount; i++)
+                    if (s_sites[i].count)
+                        fprintf(stderr, "[guard]   %llu x %s %s in %s: %.1f ms (longest %.2f ms); %llu outside the guarded range "
+                                        "(%.1f ms); fault - guarded base %d..%d; last at %08X, guarded %08X+%X\n",
+                            (unsigned long long)s_sites[i].count, s_sites[i].write ? "write" : "read", s_sites[i].tag ? s_sites[i].tag : "?",
+                            s_sites[i].name ? s_sites[i].name : "?", double(s_sites[i].us) / 1000.0, double(s_sites[i].maxUs) / 1000.0,
+                            (unsigned long long)s_sites[i].outside, double(s_sites[i].outsideUs) / 1000.0, s_sites[i].minOffset,
+                            s_sites[i].maxOffset, s_sites[i].address, s_sites[i].base, s_sites[i].size);
+                for (uint32_t i = 0; i < s_siteCount; i++)
+                {
+                    s_sites[i].count = s_sites[i].us = s_sites[i].maxUs = s_sites[i].outside = s_sites[i].outsideUs = 0;
+                    s_sites[i].minOffset = INT32_MAX;
+                    s_sites[i].maxOffset = INT32_MIN;
+                }
+                s_siteStalls = 0;
+            }
+            s_siteLock.clear(std::memory_order_release);
         }
 
         void Guard(uint32_t physical, uint32_t size, uint64_t submission, bool write, const char* tag, bool untile = false)

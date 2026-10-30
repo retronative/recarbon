@@ -32,6 +32,9 @@ tests/run_instr_tests.sh   # assemble tests/instr/*.s, recompile, run (fails on 
 cmake -S . -B build/main -G Ninja -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++
 ninja -C build/main -j8    # build/main/runtime/ReCarbon (about 100 s clean, 2.6 GB peak)
+scripts/verify.sh          # the automated gate in order: build (with -DRECARBON_TESTS=ON), ctest (the
+                           # parallel-safe tests together, then the timing-sensitive ones alone),
+                           # instruction tests, validate_recomp; refuses while the game or a benchmark runs
 ```
 
 - The survey scripts need Python 3.11+ (`tomllib`). `/usr/bin/python3` is 3.9, so use

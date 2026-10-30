@@ -51,8 +51,13 @@ namespace gpu
     // RECARBON_CP_OPT bit 8 (on by default): translate shaders with packed constants.
     bool PackedConstantsEnabled();
 
-    // `ucode` is in host byte order (swap the guest's big-endian words first).
-    TranslatedShader TranslateShader(ShaderStage stage, const uint32_t* ucode, size_t dwordCount);
+    // RECARBON_SELECT_MUL=1 (an experiment, off by default): translate with the select form of the
+    // Shader Model 3 multiply (gpu/sm3_mul_glsl.h), the same bits with fewer operations.
+    bool SelectMulEnabled();
+
+    // `ucode` is in host byte order (swap the guest's big-endian words first). `selectMul`: the
+    // select form of xmul; otherwise the output is exactly as before it existed.
+    TranslatedShader TranslateShader(ShaderStage stage, const uint32_t* ucode, size_t dwordCount, bool selectMul = SelectMulEnabled());
 
     // The GLSL declarations every translated shader starts with (also used by
     // the host to lay out its buffers).

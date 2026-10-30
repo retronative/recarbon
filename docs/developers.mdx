@@ -49,6 +49,10 @@ ninja -C build/main
 ctest --test-dir build/main
 ```
 
+`scripts/verify.sh` runs the whole gate in order (build, the unit tests with the timing-sensitive
+ones alone at the end, the instruction tests, `validate_recomp.py`) and stops at the first failure;
+`ninja -C build/main recarbon_tests` builds the tests alone, without the game.
+
 The macOS deployment target defaults to your own macOS (`MACOSX_DEPLOYMENT_TARGET` when set). To
 choose another, set `MACOSX_DEPLOYMENT_TARGET` for both `setup_tools.sh` and the first `cmake`
 run. `tools/`, `game/`, `ppc/` and `build/` are git-ignored: **never commit or share them**.

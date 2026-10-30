@@ -3,6 +3,30 @@
 What changed in each ReCarbon version, newest first. The game shows the current version's entry
 once, the first time that version starts (it's built into the game: runtime/CMakeLists.txt).
 
+## v0.1.3
+
+### What's new
+
+- Smoother races and a cooler Mac. The game's own busy-waits for the GPU (every 3D scene) no
+  longer spin a CPU core: they sleep between polls. On a MacBook Air M5 at 2x this cut the main
+  thread's CPU use in a race by more than half; in a 9-minute play-test the races ran 52-60 fps
+  where the same Mac ran v0.1.2 at 31-37 fps earlier the same day. At 3x the main thread fell from
+  a full core to an eighth and thermal throttling came about two and a half minutes later.
+  `RECARBON_GPU_WAIT_BACKOFF=0` turns it off.
+- Fewer stalls while racing: vertex data up to 128 KB is copied with its draw instead of guarded
+  against the game rewriting it, which removed a stall of 2.7 ms (2x) to 17 ms (3x) about once a
+  frame on the M5 (v0.1.2 measured; 3x +2.8 fps). `RECARBON_VERTEX_COPY_128=0` restores 64 KB.
+- Settings > Display > Frame Rate explains each choice under the row: what Auto does, what 60
+  costs when the Mac can't hold it, and what 30 gives.
+- Known issues: a fanless Mac still throttles within a few minutes at 2x and above; once it does,
+  races at 2x run at about 52-56 fps with visible judder (frames shown twice) until it cools.
+  Otherwise as in v0.1.2: occasional stalls of about a second while racing, and shorter
+  ones; the slowdown in long races on the M1; memory use that grows during long sessions; the
+  first race after a fresh install can hitch while the shader cache fills. Measured on a MacBook
+  Air M5 only, not yet on an M1 or other Macs. It needs an Apple silicon Mac with macOS 27 or
+  later. Experimental switches in this build stay off: the AA downscale gate, the select
+  multiply, dynamic internal resolution, the pre-race Auto frame rate.
+
 ## v0.1.2
 
 ### What's new

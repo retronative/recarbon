@@ -7,7 +7,9 @@
 // (Carbon's logs: median 53-55 draws, CP 0.2 ms; its 30 fps menus likewise).
 // Upstream's Steam Frame headset case is left out (not a ReCarbon platform),
 // and so is NFSMW_THERMAL_SIM (ReCarbon has none). Added: WindowIsRecent
-// and NoEvidenceAcrossSwitch. Frame Rate is 60 by
+// and NoEvidenceAcrossSwitch; Mac3xRace and ThrottledWhileFair (the Frame
+// Rate options' audit: what Auto does on the M5 at 3x and on the M1, where
+// macOS never reports thermal serious). Frame Rate is 60 by
 // default here; Auto is the player's choice. The thresholds themselves
 // (frame_rate_policy.h) are SpeedBreaker's, measured on iPhones and iPads,
 // and not retuned for Carbon on a Mac.
@@ -368,6 +370,63 @@ namespace
         CHECK(d.switches.size() == 1 && d.switches[0].rate == 30, "%zu switches", d.switches.size());
     }
 
+    // ReCarbon (Frame Rate options): what Auto does on a MacBook Air M5 at
+    // 3x, the resolution the 30 fps mode is for. The race is GPU-bound at
+    // 45-50 fps (GPU 22-25 ms a frame, CP 8: measured on a MacBook Air M5, October 2026),
+    // macOS reports thermal "fair" throughout (never serious, so Hot never
+    // fires), and at 30 the GPU still reads over the rise's 13 ms. So: a
+    // drop by CantHold60 once the window holds 10 s; 60 comes back only by
+    // tries, each a 60 the scene can't hold for the window plus the dwell
+    // (30-45 s of shaky 60) before the next drop; the waits double up to
+    // 8x (180, 360, 720, 1440, 1440 s) and never two switches within the
+    // dwell. The inherited (iOS-measured) numbers, pinned as they stand.
+    void Mac3xRace()
+    {
+        Driver d;
+        d.Run(5000, State::Fair, 48, 8, 24, 8, 24);
+        CHECK(d.switches.size() >= 10, "%zu switches", d.switches.size());
+        if (d.switches.size() < 10)
+            return;
+        CHECK(d.switches[0].rate == 30 && d.switches[0].reason == FrameRateReason::CantHold60 && d.switches[0].at >= 10 &&
+                d.switches[0].at < 11, "first %s at %.1f s", ReasonName(d.switches[0].reason), d.switches[0].at);
+        const double tryGap[] = { 180, 360, 720, 1440, 1440 };
+        for (size_t i = 1; i < 10; i++)
+        {
+            const Switch& s = d.switches[i];
+            const double gap = s.at - d.switches[i - 1].at;
+            CHECK(gap >= AutoFrameRatePolicy::kDwellSec - 1e-9, "switches at %.1f and %.1f s", d.switches[i - 1].at, s.at);
+            if (s.rate == 60)
+            {
+                CHECK(s.reason == FrameRateReason::Try, "rise %zu by %s", i, ReasonName(s.reason));
+                const double want = tryGap[(i - 1) / 2];
+                CHECK(gap >= want - 1 && gap < want + 2, "try %zu after %.1f s at 30, want %.0f", (i + 1) / 2, gap, want);
+            }
+            else
+            {
+                CHECK(s.reason == FrameRateReason::CantHold60, "drop %zu by %s", i, ReasonName(s.reason));
+                CHECK(gap >= AutoFrameRatePolicy::kDwellSec && gap < 45, "the try lasted %.1f s", gap);
+                CHECK(s.backoff == std::min(int((i + 1) / 2), AutoFrameRatePolicy::kBackoffMax), "drop %zu: back-off %d", i, s.backoff);
+            }
+        }
+    }
+
+    // ReCarbon: a MacBook Air M1's long race (docs/performance.md): 30 fps
+    // at first, then slower as the GPU throttles, while macOS says "fair"
+    // the whole time. The drop comes from the frames, not the thermal
+    // state, within the window of the slowdown; and 30 stays while the
+    // GPU reads over the rise's 13 ms.
+    void ThrottledWhileFair()
+    {
+        Driver d;
+        d.Run(120, State::Fair, 60, 6, 13);
+        CHECK(d.switches.empty(), "60 fps at thermal fair: %zu switches", d.switches.size());
+        d.Run(60, State::Fair, 40, 8, 25, 8, 25);
+        CHECK(d.switches.size() == 1 && d.switches[0].reason == FrameRateReason::CantHold60 && d.switches[0].at >= 125 &&
+                d.switches[0].at < 131, "%zu switches, the first at %.1f s", d.switches.size(), d.switches.empty() ? 0.0 : d.switches[0].at);
+        d.Run(100, State::Fair, 40, 8, 25, 8, 25);
+        CHECK(d.switches.size() == 1, "%zu switches: 60 came back with the GPU at 25 ms", d.switches.size());
+    }
+
     // --- Replays ---
 
     State StateNamed(const std::string& name)
@@ -463,6 +522,8 @@ int main(int argc, char** argv)
     ReheatBacksOff();
     WindowIsRecent();
     NoEvidenceAcrossSwitch();
+    Mac3xRace();
+    ThrottledWhileFair();
     for (int i = 1; i < argc; i++)
         Replay(argv[i]);
     printf("%s (%d failure%s)\n", g_failures ? "FAILED" : "ok", g_failures, g_failures == 1 ? "" : "s");

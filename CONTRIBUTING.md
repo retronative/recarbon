@@ -46,6 +46,7 @@ Before you open a pull request, run the checks your change touches:
 tests/run_instr_tests.sh                                     # recompiler instruction tests
 /opt/homebrew/bin/python3 survey/validate_recomp.py game/survey/recomp.log   # after a survey
 ninja -C build/main && ctest --test-dir build/main          # unit tests (-DRECARBON_TESTS=ON)
+scripts/verify.sh                                            # all of the above in order, stopping at the first failure
 ```
 
 For the website (`website/`): `npm run check` and `npm run build` (see

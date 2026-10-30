@@ -3,6 +3,7 @@
 // vulkan/vulkan_pipeline_cache.cc.
 #include <stdafx.h>
 #include "renderer.h"
+#include "vertex_copy.h"
 #include "edram_format.h"
 #include <cpu/guest_thread.h>
 #include <cpu/host_cpu.h>
@@ -18,15 +19,18 @@
 #include "depth24_glsl.h"
 #include "depth_only.h"
 #include "render_scale.h"
+#include "dynamic_scale.h"
 #include "texture_eviction.h"
 #include "scaled_wanted.h"
 #include "scaled_fuse.h"
+#include "pass_profile.h"
 #include "shared_memory_glsl.h"
 #include "xenos/registers.h"
 
 #include <kernel/vmem.h>
 #include <kernel/write_watch.h>
 #include <video/presenter.h>
+#include <platform/thermal.h>
 #include <video/picture_fit.h>
 #include <video/scale_budget.h>
 #include <user/paths.h>
@@ -91,6 +95,7 @@ namespace gpu::renderer
         struct HitchTimes
         {
             double shaderMs = 0, pipelineMs = 0, textureMs = 0, shadowMs = 0, imageMs = 0, submitMs = 0;
+            double queueLockMs = 0;  // of submitMs, waiting for the queue lock (the presenter holds it to present)
             uint32_t shaders = 0, pipelines = 0, textures = 0, images = 0, scaledTextures = 0;
             uint64_t textureBytes = 0;
         };
@@ -640,14 +645,43 @@ namespace gpu::renderer
         VkQueryPool s_timestamps = VK_NULL_HANDLE;  // RECARBON_GPU_TIMING=1 (each costs a blit encoder on MoltenVK)
         double s_timestampPeriod = 1.0;
 
-        // RECARBON_PASS_PROFILE=<frame>: time every render pass of one frame and
-        // print them (targets, area, draws, GPU us). 256 passes max.
+        // RECARBON_PASS_PROFILE=<frame>[,<every>]: time every render pass of one frame and
+        // print them (targets, area, draws, GPU us). 256 passes max. With <every> (2 or more),
+        // that frame and every <every>th after it, up to kProfiles frames.
         const int s_profileFrame = [] { const char* v = std::getenv("RECARBON_PASS_PROFILE"); return v ? std::atoi(v) : -1; }();
+        const int s_profileEvery = [] {
+            const char* v = std::getenv("RECARBON_PASS_PROFILE");
+            const char* comma = v ? std::strchr(v, ',') : nullptr;
+            return comma ? std::max(2, std::atoi(comma + 1)) : 0;
+        }();
+        constexpr int kProfiles = 12;
+        // RECARBON_PASS_PROFILE_SPLIT=<draws> (gpu/pass_profile.h): in a profiled frame, a pass ends
+        // every <draws> draws and lists all its draws; off by default.
+        const uint32_t s_profileSplit = [] {
+            const char* v = std::getenv("RECARBON_PASS_PROFILE_SPLIT");
+            const uint32_t split = passprofile::ParseSplit(v);
+            if (v && !split)
+                fprintf(stderr, "[profile] RECARBON_PASS_PROFILE_SPLIT=%s ignored (1-%u draws)\n", v, passprofile::kMaxSplit);
+            else if (split)
+                fprintf(stderr, "[profile] RECARBON_PASS_PROFILE_SPLIT=%u: profiled passes end every %u draws\n", split, split);
+            return split;
+        }();
+        // Timestamp queries: 2 a pass; a split profile has many more passes.
+        const uint32_t s_passQueryCount = s_profileSplit ? 4096 : 512;
+        uint32_t s_profileDraws = 0;    // draws so far in the profiled frame
+        uint32_t s_passDrawCount = 0;   // draws in the open pass, while profiling
+        bool s_passRecorded = false;    // the open pass has a PassInfo
+        int s_profiled = 0;
+        uint64_t s_profilingFrame = 0;
         VkQueryPool s_passQueries = VK_NULL_HANDLE;
         // Per profiled pass, also what was recorded in the gap before it:
         // resolves, texture uploads, submissions, guest memory synced to the
         // GPU copy (KB).
-        struct PassInfo { std::string desc; uint32_t draws = 0; uint32_t slot, query; uint32_t resolves = 0, uploads = 0, submits = 0; uint64_t shadowKB = 0; };
+        struct PassInfo
+        {
+            std::string desc; uint32_t draws = 0; uint32_t slot, query; uint32_t resolves = 0, uploads = 0, submits = 0; uint64_t shadowKB = 0;
+            uint32_t firstDraw = 0; passprofile::DrawRuns runs;  // with RECARBON_PASS_PROFILE_SPLIT
+        };
         struct GapCounters { uint64_t resolves = 0, uploads = 0, submits = 0, shadowBytes = 0; } s_gapLast;
         std::vector<PassInfo> s_passInfos;
         bool s_profiling = false;
@@ -727,6 +761,21 @@ namespace gpu::renderer
         // Bumped when the command buffer's graphics state is unknown (a new
         // command buffer; compute work, which shares the push constants).
         uint64_t s_stateEpoch = 1;
+
+        // gpu/vertex_copy.h: vertex ranges up to this are copied with their draws, larger ones
+        // guarded (128 KB; RECARBON_VERTEX_COPY_128=0: 64 KB, as before).
+        uint32_t s_vertexCopyMax = gpu::vertexcopy::Threshold(std::getenv("RECARBON_VERTEX_COPY_128"));
+        // RECARBON_LOG_VCOPY=1 (diagnostic): per 120 frames, the vertex ranges copied with their draws
+        // (up to the threshold), those guarded that a copy could take instead (to 128 KB, and over),
+        // and the upload ring's pressure (submits because a slot was full, the fullest slot).
+        const bool s_logVertexCopy = std::getenv("RECARBON_LOG_VCOPY") != nullptr;
+        VkDeviceSize s_ringPeak = 0;
+        uint64_t s_ringFullTotal = 0;  // submits because a ring slot was full, since launch
+        struct VertexCopyLog
+        {
+            uint64_t copied = 0, copiedBytes = 0, mid = 0, midBytes = 0, large = 0, largeBytes = 0;
+            std::unordered_set<uint64_t> midRanges, largeRanges;
+        } s_vcopy;
 
         // Write-watch GPU guard for the submission being recorded, once per
         // range and submission (the same vertex buffer serves many draws).
@@ -859,6 +908,8 @@ namespace gpu::renderer
             if (!s_recording)
                 return;
             s_submitWhy[why]++;
+            s_ringFullTotal += why == 1;
+            s_ringPeak = std::max(s_ringPeak, s_ringOffset);
             timeline::Mark(timeline::SubmitBegin, why);
             EndPass();
             if (s_timestamps)
@@ -890,6 +941,7 @@ namespace gpu::renderer
                 s_queueLockUs += std::chrono::duration<double, std::micro>(tl - t0).count();
                 s_queueSubmitUs += std::chrono::duration<double, std::micro>(t2 - t1).count();
                 s_hitch.submitMs += std::chrono::duration<double, std::milli>((t2 - t0) - (t1 - tl)).count();
+                s_hitch.queueLockMs += std::chrono::duration<double, std::milli>(tl - t0).count();
             }
             {
                 std::lock_guard lock(s_submitMutex);
@@ -1867,6 +1919,26 @@ namespace gpu::renderer
         uint32_t s_scalePitchMin = 640, s_scalePitchMax = 1280;
         uint32_t s_scaleBudget = 6;  // Auto's most host pixels per guest pixel
         bool s_scaleFixed = false;   // RECARBON_RENDER_SCALE: no live changes
+        // RECARBON_DYNAMIC_SCALE=<budget ms> (an experiment, off by default):
+        // the internal resolution follows the GPU's time (gpu/dynamic_scale.h),
+        // the setting its top rung and 2x2 the floor. Needs an explicit
+        // setting (not Auto) and no RECARBON_RENDER_SCALE.
+        const float s_dynamicBudgetMs = [] {
+            const char* v = std::getenv("RECARBON_DYNAMIC_SCALE");
+            if (!v)
+                return 0.0f;
+            const double ms = std::atof(v);
+            if (!(ms >= 4.0 && ms <= 100.0))
+            {
+                fprintf(stderr, "[renderer] RECARBON_DYNAMIC_SCALE=%s ignored: a GPU budget in ms, 4-100\n", v);
+                return 0.0f;
+            }
+            fprintf(stderr, "[renderer] RECARBON_DYNAMIC_SCALE=%.1f: the internal resolution follows the GPU's time, from the setting's scale down to 2x\n", ms);
+            return float(ms);
+        }();
+        std::unique_ptr<dynscale::Policy> s_dynamic;  // while the dynamic scale runs
+        gpu::RenderScale s_dynamicTop;
+        uint32_t s_dynamicSamples = 0;
 
         // What the Internal Resolution setting asks for with the picture
         // covering `regionW` x `regionH` of the swapchain.
@@ -2314,7 +2386,9 @@ namespace gpu::renderer
             ri.pColorAttachments = colors;
             ri.pDepthAttachment = depth ? &ds : nullptr;
             ri.pStencilAttachment = depth ? &ds : nullptr;
-            if (s_profiling && s_passQueryNext + 2 <= 512)
+            s_passDrawCount = 0;
+            s_passRecorded = false;
+            if (s_profiling && s_passQueryNext + 2 <= s_passQueryCount)
             {
                 char desc[256];
                 int n = snprintf(desc, sizeof(desc), "area %ux%u@%d,%d", s_passArea.extent.width, s_passArea.extent.height,
@@ -2328,7 +2402,9 @@ namespace gpu::renderer
                 vkCmdWriteTimestamp(s_cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, s_passQueries, s_passQueryNext);
                 GapCounters now{ s_stats.resolves, s_stats.uploads, s_stats.submits, writewatch::GetGuardStats().uploadBytes };
                 s_passInfos.push_back({ desc, 0, s_slot, s_passQueryNext, uint32_t(now.resolves - s_gapLast.resolves),
-                    uint32_t(now.uploads - s_gapLast.uploads), uint32_t(now.submits - s_gapLast.submits), (now.shadowBytes - s_gapLast.shadowBytes) / 1024 });
+                    uint32_t(now.uploads - s_gapLast.uploads), uint32_t(now.submits - s_gapLast.submits), (now.shadowBytes - s_gapLast.shadowBytes) / 1024,
+                    s_profileDraws });
+                s_passRecorded = true;
                 s_gapLast = now;
                 s_passQueryNext += 2;
             }
@@ -6930,6 +7006,24 @@ void main()
                     return;  // no picture to size it for: keep the scale
             }
             const gpu::RenderScale want = WantedRenderScale(setting, regionW, regionH);
+            if (s_dynamicBudgetMs > 0 && setting > 0)
+            {
+                // The setting is the top rung; the policy (DynamicScaleStep)
+                // owns the applied scale below it. A new setting: its ladder,
+                // from the top.
+                if (!s_dynamic || !(want == s_dynamicTop))
+                {
+                    s_dynamicTop = want;
+                    if (!s_dynamic)
+                        s_dynamic = std::make_unique<dynscale::Policy>(s_dynamicBudgetMs, want, gpu::RenderScale::Whole(2, 2));
+                    else
+                        s_dynamic->SetTop(want, gpu::RenderScale::Whole(2, 2));
+                    s_resolutionSetting = setting;
+                    if (!(want == s_renderScale))
+                        ApplyRenderScale(want, "setting, the dynamic scale's top");
+                }
+                return;
+            }
             if (want == s_renderScale)
             {
                 s_resolutionSetting = setting;
@@ -6950,6 +7044,24 @@ void main()
             s_resolutionSetting = setting;
             s_autoSeen = 0;
             ApplyRenderScale(want, ScaleReason(setting, regionW, regionH));
+        }
+
+        // RECARBON_DYNAMIC_SCALE, every 30 swaps (the command processor's perf
+        // numbers are fresh at frame % 30 == 0; this runs 15 later): one
+        // update, a step applied through ApplyRenderScale, a line every 10 s.
+        void DynamicScaleStep(uint64_t frame)
+        {
+            if (!s_dynamic || s_scaleFixed || frame % 30 != 15)
+                return;
+            static const auto start = std::chrono::steady_clock::now();
+            const PerfNumbers perf = GetPerfNumbers();
+            const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+            const dynscale::Decision d = s_dynamic->Update(seconds, platform::thermal::Current(), { perf.gpuMs, perf.draws });
+            if (d.changed && !(d.scale == s_renderScale))
+                ApplyRenderScale(d.scale, std::format("dynamic: GPU {:.1f} ms a frame against a budget of {:.0f}, {}", d.ema, s_dynamicBudgetMs,
+                                               d.reason == dynscale::Reason::OverBudget ? "over it" : "room for more"));
+            if (++s_dynamicSamples % 20 == 0)
+                fprintf(stderr, "[renderer] dynamic scale: %s\n", s_dynamic->Describe().c_str());
         }
 
         // ---------------------------------------------------------------
@@ -7085,7 +7197,7 @@ void main()
                     s_timestamps = VK_NULL_HANDLE;
             if (s_profileFrame >= 0)
             {
-                qpci.queryCount = 512;
+                qpci.queryCount = s_passQueryCount;
                 Check(vkCreateQueryPool(s_dev, &qpci, nullptr, &s_passQueries), "pass query pool");
             }
         }
@@ -7666,7 +7778,6 @@ void main()
         VkDeviceSize copyBytes = 0;
         if (g_eagerWrites || s_shadowMode)
         {
-            constexpr uint32_t kSnapshotMax = 64 * 1024;
             using Range = SnapshotRange;
             for (const Shader* shader : { s_vs, s_ps })
                 for (uint32_t word = 0; word < 3; word++)
@@ -7678,14 +7789,30 @@ void main()
                         r.size = std::min<uint32_t>(r.size, uint32_t(kSharedSize) - r.base);
                         if (r.size == 0 || std::any_of(copies, copies + copyCount, [&](const Range& c) { return c.base == r.base && c.size == r.size; }))
                             continue;
-                        if (g_eagerWrites && r.size <= kSnapshotMax && copyCount < 4 &&
-                            !writewatch::GpuWritePending(r.base, r.size) && !writewatch::AnyGpuOwned(r.base, r.size))
+                        // gpu/vertex_copy.h: copied up to the threshold (128 KB), else guarded.
+                        const bool gpuWrite = writewatch::GpuWritePending(r.base, r.size), owned = writewatch::AnyGpuOwned(r.base, r.size);
+                        const bool copyable = g_eagerWrites && copyCount < gpu::vertexcopy::kCopiesPerDraw && !gpuWrite && !owned;
+                        if (g_eagerWrites && gpu::vertexcopy::Copy(r.size, s_vertexCopyMax, copyCount, gpuWrite, owned))
                         {
                             copies[copyCount++] = r;
-                            copyBytes += (r.size + 255) & ~255u;
+                            copyBytes += gpu::vertexcopy::RingBytes(r.size);
+                            if (s_logVertexCopy)
+                            {
+                                s_vcopy.copied++;
+                                s_vcopy.copiedBytes += gpu::vertexcopy::RingBytes(r.size);
+                            }
                         }
                         else
                         {
+                            // RECARBON_LOG_VCOPY: what a 128 KB copy threshold would copy instead of guarding.
+                            if (s_logVertexCopy && copyable)
+                            {
+                                VertexCopyLog& v = s_vcopy;
+                                const bool upTo128 = r.size <= 128 * 1024;
+                                (upTo128 ? v.mid : v.large)++;
+                                (upTo128 ? v.midBytes : v.largeBytes) += r.size;
+                                (upTo128 ? v.midRanges : v.largeRanges).insert(uint64_t(r.base) << 32 | r.size);
+                            }
                             EnsureShadow(r.base, r.size);
                             GuardGpu(r.base, r.size, false, "vertices");
                         }
@@ -8031,11 +8158,23 @@ void main()
         }
         if (s_passBarrier >= 2)
             VertexBarrierIfNeeded(layout.vsMasks, pc.indexAddress, pc.indexAddress ? count << (src.is32 ? 2 : 1) : 0);
+        if (passprofile::SplitDue(s_profileSplit, s_profiling, s_passActive ? s_passDrawCount : 0))
+            EndPass();
         BeginPass(color, depth, scissor);
         if (s_profiling && !s_passInfos.empty())
         {
             PassInfo& pi = s_passInfos.back();
-            if (pi.draws++ < 3)
+            if (s_profileSplit)
+            {
+                s_passDrawCount++;
+                if (s_passRecorded)
+                {
+                    pi.draws++;
+                    pi.runs.Add(s_vs->hash, s_ps->hash, vertexCount);
+                }
+                s_profileDraws++;
+            }
+            else if (pi.draws++ < 3)
                 pi.desc += std::format(" [vs_{:016x} ps_{:016x} n{}]", s_vs->hash, s_ps->hash, vertexCount);
         }
         scissor = drawScissor;
@@ -9300,7 +9439,10 @@ void main()
     void OnSwap(uint64_t frame)
     {
         if (s_vk)
+        {
             ApplyLiveSettings();
+            DynamicScaleStep(frame);
+        }
         if (s_uploadLog)
         {
             UploadLog& log = *s_uploadLog;
@@ -9323,6 +9465,20 @@ void main()
             writewatch::SetWriterFrame(frame);
         }
         s_frame = frame;
+        if (s_logVertexCopy && frame % 120 == 0)
+        {
+            VertexCopyLog& v = s_vcopy;
+            static uint64_t lastRingFull = 0;
+            fprintf(stderr, "[vcopy] per frame: %.0f vertex ranges copied with their draws (%.2f MB, up to %u KB); guarded but copyable: %.0f draw "
+                            "ranges up to 128 KB (%.2f MB, %zu distinct in 120 frames), %.0f over (%.2f MB, %zu distinct); ring: %.2f submits a frame "
+                            "for a full slot, the fullest slot %.1f MB of 16\n",
+                double(v.copied) / 120, double(v.copiedBytes) / 1048576.0 / 120, s_vertexCopyMax / 1024, double(v.mid) / 120,
+                double(v.midBytes) / 1048576.0 / 120, v.midRanges.size(), double(v.large) / 120, double(v.largeBytes) / 1048576.0 / 120,
+                v.largeRanges.size(), double(s_ringFullTotal - lastRingFull) / 120, double(s_ringPeak) / 1048576.0);
+            lastRingFull = s_ringFullTotal;
+            s_ringPeak = 0;
+            v = {};
+        }
         if (s_vk)
             EvictTextures();
         if (s_zpdOn)
@@ -9444,10 +9600,15 @@ void main()
         }
         if (!s_vk || s_profileFrame < 0)
             return;
-        if (frame == uint64_t(s_profileFrame))
+        const bool due = frame >= uint64_t(s_profileFrame) && s_profiled < (s_profileEvery ? kProfiles : 1) &&
+                         (s_profileEvery ? (frame - uint64_t(s_profileFrame)) % uint64_t(s_profileEvery) == 0 : frame == uint64_t(s_profileFrame));
+        if (due && !s_profiling)
         {
             s_profiling = true;
+            s_profilingFrame = frame;
+            s_profiled++;
             s_passInfos.clear();
+            s_profileDraws = 0;
             s_gapLast = { s_stats.resolves, s_stats.uploads, s_stats.submits, writewatch::GetGuardStats().uploadBytes };
             s_passQueryNext = 0;
             return;
@@ -9461,7 +9622,7 @@ void main()
         // where a submission waited).
         double total = 0, between = 0;
         uint64_t lastEnd = 0;
-        fprintf(stderr, "[profile] frame %d: %zu passes\n", s_profileFrame, s_passInfos.size());
+        fprintf(stderr, "[profile] frame %llu: %zu passes\n", (unsigned long long)s_profilingFrame, s_passInfos.size());
         for (const PassInfo& pi : s_passInfos)
         {
             uint64_t ts[2] = {};
@@ -9472,8 +9633,11 @@ void main()
             between += gap;
             if (ts[1] > ts[0])
                 lastEnd = ts[1];
-            fprintf(stderr, "[profile] %8.1f us  %4u draws  (+%7.1f us before: %u resolves, %u uploads, %u submits, %llu KB synced)  %s\n",
-                us, pi.draws, gap, pi.resolves, pi.uploads, pi.submits, (unsigned long long)pi.shadowKB, pi.desc.c_str());
+            const std::string split = !s_profileSplit ? std::string()
+                : pi.draws ? std::format(" draws {}-{}{}", pi.firstDraw, pi.firstDraw + pi.draws - 1, pi.runs.Describe())
+                           : std::string(" no draws");
+            fprintf(stderr, "[profile] %8.1f us  %4u draws  (+%7.1f us before: %u resolves, %u uploads, %u submits, %llu KB synced)  %s%s\n",
+                us, pi.draws, gap, pi.resolves, pi.uploads, pi.submits, (unsigned long long)pi.shadowKB, pi.desc.c_str(), split.c_str());
         }
         fprintf(stderr, "[profile] total %.1f us in passes, %.1f us between them\n", total, between);
     }
@@ -9591,7 +9755,7 @@ void main()
                 "waits %.1f ms (throttle %.1f, regmem %.1f, shadow %.1f, flush %.1f, pipeline %.1f, slot %.1f)%s, idle %.1f ms, "
                 "on a core %.1f ms%s | "
                 "shadow sync %.1f ms (%.0f KB, %.0f KB of it new; copying %.1f ms), textures %u (%.1f ms, %.0f KB, %u scaled), images created %u (%.1f ms), "
-                "image memory allocations %llu (%.1f ms), shaders %u (%.1f ms), pipelines %u (%.1f ms), submits %llu (%.1f ms), draws %llu (%llu later tiles), resolves %llu, "
+                "image memory allocations %llu (%.1f ms), shaders %u (%.1f ms), pipelines %u (%.1f ms), submits %llu (%.1f ms, %.1f ms of it the queue lock), draws %llu (%llu later tiles), resolves %llu, "
                 "snapshots %.0f KB | guard: %llu faults, %llu stalls (%.1f ms), %llu mprotect (%.1f ms), %.0f KB read back, "
                 "%.0f KB file reads | "
                 "game: longest frame %.1f ms, present %.1f ms, D3D waits %.1f ms | GPU executing %.1f ms\n",
@@ -9601,7 +9765,7 @@ void main()
                 double(g.firstUploadBytes - lg.firstUploadBytes) / 1024, ms(g.uploadNs - lg.uploadNs), s_hitch.textures, s_hitch.textureMs, double(s_hitch.textureBytes) / 1024,
                 s_hitch.scaledTextures, s_hitch.images, s_hitch.imageMs, (unsigned long long)(now.allocations - last.allocations),
                 ms(now.allocationNs - last.allocationNs), s_hitch.shaders, s_hitch.shaderMs, s_hitch.pipelines,
-                s_hitch.pipelineMs, (unsigned long long)(now.submits - last.submits), s_hitch.submitMs,
+                s_hitch.pipelineMs, (unsigned long long)(now.submits - last.submits), s_hitch.submitMs, s_hitch.queueLockMs,
                 (unsigned long long)(now.draws - last.draws), (unsigned long long)(now.tileSkips - last.tileSkips),
                 (unsigned long long)(now.resolves - last.resolves), double(now.snapshotBytes - last.snapshotBytes) / 1024,
                 (unsigned long long)(g.faults - lg.faults), (unsigned long long)(g.stalls - lg.stalls), double(g.stallUs - lg.stallUs) / 1000,

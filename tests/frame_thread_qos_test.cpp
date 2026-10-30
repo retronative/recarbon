@@ -126,6 +126,59 @@ int main(int argc, char** argv)
     });
 #endif
 
+    // 5b. The thread is a frame thread from its first call on; others aren't.
+    OnThread(QOS_CLASS_DEFAULT, [] {
+        Check(!kernel::IsFrameThread(), "a fresh thread isn't a frame thread");
+        kernel::RaiseFrameThreadQos();
+        Check(kernel::IsFrameThread(), "after its first call it is");
+        OnThread(QOS_CLASS_DEFAULT, [] { Check(!kernel::IsFrameThread(), "another thread still isn't"); });
+        Check(kernel::IsFrameThread(), "and it stays one");
+    });
+
+    // 5c. RECARBON_FRAME_THREAD_QOS=interactive (an experiment): the target class.
+    using kernel::FrameThreadQos;
+    using kernel::ParseFrameThreadQos;
+    Check(ParseFrameThreadQos(nullptr) == FrameThreadQos::Initiated && ParseFrameThreadQos("") == FrameThreadQos::Initiated, "unset or empty: user-initiated");
+    Check(ParseFrameThreadQos("interactive") == FrameThreadQos::Interactive, "interactive");
+    Check(ParseFrameThreadQos("interactive2") == FrameThreadQos::Initiated && ParseFrameThreadQos("Interactive") == FrameThreadQos::Initiated &&
+              ParseFrameThreadQos("initiated") == FrameThreadQos::Initiated && ParseFrameThreadQos("1") == FrameThreadQos::Initiated,
+        "anything else: user-initiated");
+    Check(RaisesFrameThreadQos(QOS_CLASS_DEFAULT, FrameThreadQos::Interactive) && RaisesFrameThreadQos(QOS_CLASS_USER_INITIATED, FrameThreadQos::Interactive),
+        "to interactive: default and user-initiated are raised");
+    Check(!RaisesFrameThreadQos(QOS_CLASS_USER_INTERACTIVE, FrameThreadQos::Interactive), "user-interactive is kept");
+    Check(!RaisesFrameThreadQos(QOS_CLASS_USER_INITIATED, FrameThreadQos::Initiated), "to initiated: user-initiated is kept (as before)");
+    OnThread(QOS_CLASS_DEFAULT, [] {
+        kernel::RaiseFrameThreadQosTo(FrameThreadQos::Interactive);
+        Check(Current() == QOS_CLASS_USER_INTERACTIVE && kernel::IsFrameThread(), "raised to user-interactive on request");
+    });
+    OnThread(QOS_CLASS_USER_INITIATED, [] {
+        kernel::RaiseFrameThreadQosTo(FrameThreadQos::Interactive);
+        Check(Current() == QOS_CLASS_USER_INTERACTIVE, "a user-initiated thread is raised to user-interactive on request");
+    });
+    OnThread(QOS_CLASS_USER_INTERACTIVE, [] {
+        kernel::RaiseFrameThreadQosTo(FrameThreadQos::Initiated);
+        Check(Current() == QOS_CLASS_USER_INTERACTIVE, "never lowered");
+    });
+    OnThread(QOS_CLASS_DEFAULT, [] {
+        kernel::RaiseFrameThreadQosTo(FrameThreadQos::Initiated);
+        pthread_set_qos_class_self_np(QOS_CLASS_DEFAULT, 0);
+        kernel::RaiseFrameThreadQosTo(FrameThreadQos::Interactive);
+        Check(Current() == QOS_CLASS_DEFAULT, "the explicit form applies once per thread too");
+    });
+
+    // 5d. RECARBON_FRAME_THREAD_QOS_AT: the class per phase.
+    using kernel::FrameThreadQosInPhase;
+    Check(FrameThreadQosInPhase(FrameThreadQos::Initiated, 0) == FrameThreadQos::Initiated && FrameThreadQosInPhase(FrameThreadQos::Initiated, 1) == FrameThreadQos::Interactive &&
+              FrameThreadQosInPhase(FrameThreadQos::Initiated, 2) == FrameThreadQos::Initiated && FrameThreadQosInPhase(FrameThreadQos::Initiated, 3) == FrameThreadQos::Interactive,
+        "from user-initiated: interactive in odd phases");
+    Check(FrameThreadQosInPhase(FrameThreadQos::Interactive, 0) == FrameThreadQos::Interactive && FrameThreadQosInPhase(FrameThreadQos::Interactive, 1) == FrameThreadQos::Initiated,
+        "from user-interactive: the other way round");
+
+    using kernel::SwitchedQosClass;
+    Check(SwitchedQosClass(QOS_CLASS_DEFAULT, FrameThreadQos::Initiated) == QOS_CLASS_USER_INITIATED && SwitchedQosClass(QOS_CLASS_DEFAULT, FrameThreadQos::Interactive) == QOS_CLASS_USER_INTERACTIVE,
+        "a switch sets the phase's class");
+    Check(SwitchedQosClass(QOS_CLASS_USER_INTERACTIVE, FrameThreadQos::Initiated) == QOS_CLASS_USER_INTERACTIVE, "but never below a thread's own user-interactive");
+
     // 6. Both handlers call it first. Read from their sources: VdSwap and
     // XamInputGetState can't run in a unit test (they need the command
     // processor's ring and guest memory, and SDL's input state).
