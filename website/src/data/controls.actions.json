@@ -65,10 +65,10 @@
 			"driving": { "label": "Activate Crew Member", "status": "hand-verified", "evidence": "Y activates the crew member in a race: the user's hand test on a physical 8BitDo Ultimate 2 Wireless Controller (2026-10-31, MacBook Air M5, ReCarbon v0.1.4 test builds). Earlier, the virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race (no crew member), and Left Ctrl (Y) didn't trigger nitrous in a hand test (2026-10-25)." }
 		},
 		"LB": {
-			"driving": { "label": "Look Back", "status": "automated", "evidence": "Virtual-controller check (reference/M8_PLAN.md, 2026-10-24): scripted Quick Race on the M1 worker, Circuit, stock RX-8, manual gearbox, under about 35 mph; paired screenshots. While held the view faces backward; normal on release." }
+			"driving": { "label": "Look Back", "status": "hand-verified", "evidence": "By hand on a physical Xbox controller: LB, reported by the user (2026-11-03). By hand on the keyboard: Q (LB on the WASD keys, the Default profile), reported by the user (2026-11-03); no log of the key presses. Earlier, the virtual-controller check (reference/M8_PLAN.md, 2026-10-24): while held the view faces backward; normal on release." }
 		},
 		"RB": {
-			"driving": { "label": "Change Camera", "status": "automated", "evidence": "Virtual-controller check (reference/M8_PLAN.md, 2026-10-24): scripted Quick Race on the M1 worker, Circuit, stock RX-8, manual gearbox, under about 35 mph; paired screenshots. Each tap moves to the next camera, kept after release (near chase, far chase, bumper, hood, near chase). The tester also changed the camera by hand in a race on the keyboard (2026-10-25, reference/M7_ACCEPTANCE.md); which key wasn't recorded, so the status stays automated." }
+			"driving": { "label": "Change Camera", "status": "hand-verified", "evidence": "By hand on a physical Xbox controller: RB, reported by the user (2026-11-03). By hand on the keyboard: E (RB on the WASD keys, the Default profile), reported by the user (2026-11-03); no log of the key presses. Earlier, the virtual-controller check (reference/M8_PLAN.md, 2026-10-24): each tap moves to the next camera, kept after release." }
 		},
 		"DpadUp": {
 			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race; it waits for a hand test." },
@@ -87,7 +87,7 @@
 			"menu": { "label": "Navigate", "status": "hand-verified", "evidence": "M5 hand test 2 (2026-10-23): menu navigation with the keyboard, on the WASD keys (the Default profile). Under Arrows the D-pad keys (W A S D) reach the game as the D-pad only (profiles_test); a menu moved by them is not yet hand-tested (ROADMAP M8). Also seen with the virtual controller (2026-10-24, reference/M8_PLAN.md)." }
 		},
 		"Start": {
-			"driving": { "label": "Pause", "status": "automated", "evidence": "Virtual-controller check (reference/M8_PLAN.md, 2026-10-24): scripted Quick Race on the M1 worker, Circuit, stock RX-8, manual gearbox, under about 35 mph; paired screenshots. Start in a race opens the PAUSE menu." },
+			"driving": { "label": "Pause", "status": "hand-verified", "evidence": "By hand on the keyboard: Return (Start on the WASD keys, the Default profile), reported by the user (2026-11-03); no log of the key presses. Earlier, the virtual-controller check (reference/M8_PLAN.md, 2026-10-24): Start in a race opens the PAUSE menu." },
 			"menu": { "label": "Start / Done", "status": "automated", "evidence": "Scripted runs: START is Done on the game's Enter Name screen (FEASIBILITY §6b)." }
 		},
 		"Back": {
@@ -95,10 +95,10 @@
 			"menu": { "label": "Back", "status": "source", "evidence": "Option text in settings.cpp: \"Back.\" With Start, it also opens ReCarbon's Settings (the Back + Start chord), so the game sees Back slightly later." }
 		},
 		"RightStickUp": {
-			"driving": { "label": "Gear Up", "status": "automated", "evidence": "Virtual-controller check (reference/M8_PLAN.md, 2026-10-24): scripted Quick Race on the M1 worker, Circuit, stock RX-8, manual gearbox, under about 35 mph; paired screenshots. Manual gearbox: the HUD gear goes 1 > 2 > 3." }
+			"driving": { "label": "Gear Up", "status": "hand-verified", "evidence": "By hand on the keyboard: O (Right Stick Up on the WASD keys, the Default profile), reported by the user (2026-11-03); the gearbox type wasn't recorded; no log of the key presses. Earlier, the virtual-controller check (reference/M8_PLAN.md, 2026-10-24): manual gearbox, the HUD gear goes 1 > 2 > 3." }
 		},
 		"RightStickDown": {
-			"driving": { "label": "Gear Down", "status": "automated", "evidence": "Virtual-controller check (reference/M8_PLAN.md, 2026-10-24): scripted Quick Race on the M1 worker, Circuit, stock RX-8, manual gearbox, under about 35 mph; paired screenshots. Manual gearbox: the HUD gear goes 3 > 2 > 1 > N." }
+			"driving": { "label": "Gear Down", "status": "hand-verified", "evidence": "By hand on the keyboard: L (Right Stick Down on the WASD keys, the Default profile), reported by the user (2026-11-03); the gearbox type wasn't recorded; no log of the key presses. Earlier, the virtual-controller check (reference/M8_PLAN.md, 2026-10-24): manual gearbox, the HUD gear goes 3 > 2 > 1 > N." }
 		},
 		"RightStickLeft": {
 			"driving": { "label": "Gear Down", "status": "hand-verified", "evidence": "By hand on the keyboard (2026-10-25, the tester, MacBook Air M1, the BONUS RX-8 with automatic transmission): K (Right Stick Left on the WASD preset) shifts down. Observed with automatic transmission. The virtual-controller check (2026-10-24, reference/M8_PLAN.md) shifted a manual gearbox with the right stick's up and down (O / L on the WASD keys)." }

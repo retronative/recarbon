@@ -267,8 +267,9 @@ customization.
     360 physics equivalence is **deferred and unverified** (the criterion revision is below);
   - M7.6's audio and video sync rests on the tester's subjective reports, not on instrumented
     synchronization testing (the audio logs show only no underruns or gaps);
-  - keyboard functions not yet tried by hand: Reverse, Look Back and Pause. Gear Down (K) and
-    Gear Up (;) were confirmed by hand with automatic transmission (2026-10-25).
+  - keyboard functions not yet tried by hand: Reverse. Gear Down (K) and Gear Up (;) were
+    confirmed by hand with automatic transmission (2026-10-25); Look Back (Q), Change Camera (E),
+    Pause (Return) and Gear Up / Down on O / L by hand too (the user's report, 2026-11-03).
 
   Closing M7 doesn't release anything: no alpha build is published. The alpha packaging is M8.
 Input as in M5: SpeedBreaker's keyboard rebinding and `[keys]` keep working. No new
@@ -358,7 +359,8 @@ customization. The controls criterion is judged on the default mappings.
       trigger nitrous; why isn't known. Gear Down (K) and Gear Up
       (;), the right stick's left and right, are hand-verified with automatic transmission (the
       BONUS RX-8, 2026-10-25); the virtual-controller check (manual gearbox, 2026-10-24) also shifted
-      on the right stick's up and down. Still untested by hand: Reverse, Look Back and Pause. The
+      on the right stick's up and down, also tried by hand on O / L with Look Back (Q), Change Camera (E)
+      and Pause (Return) (the user's report, 2026-11-03). Still untested by hand: Reverse. The
       physical controller is deferred;
     - audio and picture (M7.6): completed on human gameplay verification. The tester reported
       picture and sound fine on the M1, smooth play with audio in sync on the M5, and normal
