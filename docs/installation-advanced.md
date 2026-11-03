@@ -8,19 +8,19 @@ For scripts, SSH sessions and troubleshooting. To install ReCarbon the usual way
 
 ## Check the downloads
 
-Each file on the [v0.1.3 release](https://github.com/retronative/recarbon/releases/tag/v0.1.3)
+Each file on the [v0.1.4 release](https://github.com/retronative/recarbon/releases/tag/v0.1.4)
 has a `.sha256` file next to it. In Terminal, in the folder with both files:
 
 ```sh
-shasum -a 256 -c ReCarbon-0.1.3-macos.dmg.sha256
+shasum -a 256 -c ReCarbon-0.1.4-macos.dmg.sha256
 ```
 
-It must print `ReCarbon-0.1.3-macos.dmg: OK`.
+It must print `ReCarbon-0.1.4-macos.dmg: OK`.
 
 | File | SHA-256 |
 |---|---|
-| `ReCarbon-0.1.3-macos.dmg` | `b0cb142a90d5fe86ee5bc90234c78a824a1a4ff240fe8ebc5f261913e446a071` |
-| `ReCarbon-0.1.3-third-party-source.tar.xz` | `2277ed03badeb2da9402e2c186a2ad6d54c255f9a7284d5051b2d50885e784cb` |
+| `ReCarbon-0.1.4-macos.dmg` | `75cea210f7f1cd12d4b7b2cc2c3d55b2930bafe0c7b0c6178d87a05e8af52594` |
+| `ReCarbon-0.1.4-third-party-source.tar.xz` | `4880012575d88a53ff121c120adfa52b67e4840da7602e0026b0a462833c8e6a` |
 
 ## Why macOS blocks ReCarbon
 
