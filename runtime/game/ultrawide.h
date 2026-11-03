@@ -1,5 +1,7 @@
 // ReCarbon runtime (based on SpeedBreaker). GPL-3.0-or-later (see COPYING).
-// ReCarbon: implemented by game/title_hooks.cpp, which has no Carbon hooks yet.
+// ReCarbon: implemented by game/carbon_ultrawide.cpp, Vert+ only and only with
+// RECARBON_VERT_PLUS=1 (game/vert_plus.h); FrontEndParksByCentre() from
+// SpeedBreaker's Carbon layer.
 //
 // Screens of another shape than 16:9 (Aspect Ratio on Auto, "Fill Screen";
 // video/picture_fit decides): the game keeps rendering its 1280x720 frame,
@@ -40,4 +42,9 @@ namespace game
     // the renderer recognises front-end draws by them.
     float FrontEndScaleX();
     float FrontEndScaleY();
+    // Vert+'s band clip (gpu/edge_bars.h Parked): whether a front-end
+    // primitive whose centre lies past the 16:9 band counts as parked off the
+    // frame, as well as one wholly past it. NFS: Carbon's pulsing minimap
+    // icons need it (true).
+    bool FrontEndParksByCentre();
 }

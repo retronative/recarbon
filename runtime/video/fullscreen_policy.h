@@ -56,8 +56,20 @@ namespace video
             m_setting = setting;
             if (setting == m_window)
                 return std::nullopt;
+            m_beforeRequest = m_window;
             m_window = m_requested = setting;
             return setting;
+        }
+
+        // ReCarbon (v0.1.4): SDL refused the request SettingIs just returned
+        // (SDL_SetWindowFullscreen returned false): the window is as it was.
+        // The setting stays as chosen (the row says what the window is, as
+        // after a system change) and nothing asks again until the setting
+        // changes: no retry loop. (A macOS fullscreen Space that fails later
+        // is reported as the window leaving fullscreen: WindowIs.)
+        void RequestFailed()
+        {
+            m_window = m_requested = m_beforeRequest;
         }
 
         // SDL reported the window entering (true) or leaving fullscreen. The
@@ -82,5 +94,6 @@ namespace video
         bool m_setting = false;
         bool m_window = false;
         bool m_requested = false;  // what the game last asked for (or the system last did)
+        bool m_beforeRequest = false;  // ReCarbon: the window before SettingIs's request (RequestFailed)
     };
 }

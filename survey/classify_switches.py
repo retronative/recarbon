@@ -23,7 +23,7 @@ def fidx(a):
 tables = sorted(tomllib.load(open('config/switch_tables.toml', 'rb'))['switch'], key=lambda s: s['base'])
 keys = [s['base'] for s in tables]
 log = open(sys.argv[1] if len(sys.argv) > 1 else 'game/survey/recomp.log', 'rb').read().decode('latin1')
-bad = sorted(set(int(m, 16) for m in re.findall(r'Switch case at ([0-9A-F]+) is trying', log)))
+bad = sorted(set(int(m, 16) for m in re.findall(r'(?:Switch case|switch case) at ([0-9A-F]+) (?:is trying|jumps outside)', log)))
 
 kinds = collections.defaultdict(list)
 for bctr in bad:

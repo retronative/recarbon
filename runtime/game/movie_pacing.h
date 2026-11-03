@@ -1,5 +1,5 @@
 // ReCarbon runtime (based on SpeedBreaker). GPL-3.0-or-later (see COPYING).
-// ReCarbon: implemented by game/title_hooks.cpp, which has no Carbon hooks yet.
+// ReCarbon: implemented by game/title_hooks.cpp (no hook feeds it yet).
 #pragma once
 #include <cstdint>
 

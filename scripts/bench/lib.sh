@@ -11,7 +11,7 @@
 BENCH_THERMAL_CMD=${BENCH_THERMAL_CMD:-"notifyutil -g com.apple.system.thermalpressurelevel | awk '{print \$2}'"}
 BENCH_MEMFREE_CMD=${BENCH_MEMFREE_CMD:-"memory_pressure -Q | awk '/free percentage/ {sub(\"%\", \"\", \$NF); print \$NF}'"}
 BENCH_SWAP_CMD=${BENCH_SWAP_CMD:-"sysctl -n vm.swapusage | awk '{sub(\"M\", \"\", \$6); print \$6}'"}
-BENCH_THERMAL_STOP=2   # Heavy: stop at once
+BENCH_THERMAL_STOP=2   # Heavy: stop at once (the default; BENCH_STOP_LEVEL=3 in bench_watch.sh)
 BENCH_MEMFREE_STOP=20  # percent
 BENCH_SWAP_STOP=1024   # MB of swap growth during a run
 

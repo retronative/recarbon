@@ -1,6 +1,7 @@
 // From SpeedBreaker v0.1.8's tests/fullscreen_policy_test.cpp
-// (GPL-3.0-or-later), unchanged. Its forced-fullscreen case (SteamOS Game
-// Mode, iOS) is a branch of the same policy that a Mac doesn't take.
+// (GPL-3.0-or-later). Its forced-fullscreen case (SteamOS Game Mode, iOS) is
+// a branch of the same policy that a Mac doesn't take. ReCarbon change
+// (v0.1.4): a request SDL refuses (RequestFailed), and presenter.cpp's use of it.
 //
 // Settings > Display > Fullscreen against the window's own state
 // (video/fullscreen_policy.h): a change the system makes (the green button,
@@ -71,6 +72,17 @@ namespace
             {
                 requests++;
                 Event(*want);
+            }
+        }
+        // ReCarbon: the menu's row, and SDL_SetWindowFullscreen returning
+        // false: the window stays as it was, and no event follows.
+        void MenuRefused(bool fullscreen)
+        {
+            saved = fullscreen;
+            if (policy.SettingIs(saved))
+            {
+                requests++;
+                policy.RequestFailed();
             }
         }
         // The next launch reads what this one left in settings.toml.
@@ -144,6 +156,28 @@ namespace
         CHECK(!t.Next().sdlWindow, "the next launch is windowed");
     }
 
+    // ReCarbon: SDL refuses the menu's request. The window is known to be as
+    // it was (the row says so), the setting stays as chosen, and nothing asks
+    // again until the setting changes (no retry loop).
+    void Refused()
+    {
+        Session s(false);
+        s.MenuRefused(true);
+        CHECK(s.saved && s.requests == 1, "asked once, saved On");
+        CHECK(!s.policy.Window() && s.policy.WindowDiffers(), "still windowed, and the row says so");
+        CHECK(!s.policy.SettingIs(true), "no new request for the same setting");
+        CHECK(s.Next().sdlWindow, "the next launch tries fullscreen, as set");
+        s.System(true);  // the green button then
+        CHECK(s.policy.Window() && !s.policy.WindowDiffers() && s.systemLines == 1, "the system's change is the system's; row and window agree");
+        Session t(false);
+        t.MenuRefused(true);
+        t.Menu(false);
+        CHECK(!t.saved && t.requests == 1 && !t.policy.WindowDiffers(), "Off again: the window is windowed already, nothing asked");
+        Session u(true);
+        u.MenuRefused(false);
+        CHECK(u.policy.Window() && u.policy.WindowDiffers(), "leaving fullscreen refused: still fullscreen");
+    }
+
     // SteamOS Game Mode / iOS: always fullscreen, the setting kept as it is.
     void Locked()
     {
@@ -178,6 +212,11 @@ namespace
             "the window starts as the setting says");
         CHECK(src.find("s_fullscreen.SettingIs(settings::GetBool(settings::Id::Fullscreen))") != std::string::npos,
             "the setting moves the window");
+        // ReCarbon: a refused request is given back to the policy.
+        const size_t ask = src.find("bool ok = SDL_SetWindowFullscreen(s_window, *fullscreen);");
+        const size_t failed = ask == std::string::npos ? ask : src.find("s_fullscreen.RequestFailed();", ask);
+        CHECK(failed != std::string::npos && src.find("if (!ok)", ask) < failed && failed - ask < 1000,
+            "SDL_SetWindowFullscreen's false goes to RequestFailed");
     }
 }
 
@@ -189,6 +228,7 @@ int main(int argc, char** argv)
     MenuSaves();
     MenuAfterSystemChange();
     Locked();
+    Refused();
     if (argc > 1)
         Presenter(argv[1]);
     else

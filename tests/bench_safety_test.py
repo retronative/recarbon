@@ -4,7 +4,9 @@
 # The benchmark harness's safety: scripts/run_attempt.sh's mandatory deadline and argument
 # checks, and scripts/bench/bench_run.sh + bench_watch.sh's refusals and stops. Malformed
 # arguments, the deadline and the hard limit, thermal pressure (level 2 = Heavy and above stop,
-# 1 doesn't; BENCH_THERMAL_GRACE allows a bounded stay at 2, never at 3), memory and swap, monitor failures, logging failures and a dead watchdog. Runs copies
+# 1 doesn't; BENCH_THERMAL_GRACE allows a bounded stay at 2, never at 3; ReCarbon v0.1.4:
+# BENCH_STOP_LEVEL=3 allows level 2 and still stops at 3, BENCH_MAX_SECS raises the 600 s cap up
+# to 3600), memory and swap, monitor failures, logging failures and a dead watchdog. Runs copies
 # of the scripts in a scratch tree with a stub in place of build/main/runtime/ReCarbon and fake
 # probes (BENCH_*_CMD reading files the test changes), so no game is launched.
 # From the repo root: python3 tests/bench_safety_test.py (ctest runs it).
@@ -237,6 +239,75 @@ with tempfile.TemporaryDirectory() as tmp:
         r = t.bench([f'gracebad{len(bad)}{bad[:1]}', '10'], env=t.env(BENCH_THERMAL_GRACE=bad))
         check(r.returncode == 11 and not t.ran(), f'BENCH_THERMAL_GRACE={bad!r}: refused as a monitor failure, nothing ran ({r.returncode})')
         t.reset_ran()
+
+    # ---- BENCH_STOP_LEVEL (ReCarbon v0.1.4): 2 by default; 3 lets a run stay at level 2 ----
+    t.set(thermal='0')
+    rc, text, after = mid_run(t, 'stop2', lambda: t.set(thermal='2'), BENCH_STOP_LEVEL='2')
+    check(rc == 10 and after < 1.5 and 'thermal pressure level 2' in t.samples('stop2'), f'BENCH_STOP_LEVEL=2, level 2: stops at once, as the default ({rc}, {after:.1f} s)')
+    t.set(thermal='0')
+    rc, text, after = mid_run(t, 'stopempty', lambda: t.set(thermal='2'), BENCH_STOP_LEVEL='')
+    check(rc == 10 and after < 1.5, f'BENCH_STOP_LEVEL empty is the default: level 2 stops at once ({rc}, {after:.1f} s)')
+    t.set(thermal='0')
+    p = t.start(['stop3heavy', '30'], t.env('exit:4', BENCH_STOP_LEVEL='3'))
+    wait_for_samples(t, 'stop3heavy', 3)
+    t.set(thermal='2')
+    rc, out, err = finish(p)
+    check(rc == 0 and 'STOP' not in t.samples('stop3heavy'), f'BENCH_STOP_LEVEL=3: a run at level 2 for its whole length ends by itself ({rc}: {out!r} {err!r})')
+    check(any(l.split()[1:2] == ['2'] for l in t.samples('stop3heavy').splitlines()[1:]), 'BENCH_STOP_LEVEL=3: level 2 was sampled')
+    check('thermal stop level 3' in t.verdict('stop3heavy'), f'BENCH_STOP_LEVEL=3: the verdict names the stop level ({t.verdict("stop3heavy")!r})')
+    check('thermal stop level' not in t.verdict('ok-2x'), 'the default verdict line is as before')
+
+    def heavy_then(change):  # a second at level 2 (which must not stop the run), then the change
+        def go():
+            t.set(thermal='2')
+            time.sleep(1)
+            change()
+        return go
+    for level in ('3', '4'):
+        t.set(thermal='0')
+        name = f'stop3at{level}'
+        rc, text, after = mid_run(t, name, heavy_then(lambda: t.set(thermal=level)), BENCH_STOP_LEVEL='3')
+        check(rc == 10 and after < 2.5 and f'thermal pressure level {level}' in t.samples(name),
+              f'BENCH_STOP_LEVEL=3, level {level} after level 2: stops at once at {level} ({rc}, {after:.1f} s, {t.samples(name)[-120:]!r})')
+        check(not t.stub_alive(), f'BENCH_STOP_LEVEL=3, level {level}: the game is stopped')
+    t.set(thermal='0')
+    rc, text, _ = mid_run(t, 'stop3mem', heavy_then(lambda: t.set(memfree='10')), BENCH_STOP_LEVEL='3')
+    check(rc == 10 and 'memory free 10%' in t.samples('stop3mem'), f'BENCH_STOP_LEVEL=3: memory still stops ({rc})')
+    t.set(thermal='0', memfree='60')
+    rc, text, _ = mid_run(t, 'stop3swap', heavy_then(lambda: t.set(swap='1200.50')), BENCH_STOP_LEVEL='3')
+    check(rc == 10 and 'swap grew' in t.samples('stop3swap'), f'BENCH_STOP_LEVEL=3: swap still stops ({rc})')
+    t.set(thermal='0', swap='100.00')
+    rc, text, _ = mid_run(t, 'stop3serious', lambda: None, mode='serious', BENCH_STOP_LEVEL='3')
+    check(rc == 10 and 'serious thermal' in t.samples('stop3serious'), f'BENCH_STOP_LEVEL=3: the game\'s serious line still stops ({rc})')
+    rc, text, _ = mid_run(t, 'stop3probe', lambda: t.set(thermal='garbage'), BENCH_STOP_LEVEL='3')
+    check(rc == 11 and not t.stub_alive(), f'BENCH_STOP_LEVEL=3: a probe failure still stops ({rc})')
+    t.set(thermal='0')
+    t.reset_ran()
+    for i, (bad, extra) in enumerate((('1', {}), ('4', {}), ('0', {}), ('abc', {}), ('03', {}), (' 3', {}), ('3.0', {}),
+                                      ('3', {'BENCH_THERMAL_GRACE': '5'}))):
+        r = t.bench([f'stopbad{i}', '10'], env=t.env(BENCH_STOP_LEVEL=bad, **extra))
+        check(r.returncode == 11 and not t.ran(), f'BENCH_STOP_LEVEL={bad!r} {extra}: refused as a monitor failure, nothing ran ({r.returncode})')
+        t.reset_ran()
+    r = t.bench(['stop3grace0', '10'], env=t.env(BENCH_STOP_LEVEL='3', BENCH_THERMAL_GRACE='0'))
+    check(r.returncode == 0, f'BENCH_STOP_LEVEL=3 with BENCH_THERMAL_GRACE=0 (the default) runs ({r.returncode}: {r.stderr!r})')
+    t.reset_ran()
+
+    # ---- BENCH_MAX_SECS (ReCarbon v0.1.4): the duration cap, 600 s unless raised (up to 3600) ----
+    for secs, cap in (('601', '601'), ('900', '900'), ('3600', '3600'), ('10', '10'), ('599', '')):
+        name = f'cap{secs}-{cap or "default"}'
+        r = t.bench([name, secs], env=t.env(BENCH_MAX_SECS=cap))
+        check(r.returncode == 0 and t.ran(), f'{secs} s with BENCH_MAX_SECS={cap!r}: runs ({r.returncode}: {r.stderr!r})')
+        t.reset_ran()
+    log = t.path('game', 'm3', 'cap3600-3600.log')
+    check(os.path.exists(log) and 'stub ran' in open(log).read(), 'a 3600 s run reaches the game')
+    for i, (secs, cap) in enumerate((('601', None), ('601', ''), ('601', '600'), ('901', '900'), ('3601', '3600'),
+                                     ('11', '10'), ('10', '3601'), ('10', '0'), ('10', 'abc'), ('10', '-1'),
+                                     ('10', '1.5'), ('10', '0900'), ('10', '99999'))):
+        extra = {} if cap is None else {'BENCH_MAX_SECS': cap}
+        r = t.bench([f'capbad{i}', secs], env=t.env(**extra))
+        check(r.returncode == 2 and not t.ran(), f'{secs} s with BENCH_MAX_SECS={cap!r}: exit 2, nothing ran ({r.returncode}: {r.stderr.strip()!r})')
+        t.reset_ran()
+    check(not os.path.exists(t.path('game', 'm3', 'bench', 'capbad0')), 'a refused duration creates no output')
 
     t.set(thermal='0')
     p = t.start(['moderate', '20'], t.env('exit:1.5'))

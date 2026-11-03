@@ -3,6 +3,35 @@
 What changed in each ReCarbon version, newest first. The game shows the current version's entry
 once, the first time that version starts (it's built into the game: runtime/CMakeLists.txt).
 
+## v0.1.4
+
+### What's new
+
+- Expanded View, on by default: on a screen that isn't 16:9, such as a MacBook's 16:10, the 3D
+  view fills the screen and shows more above and below, while the HUD, mirror and movies keep
+  their 16:9 shape. It draws a little more each frame. Settings > Display > Expanded View: Off
+  brings back the original 16:9 view with bars.
+- Settings in plain words: Internal Resolution is named HD (720p), Full HD (1080p), QHD (1440p)
+  and 4K UHD (2160p), and its row says what is drawn when that differs; Upscaling is Sharp, Soft
+  or FSR 1; simpler help lines. Saved settings read as before.
+- 4K UHD renders at 4K only on a display with at least 3840x2160 pixels; below that it renders
+  at QHD and keeps your choice.
+- Export Performance Report (Settings > Advanced): a file you can attach to a bug report, made
+  only when you ask, with personal paths removed.
+- Steadier rendering: the game's render queue handshake and its publishes are fenced, so the
+  main thread never reads a half-written entry.
+- Display changes are handled in one step (moving the window to another display, connecting or
+  disconnecting a monitor, changing resolution or scaling); a saved window size opens within
+  the display it opens on; a fullscreen request macOS refuses leaves the window as it was, with
+  a message.
+- Stepping through Internal Resolution in the open menu rebuilds once, after you stop.
+- Controllers: the default mapping was hand-tested on a physical controller (8BitDo Ultimate 2
+  Wireless): every current button and mapping is correct.
+- Known issues: as in v0.1.3. With Expanded View on, the very first boot movie may show
+  stretched, and a fade to a loading screen may leave a strip above or below the 16:9 picture
+  for a moment. Measured on a MacBook Air M5. It needs an Apple silicon Mac with macOS 27 or
+  later. Experimental switches in this build stay off.
+
 ## v0.1.3
 
 ### What's new

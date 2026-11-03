@@ -30,7 +30,9 @@ also changed by hand, but which key wasn't recorded. Change Camera (RB), Look Ba
 on the right stick's up and down (**O** / **L**, with a manual gearbox), Reverse (the Left Trigger at
 a standstill) and Pause (Start) were seen with SDL's virtual controller in a scripted Quick Race
 (automated), not yet by hand. The rest wait for a hand test.
-The physical controller test is deferred: nothing on a real pad is verified.
+On a physical controller (an 8BitDo Ultimate 2 Wireless, 2026-10-31), every current button and
+mapping was checked by hand and is correct; **View + Menu** together open Settings, and **Y**
+activates the crew member in a race.
 
 <ControlsTables headingLevel={2} />
 
@@ -66,9 +68,10 @@ whatever the layout: `"w"`, `"left_shift"`, `"semicolon"`, `"keypad_1"`, or `"no
 
 - Buttons are mapped **by position**: South, East, West, North are A, B, X, Y, so a PlayStation
   pad's Cross is A. The Garage's Xbox / PlayStation switch changes only the names shown.
-- <StatusBadge status="automated" /> The default mapping and controller rebinding were checked
-  with SDL's virtual controller only. <StatusBadge status="pending" /> No physical controller has
-  been hand-tested (deferred), and controller rebinding hasn't been tried on hardware.
+- <StatusBadge status="hand-verified" /> The default mapping was hand-tested on a physical 8BitDo
+  Ultimate 2 Wireless Controller (2026-10-31): every current button and mapping is correct, and
+  View + Menu open Settings. <StatusBadge status="automated" /> Controller rebinding was checked
+  with SDL's virtual controller only; it hasn't been tried on hardware.
 - Sticks have a radial deadzone (8% by default) and the triggers their own (2%): Settings > Input.
 - **View (Back)** is held back for a moment while it might start the View + Menu chord that opens
   Settings.

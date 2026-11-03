@@ -11,6 +11,7 @@
 #include <stdafx.h>
 #include "report.h"
 #include "internal.h"
+#include "perf_scrub.h"
 #include "zip.h"
 
 #include <cpu/guest_thread.h>
@@ -87,27 +88,6 @@ namespace report
             }
 #endif
             return {};
-        }
-
-        // Where a saved report is, for the player: on iOS the Files app's
-        // name for it; elsewhere the path with the home folder as "~".
-        std::string Describe(const std::filesystem::path& path)
-        {
-#if defined(__APPLE__) && TARGET_OS_IOS
-            if (std::filesystem::path files = FilesAppFolder(); !files.empty() && path.parent_path() == files)
-                return "the Files app, ReCarbon folder: " + path.filename().string();
-#endif
-            return ScrubHome(path.string());
-        }
-
-        std::filesystem::path OutputFolder()
-        {
-            if (const char* v = std::getenv("RECARBON_BUG_REPORT_DIR"); v && *v)
-                return v;
-            if (std::filesystem::path files = FilesAppFolder(); !files.empty())
-                return files;
-            std::filesystem::path desktop = DesktopFolder();
-            return desktop.empty() ? GetUserPath() : desktop;
         }
 
         bool ReadWhole(const std::filesystem::path& path, std::string& text)
@@ -300,58 +280,13 @@ namespace report
                 ok &= zip.Add("screenshot.png", png.data(), png.size(), now);
             const std::vector<uint8_t>& archive = zip.Finish();
 
-            // Through a .partial file and a rename; "" when saved, else why not.
-            auto saveTo = [&](const std::filesystem::path& folder, const std::filesystem::path& path) -> std::string {
-                if (!ok)
-                    return "the archive couldn't be built";
-                std::filesystem::path partial = path;
-                partial += ".partial";
-                std::error_code ec;
-                std::filesystem::create_directories(folder, ec);
-                // write(2) rather than a stream, for an errno that says why.
-                int fd = ::open(partial.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
-                if (fd < 0)
-                    return strerror(errno);
-                int error = 0;
-                for (size_t done = 0; done < archive.size() && !error;)
-                {
-                    ssize_t n = ::write(fd, archive.data() + done, archive.size() - done);
-                    if (n > 0)
-                        done += size_t(n);
-                    else if (n == 0 || errno != EINTR)
-                        error = n == 0 ? ENOSPC : errno;
-                }
-                if (::close(fd) != 0 && !error)
-                    error = errno;
-                if (!error && ::rename(partial.c_str(), path.c_str()) != 0)
-                    error = errno;
-                if (error)
-                {
-                    std::filesystem::remove(partial, ec);
-                    return strerror(error);
-                }
-                return {};
-            };
-            std::filesystem::path folder = OutputFolder();
-            std::filesystem::path path = folder / std::format("recarbon-bug-report-v{}-{}.zip", Version(), stamp);
-            std::string failed = saveTo(folder, path);
-            // The Desktop refused it (full, or macOS's privacy prompt said
-            // no): the data folder, where the logs are, is ours.
-            if (!failed.empty() && !std::getenv("RECARBON_BUG_REPORT_DIR") && folder != GetUserPath())
+            const std::string name = std::format("recarbon-bug-report-v{}-{}.zip", Version(), stamp);
+            detail::SavedFile saved = ok ? detail::SaveReportFile("RECARBON_BUG_REPORT_DIR", "bugreport", name, archive.data(), archive.size())
+                                         : detail::SavedFile{ {}, detail::ReportFolder("RECARBON_BUG_REPORT_DIR"), "the archive couldn't be built" };
+            const std::filesystem::path& path = saved.path;
+            if (!saved.error.empty())
             {
-                fprintf(stderr, "[bugreport] couldn't save in %s (%s); trying the data folder\n", folder.c_str(), failed.c_str());
-                std::filesystem::path fallback = GetUserPath();
-                std::filesystem::path fallbackPath = fallback / path.filename();
-                if (std::string again = saveTo(fallback, fallbackPath); again.empty())
-                {
-                    folder = fallback;
-                    path = fallbackPath;
-                    failed.clear();
-                }
-            }
-            if (!failed.empty())
-            {
-                std::string why = std::format("Couldn't save the bug report in {}: {}", ScrubHome(folder.string()), failed);
+                std::string why = std::format("Couldn't save the bug report in {}: {}", ScrubHome(saved.folder.string()), saved.error);
                 fprintf(stderr, "[bugreport] %s\n", why.c_str());
                 SetMessage(why);
                 s_state.store(BugReportState::Failed);
@@ -362,7 +297,7 @@ namespace report
             std::string size = archive.size() < (1 << 20) ? std::format("{} KB", (archive.size() + 1023) >> 10)
                                                           : std::format("{:.1f} MB", double(archive.size()) / (1 << 20));
             fprintf(stderr, "[bugreport] saved %s (%zu files, %s, %.1f s)\n", path.c_str(), zip.Entries(), size.c_str(), seconds);
-            std::string where = Describe(path);
+            std::string where = detail::DescribeReportPath(path);
             SetMessage("Saved to " + where);
             s_state.store(BugReportState::Saved);
             ui::Toast(std::format("Bug report saved: {} ({}). Send it along with what happened.", where, size), 15.0);
@@ -402,7 +337,75 @@ namespace report
         return s_message;
     }
 
-    std::string ScrubHome(std::string text)
+    std::filesystem::path detail::ReportFolder(const char* envDir)
+    {
+        if (const char* v = std::getenv(envDir); v && *v)
+            return v;
+        if (std::filesystem::path files = FilesAppFolder(); !files.empty())
+            return files;
+        std::filesystem::path desktop = DesktopFolder();
+        return desktop.empty() ? GetUserPath() : desktop;
+    }
+
+    std::string detail::DescribeReportPath(const std::filesystem::path& path)
+    {
+#if defined(__APPLE__) && TARGET_OS_IOS
+        if (std::filesystem::path files = FilesAppFolder(); !files.empty() && path.parent_path() == files)
+            return "the Files app, ReCarbon folder: " + path.filename().string();
+#endif
+        return ScrubHome(path.string());
+    }
+
+    detail::SavedFile detail::SaveReportFile(const char* envDir, const char* logTag, const std::string& name, const void* data, size_t size)
+    {
+        // Through a .partial file and a rename; "" when saved, else why not.
+        auto saveTo = [&](const std::filesystem::path& folder, const std::filesystem::path& path) -> std::string {
+            std::filesystem::path partial = path;
+            partial += ".partial";
+            std::error_code ec;
+            std::filesystem::create_directories(folder, ec);
+            // write(2) rather than a stream, for an errno that says why.
+            int fd = ::open(partial.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+            if (fd < 0)
+                return strerror(errno);
+            int error = 0;
+            const char* bytes = static_cast<const char*>(data);
+            for (size_t done = 0; done < size && !error;)
+            {
+                ssize_t n = ::write(fd, bytes + done, size - done);
+                if (n > 0)
+                    done += size_t(n);
+                else if (n == 0 || errno != EINTR)
+                    error = n == 0 ? ENOSPC : errno;
+            }
+            if (::close(fd) != 0 && !error)
+                error = errno;
+            if (!error && ::rename(partial.c_str(), path.c_str()) != 0)
+                error = errno;
+            if (error)
+            {
+                std::filesystem::remove(partial, ec);
+                return strerror(error);
+            }
+            return {};
+        };
+        SavedFile saved;
+        saved.folder = ReportFolder(envDir);
+        saved.path = saved.folder / name;
+        saved.error = saveTo(saved.folder, saved.path);
+        // The Desktop refused it (full, or macOS's privacy prompt said
+        // no): the data folder, where the logs are, is ours.
+        if (!saved.error.empty() && !std::getenv(envDir) && saved.folder != GetUserPath())
+        {
+            fprintf(stderr, "[%s] couldn't save in %s (%s); trying the data folder\n", logTag, saved.folder.c_str(), saved.error.c_str());
+            std::filesystem::path fallback = GetUserPath();
+            if (std::string again = saveTo(fallback, fallback / name); again.empty())
+                saved = { fallback / name, fallback, {} };
+        }
+        return saved;
+    }
+
+    std::vector<std::string> detail::HomeFolders()
     {
         std::vector<std::string> homes;
         if (const char* h = std::getenv("HOME"); h && strlen(h) > 1)
@@ -418,26 +421,13 @@ namespace report
             if (!ec && real.size() > 1 && real != home)
                 homes.push_back(real);
         }
-        std::sort(homes.begin(), homes.end(), [](const std::string& a, const std::string& b) { return a.size() > b.size(); });
-        auto pathChar = [](char c) { return std::isalnum(uint8_t(c)) || c == '.' || c == '_' || c == '-'; };
-        for (const std::string& home : homes)
-        {
-            std::string out;
-            out.reserve(text.size());
-            size_t from = 0;
-            for (size_t at; (at = text.find(home, from)) != std::string::npos;)
-            {
-                size_t end = at + home.size();
-                // Only the whole folder (/home/deck, not /home/deck2) and not
-                // the tail of a longer path (/mnt/home/deck).
-                bool whole = (end == text.size() || !pathChar(text[end])) && (at == 0 || !pathChar(text[at - 1]));
-                out.append(text, from, at - from);
-                out += whole ? "~" : home;
-                from = end;
-            }
-            out.append(text, from, std::string::npos);
-            text.swap(out);
-        }
-        return text;
+        return homes;
+    }
+
+    // ReCarbon: the folder replacement is perfscrub::ReplaceFolders, shared
+    // with the performance report.
+    std::string ScrubHome(std::string text)
+    {
+        return perfscrub::ReplaceFolders(std::move(text), detail::HomeFolders(), "~");
     }
 }

@@ -160,4 +160,21 @@ namespace report
 
     // HOME (and its real path) as "~", for text that leaves the machine.
     std::string ScrubHome(std::string text);
+
+    // --- Performance reports (perf_report.cpp; ReCarbon) ---
+
+    // Settings > Advanced > Export Performance Report, or PerfReport in
+    // RECARBON_UI_KEYS (ui.cpp). Any thread; ignored while one is saving.
+    // Reads the counters the game keeps anyway, now, on a thread of its own,
+    // and writes one text file where the bug report goes
+    // (RECARBON_PERF_REPORT_DIR=<dir> instead): perf_report.h's format,
+    // scrubbed and checked against its denylist first (nothing is written
+    // when the check finds anything). A toast says where, or why not.
+    enum class PerfReportTrigger : uint8_t { SettingsRow, UiKey };
+    void SavePerfReport(PerfReportTrigger trigger);
+    BugReportState GetPerfReportState();
+    // "Saved to ~/Desktop/recarbon-perf-report-v0.1.4-....md", or why not.
+    std::string PerfReportMessage();
+    // The last one saved this session (empty: none), for Reveal in Finder.
+    std::filesystem::path LastPerfReportPath();
 }

@@ -6,6 +6,7 @@
 #pragma once
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -83,4 +84,39 @@ namespace report::detail
     void KeepNewest(const std::string& dir, const char* prefix, const char* suffix, size_t keep);
     // "2026-09-28_14-03-22" for now, local time.
     std::string TimeStamp();
+
+    // ReCarbon: HOME and its real path (when it differs), without a trailing
+    // "/" (bug_report.cpp): what ScrubHome writes as "~".
+    std::vector<std::string> HomeFolders();
+
+    // ReCarbon: where a report goes and how it is written, shared by the bug
+    // report and the performance report (bug_report.cpp). The folder:
+    // $<envDir> when set, else on iOS the Files app's, else the Desktop when
+    // there is one we may write, else the data folder.
+    std::filesystem::path ReportFolder(const char* envDir);
+    // Where a saved report is, for the player: on iOS the Files app's name
+    // for it; elsewhere the path with the home folder as "~".
+    std::string DescribeReportPath(const std::filesystem::path& path);
+    // Writes `data` to ReportFolder(envDir)/name through a .partial file and
+    // a rename. The Desktop refusing it (full, or macOS's privacy prompt said
+    // no), it goes to the data folder instead, unless $<envDir> is set.
+    // `error` empty: saved at `path`; else why not, `folder` the one tried.
+    struct SavedFile
+    {
+        std::filesystem::path path, folder;
+        std::string error;
+    };
+    SavedFile SaveReportFile(const char* envDir, const char* logTag, const std::string& name, const void* data, size_t size);
+
+    // ReCarbon: this computer, for the performance report (system_info.cpp,
+    // the same readings as the system summary's). Empty or < 0: unknown.
+    struct HostFacts
+    {
+        std::string machine, chip, os;
+        int perfCores = -1, effCores = -1;
+        double memoryGb = -1;
+    };
+    HostFacts ReadHostFacts();
+    // A SetSystemItem value ("GPU"), or "".
+    std::string SystemItem(const char* key);
 }

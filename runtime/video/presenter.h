@@ -41,6 +41,24 @@ namespace video
     };
     PresentStats GetPresentStats();
 
+    // ReCarbon: for the performance report (report/perf_report.cpp). Any
+    // thread. The present times (ns, steady clock) of the last 16383 new
+    // game frames, oldest first (video/present_ring.h; redraws aren't
+    // counted), and how many there were in all.
+    std::vector<int64_t> RecentFramePresents();
+    uint64_t FramesPresented();
+    // The display as the system summary's "Display" line last had it, and
+    // whether presents are timed (VK_KHR_present_wait: repeated and shown count).
+    struct DisplayInfo
+    {
+        bool known = false;
+        int modeW = 0, modeH = 0, windowW = 0, windowH = 0;
+        double hz = 0;
+        uint32_t swapW = 0, swapH = 0;
+        bool fullscreen = false, vsync = false, presentsTimed = false;
+    };
+    DisplayInfo GetDisplayInfo();
+
     // The guest vblank's clock (gpu/command_processor.cpp's Vsync thread),
     // locked to the display when presents are timed (video/vblank_lock.h).
     class VblankLock& GuestVblank();
@@ -173,4 +191,9 @@ namespace video
     // whole of a wider or narrower screen, or its 4:3 box when it is
     // narrower than that; else its 16:9 box); 0x0 without a window.
     void FrameRegion(uint32_t& width, uint32_t& height);
+
+    // ReCarbon (v0.1.4): the pixels of the display the window is on
+    // (video/display_cap.h: the panel's, no more than its mode's backing
+    // store), 0x0 when unknown. Any thread; the renderer's 4K cap.
+    void WindowDisplayPixels(uint32_t& width, uint32_t& height);
 }

@@ -22,8 +22,8 @@ any macOS before 27 (current builds need 27 or newer: see [Download](download.md
   transmission (2026-10-25), on the WASD keys (the Default profile). Reverse, Look Back and Pause
   are still to try by hand.
 - **Controllers:** read through SDL3's gamepad support, by position: a PlayStation pad's Cross acts
-  as A. **No physical controller has been tested yet:** that test is deferred. The default mapping is
-  pinned by unit tests and checked with SDL's virtual controller only; see the [Garage](https://retronative.github.io/recarbon/garage/).
+  as A. The default mapping was hand-tested on a physical **8BitDo Ultimate 2 Wireless Controller**
+  (2026-10-31): every current button and mapping is correct. It is also pinned by unit tests; see the [Garage](https://retronative.github.io/recarbon/garage/).
 - Back paddles and extra buttons are **not mapped** by ReCarbon.
 
 Measured performance: see [Performance](performance.md).

@@ -66,14 +66,18 @@ Measured in hand-played sessions of v0.1.1, while driving:
 
 | Internal Resolution | 3D scene | Frame rate |
 |---|---|---|
-| 2x (1440p), what **Auto** picks on this Mac | 2560×1440 | about **60 fps** |
-| 3x (2160p, 4K) | 3840×2160 | about **30 fps** |
+| QHD (1440p), what **Auto** picks on this Mac | 2560×1440 | about **60 fps** |
+| 4K UHD (2160p) | 3840×2160 | about **30 fps** |
 
 - **4K means the 3D scene is drawn at 3840×2160.** The game's own textures and its movies stay at
   their original resolution.
-- 4K rendering was checked on an external 4K monitor and on the MacBook's own display. On a
-  display with fewer pixels than 3840×2160, the picture is scaled down, which smooths edges.
-- At 3x the GPU needs about 30–35 ms a frame, so the game runs near 30 fps. **Auto (2x) is the
+- 4K rendering was checked on an external 4K monitor and on the MacBook's own display, scaled
+  down to it. **Since v0.1.4, 4K UHD renders 3840×2160 only on a display with at least that many
+  pixels.** On a smaller one, the MacBook's own included, those pixels would be thrown away by the
+  downscale, so QHD (2560×1440) is rendered. Your choice is kept, and the menu's row says
+  "4K UHD (QHD on this display)". On a 4K display it renders 4K again. A 4K display doesn't mean a Mac holds 60 fps
+  at 4K.
+- At 3x the GPU needs about 30–35 ms a frame, so the game runs near 30 fps. **Auto (QHD, 1440p) is the
   recommended setting on the MacBook Air M5.** Other Macs weren't measured.
 
 ## Higher internal resolutions in v0.1.2, 2026-10-27
@@ -82,7 +86,7 @@ v0.1.2 does less GPU work when the 3D scene is drawn above 1x: a resolve drawn a
 resolution also goes straight into the texture that reads it, and only what something reads is
 kept at that resolution. Each change was turned on and off every 10–25 seconds in the same session,
 and each "on" stretch was compared with the "off" stretches next to it. MacBook Air M5,
-Internal Resolution 3x (2160p):
+Internal Resolution 4K UHD (2160p, scale 3x), drawn at 3840×2160 (before v0.1.4's cap):
 
 | Change | GPU time a frame | Frame rate | Conditions |
 |---|---|---|---|
@@ -91,7 +95,7 @@ Internal Resolution 3x (2160p):
 | Then, on top of it: only what's read kept at 3x | **1.6 ms less** (median, 18 of 19) | +1.9 fps | about 10 minutes of Quick Races driven by hand |
 | Same, still scene | 1.0 ms less (9 of 11) | | the same picture, byte for byte |
 
-- **3x still runs at about 30–35 fps** on this Mac, not 60. Auto (2x) stays the recommended setting.
+- **3x still runs at about 30–35 fps** on this Mac, not 60. Auto (QHD, 1440p) stays the recommended setting.
 - At 2x the first change made no difference to GPU time or frame pacing; at 1x neither applies.
 - The two were measured one after the other, so the totals aren't simply added up.
 - No corruption, cache mismatches or GPU errors in these sessions.
@@ -135,7 +139,10 @@ v0.1.2 against v0.1.3 (the same build apart from this change):
 
 All in Settings (F1); see [Settings](settings.mdx):
 
-- **Internal Resolution:** the 3D scene's resolution. 1x is the console's 720p; 3x is 2160p (4K).
+- **Internal Resolution:** the 3D scene's resolution. HD (720p) is the console's own; Full HD
+  (1080p), QHD (1440p), and 4K UHD (2160p) on a display with at least 3840×2160 pixels (below
+  that, QHD). The row says what is drawn when it differs; the exact sizes and scales are in
+  [Settings](settings.mdx#technical-details).
 - **Frame Rate:** 60, 30, or Auto (60, or 30 while the device is hot or can't hold 60). 30 shows
   one game frame every second display refresh, for steadier pacing where 60 isn't held (3x on the
   M5); Auto switches between the two during play. The menu's help line says what the chosen value

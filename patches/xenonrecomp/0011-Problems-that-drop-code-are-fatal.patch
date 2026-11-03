@@ -1,0 +1,195 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: SpeedBreaker Project <speedbreaker-project@users.noreply.github.com>
+Date: Mon, 12 Oct 2026 02:52:14 +0000
+Subject: [PATCH] Problems that drop code are fatal
+
+XenonRecomp used to print "Unrecognized instruction" and carry on, leaving
+the instruction out of the generated code. Now these are FATAL: an
+unrecognised or undecodable instruction, a record form whose codegen writes
+no CR field (the '.' shares its opcode id with the plain form), a switch
+case outside its function, a bctr that looks like a jump table with no
+table entry, and a secondary entry outside every function. Each is printed,
+written into the output as an #error (so the output can't build even if the
+exit status is ignored), and the run exits with a failure. In test mode a
+test function that doesn't recompile fails the run too (it used to be left
+out of the harness, which read as a pass).
+
+From SpeedBreaker's XenonRecomp patch "NFS: Carbon: eqv, dcbst, bdnzt,
+mfctr; problems that drop code are fatal" (SpeedBreaker Project,
+GPL-3.0-or-later; XenonRecomp itself is MIT). ReCarbon: only its fatal
+checks, the record-form check and the test-mode count are taken. Its eqv,
+dcbst and bdnzt are ReCarbon's 0009 (whose bdnzt also tail-calls a target
+outside the function); its bdnzf BI read, mfctr and missing-XEX message are
+left out. NFS: Carbon's output with this change is byte-identical to before.
+---
+ XenonRecomp/main.cpp            | 11 ++++++++++-
+ XenonRecomp/recompiler.cpp      | 32 +++++++++++++++++++++++++-------
+ XenonRecomp/recompiler.h        |  6 ++++++
+ XenonRecomp/test_recompiler.cpp |  8 +++++++-
+ XenonRecomp/test_recompiler.h   |  3 ++-
+ 5 files changed, 50 insertions(+), 10 deletions(-)
+
+diff --git a/XenonRecomp/main.cpp b/XenonRecomp/main.cpp
+index 12c6d8c..226ca0d 100644
+--- a/XenonRecomp/main.cpp
++++ b/XenonRecomp/main.cpp
+@@ -42,10 +42,19 @@ int main(int argc, char* argv[])
+             ;
+ 
+         recompiler.Recompile(headerFilePath);
++        if (recompiler.fatalProblems != 0)
++        {
++            fmt::println("XenonRecomp: {} fatal problem(s), listed above as FATAL; the output has an #error for each", recompiler.fatalProblems);
++            return EXIT_FAILURE;
++        }
+     }
+     else
+     {
+-        TestRecompiler::RecompileTests(path, argv[2]);
++        if (size_t problems = TestRecompiler::RecompileTests(path, argv[2]); problems != 0)
++        {
++            fmt::println("XenonRecomp: {} test function(s) not recompiled, listed above", problems);
++            return EXIT_FAILURE;
++        }
+     }
+ 
+     return EXIT_SUCCESS;
+diff --git a/XenonRecomp/recompiler.cpp b/XenonRecomp/recompiler.cpp
+index 3cda865..6f10975 100644
+--- a/XenonRecomp/recompiler.cpp
++++ b/XenonRecomp/recompiler.cpp
+@@ -620,7 +620,7 @@ bool Recompiler::Recompile(
+                 if (label < fn.base || label >= fn.base + fn.size)
+                 {
+                     println("\t\t// ERROR: 0x{:X}", label);
+-                    fmt::println("ERROR: Switch case at {:X} is trying to jump outside function: {:X}", base, label);
++                    Fatal(fmt::format("switch case at {:X} jumps outside its function: {:X}", base, label));
+                     println("\t\treturn;");
+                 }
+                 else
+@@ -2436,6 +2436,13 @@ bool Recompiler::Recompile(
+     return true;
+ }
+ 
++void Recompiler::Fatal(const std::string& message)
++{
++    fmt::println("FATAL: {}", message);
++    println("#error \"XenonRecomp: {}\"", message);
++    fatalProblems++;
++}
++
+ bool Recompiler::Recompile(const Function& fn, uint32_t entry)
+ {
+     auto base = fn.base;
+@@ -2577,21 +2584,32 @@ bool Recompiler::Recompile(const Function& fn, uint32_t entry)
+         if (insn.opcode == nullptr)
+         {
+             println("\t// {}", insn.op_str);
+-#if 1
+             if (*data != 0)
+-                fmt::println("Unable to decode instruction {:X} at {:X}", *data, base);
+-#endif
++                Fatal(fmt::format("unable to decode instruction {:X} at {:X}", ByteSwap(*data), base));
+         }
+         else
+         {
+             if (insn.opcode->id == PPC_INST_BCTR && (*(data - 1) == 0x07008038 || *(data - 1) == 0x00000060) && switchTable == config.switchTables.end())
+-                fmt::println("Found a switch jump table at {:X} with no switch table entry present", base);
++                Fatal(fmt::format("switch jump table at {:X} with no switch table entry present", base));
+ 
++            const size_t emittedBefore = out.size();
+             if (!Recompile(fn, base, insn, data, switchTable, localVariables, csrState))
+             {
+-                fmt::println("Unrecognized instruction at 0x{:X}: {}", base, insn.opcode->name);
++                Fatal(fmt::format("unrecognized instruction at 0x{:X}: {}", base, insn.opcode->name));
+                 allRecompiled = false;
+             }
++            else if (const size_t len = strlen(insn.opcode->name); len > 1 && insn.opcode->name[len - 1] == '.')
++            {
++                // A record form (the '.' shares its opcode id with the plain
++                // form) must write a CR field: one whose codegen ignores the
++                // '.' would leave CR stale.
++                std::string_view emitted(out.data() + emittedBefore, out.size() - emittedBefore);
++                bool writesCr = false;
++                for (size_t at = emitted.find("cr"); at != std::string_view::npos && !writesCr; at = emitted.find("cr", at + 2))
++                    writesCr = at + 2 < emitted.size() && emitted[at + 2] >= '0' && emitted[at + 2] <= '7';
++                if (!writesCr)
++                    Fatal(fmt::format("record form {} at 0x{:X} writes no CR field", insn.opcode->name, base));
++            }
+         }
+ 
+         base += 4;
+@@ -2788,7 +2806,7 @@ void Recompiler::Recompile(const std::filesystem::path& headerFilePath)
+         auto fn = std::find_if(functions.begin(), functions.end(),
+             [&](const Function& f) { return entry > f.base && entry < f.base + f.size; });
+         if (fn == functions.end())
+-            fmt::println("ERROR: secondary entry {:X} is not inside any function", entry);
++            Fatal(fmt::format("secondary entry {:X} is not inside any function", entry));
+         else
+             Recompile(*fn, entry);
+     }
+diff --git a/XenonRecomp/recompiler.h b/XenonRecomp/recompiler.h
+index 690570b..8765329 100644
+--- a/XenonRecomp/recompiler.h
++++ b/XenonRecomp/recompiler.h
+@@ -68,4 +68,10 @@ struct Recompiler
+     void Recompile(const std::filesystem::path& headerFilePath);
+ 
+     void SaveCurrentOutData(const std::string_view& name = std::string_view());
++
++    // A problem that would make the output wrong (an instruction dropped, a
++    // switch case or entry point that can't be reached): printed, written
++    // into the output as an #error, and counted. The run then fails.
++    size_t fatalProblems = 0;
++    void Fatal(const std::string& message);
+ };
+diff --git a/XenonRecomp/test_recompiler.cpp b/XenonRecomp/test_recompiler.cpp
+index f4fcdfe..720eca8 100644
+--- a/XenonRecomp/test_recompiler.cpp
++++ b/XenonRecomp/test_recompiler.cpp
+@@ -32,9 +32,10 @@ void TestRecompiler::Analyse(const std::string_view& testName)
+     std::sort(functions.begin(), functions.end(), [](auto& lhs, auto& rhs) { return lhs.base < rhs.base; });
+ }
+ 
+-void TestRecompiler::RecompileTests(const char* srcDirectoryPath, const char* dstDirectoryPath)
++size_t TestRecompiler::RecompileTests(const char* srcDirectoryPath, const char* dstDirectoryPath)
+ {
+     std::map<std::string, std::unordered_set<size_t>> functions;
++    size_t problems = 0;
+ 
+     for (auto& file : std::filesystem::directory_iterator(srcDirectoryPath))
+     {
+@@ -62,8 +63,12 @@ void TestRecompiler::RecompileTests(const char* srcDirectoryPath, const char* ds
+                 else
+                 {
+                     fmt::println("Function {:X} in {} has unimplemented instructions", fn.base, stem);
++                    problems++;
+                 }
+             }
++            // Fatal problems in functions that did recompile (a record form
++            // writing no CR field).
++            problems += recompiler.fatalProblems;
+             stem += ".cpp";
+             recompiler.SaveCurrentOutData(stem);
+         }
+@@ -288,4 +293,5 @@ void TestRecompiler::RecompileTests(const char* srcDirectoryPath, const char* ds
+     fmt::println(file, "}}");
+ 
+     fclose(file);
++    return problems;
+ }
+diff --git a/XenonRecomp/test_recompiler.h b/XenonRecomp/test_recompiler.h
+index 2ef368c..48ce65e 100644
+--- a/XenonRecomp/test_recompiler.h
++++ b/XenonRecomp/test_recompiler.h
+@@ -6,5 +6,6 @@ struct TestRecompiler : Recompiler
+     void Analyse(const std::string_view& testName);
+     void Reset();
+     
+-    static void RecompileTests(const char* srcDirectoryPath, const char* dstDirectoryPath);
++    // Returns how many test functions weren't recompiled (or had a fatal problem).
++    static size_t RecompileTests(const char* srcDirectoryPath, const char* dstDirectoryPath);
+ };
+-- 
+2.54.0 (Apple Git-157)
+

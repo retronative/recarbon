@@ -1,5 +1,7 @@
 // ReCarbon runtime (based on SpeedBreaker). GPL-3.0-or-later (see COPYING).
-// ReCarbon: implemented by game/title_hooks.cpp, which has no Carbon hooks yet.
+// ReCarbon: implemented by game/game_time.cpp, which counts them only while
+// RECARBON_GAME_TIME_LOG is on (0 otherwise, as before), and never gives a
+// frame whole vblanks (snapped stays 0).
 //
 // The game's frame statistics for the command processor's [perf] line. In
 // SpeedBreaker MW's main-loop hooks counted them.

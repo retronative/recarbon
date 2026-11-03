@@ -15,6 +15,7 @@
 #include "kernel/write_watch.h"
 #include "kernel/dispatcher.h"
 #include "cpu/guest_time.h"
+#include <game/render_queue.h>
 #include <game/title_hooks.h>
 #include <video/presenter.h>
 #include <gpu/renderer.h>
@@ -605,6 +606,7 @@ int main(int argc, char** argv)
     if (int sig = quitsignals::Requested())
         fprintf(stderr, "[runtime] %s: quitting, as the window's close button does\n", quitsignals::Name(sig));
     fprintf(stderr, "[runtime] window closed\n");
+    game::renderqueue::LogTotals();  // ReCarbon: RECARBON_RQ_LOG's totals
     if (settings::Dirty())
         settings::Save();
     gpu::renderer::Shutdown();

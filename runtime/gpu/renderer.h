@@ -27,6 +27,8 @@
 #include <string>
 #include <vector>
 
+#include "render_scale.h"
+
 namespace gpu::renderer
 {
     // `regs` is the command processor's register file (host order). Returns
@@ -124,6 +126,41 @@ namespace gpu::renderer
     };
     PerfNumbers GetPerfNumbers();
     void PublishPerfNumbers(const PerfNumbers& numbers);
+    // ReCarbon: what the [perf] line read at its last tick (every 120
+    // swaps), for the performance report (report/perf_report.cpp): per frame
+    // over those swaps, and totals since launch. Published by the command
+    // processor (its counters are plain, read on that thread only); any
+    // thread reads a copy. ticks == 0: none yet.
+    struct PerfTotals
+    {
+        uint64_t ticks = 0, swaps = 0, lateFrames = 0;
+        // gpuExecMs < 0: no GPU timestamps; postMs < 0: not measured (RECARBON_GPU_TIMING).
+        double guestFps = 0, worstMs = 0, cpBusyMs = 0, draws = 0, gpuBusyMs = 0, gpuExecMs = 0, postMs = -1;
+        uint64_t cpBusyNs = 0, waitNs[7] = {};  // totals, by CpWait
+        // The internal resolution in use: its name ("2x2"), a 1280x720
+        // frame's size at it, RECARBON_RENDER_SCALE, the dynamic scale.
+        std::string scale;
+        uint32_t scaledW = 0, scaledH = 0;
+        bool scaleFixed = false, scaleDynamic = false;
+    };
+    PerfTotals GetPerfTotals();
+    void PublishPerfTotals(const PerfTotals& totals);
+    // Command processor thread: the internal resolution in use (fills
+    // PerfTotals' scale fields).
+    void FillAppliedScale(PerfTotals& totals);
+    // ReCarbon (v0.1.4): Settings > Graphics > Internal Resolution as the
+    // menu shows it (video/resolution_label.h). Any thread.
+    //   InternalResolutionScale: the scale `setting` (settings.h's half
+    //   steps, 0 Auto) applies now, the renderer's own choice: Auto for the
+    //   picture's size, the 4K cap for the window's display
+    //   (video/display_cap.h), or RECARBON_RENDER_SCALE's when set. `asked`:
+    //   the same before the cap. False while it isn't known (Auto before
+    //   there is a picture).
+    bool InternalResolutionScale(int32_t setting, gpu::RenderScale& out, gpu::RenderScale* asked = nullptr);
+    // The scale applied now (1x before the renderer starts).
+    gpu::RenderScale AppliedRenderScale();
+    // RECARBON_RENDER_SCALE sets the scale for this run.
+    bool RenderScaleFixed();
     // At exit: persist caches.
     void Shutdown();
     // GLSL to SPIR-V (glslang, through the shader disk cache): stage 0
@@ -172,6 +209,7 @@ namespace gpu::renderer
         CP_WAIT_SUSPENDED, // the game is suspended (iOS: the app isn't active; guest time stands still)
         CP_WAIT_KINDS
     };
+    static_assert(CP_WAIT_KINDS == sizeof(PerfTotals::waitNs) / sizeof(uint64_t), "PerfTotals::waitNs has one per kind");
     inline uint64_t g_cpBusyNs = 0, g_cpWaitNs = 0, g_cpWaitKindNs[CP_WAIT_KINDS] = {};
     inline thread_local bool t_commandProcessor = false;
     struct CpWaitTimer

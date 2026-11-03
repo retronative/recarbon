@@ -70,6 +70,11 @@ namespace gpu
         std::atomic<uint64_t> s_draws{ 0 };
         std::atomic<uint32_t> s_counter{ 0 };        // Xenia's counter_: swaps + vblanks (two threads count)
         uint64_t s_binMask = ~0ull, s_binSelect = ~0ull;
+        // ReCarbon: predicated packets dropped because their bin select and
+        // the bin mask are disjoint (ExecuteType3), and the draws among them,
+        // for the [perf] line's `tiling:` (shown only when non-zero). Counted
+        // only; the drop is unchanged.
+        uint64_t s_binDroppedPackets = 0, s_binDroppedDraws = 0;
         std::atomic<bool> s_started{ false };
         std::atomic<uint32_t> s_vblanks{ 0 };        // guest vblank interrupts raised
         // The WAIT_REG_MEM being polled past its first check, for the hang
@@ -438,6 +443,12 @@ namespace gpu
 
             if ((packet & 1) && ((s_binSelect & s_binMask) == 0 || opcode == PM4_XE_SWAP))
             {
+                if (opcode != PM4_XE_SWAP)
+                {
+                    s_binDroppedPackets++;
+                    if (opcode == PM4_DRAW_INDX || opcode == PM4_DRAW_INDX_2)
+                        s_binDroppedDraws++;
+                }
                 r.Skip(count);  // predicated packet that doesn't apply
                 return true;
             }
@@ -586,6 +597,13 @@ namespace gpu
                     platform::thermal::State thermal = platform::thermal::Current();
                     std::string tailText = (thermal == platform::thermal::State::Unknown ? std::string()
                         : std::format(" | thermal {}", platform::thermal::Name(thermal))) + video::AutoFrameRatePerfText();
+                    // ReCarbon: predicated packets the bin test dropped in this window, if any.
+                    static uint64_t lastBinPackets = 0, lastBinDraws = 0;
+                    if (s_binDroppedPackets != lastBinPackets)
+                        tailText += std::format(" | tiling: {} predicated draws dropped ({} packets; bin select and mask disjoint)",
+                            s_binDroppedDraws - lastBinDraws, s_binDroppedPackets - lastBinPackets);
+                    lastBinPackets = s_binDroppedPackets;
+                    lastBinDraws = s_binDroppedDraws;
                     // RECARBON_WATCH_SUBPAGES in use: its snapshots (write_watch.cpp).
                     // Pool-full evictions, whole-page fallbacks and guest pages
                     // marked for a GPU read are where it loses its gain (which,
@@ -638,6 +656,25 @@ namespace gpu
                         (unsigned long long)(memory.spareBlocks - lastMemory.spareBlocks),
                         memory.spareBlocks > lastMemory.spareBlocks ? double(memory.spareNs - lastMemory.spareNs) / 1e6 / double(memory.spareBlocks - lastMemory.spareBlocks) : 0.0,
                         (unsigned long long)(memory.blocksFreed - lastMemory.blocksFreed), tailText.c_str());
+                    // ReCarbon: the same numbers, and the totals, for the
+                    // performance report.
+                    {
+                        renderer::PerfTotals totals;
+                        totals.ticks = frame / 120;
+                        totals.swaps = frame;
+                        totals.lateFrames = st.lateFrames;
+                        totals.guestFps = 120.0 / secs;
+                        totals.worstMs = worstMs;
+                        totals.cpBusyMs = cpBusyMs;
+                        totals.draws = drawsPerFrame;
+                        totals.gpuBusyMs = double(st.gpuBusyUs - last.gpuBusyUs) / 1000.0 / 120;
+                        totals.gpuExecMs = st.gpuExecUs > last.gpuExecUs ? double(st.gpuExecUs - last.gpuExecUs) / 1000.0 / 120 : -1;
+                        totals.postMs = post.frames > lastPost.frames ? double(post.totalNs - lastPost.totalNs) / 1e6 / postFrames : -1;
+                        totals.cpBusyNs = renderer::g_cpBusyNs;
+                        std::copy(std::begin(renderer::g_cpWaitKindNs), std::end(renderer::g_cpWaitKindNs), totals.waitNs);
+                        renderer::FillAppliedScale(totals);
+                        renderer::PublishPerfTotals(totals);
+                    }
                     lastMemory = memory;
                     lastShown = shown;
                     lastWorld = world;
@@ -1300,5 +1337,10 @@ namespace gpu
             uint32_t(*MmioRegister(REG_CP_RB_WPTR)));
         text += FormatHistory();
         return text;
+    }
+
+    uint64_t BinDroppedDraws()
+    {
+        return __atomic_load_n(&s_binDroppedDraws, __ATOMIC_RELAXED);  // written by the command processor only
     }
 }

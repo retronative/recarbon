@@ -90,6 +90,18 @@ RECARBON_REAL_HOME=1 RECARBON_MUTE=0 RECARBON_FRAME_LOG=game/m3/h07-$n.frames.cs
 - **M7.7** is the three runs together. Each run is also full M7.5 and M7.6 evidence on its
   own.
 
+## Export Performance Report (v0.1.4)
+
+- **Tester:** after a few minutes of racing, open Settings > Advanced and press **Export
+  Performance Report** twice quickly (the second press is ignored while it saves). See the toast
+  and the "Saved:" line under the rows; press **Reveal Performance Report** and see Finder select
+  the file on the Desktop. Read the file top to bottom for anything personal (your name, the
+  computer's name, a folder), paste its first lines into a scratch issue's preview, then delete
+  the file.
+- **Claude, after the run:** `scripts/perf_report_check.py <file>` passes; with
+  `RECARBON_PRESENT_TIMING=0`, `repeated_refreshes` reads `unavailable` with a `why`; on the M1,
+  `executing_ms_per_frame` is `measured` or `unavailable`, never a silent 0.
+
 ## Not in this plan
 - M8.4 (install on a fresh macOS user account) needs its own account and launch.
 - The physical controller (Deferred).

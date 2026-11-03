@@ -8,6 +8,7 @@
 #include <platform/macos_window.h>
 
 #import <AppKit/AppKit.h>
+#include <IOKit/graphics/IOGraphicsTypes.h>  // ReCarbon: kDisplayModeNativeFlag
 #include <cmath>
 #include <SDL3/SDL.h>
 
@@ -129,6 +130,41 @@ namespace platform::macos
         if (number && CGDisplayIsBuiltin(CGDirectDisplayID(number.unsignedIntValue)))
             return false;
         return shortest > 0 && longest > 0 && std::abs(longest - shortest) <= 0.01 * shortest;
+    }
+
+    // ReCarbon (v0.1.4): the panel's native mode is the one macOS flags
+    // native (kDisplayModeNativeFlag), listed with the 1x duplicates of the
+    // HiDPI modes; its pixels, whatever mode the display is in now.
+    bool NativePanelPixels(SDL_Window* window, uint32_t& width, uint32_t& height)
+    {
+        width = height = 0;
+        NSWindow* w = CocoaWindow(window);
+        NSScreen* screen = w ? w.screen : nil;
+        NSNumber* number = screen ? screen.deviceDescription[@"NSScreenNumber"] : nil;
+        if (!number)
+            return false;
+        const void* keys[] = { kCGDisplayShowDuplicateLowResolutionModes };
+        const void* values[] = { kCFBooleanTrue };
+        CFDictionaryRef options = CFDictionaryCreate(kCFAllocatorDefault, keys, values, 1, &kCFTypeDictionaryKeyCallBacks,
+            &kCFTypeDictionaryValueCallBacks);
+        CFArrayRef modes = CGDisplayCopyAllDisplayModes(CGDirectDisplayID(number.unsignedIntValue), options);
+        CFRelease(options);
+        if (!modes)
+            return false;
+        for (CFIndex i = 0; i < CFArrayGetCount(modes); i++)
+        {
+            CGDisplayModeRef mode = (CGDisplayModeRef)CFArrayGetValueAtIndex(modes, i);
+            if (!(CGDisplayModeGetIOFlags(mode) & kDisplayModeNativeFlag))
+                continue;
+            const size_t pw = CGDisplayModeGetPixelWidth(mode), ph = CGDisplayModeGetPixelHeight(mode);
+            if (uint64_t(pw) * ph > uint64_t(width) * height)
+            {
+                width = uint32_t(pw);
+                height = uint32_t(ph);
+            }
+        }
+        CFRelease(modes);
+        return width > 0 && height > 0;
     }
 
     void ForgetWindow(SDL_Window*)

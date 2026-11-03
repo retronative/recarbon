@@ -275,6 +275,140 @@ functions = [
 name = "RenderQueuePublish"
 address = 0x824694B0
 
+# The same publish inlined (memcpy of the 16-byte payload into the entry at
+# the write pointer, its callback at +0 and size at +4, then stw r11,20(r30)
+# = word 917E0014 and the count at +0; r30 = lis r,-32071 / addi r30,r,-14492
+# = 0x82B8C764) in the frame render that sub_824E9A80 records in deferred
+# mode (sub_824F0210 -> sub_824EE110, sub_824EF830) while sub_824E9720 plays
+# it back on the main thread. sub_824EF738 has the same shape; no caller of it
+# was found in the image (fenced for completeness, at no cost if unreached).
+[[midasm_hook]]
+name = "RenderQueuePublish"
+address = 0x824EE334
+
+[[midasm_hook]]
+name = "RenderQueuePublish"
+address = 0x824EE39C
+
+[[midasm_hook]]
+name = "RenderQueuePublish"
+address = 0x824EE42C
+
+[[midasm_hook]]
+name = "RenderQueuePublish"
+address = 0x824EF80C
+
+[[midasm_hook]]
+name = "RenderQueuePublish"
+address = 0x824EF9C4
+
 [[midasm_hook]]
 name = "RenderQueueAcquire"
 address = 0x82469518
+
+# ReCarbon: the handshake that opens a recording window. sub_824E9A80 resets
+# the state (stw 0 to +0 and +4, stb 0 to +8, stw 0x40000 to +12), then sets
+# the handshake word 0x82C651C4 to 1 (stw r10,20932(r9) = word 914951C4,
+# r10 = li 1), then +16..+24. The main thread's poll in sub_824E9720 (lwz
+# r11,20932(r27); cmpwi cr6,r11,0: bne at 0x824E9770 and the fall-through of
+# beq at 0x824E9784 both reach loc_824E9788) then reads +12, +8, +0 and +4.
+# No barrier on either side, and a branch does not order later loads on
+# ARM64: with the previous frame's +8 = 1 and count == played it clears the
+# handshake (a frame dropped); with count != played from a mix of old and
+# new values it plays from the buffer being rewritten (the push race's crash)
+# or keeps its own old played count above the new count (neither thread then
+# stops waiting). Release
+# before the store; acquire where the poll exits. Both are needed: either
+# side alone can still reorder. +16..+24 are stored after the handshake:
+# until the first push count == 0 and sub_824694C0 returns before reading
+# them; the push's release orders them before its count, but the main
+# thread's +24 load (0x824694F4) has no acquire after its count load
+# (0x824E980C), harmful only if the new write pointer passes the previous
+# frame's end within one out-of-order window. Not fenced: no evidence.
+[[midasm_hook]]
+name = "RenderQueueWindow"
+address = 0x824E9B24
+
+[[midasm_hook]]
+name = "RenderQueueHandshake"
+address = 0x824E9788
+
+# RECARBON_GAME_TIME_LOG=<file> (a diagnostic, off by default): the world's
+# step cadence, one CSV line per game frame (runtime/game/game_time.cpp).
+# Read-only hooks: each reads registers or guest words and counts; none
+# writes a register, guest memory or the control flow.
+# The frame (sub_82452EA8, called once per main-loop iteration from
+# sub_82453288 at 0x824533D4) converts the measured time to seconds in f1 and
+# calls the quantiser (sub_824681F8) at 0x82452EF0 (`bl 0x824681f8`; its only
+# other caller, sub_82452D90, has 17 callers of its own, none the frame). The
+# hook there starts a game frame and reads f1, the measured seconds.
+[[midasm_hook]]
+name = "GameTimeFrame"
+address = 0x82452EF0
+registers = ["f1"]
+
+# Right after the quantiser returns (`bl 0x82919ef8`): its results, the
+# frame's 1/3600 s ticks (`stw r30,20360(r11)`, r11 = 0x82C60000: 0x82C64F88)
+# and the frame's seconds (`stfs f0,-21556(r11)`, r11 = 0x82C80000:
+# 0x82C7ABCC), read from guest memory.
+[[midasm_hook]]
+name = "GameTimeQuantised"
+address = 0x82452EF4
+
+# The world stepper (sub_82529D10, called from the frame at 0x82452FCC only
+# while the world runs: the word at 0x82C13274 is non-zero): acc
+# (0x82C653B8) += dt (f1); below one step (0x8205E0C8, 1/60 s) it stores acc
+# (`stfs f0,4(r9)`, 0x82529D5C, just before loc_82529D60) and returns 0:
+# no step this frame, f0 = acc.
+[[midasm_hook]]
+name = "GameTimeNoStep"
+address = 0x82529D5C
+registers = ["f0"]
+
+# Else k = (int)(acc x 0x820C86AC) is compared with 1 (`cmpwi cr6,r11,1`,
+# 0x82529D90, the 8th instruction from loc_82529D74; r11 = k, f0 = acc);
+# after it k is raised to 1 and capped at 8, and acc -= k steps.
+[[midasm_hook]]
+name = "GameTimeSteps"
+address = 0x82529D90
+registers = ["r11", "f0"]
+
+# RECARBON_HANDOFF_TRACE=1 (a diagnostic, off by default): the frame
+# handshake word (0x82C651C4, runtime/game/handoff_waits.cpp). The render
+# thread's loop (sub_824E9720) polls it with Sleep(0) (sub_82943548) while it
+# is 0: loc_824E9774 (`li r3,0`, each poll) to loc_824E9788 (the exit, also
+# taken when there is nothing to wait for). WaitPlayed (sub_824E9948) polls
+# it while it is 1: loc_824E99DC (each poll) to loc_824E99F0 (the exit).
+[[midasm_hook]]
+name = "HandoffRenderPoll"
+address = 0x824E9774
+
+# The exit loc_824E9788 is also RenderQueueHandshake's address (above): the
+# recompiler keeps one mid-asm hook per address, so RenderQueueHandshake
+# calls HandoffRenderDone after its fence (runtime/game/render_queue.cpp).
+
+[[midasm_hook]]
+name = "HandoffPlayedPoll"
+address = 0x824E99DC
+
+[[midasm_hook]]
+name = "HandoffPlayedDone"
+address = 0x824E99F0
+
+# ReCarbon: Vert+ (RECARBON_VERT_PLUS=1, off by default; runtime/game/
+# carbon_ultrawide.cpp has the evidence). Off, each hook returns at once.
+# The view setup (sub_822CEBA0) builds the projections at view + 64 and
+# + 128 from f5 (P[0][0]) and f11 (|P[1][1]|, negated at 0x822CEED8); the
+# hook sits before the first store, `stfs f5,0(r29)` (D0BD0000), and reads
+# the view (r7, its id at +8).
+[[midasm_hook]]
+name = "VertPlusProjection"
+address = 0x822CEEC4
+registers = ["r7", "f5", "f11"]
+
+# The end of the front-end matrix's widescreen case in sub_8250AD98, the
+# `b 0x8250aeec` (4800005C): f13 its x scale (0.92 x 0.75), f0 its y (0.92).
+[[midasm_hook]]
+name = "VertPlusFrontEnd"
+address = 0x8250AE90
+registers = ["f13", "f0"]

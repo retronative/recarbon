@@ -778,9 +778,12 @@ namespace ui
         // and 40 points either side in turn, for the cursor's hiding:
         // SDL_WarpMouseInWindow moves the real pointer (SDL reports a warp as
         // a motion of no distance, which isn't the mouse moving), then the
-        // motion a mouse moving there makes is posted.
+        // motion a mouse moving there makes is posted. ReCarbon: PerfReport
+        // exports a performance report (Settings > Advanced's row, without
+        // the menu); RECARBON_PERF_REPORT_DIR=<dir> says where.
         constexpr SDL_Keycode kFocusLost = SDLK_EXTENDED_MASK | 0x7F01, kFocusGained = SDLK_EXTENDED_MASK | 0x7F02,
-                              kShot = SDLK_EXTENDED_MASK | 0x7F03, kMouseMove = SDLK_EXTENDED_MASK | 0x7F04;
+                              kShot = SDLK_EXTENDED_MASK | 0x7F03, kMouseMove = SDLK_EXTENDED_MASK | 0x7F04,
+                              kPerfReport = SDLK_EXTENDED_MASK | 0x7F05;
         enum class Press : uint8_t { Tap, Hold, Repeat, Release };
         struct Key { double time; SDL_Keycode key; Press press = Press::Tap; };
         static const auto start = std::chrono::steady_clock::now();
@@ -807,6 +810,7 @@ namespace ui
                     SDL_Keycode key = name == "FocusLost" ? kFocusLost : name == "FocusGained" ? kFocusGained
                         : name == "Shot"                                                         ? kShot
                         : name == "MouseMove"                                                    ? kMouseMove
+                        : name == "PerfReport"                                                   ? kPerfReport
                                                                                                  : SDL_GetKeyFromName(name.c_str());
                     if (key != SDLK_UNKNOWN)
                         parsed.push_back({ std::atof(item.c_str()), key, press });
@@ -864,6 +868,12 @@ namespace ui
                 e.motion.yrel = y - fromY;
                 SDL_PushEvent(&e);
                 fprintf(stderr, "[ui] RECARBON_UI_KEYS: mouse to %.0f,%.0f\n", x, y);
+                continue;
+            }
+            if (keys[next].key == kPerfReport)
+            {
+                fprintf(stderr, "[ui] RECARBON_UI_KEYS: performance report\n");
+                report::SavePerfReport(report::PerfReportTrigger::UiKey);
                 continue;
             }
             if (keys[next].key == kFocusLost || keys[next].key == kFocusGained)

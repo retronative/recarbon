@@ -156,7 +156,7 @@ const groups = (mode: Mode) => {
 			</div>
 			<PadGuideList />
 			<p class="pad-note" data-for-device="controller">
-				<span class="pn"><span class="pn-ico is-pending" aria-hidden="true">{STATUS.pending.icon}</span>Not yet tested on a physical controller</span>
+				<span class="pn"><span class="pn-ico is-hand-verified" aria-hidden="true">{STATUS['hand-verified'].icon}</span>Hand-tested on a physical controller</span>
 				<span class="pn pn-more"><span class="pn-ico is-tested" aria-hidden="true">{STATUS.tested.icon}</span>Mapping unit-tested</span>
 				<span class="pn pn-more"><span class="pn-ico" aria-hidden="true">{STATUS['not-mapped'].icon}</span>Paddles not mapped</span>
 				<a href="#controller-notes">Notes</a>
@@ -510,6 +510,9 @@ const groups = (mode: Mode) => {
 	}
 	.pn-ico.is-tested {
 		color: var(--mode-menu);
+	}
+	.pn-ico.is-hand-verified {
+		color: var(--rn-status-hand-verified);
 	}
 	.pad-note a {
 		margin-inline-start: auto;

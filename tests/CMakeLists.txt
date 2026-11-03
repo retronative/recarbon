@@ -110,11 +110,28 @@ recarbon_test(render_scale_test ARGS ${RT}/gpu/renderer.cpp)
 # gpu/dynamic_scale.h: RECARBON_DYNAMIC_SCALE's policy (the ladder of rungs, stepping down fast and up slowly, the
 # dwells, the thermal and loading-screen guards) on fake samples.
 recarbon_test(dynamic_scale_test)
-# Where the picture goes on a screen of any shape, letterboxed (Carbon has no
-# view-scaling hooks: game/title_hooks.cpp is linked to check), and Auto
-# internal resolution at a Mac's budgets (video/picture_fit.cpp). From
-# SpeedBreaker v0.1.8's, without its Hor+/Vert+ cases (ReCarbon M8 tests).
-recarbon_test(picture_fit_test SOURCES ${RT}/video/picture_fit.cpp ${RT}/game/title_hooks.cpp)
+# Where the picture goes on a screen of any shape: letterboxed with Vert+ off (the default),
+# filled below 16:9 with RECARBON_VERT_PLUS=1 (game/vert_plus.h's State gives the hooks the
+# presenter sees), and Auto internal resolution at a Mac's budgets (video/picture_fit.cpp). From
+# SpeedBreaker v0.1.8's, without its Hor+ cases (ReCarbon M8 tests, Vert+ table hand-computed).
+recarbon_test(picture_fit_test SOURCES ${RT}/video/picture_fit.cpp)
+# ReCarbon: Vert+'s policy (game/vert_plus.h: the RECARBON_VERT_PLUS gate, off changing nothing,
+# the widened view ids, the front-end matrix resend, the mirror rectangle, the movie aspect) and
+# the band clip's parked rule (gpu/edge_bars.h Parked, from SpeedBreaker's Carbon layer); header only.
+recarbon_test(vert_plus_test)
+# video/display_cap.h: the pixels of the window's display (the panel's native mode, no more than
+# the backing store; macOS's More Space and Larger Text modes) and the 4K cap on the internal
+# resolution, on fake displays (ReCarbon's own, header only).
+recarbon_test(display_cap_test)
+# video/resolution_label.h: Internal Resolution's entry names (HD, Full HD, QHD, 4K UHD), the row's
+# text when it differs from the entry, the cap's help line, word for word; settings.toml's tokens unchanged
+# (user/settings.cpp linked). ReCarbon's own.
+recarbon_test(resolution_label_test SOURCES ${RT}/user/settings.cpp ${RT}/user/atomic_file.cpp
+    ARGS ${CMAKE_CURRENT_BINARY_DIR}/resolution_label_scratch)
+target_include_directories(resolution_label_test SYSTEM PRIVATE ${ROOT}/tools/XenonRecomp/thirdparty/tomlplusplus/include)
+# gpu/resolution_settle.h: stepping through Internal Resolution in the open menu rebuilds once,
+# 250 ms after the last step or when the menu closes, on a fake clock (ReCarbon's own, header only).
+recarbon_test(resolution_settle_test)
 # Frame Rate's Auto: when to run at 30 instead of 60 (video/frame_rate_policy.cpp).
 # From SpeedBreaker v0.1.8's, with Carbon's draw counts, and two rules
 # upstream's cases didn't pin (ReCarbon M8 tests).
@@ -192,6 +209,11 @@ recarbon_test(sleep0_backoff_test)
 recarbon_test(gpu_wait_backoff_test)
 # kernel/sleep0_trace.h: RECARBON_SLEEP0_TRACE's core layout check, duration histogram and per-thread waits.
 recarbon_test(sleep0_trace_test)
+# game/wait_span.h: a polling loop's wait from its first poll to its exit (the hitch report's D3D waits) and
+# RECARBON_HANDOFF_TRACE's 10 s window of them (count, total, p50/p99). `--bench` (not run here) times its cost.
+recarbon_test(wait_span_test)
+# game/game_time_log.h: RECARBON_GAME_TIME_LOG's CSV line per game frame, the step count rule, the [gametime] summary.
+recarbon_test(game_time_log_test)
 # kernel/sleep0_schedule.h: RECARBON_SLEEP0_BACKOFF_AT's switch times, phases, per-poll steps, one switch line under racing threads.
 recarbon_test(sleep0_schedule_test)
 # kernel/sleep0_predict.h: RECARBON_SLEEP0_BACKOFF=2's predicted wake on a fake clock: learning, hits, early and late ends, dropped frames,
@@ -200,9 +222,15 @@ recarbon_test(sleep0_predict_test)
 # game/movie_hold.h: which movie frames wait a vblank more, on the swap callbacks recorded from
 # Carbon's movies (tests/data/carbon_movie_swaps.txt).
 recarbon_test(movie_hold_test ARGS ${CMAKE_CURRENT_SOURCE_DIR}/data/carbon_movie_swaps.txt)
+# game/render_queue_log.h: RECARBON_RQ_LOG's switch and its [rq] lines (recording windows, publishes, entries played).
+recarbon_test(render_queue_log_test)
 # The bug report's own deflate, PNG and zip writers (report/zip.cpp), against
 # published checksums and Python's zlib. From SpeedBreaker v0.1.8's (ReCarbon M8 tests).
 recarbon_test(report_zip_test SOURCES ${RT}/report/zip.cpp ARGS ${CMAKE_CURRENT_BINARY_DIR}/report_zip_out)
+# ReCarbon: Export Performance Report's format, quantiles, switch policy, scrub
+# and fail-closed denylist, and the present ring (report/perf_report.h,
+# perf_scrub.h, video/present_ring.h; header only). Prints Push's cost.
+recarbon_test(perf_report_test)
 # The installer's folder rules and messages (install/placement.cpp and the
 # installer it calls), and portable mode with --portable on|off
 # (user/portable.cpp, install/portable_switch.cpp), in scratch folders at the
@@ -265,12 +293,25 @@ target_include_directories(settings_scaling_test SYSTEM PRIVATE ${ROOT}/tools/Xe
 # answers, and the runtime's log and CSV formats it reads. Python 3.9+.
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
 add_test(NAME frame_times_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/frame_times_test.py)
+# scripts/game_time.py (RECARBON_GAME_TIME_LOG's world steps, merged with the frame log) on synthetic CSVs.
+add_test(NAME game_time_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/game_time_test.py)
+# ReCarbon: scripts/perf_report_check.py (a real performance report's check)
+# against synthetic reports, good and with planted faults.
+add_test(NAME perf_report_check_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/perf_report_check_test.py)
 # scripts/run_attempt.sh's retention marker for game/m3 (written once, never changed).
 add_test(NAME run_attempt_marker_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_attempt_marker_test.py)
 # scripts/run_attempt.sh's mandatory deadline and scripts/bench/'s refusals and stops (thermal level 2+,
 # memory, swap, monitor and logging failures, a dead watchdog, the hard limit), with a stub game
 # and fake probes in a scratch tree (no game, about 30 s).
 add_test(NAME bench_safety_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/bench_safety_test.py)
+# scripts/verify_settings.py offline: its menu plans replayed through a model of the settings
+# menu, and its verdicts on synthetic logs, captures and settings.toml files (no game).
+# settings.toml is read with tomllib: Python 3.11+.
+if(Python3_VERSION VERSION_GREATER_EQUAL 3.11)
+    add_test(NAME verify_settings_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/verify_settings_test.py)
+else()
+    message(STATUS "verify_settings_test needs Python 3.11+ (found ${Python3_VERSION}): not added")
+endif()
 # scripts/release_candidate.sh's preflight, rc_manifest.py's content gate and manifest, and
 # scripts/rc_transfer.sh's refusals, in a scratch tree (no build, no game files, no network).
 add_test(NAME release_candidate_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/release_candidate_test.py)
@@ -281,14 +322,18 @@ add_test(NAME app_icon_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_
 # volume, and check_app.py's check of it (macOS; skipped without tools/dmg-python: setup_tools.sh).
 add_test(NAME dmg_layout_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/dmg_layout_test.py)
 set_tests_properties(dmg_layout_test PROPERTIES SKIP_RETURN_CODE 77)
+# ReCarbon: CFBundleVersion made from the version (scripts/macos/bundle_version.py), above v0.1.3's
+# commit-count 368, written by make_app.py and checked by check_app.py (no build).
+add_test(NAME bundle_version_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/bundle_version_test.py)
 # Alpha gate G2: check_app.py's check that FFmpeg and libmspack's LZX decoder are separate dylibs in
 # the app, never linked statically again, on stand-in apps built with clang (macOS; no build).
 add_test(NAME lgpl_dylibs_test COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/lgpl_dylibs_test.py)
 
 # Not ported from SpeedBreaker v0.1.8 (one line each: why).
 # edge_bars_test, band_filter_test, fade_layers_test: the edge-bar fills and the
-#   band split act only with a view scale below 1, which needs MW's view hooks;
-#   Carbon has none (game/title_hooks.cpp).
+#   band split act only with a view scale below 1, which only Carbon's opt-in
+#   Vert+ sets (RECARBON_VERT_PLUS=1); their cases are MW's scenes (Parked's
+#   Carbon cases are in vert_plus_test).
 # menu_borders_test: MW's Showcase vignette and Blacklist bio panel (GitHub #19).
 # glare_fit_test, front_end_matrix_test, whole_vblanks_test, light_trails_test,
 #   player_slots_test, split_views_test, ea_cpu_budget_test: MW's game layer
@@ -317,15 +362,16 @@ set(RECARBON_PARALLEL_TESTS
     block_ranges_test version_check_test key_names_test settings_keys_test key_map_test
     raise_exception_test ring_state_test edram_format_test critical_section_test pad_map_test
     shader_gradients_test sm3_mul_test vmem_host_pages_test key_bindable_test profiles_test
-    profile_store_test render_scale_test dynamic_scale_test picture_fit_test frame_rate_policy_test
+    profile_store_test render_scale_test dynamic_scale_test picture_fit_test vert_plus_test display_cap_test resolution_label_test resolution_settle_test frame_rate_policy_test
     swapchain_policy_test quit_game_test depth24_pack_test depth_only_test zpd_report_test
     pipeline_cache_header_test display_tone_test present_schedule_test fullscreen_policy_test
     cursor_idle_test audio_cadence_test memory_plan_test texture_eviction_test scaled_wanted_test
     scaled_fuse_test vertex_copy_test aa_gate_test pass_profile_test sleep0_backoff_test
-    sleep0_trace_test sleep0_schedule_test sleep0_predict_test movie_hold_test report_zip_test
+    sleep0_trace_test sleep0_schedule_test sleep0_predict_test movie_hold_test render_queue_log_test report_zip_test
+    wait_span_test game_time_log_test perf_report_test perf_report_check_test
     install_folder_test portable_test disc_check_test switch_tables_test refresh_fit_test fsr1_test
-    settings_scaling_test frame_times_test run_attempt_marker_test release_candidate_test
-    app_icon_test lgpl_dylibs_test
+    settings_scaling_test frame_times_test game_time_test run_attempt_marker_test release_candidate_test
+    app_icon_test lgpl_dylibs_test verify_settings_test bundle_version_test
     fsr1_glsl_check_easu.comp fsr1_glsl_check_rcas.frag fsr1_glsl_check_rcas_tone.frag
     sm3_mul_glsl_check_off sm3_mul_glsl_check_on)
 get_directory_property(_recarbon_tests TESTS)

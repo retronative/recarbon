@@ -82,5 +82,5 @@ namespace timeline
 // ReCarbon: SpeedBreaker hooked MW's D3D GPU wait (sub_82597498) and Present
 // (sub_82593A58) here to time the game's waits and frames. Those are MW
 // addresses; Carbon's equivalents aren't found yet, so nothing feeds
-// GameWait*/GamePresent* and g_gameWaitNs/g_gamePresentNs/
-// g_gameLongestFrameNs stay 0 (timeline.h).
+// GameWait*/GamePresent* and g_gamePresentNs/g_gameLongestFrameNs stay 0
+// (timeline.h). g_gameWaitNs is fed by game/gpu_waits.cpp.

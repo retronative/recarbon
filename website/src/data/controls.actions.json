@@ -1,6 +1,8 @@
 {
 	"$comment": "Player-facing labels use the site's racing terms in Title Case (Throttle, Brake, Steering Left / Right...), as ReCarbon's own Settings rows do since M8; they rename, never re-map. Hand-written overlay on controls.generated.json (docs/PLAN.md §2): what each Xbox control does in the game, per mode, with a status and its evidence. Ids must exist in the generated file; the build fails otherwise. Never upgrade a status here without the evidence that does it. An action with no label is shown as 'to verify' and never named.",
-	"testedControllers": [],
+	"testedControllers": [
+		{ "model": "8BitDo Ultimate 2 Wireless Controller", "date": "2026-10-31", "evidence": "Hand test by the user on the MacBook Air M5 (ReCarbon v0.1.4 test builds, the Default controller profile): every current button and mapping is correct; View + Menu together open Settings; Y activates the crew member in a race." }
+	],
 	"binding": {
 		"keyboard": {
 			"status": "tested",
@@ -19,8 +21,8 @@
 			"evidence": "SDL virtual-controller runs (RECARBON_VIRTUAL_PAD): menus, hot-unplug with DETACH/ATTACH (FEASIBILITY §6a), and controller rebinding in Settings > Controller, persisting after a restart (ROADMAP M8). Automated evidence for the input path, not proof that a physical controller works."
 		},
 		"physicalController": {
-			"status": "pending",
-			"evidence": "Deferred, not verified (ROADMAP, the user's decision of 2026-10-23): no physical controller has been hand-tested, and controller rebinding hasn't been tried on hardware."
+			"status": "hand-verified",
+			"evidence": "Hand test on a physical 8BitDo Ultimate 2 Wireless Controller (2026-10-31, the user, MacBook Air M5, the Default controller profile): every current button and mapping is correct, and View + Menu open Settings. Controller rebinding hasn't been tried on hardware."
 		},
 		"paddles": {
 			"status": "not-mapped",
@@ -60,7 +62,7 @@
 			"driving": { "label": "Speedbreaker", "status": "hand-verified", "evidence": "Left Shift (X) worked as Speedbreaker by hand on the keyboard (reference/M7_ACCEPTANCE.md, M7.1, 2026-10-25), on the WASD keys (the Default profile), in a Quick Race on the MacBook Air M1 (race 3). The virtual-controller sweep (2026-10-24) showed no visible effect." }
 		},
 		"Y": {
-			"driving": { "status": "unverified", "evidence": "No evidence yet of its action in a race. The virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race, and Left Ctrl (Y) didn't trigger nitrous in a hand test (2026-10-25)." }
+			"driving": { "label": "Activate Crew Member", "status": "hand-verified", "evidence": "Y activates the crew member in a race: the user's hand test on a physical 8BitDo Ultimate 2 Wireless Controller (2026-10-31, MacBook Air M5, ReCarbon v0.1.4 test builds). Earlier, the virtual-controller sweep (2026-10-24, reference/M8_PLAN.md) showed no visible effect in a Quick Race (no crew member), and Left Ctrl (Y) didn't trigger nitrous in a hand test (2026-10-25)." }
 		},
 		"LB": {
 			"driving": { "label": "Look Back", "status": "automated", "evidence": "Virtual-controller check (reference/M8_PLAN.md, 2026-10-24): scripted Quick Race on the M1 worker, Circuit, stock RX-8, manual gearbox, under about 35 mph; paired screenshots. While held the view faces backward; normal on release." }
@@ -112,7 +114,7 @@
 		}
 	},
 	"settings": {
-		"open": { "label": "Open / Close Settings", "status": "source", "detail": "Any time, in game or in menus: Cmd+, (Command + Comma). Also F1 (Fn+F1 on a Mac keyboard, where F1 is the brightness key)." },
+		"open": { "label": "Open / Close Settings", "status": "hand-verified", "detail": "Any time, in game or in menus: Cmd+, (Command + Comma). Also F1 (Fn+F1 on a Mac keyboard, where F1 is the brightness key)." },
 		"pages": { "label": "Previous / Next Tab", "status": "source", "detail": "The tabs, in order: {tabs}." },
 		"navigate": { "label": "Navigate / Change Value", "status": "source", "detail": "Choose a row and change its value. On the Controls page, left and right pick the key slot (first or second key)." },
 		"activate": { "label": "Activate / Set Key", "status": "source", "detail": "Dear ImGui's keyboard navigation: Space activates. On the Controls page it waits for the new key.", "keys": ["space"], "pad": ["SOUTH"], "evidence": "runtime/ui/ui.cpp ImGuiConfigFlags_NavEnableKeyboard; the footer legend \"A: set key\"" },

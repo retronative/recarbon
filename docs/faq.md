@@ -45,7 +45,8 @@ and play on; nothing is lost. The online modes aren't available.
 
 ## Can I use a controller?
 
-Yes, through SDL3, but **no physical controller has been tested yet**. See the
+Yes, through SDL3. The default mapping was hand-tested on an 8BitDo Ultimate 2 Wireless Controller
+(2026-10-31): every button is correct, and View + Menu together open Settings. See the
 [Garage](https://retronative.github.io/recarbon/garage/) for the default mapping and what each control is known to do.
 
 ## Is it free?

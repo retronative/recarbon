@@ -2,6 +2,7 @@
 // Tiled addressing follows Xenia's gpu/texture_address.h (BSD license).
 #include <stdafx.h>
 #include "presenter.h"
+#include "present_ring.h"
 
 #include <kernel/vmem.h>
 #include <kernel/dispatcher.h>
@@ -26,6 +27,7 @@
 #include "fsr1.h"
 #include "upscale.h"
 #include "aa_gate.h"
+#include "display_cap.h"
 #include <ui/ui.h>
 #if defined(__APPLE__) && TARGET_OS_IOS
 #include <platform/ios_ui.h>
@@ -69,6 +71,10 @@ namespace video
         // The last swapchain's extent (width << 32 | height), for FrameRegion
         // on other threads: the renderer's Auto internal resolution follows it.
         std::atomic<uint64_t> s_regionExtent{ 0 };
+        // ReCarbon (v0.1.4): the pixels of the window's display
+        // (display_cap.h; width << 32 | height, 0 unknown), for the
+        // renderer's 4K cap (WindowDisplayPixels). Main thread writes it.
+        std::atomic<uint64_t> s_displayPixels{ 0 };
         std::vector<VkImage> s_swapImages;
         std::vector<VkImageView> s_swapViews;  // for the post-processing pass
         bool s_swapReadable = false;
@@ -159,6 +165,11 @@ namespace video
         int64_t s_pendingVblank = 0;  // the guest vblank the frame followed
         std::atomic<uint64_t> s_dropped{ 0 };  // frames replaced here before they were shown
         std::atomic<uint64_t> s_repeated{ 0 }, s_shown{ 0 };  // see PresentStats
+        // ReCarbon: new game frames' present times (RecentFramePresents),
+        // written under the queue lock; and the display (GetDisplayInfo).
+        PresentRing<16384> s_presentRing;
+        std::mutex s_displayInfoMutex;
+        DisplayInfo s_displayInfo;
         std::atomic<int64_t> s_guestVblank{ 0 };
         std::atomic<uint64_t> s_guestVblanks{ 0 };
 
@@ -652,6 +663,41 @@ namespace video
                 fprintf(stderr, "[vblank] %s\n", line.c_str());
         }
 
+        // ReCarbon (v0.1.4): the window's display's pixels (display_cap.h),
+        // published for the renderer's 4K cap, and a line when they change.
+        // Main thread: after the window is made, and on each display change.
+        void QueryDisplayPixels()
+        {
+            const SDL_DisplayID display = SDL_GetDisplayForWindow(s_window);
+            if (!display)
+                return;  // (no display for now, as during an unplug: the last one's stand)
+            PixelSize native;
+#if defined(__APPLE__) && !TARGET_OS_IOS
+            platform::macos::NativePanelPixels(s_window, native.width, native.height);
+#endif
+            std::vector<ModeSize> modes;
+            int count = 0;
+            if (SDL_DisplayMode** list = SDL_GetFullscreenDisplayModes(display, &count))
+            {
+                for (int i = 0; i < count; i++)
+                    modes.push_back({ list[i]->w, list[i]->h, list[i]->pixel_density });
+                SDL_free(list);
+            }
+            ModeSize current;
+            if (const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(display))
+                current = { mode->w, mode->h, mode->pixel_density };
+            const DisplayPixelsFound found = PhysicalPixels(native, modes, current);
+            s_displayPixels.store(uint64_t(found.pixels.width) << 32 | found.pixels.height, std::memory_order_relaxed);
+            static PixelSize logged{ ~0u, ~0u };
+            if (found.pixels == logged)
+                return;
+            logged = found.pixels;
+            const char* name = SDL_GetDisplayName(display);
+            fprintf(stderr, "[video] display \"%s\": %ux%u pixels (%s; its mode %dx%d points x%.2f): %s\n", name ? name : "?",
+                found.pixels.width, found.pixels.height, PixelSourceName(found.source), current.w, current.h, double(current.density),
+                Below4K(found.pixels) ? "4K UHD (3x) renders at QHD (2x) here" : found.pixels.Known() ? "4K UHD (3x) renders at 4K" : "no 4K cap");
+        }
+
         void DestroySwapchain()
         {
             {
@@ -690,6 +736,17 @@ namespace video
             const Extent surface = SurfaceExtent(caps);
             const ExtentChoice choice = ChooseExtent(surface, InterfaceNow(), LandscapeOnlyHere());
             s_swapExtent = { choice.extent.width, choice.extent.height };
+            // ReCarbon (v0.1.4): within the surface's limits (the window's
+            // pixels, where Vulkan has no current extent, aren't bound by them).
+            if (const PixelSize fits = ClampExtent({ s_swapExtent.width, s_swapExtent.height },
+                    { caps.minImageExtent.width, caps.minImageExtent.height }, { caps.maxImageExtent.width, caps.maxImageExtent.height });
+                fits.Known() && (fits.width != s_swapExtent.width || fits.height != s_swapExtent.height))
+            {
+                fprintf(stderr, "[video] the surface is %ux%u, outside its limits (%ux%u to %ux%u): the swapchain is %ux%u\n", s_swapExtent.width,
+                    s_swapExtent.height, caps.minImageExtent.width, caps.minImageExtent.height, caps.maxImageExtent.width,
+                    caps.maxImageExtent.height, fits.width, fits.height);
+                s_swapExtent = { fits.width, fits.height };
+            }
             if (s_swapExtent.width == 0 || s_swapExtent.height == 0)
                 return false;  // minimised
             if (choice.refused)
@@ -2179,6 +2236,14 @@ void main()
                 bool ok = SDL_SetWindowFullscreen(s_window, *fullscreen);
                 fprintf(stderr, "[video] fullscreen %s (setting)%s%s\n", *fullscreen ? "on" : "off", ok ? "" : ": ",
                     ok ? "" : SDL_GetError());
+                // ReCarbon (v0.1.4): refused, the window stays as it was, and
+                // the policy knows it (not asked again until the setting changes).
+                if (!ok)
+                {
+                    s_fullscreen.RequestFailed();
+                    ui::Toast(std::format("Couldn't switch to {}: {}. The game stays {}.", *fullscreen ? "fullscreen" : "a window",
+                        SDL_GetError(), *fullscreen ? "windowed" : "fullscreen"));
+                }
             }
             bool rebuild = false;
             bool vsync = settings::GetBool(settings::Id::VSync);
@@ -2341,6 +2406,17 @@ void main()
         hid::Initialize();
         // The size it had last time (RECARBON_WINDOW=<width>x<height> overrides).
         int windowW = settings::GetInt(settings::Id::WindowWidth), windowH = settings::GetInt(settings::Id::WindowHeight);
+        // ReCarbon (v0.1.4): a size saved on a larger display, within the one
+        // the window opens on (SDL's primary display); RECARBON_WINDOW's as given.
+        if (SDL_Rect usable{}; !settings::EnvOverride(settings::Id::WindowWidth) && !settings::EnvOverride(settings::Id::WindowHeight) &&
+            SDL_GetDisplayUsableBounds(SDL_GetPrimaryDisplay(), &usable))
+        {
+            const int savedW = windowW, savedH = windowH;
+            ClampWindowSize(windowW, windowH, usable.w, usable.h);
+            if (windowW != savedW || windowH != savedH)
+                fprintf(stderr, "[video] the saved window size %dx%d is larger than this display's %dx%d usable points: %dx%d\n", savedW, savedH,
+                    usable.w, usable.h, windowW, windowH);
+        }
         s_gameMode = DetectGameMode();
         const bool startFullscreen = s_fullscreen.Launch(settings::GetBool(settings::Id::Fullscreen), FullscreenLocked());
         s_vsync = settings::GetBool(settings::Id::VSync);
@@ -2370,6 +2446,7 @@ void main()
 #if defined(__APPLE__) && TARGET_OS_IOS
         platform::ios::WatchKeyboards(s_window);
 #endif
+        QueryDisplayPixels();  // ReCarbon: before the renderer's first internal resolution (its 4K cap)
 
         Uint32 extCount = 0;
         const char* const* sdlExts = SDL_Vulkan_GetInstanceExtensions(&extCount);
@@ -2740,6 +2817,11 @@ void main()
             int windowW = 0, windowH = 0;
             SDL_GetWindowSizeInPixels(s_window, &windowW, &windowH);
             const char* name = SDL_GetDisplayName(SDL_GetDisplayForWindow(s_window));
+            {
+                std::lock_guard lock(s_displayInfoMutex);
+                s_displayInfo = { true, mode ? mode->w : 0, mode ? mode->h : 0, windowW, windowH, mode ? double(mode->refresh_rate) : 0.0,
+                    s_swapExtent.width, s_swapExtent.height, s_fullscreen.Window(), s_vsync, s_presentTiming };
+            }
             report::SetSystemItem("Display", std::format("{} {}x{} at {:.2f} Hz{}; window {}x{} pixels{}, "
                 "swapchain {}x{}, V-Sync {}; SDL video driver {}; {}", name ? name : "?", mode ? mode->w : 0, mode ? mode->h : 0,
                 mode ? mode->refresh_rate : 0.0f, nativeW > 0 ? std::format(", monitor {}x{}", nativeW, nativeH) : std::string(),
@@ -2857,6 +2939,36 @@ void main()
 
     namespace
     {
+        // ReCarbon (v0.1.4): one step for every display change (the window
+        // moved to another display, a monitor connected or disconnected, a
+        // display's mode or scaling changed): the display is asked again
+        // (its name, size and refresh for the bug report's Display line and
+        // the refresh multiple, its pixels for the 4K cap), and the
+        // swapchain policy looks at the surface. Only marks: the policy
+        // builds a swapchain only for a new size, and the renderer moves the
+        // internal resolution only once a new choice has held for its 30
+        // frames.
+        void DisplayChanged(uint32_t type)
+        {
+            s_swapPolicy.SizeChanged();
+            UpdateDisplayItem();
+            QueryDisplayPixels();
+            const SDL_DisplayID display = SDL_GetDisplayForWindow(s_window);
+            const SDL_DisplayMode* mode = display ? SDL_GetCurrentDisplayMode(display) : nullptr;
+            const char* name = display ? SDL_GetDisplayName(display) : nullptr;
+            std::string now = std::format("\"{}\" {}x{} points x{:.2f} at {:.2f} Hz", name ? name : "?", mode ? mode->w : 0, mode ? mode->h : 0,
+                mode ? mode->pixel_density : 0.0f, mode ? mode->refresh_rate : 0.0f);
+            static std::string logged;
+            if (now == logged)
+                return;
+            logged = now;
+            const char* what = type == SDL_EVENT_DISPLAY_ADDED ? "a display was connected"
+                : type == SDL_EVENT_DISPLAY_REMOVED              ? "a display was disconnected"
+                : type == SDL_EVENT_WINDOW_DISPLAY_CHANGED       ? "the window moved to another display"
+                                                                 : "the display's mode or scaling changed";
+            fprintf(stderr, "[video] display changed (%s): the window's display is %s\n", what, now.c_str());
+        }
+
         // RECARBON_WINDOW_AT=<s>:<w>x<h>,...: resize the window at those seconds
         // (RECARBON_UI_KEYS's clock), to test what follows the window's size,
         // such as the Auto internal resolution, without a person. A step of
@@ -3354,8 +3466,9 @@ void main()
                         s_background.load(std::memory_order_acquire) ? " (app inactive: checked after the resume)" : "", GeometryNote().c_str());
 #endif
             }
-            if (e.type == SDL_EVENT_WINDOW_DISPLAY_CHANGED || e.type == SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED)
-                UpdateRefreshMultiple(SDL_GetCurrentDisplayMode(SDL_GetDisplayForWindow(s_window)));
+            if (e.type == SDL_EVENT_WINDOW_DISPLAY_CHANGED || e.type == SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED ||
+                e.type == SDL_EVENT_DISPLAY_ADDED || e.type == SDL_EVENT_DISPLAY_REMOVED || e.type == SDL_EVENT_DISPLAY_CONTENT_SCALE_CHANGED)
+                DisplayChanged(e.type);
             if (e.type == SDL_EVENT_WINDOW_RESIZED)
                 RememberWindowSize();
             else if (e.type == SDL_EVENT_WINDOW_FOCUS_GAINED || e.type == SDL_EVENT_WINDOW_FOCUS_LOST)
@@ -4010,6 +4123,8 @@ void main()
             presented = NowNs();
         }
         VkResult present = vkQueuePresentKHR(s_queue, &pi);
+        if (frameVblank && (present == VK_SUCCESS || present == VK_SUBOPTIMAL_KHR))
+            s_presentRing.Push(presented);
         queueLock.unlock();
         if (s_presentTiming && (present == VK_SUCCESS || present == VK_SUBOPTIMAL_KHR))
         {
@@ -4089,6 +4204,22 @@ void main()
     {
         if (s_device)
             WaitIdle();
+    }
+
+    std::vector<int64_t> RecentFramePresents()
+    {
+        return s_presentRing.Copy();
+    }
+
+    uint64_t FramesPresented()
+    {
+        return s_presentRing.Count();
+    }
+
+    DisplayInfo GetDisplayInfo()
+    {
+        std::lock_guard lock(s_displayInfoMutex);
+        return s_displayInfo;
     }
 
     PresentStats GetPresentStats()
@@ -4205,6 +4336,13 @@ void main()
         const PictureFit fit = FitPicture(ew, eh, 1280.0f, 720.0f, fillMode, fillMode);
         width = uint32_t(fit.width);
         height = uint32_t(fit.height);
+    }
+
+    void WindowDisplayPixels(uint32_t& width, uint32_t& height)
+    {
+        const uint64_t pixels = s_displayPixels.load(std::memory_order_relaxed);
+        width = uint32_t(pixels >> 32);
+        height = uint32_t(pixels);
     }
 
     bool WindowFocused()

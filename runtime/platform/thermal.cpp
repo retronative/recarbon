@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <format>
+#include <mutex>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -18,6 +19,15 @@ namespace platform::thermal
     namespace
     {
         std::atomic<State> s_state{ State::Unknown };
+        std::mutex s_historyMutex;  // ReCarbon
+        std::vector<Step> s_history;
+
+        void Note(double at, State state, bool simulated)
+        {
+            std::lock_guard lock(s_historyMutex);
+            if (s_history.size() < 32)
+                s_history.push_back({ at, state, simulated });
+        }
 
         struct Change
         {
@@ -120,9 +130,31 @@ namespace platform::thermal
         if (std::exchange(first, false))
         {
             if (state != State::Unknown)
+            {
                 fprintf(stderr, "[thermal] %s at start%s\n", Name(state), simulated ? " (RECARBON_THERMAL_SIM)" : "");
+                Note(now, state, simulated);
+            }
         }
         else if (state != old)
+        {
             fprintf(stderr, "[thermal] %s -> %s at %.1f s%s\n", Name(old), Name(state), now, simulated ? " (RECARBON_THERMAL_SIM)" : "");
+            Note(now, state, simulated);
+        }
+    }
+
+    std::vector<Step> History()
+    {
+        std::lock_guard lock(s_historyMutex);
+        return s_history;
+    }
+
+    bool PressureLevel(uint64_t& level)
+    {
+#ifdef __APPLE__
+        return detail::ReadPressure(level);
+#else
+        (void)level;
+        return false;
+#endif
     }
 }

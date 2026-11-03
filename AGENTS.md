@@ -16,7 +16,7 @@ native arm64 macOS. It is built on SpeedBreaker (the NFS: Most Wanted port), and
 | `runtime/` | SpeedBreaker's runtime with the MW game layer replaced by `game/title_hooks.cpp` | identity changes only, outside `game/` |
 | `config/` | `recarbon.toml` + switch tables | committed: addresses only, no game bytes |
 | `survey/` | Analysis pipeline (from SpeedBreaker, parametrized by `survey/layout.py`) | |
-| `patches/xenonrecomp/` | XenonRecomp patches applied by `scripts/setup_tools.sh` (0001–0008 SpeedBreaker, 0009+ ReCarbon) | |
+| `patches/xenonrecomp/` | XenonRecomp patches applied by `scripts/setup_tools.sh` (0001–0008 SpeedBreaker, 0009+ ReCarbon; 0011 ports the fatal checks of a later SpeedBreaker patch). A problem that drops code (unrecognised or undecodable instruction, record form without a CR write, switch case outside its function, jump table with no entry, secondary entry outside every function) fails the run with `FATAL:` and an `#error` in `ppc/` | |
 | `tests/` | Instruction tests: SpeedBreaker's `nfsmw_*.s` and ReCarbon's hand-computed `carbon_*.s` | |
 | `reference/` | Feasibility, architecture, roadmap, header parsers | |
 | `docs/` | The player documentation: one source for GitHub and the website's `/docs/` pages | Write it to read on GitHub: file links between pages (`faq.md`), license links to the repository's files (`../NOTICE`), callouts as GitHub alerts (`> [!NOTE]`, an optional bold first line as the title). The site maps them (`website/src/lib/docs-markdown.mjs`). `docs/README.md` is the GitHub index, not a site page; `docs/download.md` is the GitHub version of the site's own Download page (`website/src/pages/docs/download/`). No private material (internal reviews, keys, game data). |

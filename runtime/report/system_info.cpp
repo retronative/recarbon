@@ -270,6 +270,30 @@ namespace report
         }
     }
 
+    detail::HostFacts detail::ReadHostFacts()
+    {
+        HostFacts facts;
+        facts.machine = MachineText();
+        facts.os = OsText();
+#ifdef __APPLE__
+        facts.chip = Sysctl("machdep.cpu.brand_string");
+        facts.perfCores = int(SysctlInt("hw.perflevel0.physicalcpu"));
+        facts.effCores = int(SysctlInt("hw.perflevel1.physicalcpu"));
+        if (int64_t bytes = SysctlInt("hw.memsize"); bytes > 0)
+            facts.memoryGb = double(bytes) / (1024.0 * 1024.0 * 1024.0);
+#endif
+        return facts;
+    }
+
+    std::string detail::SystemItem(const char* key)
+    {
+        std::lock_guard lock(s_mutex);
+        for (const auto& [k, value] : s_items)
+            if (k == key)
+                return value;
+        return {};
+    }
+
     void SetSystemItem(const char* key, std::string value)
     {
         std::lock_guard lock(s_mutex);

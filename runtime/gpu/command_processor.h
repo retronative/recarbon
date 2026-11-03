@@ -32,4 +32,8 @@ namespace gpu
     // For a hang report: that wait (with the value it reads now), frame and
     // ring positions, and the last 64 packets.
     std::string DescribeState();
+    // ReCarbon: the session total of predicated draws the command processor
+    // dropped because their bin select and the bin mask are disjoint (the
+    // [perf] line's `tiling:`), for the performance report.
+    uint64_t BinDroppedDraws();
 }

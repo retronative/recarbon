@@ -25,6 +25,16 @@
 // about a sleep later than it would have been. Per-thread state; a summary
 // line every 10 s (polls, sleeps and their measured lengths, late sleeps).
 //
+// Each wait loop calls sub_826E0190 with the record once it ends (D3D adds
+// the wait's timebase ticks to the device's own wait-time totals there; every
+// one of the ten loops does, after its last poll or when the hang check gave
+// up). An override of it, with the hang check's, times each wait on the
+// host's clock from its first poll to that call (game/wait_span.h: a clock
+// read at the first poll and one at the end, nothing for the polls between)
+// into timeline::g_gameWaitNs, the hitch report's "D3D waits". Always on, as
+// cheap as that; a wait whose loop found the GPU done at once has no poll and
+// costs nothing. It doesn't depend on the back-off (on or off, the same).
+//
 // RECARBON_GPU_WAIT_BACKOFF_AT=<s>,<s>,... (seconds since launch, ascending)
 // switches the back-off off<->on at those times for a same-session A/B, as
 // RECARBON_SLEEP0_BACKOFF_AT does for the Sleep(0) back-off (the same
@@ -39,6 +49,8 @@
 #include <kernel/gpu_wait_backoff.h>
 #include <kernel/sleep0_schedule.h>
 #include <kernel/sleep0_trace.h>
+#include <debug/timeline.h>
+#include <game/wait_span.h>
 
 #include <atomic>
 #include <chrono>
@@ -50,6 +62,7 @@
 #include <sched.h>
 
 extern "C" PPC_FUNC(__imp__sub_826E0250);  // D3D: the GPU hang check, called once per poll of a GPU wait
+extern "C" PPC_FUNC(__imp__sub_826E0190);  // D3D: a GPU wait's end (adds its time to the device's totals)
 
 namespace
 {
@@ -86,6 +99,8 @@ namespace
     {
         return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
     }
+
+    thread_local game::waitspan::Span t_wait;  // this thread's GPU wait under way
 
     std::atomic<uint64_t> s_polls{ 0 }, s_sleeps{ 0 }, s_late{ 0 }, s_yields{ 0 };
     std::atomic<int64_t> s_nextLog{ 0 };
@@ -141,6 +156,8 @@ namespace
 
 PPC_FUNC(sub_826E0250)
 {
+    if (!t_wait.open)
+        t_wait.Begin(NowNs());
     thread_local kernel::gpuwait::State state;
     bool on = s_on;
     int phase = -1;
@@ -161,4 +178,11 @@ PPC_FUNC(sub_826E0250)
     else
         s_polls.fetch_add(1, std::memory_order_relaxed);
     __imp__sub_826E0250(ctx, base);
+}
+
+PPC_FUNC(sub_826E0190)
+{
+    if (t_wait.open)
+        timeline::g_gameWaitNs.fetch_add(uint64_t(t_wait.End(NowNs())), std::memory_order_relaxed);
+    __imp__sub_826E0190(ctx, base);
 }

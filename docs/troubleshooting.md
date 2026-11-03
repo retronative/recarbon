@@ -39,11 +39,40 @@ Open Settings (<kbd aria-label="Command">⌘</kbd> + <kbd>,</kbd>, or F1 / Fn + 
 Home-folder paths inside it read `~`. **Nothing is ever sent anywhere**: you choose whether to
 share the file.
 
+## Export a performance report
+
+If the game runs slowly or stutters, open Settings, go to **Advanced**, and choose **Export
+Performance Report**, after a few minutes of racing: the frame numbers cover the frames shown
+so far, up to the last few minutes. ReCarbon writes one text file,
+`recarbon-perf-report-<version>-<date>_<time>.md`, to your Desktop (or, if it can't, to the
+game's data folder), and **Reveal Performance Report** under it shows the file in Finder.
+
+What it contains:
+
+- your Mac's model and chip, its cores and memory, the macOS version and the ReCarbon version;
+- your display mode, window and swapchain sizes, V-Sync, Frame Rate, and the Internal
+  Resolution you chose and the one the game applied;
+- the frame rate and the frame-time percentiles (p50, p95, p99, the worst), frames over 25, 33
+  and 50 ms, late frames, repeated refreshes, and the time the game waited and why;
+- the GPU's and the CPU's time (per thread), the thermal state and its changes, and macOS's
+  thermal pressure;
+- how many warnings the log has, by kind, and which `RECARBON_*` switches and non-default
+  settings are on.
+
+Each number says whether it was **measured**, **estimated** or is **unavailable** on your Mac.
+
+What it never contains: **paths, your user or computer name, saves, your settings file, game
+files, screenshots or the game's memory addresses.** ReCarbon checks the file for them before
+writing it, and if the check finds any, it writes nothing and says so. **Nothing is ever sent
+anywhere**: paste the lines at the top into your issue, or attach the file. Its format is
+described in [Developers](developers.mdx#performance-reports).
+
 ## Report a problem
 
 Open an issue at [github.com/retronative/recarbon/issues](https://github.com/retronative/recarbon/issues)
 with what you did, what happened, your Mac and macOS version, and attach the bug report's `.zip`
-if you are comfortable sharing it. Never attach game files.
+if you are comfortable sharing it, and a performance report if the problem is speed or
+stutter. Never attach game files.
 
 ## Logs
 

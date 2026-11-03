@@ -24,6 +24,7 @@
 #include "scaled_wanted.h"
 #include "scaled_fuse.h"
 #include "pass_profile.h"
+#include "resolution_settle.h"
 #include "shared_memory_glsl.h"
 #include "xenos/registers.h"
 
@@ -32,9 +33,11 @@
 #include <video/presenter.h>
 #include <platform/thermal.h>
 #include <video/picture_fit.h>
+#include <video/display_cap.h>
 #include <video/scale_budget.h>
 #include <user/paths.h>
 #include <user/settings.h>
+#include <ui/ui.h>  // ReCarbon: CapturingInput, for ResolutionSettle
 #include <game/ultrawide.h>
 
 #include <glslang/Include/glslang_c_interface.h>
@@ -1917,8 +1920,19 @@ namespace gpu::renderer
         // size (the window, fullscreen, the aspect ratio setting).
         gpu::RenderScale s_renderScale;
         uint32_t s_scalePitchMin = 640, s_scalePitchMax = 1280;
-        uint32_t s_scaleBudget = 6;  // Auto's most host pixels per guest pixel
-        bool s_scaleFixed = false;   // RECARBON_RENDER_SCALE: no live changes
+        // ReCarbon (v0.1.4): atomics, as the menu reads them
+        // (InternalResolutionScale); s_renderScale as applied, for it too
+        // (AppliedRenderScale: x num, x den, y num, y den, 16 bits each).
+        std::atomic<uint32_t> s_scaleBudget{ 6 };  // Auto's most host pixels per guest pixel
+        std::atomic<bool> s_scaleFixed{ false };    // RECARBON_RENDER_SCALE: no live changes
+        std::atomic<uint64_t> s_appliedScale{ 0x0001000100010001ull };
+
+        void PublishRenderScale()
+        {
+            const gpu::RenderScale& s = s_renderScale;
+            s_appliedScale.store(uint64_t(s.x.num) << 48 | uint64_t(s.x.den) << 32 | uint64_t(s.y.num) << 16 | s.y.den,
+                std::memory_order_relaxed);
+        }
         // RECARBON_DYNAMIC_SCALE=<budget ms> (an experiment, off by default):
         // the internal resolution follows the GPU's time (gpu/dynamic_scale.h),
         // the setting its top rung and 2x2 the floor. Needs an explicit
@@ -1945,12 +1959,23 @@ namespace gpu::renderer
         // The setting's value is the scale in half steps (settings.h: 2 is
         // 1x, 3 is 1.5x, 4 is 2x, 6 is 3x). Auto (whole scales only, for
         // now: video::AutoRenderScale) could pick 1.5x by returning one.
-        gpu::RenderScale WantedRenderScale(int32_t setting, uint32_t regionW, uint32_t regionH)
+        // ReCarbon (v0.1.4): the GPU's largest 2D image (0 until
+        // ReadRenderScale), and the largest scaled guest surface on an axis
+        // (2048 rows, or a wider RECARBON_SCALE_PITCH): no scale makes a
+        // target the GPU can't (video/display_cap.h's FitImageLimit).
+        std::atomic<uint32_t> s_maxImageDimension{ 0 }, s_maxGuestDimension{ 2048 };
+
+        gpu::RenderScale FitGpuLimit(const gpu::RenderScale& scale)
+        {
+            return video::FitImageLimit(scale, s_maxGuestDimension, s_maxImageDimension);
+        }
+
+        gpu::RenderScale SettingRenderScale(int32_t setting, uint32_t regionW, uint32_t regionH)
         {
             if (setting > 0)
             {
                 gpu::AxisScale a = gpu::AxisFromHalves(uint32_t(std::clamp(setting, 2, 6)));
-                return { a, a };
+                return FitGpuLimit({ a, a });
             }
             uint32_t sx = 1, sy = 1;
             // Auto: enough host pixels to cover the screen area the frame
@@ -1962,16 +1987,37 @@ namespace gpu::renderer
             // iPhone or iPad the chip's (video/scale_budget: 1 on every chip
             // measured so far).
             video::AutoRenderScale(regionW, regionH, s_scaleBudget, sx, sy);
-            return gpu::RenderScale::Whole(sx, sy);
+            return FitGpuLimit(gpu::RenderScale::Whole(sx, sy));
+        }
+
+        // ReCarbon (v0.1.4): the display the window is on now (the
+        // presenter's), for the 4K cap.
+        video::PixelSize DisplayNow()
+        {
+            video::PixelSize display;
+            video::WindowDisplayPixels(display.width, display.height);
+            return display;
+        }
+
+        // The scale applied for the setting: SettingRenderScale within the
+        // 4K cap (video/display_cap.h: above 2x is 2x on a display below
+        // 3840x2160; the setting itself is kept). The one policy: the
+        // renderer applies it, the menu shows it (InternalResolutionScale).
+        gpu::RenderScale WantedRenderScale(int32_t setting, uint32_t regionW, uint32_t regionH)
+        {
+            return video::CapForDisplay(SettingRenderScale(setting, regionW, regionH), DisplayNow());
         }
 
         std::string ScaleReason(int32_t setting, uint32_t regionW, uint32_t regionH)
         {
             if (s_scaleFixed)
                 return "RECARBON_RENDER_SCALE";
-            if (setting > 0)
-                return "setting";
-            return std::format("auto for a {}x{} picture", regionW, regionH);
+            std::string reason = setting > 0 ? "setting" : std::format("auto for a {}x{} picture", regionW, regionH);
+            const video::PixelSize display = DisplayNow();
+            const gpu::RenderScale asked = SettingRenderScale(setting, regionW, regionH);
+            if (!(video::CapForDisplay(asked, display) == asked))
+                reason += std::format(", capped: display {}x{} below 3840x2160", display.width, display.height);
+            return reason;
         }
 
         void ReadRenderScale(const VkPhysicalDeviceProperties& props)
@@ -1990,7 +2036,7 @@ namespace gpu::renderer
                 const video::ScaleBudget mobile = video::MobileScaleBudget(props.deviceName);
                 s_scaleBudget = mobile.pixels;
                 fprintf(stderr, "[renderer] Auto internal resolution: at most %u host pixel%s per guest pixel on the %s (%s)\n",
-                    s_scaleBudget, s_scaleBudget == 1 ? "" : "s", props.deviceName, mobile.reason);
+                    s_scaleBudget.load(), s_scaleBudget == 1 ? "" : "s", props.deviceName, mobile.reason);
             }
 #elif defined(__APPLE__)
             // Apple GPUs are all integrated, but a recent Max or Ultra has
@@ -2013,11 +2059,24 @@ namespace gpu::renderer
                     s_scaleBudget = 9;
             }
 #endif
+            if (const char* v = std::getenv("RECARBON_SCALE_PITCH"))
+                sscanf(v, "%u-%u", &s_scalePitchMin, &s_scalePitchMax);
+            s_maxImageDimension = props.limits.maxImageDimension2D;
+            s_maxGuestDimension = std::max(2048u, s_scalePitchMax);
             int32_t setting = settings::GetInt(settings::Id::InternalResolution);
             uint32_t regionW = 0, regionH = 0;
             const char* fixed = std::getenv("RECARBON_RENDER_SCALE");
             if (fixed && gpu::ParseRenderScale(fixed, s_renderScale))
+            {
                 s_scaleFixed = true;
+                // ReCarbon (v0.1.4): not the 4K cap, but within what the GPU can make.
+                if (const gpu::RenderScale fits = FitGpuLimit(s_renderScale); !(fits == s_renderScale))
+                {
+                    fprintf(stderr, "[renderer] RECARBON_RENDER_SCALE=%s: %s, as this GPU's largest image is %u pixels\n", fixed,
+                        gpu::ScaleName(fits).c_str(), s_maxImageDimension.load());
+                    s_renderScale = fits;
+                }
+            }
             else
             {
                 if (fixed)
@@ -2025,8 +2084,7 @@ namespace gpu::renderer
                 video::FrameRegion(regionW, regionH);
                 s_renderScale = WantedRenderScale(setting, regionW, regionH);
             }
-            if (const char* v = std::getenv("RECARBON_SCALE_PITCH"))
-                sscanf(v, "%u-%u", &s_scalePitchMin, &s_scalePitchMax);
+            PublishRenderScale();
             fprintf(stderr, "[renderer] internal resolution %s (%ux%u, %s; surface pitches %u-%u)\n", gpu::ScaleName(s_renderScale).c_str(),
                 s_renderScale.x.Size(1280), s_renderScale.y.Size(720), ScaleReason(setting, regionW, regionH).c_str(), s_scalePitchMin,
                 s_scalePitchMax);
@@ -2072,6 +2130,16 @@ namespace gpu::renderer
             // has room for its last host column.)
             rt->width = rt->scale.x.Size(rt->guestWidth);
             rt->height = rt->scale.y.Size(rt->guestHeight);
+            // ReCarbon (v0.1.4): the last guard (the scale fits already:
+            // FitGpuLimit): never an image of no size or past the GPU's limit.
+            if (const uint32_t limit = s_maxImageDimension; rt->width == 0 || rt->height == 0 || (limit && (rt->width > limit || rt->height > limit)))
+            {
+                static bool logged = false;
+                if (!std::exchange(logged, true))
+                    fprintf(stderr, "[renderer] render target %ux%u (pitch %u) is outside 1-%u pixels: clamped\n", rt->width, rt->height, pitch, limit);
+                rt->width = std::max(1u, limit ? std::min(rt->width, limit) : rt->width);
+                rt->height = std::max(1u, limit ? std::min(rt->height, limit) : rt->height);
+            }
             rt->vkFormat = depth ? VK_FORMAT_D32_SFLOAT_S8_UINT : ColorFormat(format);
             VkFormatProperties fp;
             vkGetPhysicalDeviceFormatProperties(s_vk->physical, rt->vkFormat, &fp);
@@ -6808,12 +6876,14 @@ void main()
         // Auto follows the picture's size (the window, fullscreen, Aspect
         // Ratio) once it has held for kAutoSettleFrames, so a window being
         // dragged doesn't rebuild at every step; a change of the setting
-        // itself applies at the next swap.
+        // itself applies at the next swap (ReCarbon: from the open menu, once
+        // it has stood 250 ms: gpu/resolution_settle.h).
         uint64_t s_liveGeneration = ~0ull;
         int32_t s_resolutionSetting = 0;  // Internal Resolution as applied
         constexpr uint32_t kAutoSettleFrames = 30;
         gpu::RenderScale s_autoWant;
         uint32_t s_autoSeen = 0;
+        gpu::ResolutionSettle s_settingSettle;  // ReCarbon (v0.1.4): the menu stepping through the entries
 
         void DestroyTexture(Texture& t)
         {
@@ -6933,6 +7003,7 @@ void main()
             const gpu::RenderScale old = s_renderScale;
             Flush();
             s_renderScale = scale;
+            PublishRenderScale();
             PrewarmResolvePipelines(scale);
             size_t targets = 0;
             for (auto& [key, slot] : s_targets)
@@ -7028,9 +7099,11 @@ void main()
             {
                 s_resolutionSetting = setting;
                 s_autoSeen = 0;
+                s_settingSettle.Reset();
                 return;
             }
-            // Only the picture's size moved (Auto): once it has settled.
+            // Only the picture's size moved (Auto), or the window's display
+            // (ReCarbon: across the 4K cap's line): once it has settled.
             if (setting == s_resolutionSetting)
             {
                 if (!(want == s_autoWant))
@@ -7041,6 +7114,11 @@ void main()
                 if (++s_autoSeen < kAutoSettleFrames)
                     return;
             }
+            // ReCarbon (v0.1.4): a new setting from the menu once it has
+            // stood a moment, or the menu closed (gpu/resolution_settle.h).
+            else if (!s_settingSettle.Ready(setting,
+                         std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count(), ui::CapturingInput()))
+                return;
             s_resolutionSetting = setting;
             s_autoSeen = 0;
             ApplyRenderScale(want, ScaleReason(setting, regionW, regionH));
@@ -7274,6 +7352,39 @@ void main()
     bool Enabled()
     {
         return s_vk != nullptr;
+    }
+
+    bool InternalResolutionScale(int32_t setting, gpu::RenderScale& out, gpu::RenderScale* asked)
+    {
+        if (s_scaleFixed)
+        {
+            out = AppliedRenderScale();
+            if (asked)
+                *asked = out;
+            return true;
+        }
+        uint32_t regionW = 0, regionH = 0;
+        if (setting <= 0)
+        {
+            video::FrameRegion(regionW, regionH);
+            if (regionW == 0 || regionH == 0)
+                return false;
+        }
+        out = WantedRenderScale(setting, regionW, regionH);
+        if (asked)
+            *asked = SettingRenderScale(setting, regionW, regionH);
+        return true;
+    }
+
+    gpu::RenderScale AppliedRenderScale()
+    {
+        const uint64_t v = s_appliedScale.load(std::memory_order_relaxed);
+        return { { uint32_t(v >> 48 & 0xFFFF), uint32_t(v >> 32 & 0xFFFF) }, { uint32_t(v >> 16 & 0xFFFF), uint32_t(v & 0xFFFF) } };
+    }
+
+    bool RenderScaleFixed()
+    {
+        return s_scaleFixed;
     }
 
     void LoadShader(uint32_t type, const uint32_t* words, uint32_t dwords)
@@ -8399,7 +8510,9 @@ void main()
                     // The band this draw shows on a 16:9 frame: clip y of
                     // its translation's share outside the narrowing, +-sv.
                     const float bandMid = c[7] * (1.0f - sv), bandLo = bandMid - sv, bandHi = bandMid + sv;
-                    bool outside = false;  // a primitive wholly above or below the band
+                    // ReCarbon: SpeedBreaker Carbon's by-centre rule (gpu/edge_bars.h Parked).
+                    static const bool parkByCentre = game::FrontEndParksByCentre();
+                    bool outside = false;  // a primitive parked above or below the band (Parked)
                     uint32_t prims = 0;
                     std::string primList;
                     // RECARBON_LOG_FRONTEND=1: up to four primitives that cross
@@ -8474,7 +8587,9 @@ void main()
                                 std::max(0.0f, std::min(hiY, sv) - std::max(loY, -sv)) * (prim == 4 ? 0.5f : 1.0f);
                             bandArea += primArea;
                             minPrimArea = std::min(minPrimArea, primArea);
-                            outside = outside || (measureY && (hiY < bandLo || loY > bandHi));
+                            // Parked off the frame (gpu/edge_bars.h Parked: wholly
+                            // past the band, and in Carbon centred past it).
+                            outside = outside || (measureY && gpu::bars::Parked(loY, hiY, bandLo, bandHi, parkByCentre));
                             if (logFrontEnd && prims < 8)
                                 primList += std::format(" [{:.3f}..{:.3f} {:.3f}..{:.3f}]", lo, hi, loY, hiY);
                             // (The front-end shader's draws only: one that
@@ -9781,6 +9896,28 @@ void main()
     {
         std::mutex s_perfMutex;
         PerfNumbers s_perfNumbers;
+        PerfTotals s_perfTotals;  // ReCarbon
+    }
+
+    PerfTotals GetPerfTotals()
+    {
+        std::lock_guard lock(s_perfMutex);
+        return s_perfTotals;
+    }
+
+    void PublishPerfTotals(const PerfTotals& totals)
+    {
+        std::lock_guard lock(s_perfMutex);
+        s_perfTotals = totals;
+    }
+
+    void FillAppliedScale(PerfTotals& totals)
+    {
+        totals.scale = gpu::ScaleName(s_renderScale);
+        totals.scaledW = s_renderScale.x.Size(1280);
+        totals.scaledH = s_renderScale.y.Size(720);
+        totals.scaleFixed = s_scaleFixed;
+        totals.scaleDynamic = s_dynamic != nullptr;
     }
 
     PerfNumbers GetPerfNumbers()

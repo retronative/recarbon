@@ -34,9 +34,10 @@ INSN_RE = re.compile(r'^\t// (\S+)(?: (.*))?$')                           # :266
 CALL_ERR_RE = re.compile(r'^\t// ERROR ([0-9A-F]+)$')                      # :402
 SWITCH_ERR_RE = re.compile(r'^\t\t// ERROR: 0x([0-9A-F]+)$')               # :622
 DEBUGTRAP = '__builtin_debugtrap();'                                       # :717 (blrl)
+FATAL_ERR = '#error "XenonRecomp: '                                        # :2442 (patch 0011)
 # Opcodes whose case emits nothing on purpose (recompiler.cpp:593-1739);
 # any other instruction with no code after its comment is a silent drop
-# (Recompile() returned false, recompiler.cpp:2387 -> log line :2559).
+# (Recompile() returned false, recompiler.cpp:2387 -> FATAL :2598).
 NOOPS = {'attn', 'cctpl', 'cctpm', 'db16cyc', 'dcbf', 'dcbst', 'dcbt', 'dcbtst', 'nop',
          'tdlgei', 'tdllei', 'twi', 'twlgei', 'twllei'}
 # b/bl to __save*/__rest* also emit nothing with non_volatile_as_local (:390).
@@ -68,6 +69,10 @@ for path in cpps:
     lines = open(path, encoding='latin1').read().split('\n')
     name = None
     for i, line in enumerate(lines):
+        if line.startswith(FATAL_ERR):    # :2442, inside a body or (secondary entry) between them
+            m = re.search(r'\b(?:0x)?([0-9A-F]{8})\b', line)
+            markers['XenonRecomp FATAL (#error)'].append((int(m.group(1), 16) if m else 0, line[len(FATAL_ERR):-1]))
+            continue
         if name is None:
             m = IMPL_RE.match(line)
             if m:
@@ -225,35 +230,199 @@ want_hooks = {(h['name'], h['address']) for h in tomllib.load(open('config/recar
 HOOK_RE = re.compile(r'^\t(?:if \()?(\w+)\(')
 found_hooks = set()
 names = {n for n, _ in want_hooks}
+PUBLISH = 'RenderQueuePublish'
+publish_funcs = {}                # start -> [asm] of a function with a render-queue hook (5c, 5d)
 for path in sorted(glob.glob(os.path.join(PPC, 'ppc_recomp.*.cpp'))):
     start = count = None
+    asm, hooked = [], False
     for line in open(path):
         m = re.match(r'^PPC_FUNC_IMPL\(__imp__sub_([0-9A-F]+)\)', line)
         if m:
+            if hooked:
+                publish_funcs[start] = asm
             start, count = int(m.group(1), 16), 0
+            asm, hooked = [], False
             continue
         if start is None:
             continue
         if line.startswith('\t// '):
             count += 1
+            asm.append(line[4:].strip())
             continue
         h = HOOK_RE.match(line)
         if h and h.group(1) in names and count:
             found_hooks.add((h.group(1), start + 4 * (count - 1)))
+            hooked |= h.group(1) in (PUBLISH, 'RenderQueueWindow', 'RenderQueueHandshake')
+    if hooked:
+        publish_funcs[start] = asm
 for name, addr in sorted(want_hooks - found_hooks, key=lambda x: x[1]):
     print(f'  missing: {name} at {addr:08X}')
 hard(want_hooks <= found_hooks, f'{len(want_hooks)} mid-asm hooks configured, {len(want_hooks & found_hooks)} called at their address')
 
+# --- 5c. every publish into the render queue is fenced (ReCarbon) -------------
+# A RenderQueuePublish hook sits before the store of the queue's write pointer
+# (stw rA,20(rS), rS the queue state), which the count's increment follows
+# (lwz rC,0(rS); addi rC,rC,1; stw rC,0(rS)); the inlined copies publish the
+# same way (runtime/game/render_queue.cpp). The state's address comes from the
+# hooked sites that build it in place (lis rT,hi; addi rS,rT,lo), so this is
+# address-free; every other site in ppc/ that publishes to it must carry the
+# hook too. A config entry lost would otherwise only show at runtime.
+STW20_RE = re.compile(r'^stw r\d+,20\((r\d+)\)$')
+def state_regs(asm, upto, hi=None, lo=None):
+    """Registers set to a 32-bit constant by lis/addi in asm[:upto]: {reg: value}, or
+    only those equal to (hi, lo) when given."""
+    regs = {}
+    for i, insn in enumerate(asm[:upto]):
+        a = re.match(r'^addi (r\d+),(r\d+),(-?\d+)$', insn)
+        if not a or (lo is not None and int(a.group(3)) != lo):
+            continue
+        lis = [l for l in asm[:i] if re.match(rf'^lis {a.group(2)},{hi if hi is not None else "-?[0-9]+"}$', l)]
+        if lis:
+            regs[a.group(1)] = ((int(lis[-1].split(',')[1]) << 16) + int(a.group(3))) & 0xFFFFFFFF
+    return regs
+def publishes(asm, i, rs):
+    """asm[i] stores the write pointer at +20 of rs and the count's increment follows."""
+    m = re.match(rf'^lwz (r\d+),0\({rs}\)$', asm[i + 1]) if i + 3 < len(asm) else None
+    return bool(m) and asm[i + 2] == f'addi {m.group(1)},{m.group(1)},1' and asm[i + 3] == f'stw {m.group(1)},0({rs})'
+states = set()
+for start, asm in publish_funcs.items():
+    for name, addr in found_hooks:
+        i = (addr - start) // 4
+        m = STW20_RE.match(asm[i]) if name == PUBLISH and 0 <= i < len(asm) else None
+        if m and m.group(1) in state_regs(asm, i):
+            states.add(state_regs(asm, i)[m.group(1)])
+unfenced = []
+for value in sorted(states):
+    hi, lo = value >> 16, value & 0xFFFF
+    lo -= 0x10000 if lo >= 0x8000 else 0
+    hi += 1 if lo < 0 else 0
+    hi -= 0x10000 if hi >= 0x8000 else 0
+    for path in sorted(glob.glob(os.path.join(PPC, 'ppc_recomp.*.cpp'))):
+        text = open(path).read()
+        for body in text.split('PPC_FUNC_IMPL(__imp__sub_')[1:] if f',{lo}' in text else []:
+            if f',{lo}' not in body:
+                continue
+            start = int(body[:body.index(')')], 16)
+            asm = [l[4:].strip() for l in body.split('\n') if l.startswith('\t// ')]
+            regs = state_regs(asm, len(asm), hi, lo)
+            for i, insn in enumerate(asm):
+                m = STW20_RE.match(insn)
+                if m and m.group(1) in regs and publishes(asm, i, m.group(1)) and (PUBLISH, start + 4 * i) not in found_hooks:
+                    unfenced.append(start + 4 * i)
+for addr in unfenced:
+    print(f'  unfenced publish: {addr:08X}')
+hard(not unfenced and states, f'render queue state {", ".join(f"{s:08X}" for s in sorted(states)) or "not found"}: {len(unfenced)} publish sites without a RenderQueuePublish hook')
+
+# --- 5d. the recording handshake is fenced on both sides (ReCarbon) -----------
+# The recording thread opens a window by resetting the queue state (+0, +4, +8,
+# +12) and then storing 1 to a handshake word the main thread polls; the main
+# thread then reads +12, +8, +0 and +4 (runtime/game/render_queue.cpp). A
+# RenderQueueWindow hook (release) sits on that store and a
+# RenderQueueHandshake hook (acquire) at every place the main thread's poll
+# leaves on a nonzero word. The word comes from the hooked store (lis rB,hi;
+# stw rV,lo(rB), rV = li 1) after the reset of the 5c state, so this is
+# address-free too; then every store of 1 to the word and every poll exit on
+# nonzero (lwz rX,lo(rB); cmpwi crN,rX,0; then bne crN,T forward, or beq
+# crN,back with its fall-through) must carry its hook. The recording thread's
+# own wait (cmpwi rX,1: it waits for 0) is not a poll exit on nonzero.
+WINDOW, HANDSHAKE = 'RenderQueueWindow', 'RenderQueueHandshake'
+STORE_RE = re.compile(r'^(stw|stb) (r\d+),(-?\d+)\((r\d+)\)$')
+def last_set(asm, upto, reg):
+    """The last instruction in asm[:upto] that writes reg (stores and compares excluded)."""
+    for insn in reversed(asm[:upto]):
+        if re.match(rf'^(?!st|cmp)\S+ {reg},', insn):
+            return insn
+    return ''
+def lis_value(asm, upto, reg):
+    m = re.match(rf'^lis {reg},(-?\d+)$', last_set(asm, upto, reg))
+    return int(m.group(1)) if m else None
+def word_of(hi, lo):
+    return ((hi << 16) + lo) & 0xFFFFFFFF
+def func_of(addr):
+    for start, asm in publish_funcs.items():
+        if start <= addr < start + 4 * len(asm):
+            return start, asm
+    return None, None
+words, bad_window = set(), []
+for name, addr in sorted(found_hooks):
+    if name != WINDOW:
+        continue
+    start, asm = func_of(addr)
+    i = (addr - start) // 4 if asm else -1
+    m = STORE_RE.match(asm[i]) if asm else None
+    hi = lis_value(asm, i, m.group(4)) if m and m.group(1) == 'stw' else None
+    reset = set()
+    for value in states:
+        shi, slo = value >> 16, value & 0xFFFF
+        slo -= 0x10000 if slo >= 0x8000 else 0
+        shi += 1 if slo < 0 else 0
+        shi -= 0x10000 if shi >= 0x8000 else 0
+        regs = state_regs(asm, i, shi, slo) if asm else {}
+        for insn in asm[:i] if asm else []:
+            s = STORE_RE.match(insn)
+            if s and s.group(4) in regs:
+                reset.add(int(s.group(3)))
+    if hi is None or last_set(asm, i, m.group(2)) != f'li {m.group(2)},1' or not {0, 4, 8, 12} <= reset:
+        bad_window.append(addr)
+    else:
+        words.add(word_of(hi, int(m.group(3))))
+for addr in bad_window:
+    print(f'  {WINDOW} at {addr:08X} is not a store of 1 after the queue state reset')
+missing, exits, stores = [], set(), 0
+for word in sorted(words):
+    lo = word & 0xFFFF
+    lo -= 0x10000 if lo >= 0x8000 else 0
+    hi = ((word - lo) >> 16) & 0xFFFF
+    hi -= 0x10000 if hi >= 0x8000 else 0
+    for path in sorted(glob.glob(os.path.join(PPC, 'ppc_recomp.*.cpp'))):
+        text = open(path).read()
+        if f',{lo}(r' not in text:
+            continue
+        for body in text.split('PPC_FUNC_IMPL(__imp__sub_')[1:]:
+            if f',{lo}(r' not in body:
+                continue
+            start = int(body[:body.index(')')], 16)
+            asm = [l[4:].strip() for l in body.split('\n') if l.startswith('\t// ')]
+            for i, insn in enumerate(asm):
+                s = STORE_RE.match(insn)
+                if s and s.group(1) == 'stw' and int(s.group(3)) == lo and lis_value(asm, i, s.group(4)) == hi \
+                        and last_set(asm, i, s.group(2)) == f'li {s.group(2)},1':
+                    stores += 1
+                    if (WINDOW, start + 4 * i) not in found_hooks:
+                        missing.append((WINDOW, start + 4 * i))
+                l = re.match(rf'^lwz (r\d+),{lo}\((r\d+)\)$', insn)
+                if not l or lis_value(asm, i, l.group(2)) != hi or i + 2 >= len(asm):
+                    continue
+                c = re.match(rf'^cmpwi (cr\d),{l.group(1)},0$', asm[i + 1])
+                b = re.match(r'^(bne|beq) (cr\d),0x([0-9a-f]+)$', asm[i + 2]) if c else None
+                if not b or b.group(2) != c.group(1):
+                    continue
+                exit_ = int(b.group(3), 16) if b.group(1) == 'bne' else start + 4 * (i + 3)
+                if exit_ > start + 4 * i:
+                    exits.add(exit_)
+                    if (HANDSHAKE, exit_) not in found_hooks:
+                        missing.append((HANDSHAKE, exit_))
+for name, addr in sorted(set(missing)):
+    print(f'  missing: {name} at {addr:08X}')
+stray = sorted(a for n, a in found_hooks if n == HANDSHAKE and a not in exits)
+for addr in stray:
+    print(f'  {HANDSHAKE} at {addr:08X} is not where a poll of the handshake exits on nonzero')
+hard(len(words) == 1 and exits and not bad_window and not missing and not stray,
+     f'render queue handshake {", ".join(f"{w:08X}" for w in sorted(words)) or "not found"}: {stores} recording starts, '
+     f'{len(exits)} poll exits, {len(set(missing)) + len(stray)} without their fence')
+
 # --- 6. recompiler log -------------------------------------------------------
 if len(sys.argv) > 1:
     print(f'\n== log {sys.argv[1]}')
-    LOG = [  # fmt::println strings in recompiler.cpp
-        ('switch case outside function (:623)', r'^ERROR: Switch case at ([0-9A-F]+) is trying to jump outside function'),
-        ('unrecognized instruction (:2559)', r'^Unrecognized instruction at 0x([0-9A-F]+): (\S+)'),
-        ('unable to decode (:2549)', r'^Unable to decode instruction [0-9A-F]+ at ([0-9A-F]+)'),
-        ('jump table without switch entry (:2555)', r'^Found a switch jump table at ([0-9A-F]+) with no switch table entry'),
-        ('RC bit without comparison (:2396)', r'^(\S+) at ([0-9A-F]+) has RC bit enabled but no comparison'),
-        ('secondary entry outside functions (:2758)', r'^ERROR: secondary entry ([0-9A-F]+) is not inside any function'),
+    LOG = [  # fmt::println strings in recompiler.cpp (FATAL: Recompiler::Fatal, patch 0011)
+        ('switch case outside function (:623)', r'^FATAL: switch case at ([0-9A-F]+) jumps outside its function'),
+        ('unrecognized instruction (:2598)', r'^FATAL: unrecognized instruction at 0x([0-9A-F]+): (\S+)'),
+        ('unable to decode (:2588)', r'^FATAL: unable to decode instruction [0-9A-F]+ at ([0-9A-F]+)'),
+        ('jump table without switch entry (:2593)', r'^FATAL: switch jump table at ([0-9A-F]+) with no switch table entry'),
+        ('record form without CR write (:2611)', r'^FATAL: record form (\S+) at 0x([0-9A-F]+) writes no CR field'),
+        ('RC bit without comparison (:2429)', r'^(\S+) at ([0-9A-F]+) has RC bit enabled but no comparison'),
+        ('secondary entry outside functions (:2809)', r'^FATAL: secondary entry ([0-9A-F]+) is not inside any function'),
+        ('fatal problem count (main.cpp:47)', r'^XenonRecomp: ([0-9]+) fatal problem\(s\)'),
         ('patch file error (:48-86)', r'^ERROR: Unable to (apply|load) the patch file'),
         ('progress', r'^Recompiling functions\.\.\.'),
     ]

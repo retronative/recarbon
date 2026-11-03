@@ -7,6 +7,9 @@
 #include <platform/thermal.h>
 
 #import <Foundation/Foundation.h>
+#include <notify.h>
+
+#include <mutex>
 
 namespace platform::thermal::detail
 {
@@ -23,5 +26,22 @@ namespace platform::thermal::detail
             }
             return State::Unknown;
         }
+    }
+
+    // ReCarbon: the pressure level macOS posts for its thermal notifications,
+    // readable without privileges (the token is registered once).
+    bool ReadPressure(uint64_t& level)
+    {
+        static int token = -1;
+        static std::once_flag once;
+        std::call_once(once, [] {
+            if (notify_register_check("com.apple.system.thermalpressurelevel", &token) != NOTIFY_STATUS_OK)
+                token = -1;
+        });
+        uint64_t state = 0;
+        if (token < 0 || notify_get_state(token, &state) != NOTIFY_STATUS_OK)
+            return false;
+        level = state;
+        return true;
     }
 }

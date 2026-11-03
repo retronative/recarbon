@@ -8,6 +8,7 @@
 // hides them with the pointer). Fullscreen is macOS's own, unchanged. Main
 // thread only (AppKit).
 #pragma once
+#include <cstdint>
 
 struct SDL_Window;
 
@@ -50,6 +51,11 @@ namespace platform::macos
     // a ProMotion panel, nor a monitor with adaptive sync on. `minHz` and
     // `maxHz`, if given, get the range (for the log). False without a screen.
     bool DisplayRefreshFixed(SDL_Window* window, double* minHz = nullptr, double* maxHz = nullptr);
+
+    // ReCarbon (v0.1.4): the pixels of the native mode of the panel the
+    // window is on (macOS flags it), for the 4K cap (video/display_cap.h).
+    // False without a screen or a mode flagged native.
+    bool NativePanelPixels(SDL_Window* window, uint32_t& width, uint32_t& height);
 
     // Before SDL_DestroyWindow: stops watching the window.
     void ForgetWindow(SDL_Window* window);

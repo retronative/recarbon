@@ -32,8 +32,9 @@
 #   Contents/Info.plist              a game (macOS Game Mode when fullscreen),
 #                                    versioned from the build: CFBundleShort-
 #                                    VersionString is project()'s version,
-#                                    CFBundleVersion the commit's number in
-#                                    the history, LSMinimumSystemVersion the
+#                                    CFBundleVersion a number made from that
+#                                    version (bundle_version.py: 0.1.4 is
+#                                    10499), LSMinimumSystemVersion the
 #                                    build's deployment target, which every
 #                                    binary in the app must match (checked)
 #
@@ -99,6 +100,9 @@
 # v0.1.1's app its dmg came out 4% smaller than hdiutil's level 9).
 # DMG_TOOL=hdiutil or DMG_TOOL=diskutil uses only that one.
 import hashlib, json, os, plistlib, re, shutil, stat, subprocess, sys, tempfile
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # ReCarbon: bundle_version.py beside it, also when a test loads this file
+from bundle_version import bundle_version  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ARGS = [a for a in sys.argv[1:] if not a.startswith('--')]
@@ -272,14 +276,6 @@ def build_identity():
     if not re.fullmatch(r'\d+\.\d+\.\d+', version or ''):
         raise SystemExit(f'make_app.py: no version in {BUILD} (project() in CMakeLists.txt; build first)')
     return version, info.get('COMMIT', 'unknown'), info.get('DIRTY', '0') == '1'
-
-
-def build_number(commit):
-    """CFBundleVersion: the commit's number in its history (an integer that
-    grows from one release to the next), 0 when git can't tell."""
-    out = subprocess.run(['git', '-C', cache_value('CMAKE_HOME_DIRECTORY') or ROOT, 'rev-list', '--count', commit],
-                         capture_output=True, text=True).stdout.strip()
-    return out if out.isdigit() else '0'
 
 
 def version_tuple(v):
@@ -846,7 +842,7 @@ def main():
             'CFBundleDisplayName': NAME,
             'CFBundlePackageType': 'APPL',
             'CFBundleShortVersionString': version,
-            'CFBundleVersion': build_number(commit),
+            'CFBundleVersion': bundle_version(version),
             'ReCarbonCommit': commit + ('-dirty' if dirty else ''),
             'LSMinimumSystemVersion': minimum,
             # A game: macOS Game Mode (CPU/GPU priority, lower Bluetooth

@@ -26,3 +26,50 @@ Changes apply at once unless marked *restart*. They are saved to `settings.toml`
 > macOS build shows it. Options hidden on macOS are left out.
 
 <SettingsReference />
+
+## Technical details
+
+The menu uses players' names. This is what they mean.
+
+### Internal Resolution
+
+The game draws its 3D scene at a multiple of the Xbox 360's 1280×720. The menu names each step by
+the standard its size matches exactly; `settings.toml` and `RECARBON_RESOLUTION` keep the scale.
+
+| Menu | Drawn at | Scale (`settings.toml`) |
+|---|---|---|
+| HD (720p) | 1280×720 | `1x` |
+| Full HD (1080p) | 1920×1080 | `1.5x` |
+| QHD (1440p) | 2560×1440 | `2x` |
+| 4K UHD (2160p) | 3840×2160 | `3x` |
+| Auto | picked from the screen and the GPU | `auto` |
+
+- **The row says what is drawn when it isn't what the entry names.** 4K UHD draws 3840×2160 only on
+  a display with at least that many pixels. On a smaller one, such as a MacBook's own display, it
+  draws QHD, and the row reads "4K UHD (QHD on this display)". Your choice is kept, and a 4K display
+  draws 4K again.
+- **Auto names what it picked:** "Auto (QHD, 1440p)". A size that matches no standard is shown in
+  pixels, never rounded to a name.
+- The scene's size is not your screen's resolution: the drawn picture is then scaled to the
+  window or screen (see Upscaling). Textures and movies stay at their original resolution.
+- `RECARBON_RENDER_SCALE` (for developers) fixes the size for one run, and the row shows it in
+  pixels. The game's log names the scale: `[renderer] internal resolution 2x2 (2560x1440, ...)`.
+
+### Upscaling and Sharpening
+
+- **Sharp** is bicubic filtering, **Soft** is bilinear. **FSR 1** is AMD FidelityFX Super Resolution 1
+  (EASU), used when the picture is enlarged; when it isn't, bicubic is used.
+- **Sharpening** is a separate pass on top of Sharp or FSR 1 (for FSR 1, the share of its RCAS
+  sharpening's full strength). 0 turns it off. It doesn't change how the picture is scaled.
+
+### Other options
+
+- **Anti-Aliasing:** an FXAA-style pass over the finished picture.
+- **Smooth Distant Textures:** mipmaps, the game's own smaller copies of its textures, used in the
+  distance. Off draws the full-size texture everywhere, which shimmers.
+- **Xbox 360 Picture:** the gamma ramp the game sets for the console's TV output (an Xbox 360
+  display gamma). Off shows the picture without it.
+- **Expanded View** (on by default) fills a screen that isn't 16:9: on a taller screen such as a
+  MacBook's 16:10, the 3D view shows more above and below, and the HUD stays at 16:9. Off shows the
+  original 16:9 view with bars. It's saved as `aspect_ratio` (`auto` is On, `16:9` is Off), and
+  `RECARBON_ASPECT` overrides it.

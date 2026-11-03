@@ -172,7 +172,7 @@ Paths are relative to `../NFS/speedbreaker/`.
 | Compiler for tools | Homebrew clang 23.1.4 (`/opt/homebrew/opt/llvm`). Apple clang 21.0.0 is present but unused. |
 | Build | cmake 4.4.4, ninja 1.13.2 |
 | Python | 3.15.0 (Homebrew), for `tomllib`. `/usr/bin/python3` (3.9) can't run the survey scripts. |
-| XenonRecomp | hedge-dev `ddd128bcca99fe8bfbb99bea583c972351fa6ace` + `patches/xenonrecomp/0001–0009`. Submodules: fmt 11.0.2-306, libmspack v1.11, simde 0.8.4-rc1-8, tiny-AES-c 1.0.0-34, tomlplusplus 3.4.0-15, xxHash 0.7.4-810. |
+| XenonRecomp | hedge-dev `ddd128bcca99fe8bfbb99bea583c972351fa6ace` + `patches/xenonrecomp/0001–0011`. Submodules: fmt 11.0.2-306, libmspack v1.11, simde 0.8.4-rc1-8, tiny-AES-c 1.0.0-34, tomlplusplus 3.4.0-15, xxHash 0.7.4-810. |
 | extract-xiso | XboxDev `3f5b62cfe68f000b0e3c8a30104973f3a297948e` |
 
 ### Commands

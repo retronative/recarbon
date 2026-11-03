@@ -31,7 +31,7 @@ listed here as equivalent, unbuildable or missed.
 | Test | ReCarbon changes | Mutants caught |
 |---|---|---|
 | render_scale | Generic resolve pieces (one rectangle, strips, a grid, side-by-side halves) instead of MW's scene | 9/9 |
-| picture_fit | Carbon has no view hooks: the letterbox cases only, tied to `title_hooks.cpp`; Auto at a Mac's budgets (4, 9); the M5/M1 picture sizes and choices as logged | 9/9 |
+| picture_fit | Letterboxed with Vert+ off (the default, `game/vert_plus.h` State(false)); with RECARBON_VERT_PLUS=1 a hand-computed Vert+ table (2940x1846, 2880x1800, 2560x1600, 3024x1890, 2160x1440, 1024x768, 1280x1024 and portrait clamped to 4:3), no Hor+, a filled frame's redraw; Auto at a Mac's budgets (4, 9); the M5/M1 picture sizes and choices as logged | 9/9; Vert+ (v0.1.4): see vert_plus |
 | frame_rate_policy | Carbon's draw counts (hand04: race median 2250, front end 55); the Steam Frame case dropped; two added cases; the Frame Rate options' audit added the M5 at 3x (tries at 180/360/720/1440 s, the back-off's cap) and the M1 throttling while macOS says "fair" | 12/12, then 9/10 (the rise path's dwell is equivalent: its cooldown and try wait both exceed the dwell) |
 | frame_rate_help | ReCarbon's own: the Frame Rate row's help line per value, word for word | 4/4 |
 | swapchain_policy | The Mac's scenarios only; fullscreen as the M5 logged it; each watch trigger on its own | 10/11 (1 equivalent within the test's tolerance), plus 7 planted rules |
@@ -48,6 +48,9 @@ listed here as equivalent, unbuildable or missed.
 | switch_tables | Carbon's 820 tables and 180 leaf bounds; MW's dispatches dropped | A planted escaping default is rejected |
 | refresh_fit | Names | 2/2 |
 | fsr1, settings_scaling | Names; the SPIR-V compiles | 3/3 |
+| perf_report (ReCarbon's own, v0.1.4) | Export Performance Report's format, quantiles, switch policy, scrub, denylist and present ring, with hand-worked values | 18/18: the scrub removed before the denylist; the private-path rule; the guest-address rule; quantile `int(p/100*n)`; quantile without rounding; any variable valued; the never-valued list ignored; a metric as a bare number; unavailable with a value; the warning filter inverted; the denylist's path rule; the host name split into words; JSON strings unescaped; `>= 50` for `> 50`; the measured bound off by one; the ring keeping overwritten slots; a guest thread's name kept; the thread names' hex-run rule |
+| vert_plus (ReCarbon's own, v0.1.4), with picture_fit | `game/vert_plus.h`: the RECARBON_VERT_PLUS gate (exactly `1`), off changing nothing, the widened view ids, the projection, front-end matrix resend, mirror/PiP rectangle and movie aspect arithmetic; `gpu/edge_bars.h` Parked (SpeedBreaker Carbon's by-centre rule); hand-worked values | 20/20: the gate taking `0` or any 1-prefix; view 3 widened; view 21 dropped; scaling about 0; the movie aspect inverted; the tracker missing the first matrix; each off guard removed (projection, front end, rectangle, movie write); Hor+ reported; hooks reported before the hook ran; P[0][0] taking the y scale; the height kept; the y clamp at 0.25; Parked ignoring byCentre or never parking by centre; picture_fit's 4:3 clamp removed; its 1% margin at 15% |
+| perf_report_check (ReCarbon's own, v0.1.4) | `scripts/perf_report_check.py` against synthetic reports | 9/9: the path, guest-address, name and file rules; null iff unavailable; the status set; bare values; the top-level keys; why required |
 
 Notes on the mutants:
 - **Unbuildable:** the depth-pack truncation mutant doesn't compile, because the C++ mirror
@@ -106,6 +109,77 @@ which test failed isn't known.
   wasn't in the suite then.
 - **Status:** not reproduced, and not attributed.
 
+## Diagnostics: game time, handshake and D3D waits (2026-10-31)
+
+Three new ctest entries, all label `unit`: `wait_span_test` (game/wait_span.h: a poll loop's
+wait from its first poll to its exit, and the 10 s window's count, total, p50/p99/max and
+polls), `game_time_log_test` (game/game_time_log.h: the CSV line, the game's 1-8 step rule,
+the `[gametime]` summary) and `game_time_test.py` (scripts/game_time.py on synthetic CSVs,
+and the runtime header it reads). `wait_span_test --bench` (not run by ctest) times the cost
+the D3D wait timing adds to a wait: about 29 ns with 1 or 10 polls (two clock reads), 0.2 ns
+for an exit without a wait, on the M5.
+
+**Mutation checks**, planted in the real files and restored after each run: 21 of 21 failed
+their test.
+- wait_span.h (8): the start moved by every poll; a negative length; the span left open; the
+  polls dropped; due strictly after 10 s; p90 reported as p99; a new window keeping counts; a
+  new wait keeping the last one's polls.
+- game_time_log.h (8): the cap at 7; the floor at 0; steps and raw steps swapped; 2 steps
+  counted as 3+; frames without the world counted as no step; due strictly after 10 s; a new
+  window keeping counts; a cut line's length past the buffer.
+- game_time.py (5): 3+ steps left out of the irregular count; `--from` ignored; the frames
+  before the first present counted into it; frames without the world counted; a cut last
+  line raising instead of being skipped. (A first version of the last one, the cut line kept
+  as a zero row, was equivalent: the window drops a host time of 0.)
+
+Not covered: the mid-asm hooks themselves and the writer thread (they need the game), and the
+command processor's dropped-packet counter (an increment in `ExecuteType3`).
+
+## Recompiler and harness safety (v0.1.4)
+
+- **Fatal recompiler problems** (`patches/xenonrecomp/0011`). `survey.sh` run twice from
+  scratch: `ppc/` (289 files) and `config/` byte-identical to each other and to v0.1.3's,
+  `validate_recomp.py` clean, `run_instr_tests.sh` 0 failed checks. Pass 1 of `survey.sh`
+  (the function map, before the inline tables and leaf bounds) logs 3,189 switch cases outside
+  their guessed functions; it is the one pass allowed to end with fatal problems.
+  Planted faults, each in a scratch config or the private XenonRecomp, each caught:
+  - a secondary entry at 0x80000000, a switch case moved outside its function, a dropped jump
+    table (a bctr after a nop): XenonRecomp exits 1, one `FATAL:` line, one `#error` in the
+    output, and `validate_recomp.py` fails on both the marker and the log line;
+  - eqv's case removed: `survey.sh` fails in the final pass with 75 `FATAL:` lines and 75
+    `#error` lines in `ppc/`;
+  - eqv.'s cr0 write removed: `run_instr_tests.sh` fails on `record form eqv. ... writes no CR
+    field` (before, only a warning that the script ignored);
+  - a test using mfctr (unimplemented): `run_instr_tests.sh` fails.
+  Not covered: the jump-table check only knows a bctr after `nop` or one other instruction
+  (upstream's heuristic), so a missing table of another shape is not caught.
+- **Harness: `BENCH_STOP_LEVEL=3` and `BENCH_MAX_SECS`** (`tests/bench_safety_test.py`, fake
+  probes, no game). The defaults are unchanged (level 2 stops at once, 601 s refused). With
+  level 3 a run stays at level 2 to its end and still stops at once at 3 and 4, and on memory,
+  swap, the game's serious line and a broken probe; any other level, or 3 with a
+  `BENCH_THERMAL_GRACE`, is refused before the game runs. `BENCH_MAX_SECS` raises the cap up to
+  3600 s or lowers it; malformed values are refused. Ten planted faults (the stop level ignored,
+  level 3 not an immediate stop, either value not validated, the grace allowed with level 3,
+  default level 3, default cap 3600, the cap ignored either way, the verdict's note dropped):
+  each fails the test. Level 3 not an immediate stop is caught only by the grace test: with
+  level 3 the level-2 branch still stops it, under the wrong label.
+- **Settings verification** (`scripts/verify_settings.py`, `tests/verify_settings_test.py`,
+  offline only: the game launches are still to be run). The planned keys for the menu and
+  persist phases are replayed through an independent model of the menu: they make exactly
+  the planned changes, one logged line per press, and the menu phase puts every row back.
+  The analysis is checked on synthetic runs: everything applied is all PASS; a missing effect
+  line fails only that row; no baseline line, a scene that moves or a Frame Rate that stays at
+  60 is INCONCLUSIVE; Mute and Internal Resolution (run_attempt.sh sets their variables) must
+  be saved without changing the run; a strict picture row with no change, a change not put back, a wrong
+  `how`, an unexpected change, a wrong value in `settings.toml`, a missing relaunch line, an
+  unclean quit after a corrupt file and an unknown key each FAIL. Sixteen planted faults in a
+  scratch copy of the script (the picture threshold reversed, `how` ignored, the undo value
+  not checked, the baseline gate removed, strict rows made lenient, the put-back and
+  still-scene checks dropped, unexpected changes ignored, pages stepped the wrong way, a bool
+  press not flipping, unknown keys ignored, `settings.toml` numbers not compared, Frame Rate
+  passing at 60, a killed game counted as running, an effect line not required, Mute's
+  absent-line check inverted): each fails the test.
+
 ## Gaps (not covered by any automated test)
 
 - **Which render targets scale** (`renderer.cpp`'s surface-pitch window, 640–1280 by
@@ -127,4 +201,7 @@ which test failed isn't known.
   - the M7 10-minute frame-pacing run;
   - the human tests listed in ROADMAP (hand05/05b/05c, M8.11; the physical controller
     deferred; Handbrake, Nitrous, Speedbreaker, Change Camera and Look Back unverified).
+- **The performance report's collection** (`report/perf_report.cpp`: the counters it reads, the
+  thread times, the file it writes) runs only in the game: checked by an export in a launch, with
+  `scripts/perf_report_check.py` on the file.
 - **No CI:** tests run by hand on the M5, and on the M1 through `remote_worker.sh`.

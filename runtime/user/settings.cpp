@@ -60,8 +60,8 @@ namespace settings
         constexpr bool kFsr1Offered = true;
 #endif
         constexpr EnumEntry kScalingEntries[] = {
-            { int32_t(ScalingMode::Bicubic), "bicubic", "Bicubic" },
-            { int32_t(ScalingMode::Linear), "linear", "Bilinear" },
+            { int32_t(ScalingMode::Bicubic), "bicubic", "Sharp" },  // ReCarbon: players' names (docs/settings.mdx: bicubic, bilinear)
+            { int32_t(ScalingMode::Linear), "linear", "Soft" },
 #if !(defined(__APPLE__) && TARGET_OS_IOS)
             { int32_t(ScalingMode::Fsr1), "fsr1", "FSR 1" },
 #endif
@@ -96,19 +96,20 @@ namespace settings
         constexpr bool kPresentScaleHidden = !kFullscreenHidden;
 
         constexpr EnumEntry kAspectEntries[] = {
-            { int32_t(AspectMode::Auto), "auto", "Fill Screen" },
-            { int32_t(AspectMode::Widescreen), "16:9", "16:9" },
+            { int32_t(AspectMode::Auto), "auto", "On" },  // ReCarbon: Expanded View's names; the tokens stay
+            { int32_t(AspectMode::Widescreen), "16:9", "Off" },
         };
 
         // The scale in half steps (settings.h); the tokens are what
         // settings.toml and RECARBON_RESOLUTION hold, so older files read as
-        // before.
+        // before. ReCarbon (v0.1.4): each label names its 16:9 preset
+        // (video/resolution_label.h); the menu adds what renders now.
         constexpr EnumEntry kResolutionEntries[] = {
             { kResolutionAuto, "auto", "Auto" },
-            { 2, "1x", "1x (720p)" },
-            { 3, "1.5x", "1.5x (1080p)" },
-            { 4, "2x", "2x (1440p)" },
-            { 6, "3x", "3x (2160p)" },
+            { 2, "1x", "HD (720p)" },
+            { 3, "1.5x", "Full HD (1080p)" },
+            { 4, "2x", "QHD (1440p)" },
+            { 6, "3x", "4K UHD (2160p)" },
         };
 
         constexpr EnumEntry kAnisotropyEntries[] = {
@@ -160,7 +161,7 @@ namespace settings
               .env = "RECARBON_VSYNC", .defaultValue = 1 },
             { .id = Id::FrameRate, .category = Category::Display, .type = Type::Enum, .apply = Apply::Live,
               .table = "video", .key = "frame_rate", .label = "Frame Rate",
-              .description = "Auto: 60, or 30 while the device is hot or can't hold 60. A steady 30 feels smoother than a shaky 60 (the Steam Frame's headset). The game keeps its speed.",
+              .description = "Auto: 60, or 30 while the device is hot or can't hold 60. A steady 30 feels smoother than a shaky 60. The game keeps its speed.",
               .env = "RECARBON_FRAME_RATE", .defaultValue = 60, .entries = kFrameRateEntries },
             { .id = Id::PresentScale, .category = Category::Display, .type = Type::Enum, .apply = Apply::Live, .hidden = kPresentScaleHidden,
               .table = "video", .key = "present_scale", .label = "Screen Resolution",
@@ -168,17 +169,17 @@ namespace settings
               .env = "RECARBON_SCREEN_RESOLUTION", .defaultValue = 100, .entries = kPresentScaleEntries },
             { .id = Id::AntiAliasing, .category = Category::Graphics, .type = Type::Bool, .apply = Apply::Live,
               .table = "video", .key = "anti_aliasing", .label = "Anti-Aliasing",
-              .description = "Smooth jagged edges (an FXAA-style pass).",
+              .description = "Smooths jagged edges, for a little GPU time.",
               .env = "RECARBON_AA", .defaultValue = 1 },
             { .id = Id::Scaling, .category = Category::Graphics, .type = Type::Enum, .apply = Apply::Live,
               .table = "video", .key = "scaling", .label = "Upscaling",
               .description = kFsr1Offered
-                  ? "How the game's picture is enlarged to the window. Bicubic is sharp, bilinear softer. FSR 1 (AMD FidelityFX Super Resolution 1) keeps curves, wires and diagonals smooth when the window is much larger than the Internal Resolution (1x on a 1440p or 4K screen), for a little more GPU time."
-                  : "How the game's picture is enlarged to the screen. Bicubic is sharp, bilinear softer.",
+                  ? "How the picture is enlarged to fit your screen. Sharp keeps detail crisp, Soft is smoother. FSR 1 keeps edges clean when the picture is enlarged a lot, for a little more GPU time. Extra crispness is the separate Sharpening setting."
+                  : "How the picture is enlarged to fit your screen. Sharp keeps detail crisp, Soft is smoother. Extra crispness is the separate Sharpening setting.",
               .env = "RECARBON_SCALING", .defaultValue = double(ScalingMode::Bicubic), .entries = kScalingEntries },
             { .id = Id::AspectRatio, .category = Category::Display, .type = Type::Enum, .apply = Apply::Live,
-              .table = "video", .key = "aspect_ratio", .label = "Aspect Ratio",
-              .description = "Fill other screen shapes: a wider view on an ultrawide, a taller one on a Steam Deck or a 4:3 iPad, the HUD at 16:9. Or 16:9 with bars.",
+              .table = "video", .key = "aspect_ratio", .label = "Expanded View",
+              .description = "See more of the game world based on your screen's shape. Off: the original view, with bars.",
               .env = "RECARBON_ASPECT", .defaultValue = double(AspectMode::Auto), .entries = kAspectEntries },
             // Brightness: a power curve on the game's picture, -5..+5 (video/display_tone.h).
             { .id = Id::Brightness, .category = Category::Display, .type = Type::Int, .apply = Apply::Live,
@@ -186,26 +187,26 @@ namespace settings
               .description = "Lighter or darker shadows and mid-tones, a gentle step at a time, as a TV's brightness. Black and white stay put. 0 is the original picture.",
               .env = "RECARBON_BRIGHTNESS", .defaultValue = 0, .min = -5, .max = 5, .step = 1 },
             { .id = Id::DisplayGamma, .category = Category::Display, .type = Type::Bool, .apply = Apply::Live,
-              .table = "video", .key = "xbox_display_gamma", .label = "Xbox 360 Display Gamma",
-              .description = "The gamma ramp the game itself sets for a real Xbox 360's TV output: a little deeper shadows and brighter mid-tones, as on the console. Off: a flatter picture.",
+              .table = "video", .key = "xbox_display_gamma", .label = "Xbox 360 Picture",
+              .description = "The console's TV look: slightly deeper shadows and brighter mid-tones. Off: a flatter picture.",
               .env = "RECARBON_DISPLAY_GAMMA", .defaultValue = 1 },
             { .id = Id::Sharpening, .category = Category::Graphics, .type = Type::Float, .apply = Apply::Live,
               .table = "video", .key = "sharpening", .label = "Sharpening",
               .description = kFsr1Offered
-                  ? "Extra sharpness for bicubic and FSR 1 upscaling (for FSR 1, the share of its sharpening pass's full strength). 0 turns it off."
-                  : "Extra sharpness for bicubic upscaling. 0 turns it off.",
+                  ? "Extra crispness on top of Sharp or FSR 1 upscaling. 0 turns it off."
+                  : "Extra crispness on top of Sharp upscaling. 0 turns it off.",
               .env = "RECARBON_SHARPEN", .defaultValue = 0.3, .min = 0, .max = 1, .step = 0.05 },
             { .id = Id::Anisotropy, .category = Category::Graphics, .type = Type::Enum, .apply = Apply::Live,
               .table = "video", .key = "anisotropic_filtering", .label = "Anisotropic Filtering",
               .description = "Keeps roads and walls sharp at a distance. Auto: 16x on a dedicated GPU or an M-series iPad, 4x on other integrated ones.",
               .env = "RECARBON_ANISOTROPY", .defaultValue = kAnisotropyAuto, .min = 1, .max = 16, .entries = kAnisotropyEntries },
             { .id = Id::Mipmaps, .category = Category::Graphics, .type = Type::Bool, .apply = Apply::Live,
-              .table = "video", .key = "mipmaps", .label = "Mipmaps",
+              .table = "video", .key = "mipmaps", .label = "Smooth Distant Textures",
               .description = "Use the game's smaller textures in the distance, so they don't shimmer.",
               .env = "RECARBON_TEXTURE_MIPS", .defaultValue = 1 },
             { .id = Id::InternalResolution, .category = Category::Graphics, .type = Type::Enum, .apply = Apply::Live,
               .table = "video", .key = "internal_resolution", .label = "Internal Resolution",
-              .description = "Render the 3D scene above the 360's 720p. 1.5x is 1080p, a little over half the pixels of 2x. Auto: from the screen (1440p: 2x, or 3x2 filling an ultrawide).",
+              .description = "How sharp the 3D scene is drawn. Higher is sharper and needs more GPU. Auto picks from your screen and GPU. 4K UHD needs a 4K display.",
               .env = "RECARBON_RESOLUTION", .defaultValue = kResolutionAuto, .entries = kResolutionEntries },
             { .id = Id::WindowWidth, .category = Category::Display, .type = Type::Int, .apply = Apply::Restart, .hidden = true,
               .table = "video", .key = "window_width", .label = "Window Width",

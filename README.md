@@ -157,6 +157,6 @@ MoltenVK is Homebrew's 1.4.2, pinned by its SHA-256 in `make_app.py`. v0.1.0 is 
 
 ReCarbon is GPL-3.0-or-later (see `COPYING` and `NOTICE`). It is derived from
 [SpeedBreaker](https://github.com/SpeedBreakerProject/speedbreaker) by project(u):
-`survey/`, `patches/xenonrecomp/0001–0008`, `tests/` and the build scripts come from it, with
+`survey/`, `patches/xenonrecomp/0001–0008` (and 0011's fatal checks), `tests/` and the build scripts come from it, with
 ReCarbon's changes marked. SpeedBreaker in turn builds on Unleashed Recompiled, XenonRecomp
 (MIT) and Xenia (BSD-3-Clause). See `LICENSES/`.

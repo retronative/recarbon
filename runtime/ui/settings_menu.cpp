@@ -14,6 +14,7 @@
 #include "quit_game.h"
 
 #include <report/report.h>
+#include <platform/reveal.h>
 #include <user/settings.h>
 #include <hid/key_map.h>     // the Controls page: one row per control, two keys each
 #include <user/key_names.h>  // a key's name in the file, when SDL has none
@@ -21,6 +22,8 @@
 #include <video/frame_rate.h>
 #include <video/frame_rate_help.h>
 #include <video/presenter.h>
+#include <video/resolution_label.h>  // ReCarbon (v0.1.4): Internal Resolution's row
+#include <gpu/renderer.h>
 
 #include <imgui.h>
 #include <imgui_internal.h>  // ClosePopupToLevel: a dialog left open when the menu closed
@@ -42,6 +45,8 @@ namespace ui
         bool s_focusFirstRow = true; // put the controller's cursor on the page's first row
         Id s_described = Id::Count;  // the row the help line describes
         bool s_describedBugReport = false;  // ...or Save Bug Report's
+        bool s_describedPerfReport = false; // ...or Export Performance Report's (ReCarbon)
+        bool s_describedReveal = false;     // ...or Reveal Performance Report's (ReCarbon)
         bool s_describedUpdate = false;     // ...or Check for Updates'
         bool s_describedProfile = false;    // ...or the profile row's (ReCarbon, M8)
         bool s_opened = true;        // just opened: take focus
@@ -155,11 +160,46 @@ namespace ui
             return kSpaceM * Scale();
         }
 
+        // ReCarbon (v0.1.4): a row's value as shown. Internal Resolution says
+        // what is drawn now when it isn't what the entry names, from the
+        // renderer's own choice (video/resolution_label.h); the others are
+        // their label.
+        std::string ValueText(const settings::Option& o, double v)
+        {
+            if (o.id != Id::InternalResolution)
+                return settings::FormatValue(o.id, v);
+            if (gpu::renderer::RenderScaleFixed())
+                return video::FixedRowText(gpu::renderer::AppliedRenderScale());
+            const int32_t setting = int32_t(v);
+            const gpu::AxisScale named = gpu::AxisFromHalves(uint32_t(std::max(setting, 2)));
+            gpu::RenderScale scale;
+            const bool known = gpu::renderer::InternalResolutionScale(setting, scale);
+            return video::ResolutionRowText(settings::FormatValue(o.id, v), setting <= 0, { named, named }, known ? &scale : nullptr);
+        }
+
+        // Internal Resolution's help line: RECARBON_RENDER_SCALE's size, or
+        // the 4K cap holding the saved choice down on this display; else "".
+        std::string ResolutionNote()
+        {
+            if (gpu::renderer::RenderScaleFixed())
+            {
+                const gpu::RenderScale s = gpu::renderer::AppliedRenderScale();
+                return std::format("RECARBON_RENDER_SCALE sets {} for this run.", video::SizeText(s));
+            }
+            const int32_t setting = int32_t(settings::GetStoredValue(Id::InternalResolution));
+            gpu::RenderScale scale, asked;
+            if (setting <= 0 || !gpu::renderer::InternalResolutionScale(setting, scale, &asked))
+                return {};
+            video::PixelSize display;
+            video::WindowDisplayPixels(display.width, display.height);
+            return video::CapNote(asked, scale, display);
+        }
+
         // Widest value this option can show, for the value column.
         float ValueWidth(const settings::Option& o)
         {
             float width = 0.0f;
-            auto measure = [&](double v) { width = std::max(width, ImGui::CalcTextSize(settings::FormatValue(o.id, v).c_str()).x); };
+            auto measure = [&](double v) { width = std::max(width, ImGui::CalcTextSize(ValueText(o, v).c_str()).x); };
             switch (o.type)
             {
             case settings::Type::Bool:
@@ -327,7 +367,7 @@ namespace ui
             ImGui::PopStyleColor();
             ImGui::PopItemFlag();
 
-            std::string text = settings::FormatValue(o.id, stored);
+            std::string text = ValueText(o, stored);
             ImVec2 size = ImGui::CalcTextSize(text.c_str());
             ImDrawList* draw = ImGui::GetWindowDrawList();
             ImU32 color = ImGui::GetColorU32(focused ? ImGuiCol_PlotLines : ImGuiCol_Text);
@@ -458,6 +498,18 @@ namespace ui
             case report::BugReportState::Saved: return "Saved";
             case report::BugReportState::Failed: return "Failed";
             default: return "Save";
+            }
+        }
+
+        // ReCarbon: Export Performance Report's value, as Save Bug Report's.
+        const char* PerfReportValue()
+        {
+            switch (report::GetPerfReportState())
+            {
+            case report::BugReportState::Saving: return "Saving...";
+            case report::BugReportState::Saved: return "Saved";
+            case report::BugReportState::Failed: return "Failed";
+            default: return "Export";
             }
         }
 
@@ -644,6 +696,20 @@ namespace ui
                 report::SaveBugReport();
         }
 
+        // ReCarbon: A (or a click) writes the performance report; once one is
+        // saved, Reveal shows it in Finder (macOS).
+        void PerfReportRows(float valueWidth)
+        {
+            if (ActionRow("perf-report", "Export Performance Report", PerfReportValue(), valueWidth, s_describedPerfReport))
+                report::SavePerfReport(report::PerfReportTrigger::SettingsRow);
+#ifdef __APPLE__
+            if (platform::CanReveal() && !report::LastPerfReportPath().empty()
+                && ActionRow("perf-report-reveal", "Reveal Performance Report", "Show", valueWidth, s_describedReveal)
+                && !platform::RevealInFinder(report::LastPerfReportPath()))
+                ui::Toast("The performance report isn't there any more.", 6.0);
+#endif
+        }
+
         // A (or a click) asks GitHub, and the dialog shows the answer.
         void UpdateRow(float valueWidth)
         {
@@ -783,6 +849,31 @@ namespace ui
                     ImGui::TextDisabled("Saved in profiles/keyboard.toml, in the game's data folder.");
                 return;
             }
+            if (s_describedPerfReport || s_describedReveal)
+            {
+                if (s_describedReveal)
+                    ImGui::TextWrapped("Shows the last performance report in Finder.");
+                else
+                    ImGui::TextWrapped("Writes one text file with this Mac's model, macOS, your display and graphics settings, and this "
+                                       "session's frame-time, GPU and thermal numbers, for performance reports. No paths, names, saves or "
+                                       "game data. Nothing is uploaded: send the file yourself.");
+                std::string message = report::PerfReportMessage();
+                const bool saved = report::GetPerfReportState() == report::BugReportState::Saved;
+                // One line, as Save Bug Report's: the file's name when the
+                // path is too long; the toast has the whole text.
+                if (saved && ImGui::CalcTextSize(message.c_str()).x > ImGui::GetContentRegionAvail().x)
+                    if (size_t cut = message.rfind('/'); cut != std::string::npos)
+                        message = "Saved: " + message.substr(cut + 1);
+                if (saved)
+                {
+                    PushAccentText();
+                    ImGui::TextUnformatted(message.c_str());
+                    PopAccentText();
+                }
+                else
+                    ImGui::TextDisabled("%s", message.empty() ? " " : message.c_str());
+                return;
+            }
             if (s_describedBugReport)
             {
 #if defined(__APPLE__) && TARGET_OS_IOS
@@ -867,6 +958,12 @@ namespace ui
             // The experiment's finer scale wins over Screen Resolution's.
             if (float scale = video::PresentScaleOverride(); o.id == Id::PresentScale && scale > 0.0f)
                 ImGui::TextDisabled("RECARBON_PRESENT_SCALE sets %.2f for this run.", double(scale));
+            else if (std::string note = o.id == Id::InternalResolution ? ResolutionNote() : std::string(); !note.empty())
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+                ImGui::TextWrapped("%s", note.c_str());  // ReCarbon (v0.1.4): the override's size, or the 4K cap
+                ImGui::PopStyleColor();
+            }
             else if (const char* env = settings::EnvOverride(o.id))
                 ImGui::TextDisabled("%s sets this for this run: %s. The choice here is saved for later runs.", env,
                     settings::FormatValue(o.id, settings::GetValue(o.id)).c_str());
@@ -946,6 +1043,8 @@ namespace ui
             ImGui::SetKeyOwner(ImGuiKey_GamepadFaceLeft, ImHashStr("controls-x"));
         s_described = Id::Count;
         s_describedBugReport = false;
+        s_describedPerfReport = false;
+        s_describedReveal = false;
         s_describedUpdate = false;
         s_describedProfile = false;
         s_described_pad = -1;
@@ -1044,6 +1143,7 @@ namespace ui
                         if (category == Category::Advanced)
                         {
                             BugReportRow(valueWidth);
+                            PerfReportRows(valueWidth);
                             UpdateRow(valueWidth);
                         }
                         ImGui::EndTable();

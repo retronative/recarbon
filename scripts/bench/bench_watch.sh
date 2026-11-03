@@ -8,7 +8,10 @@
 #   - pressure (exit 10): thermal level >= 2 (Heavy), memory free < 20%, swap +1 GB, or the
 #     game's own "serious"/"critical" thermal line. BENCH_THERMAL_GRACE=<s> (default 0) lets a
 #     run stay at level 2 for that many consecutive seconds (0-600) first; level 3 (Trapping)
-#     always stops at once;
+#     always stops at once. ReCarbon v0.1.4: BENCH_STOP_LEVEL=3 (default 2) lets a run stay at
+#     level 2 for as long as it lasts (a sustained-throttling measurement) and stops only at 3
+#     and above; memory, swap and the game's line still stop it. Any other value, or 3 with a
+#     BENCH_THERMAL_GRACE, is refused (exit 11) before the game runs;
 #   - a monitor failure (exit 11): a probe that doesn't print a number;
 #   - a logging failure (exit 12): the samples file can't be written, or the game log is still
 #     missing BENCH_LOG_WAIT (10) s after the start.
@@ -32,6 +35,9 @@ stop() {  # <exit code> <reason>
 echo "t thermal memfree swapMB load" > "$out" 2>/dev/null || stop $BENCH_STOP_LOGGING "can't write the samples file $out"
 grace=${BENCH_THERMAL_GRACE:-0}
 [[ "$grace" =~ ^[0-9]{1,3}$ ]] && [ "$grace" -le 600 ] || stop $BENCH_STOP_MONITOR "bad BENCH_THERMAL_GRACE [$grace] (whole seconds, 0-600)"
+stop_level=${BENCH_STOP_LEVEL:-$BENCH_THERMAL_STOP}
+[[ "$stop_level" =~ ^[23]$ ]] || stop $BENCH_STOP_MONITOR "bad BENCH_STOP_LEVEL [$stop_level] (2 or 3)"
+[ "$stop_level" -eq 3 ] && [ "$grace" -gt 0 ] && stop $BENCH_STOP_MONITOR "BENCH_THERMAL_GRACE [$grace] with BENCH_STOP_LEVEL=3 (level 2 never stops then)"
 heavy_since=""
 swap0=$(bench_probe "$BENCH_SWAP_CMD" number) || stop $BENCH_STOP_MONITOR "the swap probe failed"
 start=$SECONDS
@@ -44,7 +50,7 @@ while kill -0 "$run_pid" 2>/dev/null; do
   echo "$t $thermal $memfree $swap ${load:-?}" >> "$out" 2>/dev/null || stop $BENCH_STOP_LOGGING "can't write the samples file at $t s"
   if [ "$thermal" -ge 3 ]; then
     stop $BENCH_STOP_PRESSURE "thermal pressure level $thermal (3 = Trapping) at $t s"
-  elif [ "$thermal" -ge $BENCH_THERMAL_STOP ]; then
+  elif [ "$thermal" -ge "$stop_level" ]; then
     [ "$grace" -eq 0 ] && stop $BENCH_STOP_PRESSURE "thermal pressure level $thermal (2 = Heavy) at $t s"
     [ -n "$heavy_since" ] || heavy_since=$t
     [ $((t - heavy_since)) -ge "$grace" ] && stop $BENCH_STOP_PRESSURE "thermal pressure level $thermal (2 = Heavy) for $((t - heavy_since)) s, the grace of $grace s, at $t s"

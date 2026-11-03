@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 # ReCarbon benchmark launch: one bounded, watched run. GPL-3.0-or-later (see COPYING).
 #
-#   scripts/bench/bench_run.sh <name> <seconds, 1-600> [1x|2x|3x]
+#   scripts/bench/bench_run.sh <name> <seconds, 1-600 (BENCH_MAX_SECS: up to 3600)> [1x|2x|3x]
+#
+# ReCarbon v0.1.4: BENCH_MAX_SECS=<1-3600> (default 600) sets the duration cap, for a long
+# sustained run; run_attempt.sh's own deadline allows up to 3600 s. BENCH_STOP_LEVEL=3 lets a
+# run stay at thermal level 2 (bench_watch.sh); the verdict names it.
 #
 # A launch through scripts/run_attempt.sh (its isolated user folder, or RUN_HOME), with
 # RECARBON_* settings taken from the environment. Samples and the verdict go to
@@ -26,7 +30,7 @@ source scripts/bench/lib.sh
 
 usage() {
   echo "bench_run: $1" >&2
-  echo "usage: scripts/bench/bench_run.sh <name> <seconds, 1-600> [1x|2x|3x]" >&2
+  echo "usage: scripts/bench/bench_run.sh <name> <seconds, 1-600 (BENCH_MAX_SECS: up to 3600)> [1x|2x|3x]" >&2
   exit $BENCH_USAGE
 }
 refuse() {  # <exit code> <reason>
@@ -37,7 +41,9 @@ refuse() {  # <exit code> <reason>
 [ $# -eq 2 ] || [ $# -eq 3 ] || usage "expected 2 or 3 arguments, got $#"
 name=$1 secs=$2 res=${3:-1x}
 [[ "$name" =~ ^[A-Za-z0-9_-]{1,64}$ ]] || usage "bad name [$name] (letters, digits, - and _)"
-[[ "$secs" =~ ^[1-9][0-9]{0,2}$ ]] && [ "$secs" -le 600 ] || usage "bad duration [$secs] (whole seconds, 1-600)"
+max_secs=${BENCH_MAX_SECS:-600}
+[[ "$max_secs" =~ ^[1-9][0-9]{0,3}$ ]] && [ "$max_secs" -le 3600 ] || usage "bad BENCH_MAX_SECS [$max_secs] (whole seconds, 1-3600)"
+[[ "$secs" =~ ^[1-9][0-9]{0,3}$ ]] && [ "$secs" -le "$max_secs" ] || usage "bad duration [$secs] (whole seconds, 1-$max_secs; BENCH_MAX_SECS raises the cap up to 3600)"
 [[ "$res" =~ ^[123]x$ ]] || usage "bad resolution [$res] (1x, 2x or 3x)"
 
 out="game/m3/bench/$name"
@@ -143,6 +149,8 @@ if [ -n "$wd" ]; then
   fi
 fi
 stopline=$(grep -m1 '^STOP:' "$out/watch.txt" 2>/dev/null)
-echo "verdict=$verdict $reason${stopline:+ ($stopline)}; run_attempt exit $rs" > "$out/verdict.txt"
+levelnote=""
+[ "${BENCH_STOP_LEVEL:-2}" = 3 ] && levelnote="; thermal stop level 3"
+echo "verdict=$verdict $reason${stopline:+ ($stopline)}; run_attempt exit $rs$levelnote" > "$out/verdict.txt"
 echo "bench_run: $name: verdict $verdict: $reason${stopline:+ ($stopline)}; run_attempt exit $rs; samples $out/watch.txt"
 exit "$verdict"

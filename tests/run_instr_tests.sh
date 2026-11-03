@@ -63,11 +63,18 @@ done
 
 # Recompile into the XenonTests project directory (it globs *.cpp).
 rm -f "$XR"/XenonTests/*.cpp
-"$XR"/build/XenonRecomp/XenonRecomp "$WORK/bin" "$XR/XenonTests" | grep -v "^Recompiling" | tee "$WORK/recomp.log" || true
+recomp_rc=0
+"$XR"/build/XenonRecomp/XenonRecomp "$WORK/bin" "$XR/XenonTests" > "$WORK/recomp.raw.log" || recomp_rc=$?
+grep -v "^Recompiling" "$WORK/recomp.raw.log" | tee "$WORK/recomp.log" || true
 # ReCarbon: XenonRecomp's test mode leaves out any test function with an
 # instruction it can't translate, which would pass silently. Fail instead.
 if grep -q "has unimplemented instructions" "$WORK/recomp.log"; then
   echo "---- tests skipped: untranslatable instructions (see above) ----"; exit 1
+fi
+# ReCarbon (patch 0011): a FATAL problem (e.g. a record form writing no CR
+# field) or a failing exit also fails the run.
+if [ "$recomp_rc" -ne 0 ] || grep -q "^FATAL:" "$WORK/recomp.log"; then
+  echo "---- XenonRecomp reported fatal problems (exit $recomp_rc, see above) ----"; exit 1
 fi
 
 cmake -Wno-deprecated -S "$XR" -B "$XR/build-tests" -G Ninja -DCMAKE_BUILD_TYPE=Release \

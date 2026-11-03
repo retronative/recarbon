@@ -80,6 +80,18 @@ peak. The recompiler produces 72,864 functions in 289 files (181 MB).
 
 Each Settings option also has one: see [Settings](settings.mdx).
 
+## Performance reports
+
+**Settings > Advanced > Export Performance Report** ([Troubleshooting](troubleshooting.md#export-a-performance-report))
+writes a plain-text summary and, under it, a fenced JSON document (schema
+`recarbon-perf-report/1`) in which every metric is marked `measured`, `estimated` or
+`unavailable`, so reports from different Macs compare. `scripts/perf_report_check.py <file>...` validates
+reports and prints one line per report. The fields, their sources and the privacy checks are
+in the repository's
+[reference/PERF_REPORT_FORMAT.md](https://github.com/retronative/recarbon/blob/main/reference/PERF_REPORT_FORMAT.md).
+For scripts: `RECARBON_PERF_REPORT_DIR=<dir>` writes it there, and `PerfReport` in
+`RECARBON_UI_KEYS` (for example `RECARBON_UI_KEYS="90:PerfReport"`) exports one at that second.
+
 ## Contributing
 
 ReCarbon's runtime, these docs and the website are in one repository,

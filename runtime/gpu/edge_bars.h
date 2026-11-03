@@ -247,6 +247,30 @@ namespace gpu::bars
         int32_t top, bottom;
     };
 
+    // A front-end primitive parked off the 16:9 frame, which the band clip
+    // (gpu/renderer.cpp) must not let into the strips Vert+ shows above and
+    // below the band: clip y [loY, hiY] against the band [bandLo, bandHi].
+    // Wholly outside it is parked in every game. NFS: Carbon also parks
+    // pulsing icons there whose animation scales them up across the band's
+    // edge for part of each pulse: the minimap's hiding-spot icon
+    // (MINIMAP_ICON_HIDING_SPOT over DEFAULTALPHA, ePolys at about y 490-505
+    // of the 640x480 front end, parked below it all the time in free roam)
+    // reaches 0.034 of its 0.152 into the band at its peak, so a draw of it
+    // "met the band", wasn't clipped, and its whole ring showed in the strip
+    // below at ~31% across, pulsing. With byCentre (game::FrontEndParksByCentre,
+    // Carbon) a primitive whose centre lies outside the band is parked too: what
+    // stays inside the band is then exactly what a 16:9 screen shows of it.
+    // Most Wanted keeps the wholly-outside rule (byCentre false), unchanged.
+    // ReCarbon: ported from SpeedBreaker's Carbon layer (its observation, not
+    // yet seen in ReCarbon's captures).
+    inline bool Parked(float loY, float hiY, float bandLo, float bandHi, bool byCentre)
+    {
+        if (hiY < bandLo || loY > bandHi)
+            return true;
+        const float centre = (loY + hiY) * 0.5f;
+        return byCentre && (centre < bandLo || centre > bandHi);
+    }
+
     // The host rows whose centres lie between clip y `lo` and `hi` through a
     // draw's posScale y (NDC = y * ps1 + ps3, either sign of ps1): gpu/
     // renderer.cpp clips the rest of the front end to the band's rows with

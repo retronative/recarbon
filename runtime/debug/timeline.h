@@ -27,10 +27,11 @@ namespace timeline
     };
     extern bool g_enabled;
     inline thread_local bool t_waitTargetMarked = true;
-    // ReCarbon: not fed yet (no Carbon D3D hooks, timeline.cpp), so 0.
     // Always counted, for the command processor's hitch reports: time the
     // game spent in D3D's GPU waits and in Present, and its longest frame
-    // (Present to Present) since the report last took it.
+    // (Present to Present) since the report last took it. ReCarbon: the GPU
+    // waits are timed by game/gpu_waits.cpp; Present and the longest frame
+    // aren't fed yet (no Carbon hooks, timeline.cpp), so 0.
     inline std::atomic<uint64_t> g_gameWaitNs{ 0 }, g_gamePresentNs{ 0 }, g_gameLongestFrameNs{ 0 };
     void Record(Kind kind, uint32_t arg = 0);
     inline void Mark(Kind kind, uint32_t arg = 0)

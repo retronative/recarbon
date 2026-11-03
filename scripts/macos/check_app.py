@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # ReCarbon. GPL-3.0-or-later (see COPYING).
 # From SpeedBreaker's scripts/macos/check_app.py (GPL-3.0-or-later). ReCarbon
-# changes: the names, a check of the bundle ID (org.retronative.recarbon), of the icon, and of the
-# LGPL parts as separate libraries (7).
+# changes: the names, a check of the bundle ID (org.retronative.recarbon), of the icon, of
+# CFBundleVersion (bundle_version.py's number for the version, 1f), and of the LGPL parts as
+# separate libraries (7).
 #
 # check_app.py <ReCarbon.app | ReCarbon-macos.dmg> [--min-macos=<version>] [--sdk=<path>]
 #              [--same-code-as=<ReCarbon.app | dmg>]
@@ -56,6 +57,9 @@
 #      ff_*, lzxd_*), so a build that links any of them statically again fails.
 # Needs Apple's command line tools (otool, nm, codesign, clang, the macOS SDK).
 import collections, contextlib, hashlib, os, plistlib, re, struct, subprocess, sys, tempfile
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # ReCarbon: bundle_version.py beside it, also when a test loads this file
+from bundle_version import bundle_version  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ARGS = [a for a in sys.argv[1:] if not a.startswith('--')]
@@ -508,6 +512,17 @@ def dmg_layout_problems(volume):
     return problems
 
 
+def bundle_version_problem(plist):
+    """-> (the CFBundleVersion the version gives, '' or why the plist's isn't it)."""
+    short = str(plist.get('CFBundleShortVersionString', ''))
+    try:
+        want = bundle_version(short)
+    except ValueError as e:
+        return None, str(e)
+    have = str(plist.get('CFBundleVersion', ''))
+    return want, '' if have == want else f'want {want} for v{short}'
+
+
 def check(app, minimum, sdk):
     """-> (every check passed, the code of each Mach-O)."""
     ok = True
@@ -524,6 +539,10 @@ def check(app, minimum, sdk):
     good_id = bundle_id in ('org.retronative.recarbon', 'org.retronative.recarbon.test')
     print(f'1b. Info.plist: CFBundleIdentifier {bundle_id}: {"ok" if good_id else "FAIL (want org.retronative.recarbon)"}')
     ok &= good_id
+    # ReCarbon: CFBundleVersion is made from the version (bundle_version.py), never a commit count.
+    _, why = bundle_version_problem(plist)
+    print(f'1f. Info.plist: CFBundleVersion {plist.get("CFBundleVersion")}: {"ok" if not why else "FAIL (" + why + ")"}')
+    ok &= not why
     icon = icon_problems(app, plist)
     print(f'1c. icon: {"ok (CFBundleIconFile AppIcon, AppIcon.icns 16 to 512 @1x/@2x)" if not icon else "FAIL " + "; ".join(icon)}')
     ok &= not icon

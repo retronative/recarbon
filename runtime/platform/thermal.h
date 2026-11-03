@@ -14,6 +14,7 @@
 // the real reading stands.
 #pragma once
 #include <cstdint>
+#include <vector>
 
 namespace platform::thermal
 {
@@ -30,11 +31,27 @@ namespace platform::thermal
     // since the last read.
     void Poll();
 
+    // ReCarbon: for the performance report. Any thread. The first reading
+    // and each change after it, as logged (at most 32).
+    struct Step
+    {
+        double at;  // seconds since launch (report::SessionSeconds)
+        State state;
+        bool simulated;  // RECARBON_THERMAL_SIM's
+    };
+    std::vector<Step> History();
+    // macOS's thermal pressure level (notify: com.apple.system.thermalpressurelevel;
+    // 0 nominal, 1 moderate, 2 heavy, 3 trapping, 4 sleeping), read now.
+    // False where there is none.
+    bool PressureLevel(uint64_t& level);
+
 #ifdef __APPLE__
     namespace detail
     {
         // NSProcessInfo's thermalState (platform/apple/thermal.mm).
         State ReadSystem();
+        // ReCarbon: notify_get_state (platform/apple/thermal.mm).
+        bool ReadPressure(uint64_t& level);
     }
 #endif
 }
