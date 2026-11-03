@@ -152,6 +152,7 @@ const HUMAN_TESTS = [
 // of these by its opening words; an unmatched one fails the run, so nothing
 // reaches the site unreviewed. The text shown is `text`.
 const ACHIEVEMENTS = [
+	{ starts: 'ReCarbon v0.1.4 released', text: 'ReCarbon v0.1.4: Expanded View, on by default, shows more of the game world on a screen that isn\'t 16:9, such as a MacBook\'s 16:10, with Off for the original 16:9 view; the settings are named in plain words; a 4K render cap and an Export Performance Report. Experimental switches stay off.' },
 	{ starts: 'ReCarbon v0.1.3 released', text: 'ReCarbon v0.1.3, a performance and stability update: the game\'s waits for the GPU no longer spin a CPU core, so races on a MacBook Air M5 use less than half the CPU on the main thread and the Mac throttles later; vertex data up to 128 KB is copied with its draw, removing a stall; the Frame Rate setting explains each choice. Thermal judder at 2x on a fanless Mac remains a known limitation.' },
 	{ starts: 'M6 and M8 closed for the alpha', text: 'M6 and M8 closed for the alpha: the new-profile route (a new profile, a race and the save found after a restart, on a fresh macOS account) and the alpha packaging, with v0.1.0 released. Not verified: a physical controller, Game Mode on a fresh account, an install on a MacBook Air M1.' },
 	{ starts: 'ReCarbon v0.1.0 alpha released', text: 'ReCarbon v0.1.0, the first playable alpha, is released for Apple Silicon Macs with macOS 27: a disk image to install with your own Xbox 360 disc image. Known limitations are on the Known issues page.' },
