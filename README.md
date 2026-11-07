@@ -18,7 +18,7 @@ Native recompilation of Need for Speed: Carbon (Xbox 360) for Apple Silicon.
 
 ## Status
 
-**Alpha: v0.1.4 released**, an update to the playable alpha that fills taller screens (Expanded View) and names its settings in plain words ([Download](docs/download.md)). Statuses come from
+**Alpha: v0.1.5 released**, an update to the playable alpha that adds HDR (off by default) for brighter highlights on an HDR display ([Download](docs/download.md)). Statuses come from
 [reference/ROADMAP.md](reference/ROADMAP.md). A milestone passes only when every criterion is met.
 
 - **M0–M2:** the Xbox 360 executable (title 0x454107EC) is verified, recompiles to C++ with no
@@ -70,7 +70,7 @@ the installer checks every file against the USA disc, and says why when one does
 ReCarbon is signed ad hoc and not notarized, so macOS blocks a downloaded copy the first time you
 open it. After a blocked attempt, choose **System Settings > Privacy & Security > Open Anyway** and
 confirm, once, and only for a copy whose checksum you've verified
-(`shasum -a 256 -c ReCarbon-0.1.4-macos.dmg.sha256`). Never turn Gatekeeper off. The
+(`shasum -a 256 -c ReCarbon-0.1.5-macos.dmg.sha256`). Never turn Gatekeeper off. The
 full steps, including installing the game from your own disc image, are in
 [docs/installation.md](docs/installation.md).
 

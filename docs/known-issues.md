@@ -19,6 +19,22 @@ checks (M8, 2026-10-26). Each is still open.
 | Game Mode banner without the ReCarbon icon | Seen on a development Mac with many old registrations of the app: a stale icon cache, not the app bundle. Clearing the per-user icon cache (`com.apple.iconservices` under the user cache folder) and relaunching restores it. |
 | Expanded View: the first boot movie and fades | With Expanded View on, the very first boot movie may show stretched, and a fade to a loading screen may leave a strip above or below the 16:9 picture. Expanded View Off shows the original 16:9 view. |
 
+## Tested for v0.1.5
+
+On top of the v0.1.4 tests below:
+
+- **Played by hand (the release candidate, 2026-11-07, MacBook Air M5):** opened from the disk image with a
+  copy of the tester's saves; about seven minutes of play with a controller, fullscreen, HDR switched on and
+  off in the game several times; a clean exit with Quit Game. The tester found it as smooth as v0.1.4, and
+  HDR looked good.
+- **The release candidate:** every automated check passes (the unit tests, the instruction tests, the
+  recompiler's checks, the settings checks, the app and disk-image checks, the replaceable LGPL libraries,
+  the checksums).
+- **MacBook Air M1:** the same disk image's app went from What's New through the front end into a Quick
+  Race, paused, and quit cleanly from Settings. With HDR off, three pairs of matched Quick Race launches
+  against v0.1.4 ran level: 38.1 against 38.2 fps on average, with the same GPU time per frame and start-up
+  time, and level frame pacing.
+
 ## Tested for v0.1.4
 
 On a MacBook Air M5 unless marked M1, on top of the v0.1.3 tests below:
