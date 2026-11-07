@@ -49,6 +49,11 @@ namespace settings
         AspectRatio,
         Brightness,    // the game's picture (video/display_tone.h)
         DisplayGamma,  // the 360's display gamma ramp (video/display_gamma.h)
+        // ReCarbon: HDR Output, from SpeedBreaker: Carbon v0.1.1 (video/hdr_output.h)
+        Hdr,           // extended dynamic range output (macOS; video/hdr_output.h)
+        HdrFormat,     // how HDR is encoded: Auto, Extended Linear, HDR10 (PQ)
+        HdrStrength,   // brightest highlight over SDR white: 2x, 3x, or 4x
+        HdrPaperWhite, // HDR10's SDR white in nits: Auto (0), 100, 200, 300, 400
         Sharpening,
         Anisotropy,
         Mipmaps,

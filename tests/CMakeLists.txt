@@ -169,6 +169,12 @@ recarbon_test(pipeline_cache_header_test)
 # presenter.cpp's shaders and settings.cpp's defaults read. From SpeedBreaker
 # v0.1.8's (ReCarbon M8 tests).
 recarbon_test(display_tone_test ARGS ${RT}/video/presenter.cpp ${RT}/user/settings.cpp)
+# ReCarbon: HDR Output, from SpeedBreaker: Carbon v0.1.1's tests. Its
+# highlight curve and transfer functions (video/hdr_output.h, header only),
+# and its composite and frame-average GLSL (video/presenter.cpp): the maths
+# that must match hdr_output.h, written out for the glslang check below.
+recarbon_test(hdr_output_test)
+recarbon_test(hdr_shader_test ARGS ${RT}/video/presenter.cpp ${CMAKE_CURRENT_BINARY_DIR}/hdr_shaders)
 # Presentation, from SpeedBreaker v0.1.8's (ReCarbon M8 tests): the 120 Hz
 # present schedule and its watchdog (video/present_schedule.h), Fullscreen
 # against the window's own state (video/fullscreen_policy.h; presenter.cpp read),
@@ -280,6 +286,11 @@ if(RECARBON_GLSLANG_VALIDATOR)
             ${CMAKE_CURRENT_BINARY_DIR}/fsr1_glsl/${shader} -o ${CMAKE_CURRENT_BINARY_DIR}/fsr1_glsl/${shader}.spv)
         set_tests_properties(fsr1_glsl_check_${shader} PROPERTIES DEPENDS fsr1_test)
     endforeach()
+    foreach(shader hdr_composite.frag hdr_average.comp)
+        add_test(NAME hdr_shader_check_${shader} COMMAND ${RECARBON_GLSLANG_VALIDATOR} -V --target-env vulkan1.1
+            ${CMAKE_CURRENT_BINARY_DIR}/hdr_shaders/${shader} -o ${CMAKE_CURRENT_BINARY_DIR}/hdr_shaders/${shader}.spv)
+        set_tests_properties(hdr_shader_check_${shader} PROPERTIES DEPENDS hdr_shader_test)
+    endforeach()
     foreach(variant off on)
         add_test(NAME sm3_mul_glsl_check_${variant} COMMAND ${RECARBON_GLSLANG_VALIDATOR} -V --target-env vulkan1.2 -S frag
             ${CMAKE_CURRENT_BINARY_DIR}/sm3_mul_glsl/sm3_mul_${variant}.frag -o ${CMAKE_CURRENT_BINARY_DIR}/sm3_mul_glsl/sm3_mul_${variant}.spv)
@@ -364,7 +375,7 @@ set(RECARBON_PARALLEL_TESTS
     shader_gradients_test sm3_mul_test vmem_host_pages_test key_bindable_test profiles_test
     profile_store_test render_scale_test dynamic_scale_test picture_fit_test vert_plus_test display_cap_test resolution_label_test resolution_settle_test frame_rate_policy_test
     swapchain_policy_test quit_game_test depth24_pack_test depth_only_test zpd_report_test
-    pipeline_cache_header_test display_tone_test present_schedule_test fullscreen_policy_test
+    pipeline_cache_header_test display_tone_test hdr_output_test hdr_shader_test present_schedule_test fullscreen_policy_test
     cursor_idle_test audio_cadence_test memory_plan_test texture_eviction_test scaled_wanted_test
     scaled_fuse_test vertex_copy_test aa_gate_test pass_profile_test sleep0_backoff_test
     sleep0_trace_test sleep0_schedule_test sleep0_predict_test movie_hold_test render_queue_log_test report_zip_test
@@ -373,7 +384,7 @@ set(RECARBON_PARALLEL_TESTS
     settings_scaling_test frame_times_test game_time_test run_attempt_marker_test release_candidate_test
     app_icon_test lgpl_dylibs_test verify_settings_test bundle_version_test
     fsr1_glsl_check_easu.comp fsr1_glsl_check_rcas.frag fsr1_glsl_check_rcas_tone.frag
-    sm3_mul_glsl_check_off sm3_mul_glsl_check_on)
+    sm3_mul_glsl_check_off sm3_mul_glsl_check_on hdr_shader_check_hdr_composite.frag hdr_shader_check_hdr_average.comp)
 get_directory_property(_recarbon_tests TESTS)
 foreach(t ${_recarbon_tests})
     if(t IN_LIST RECARBON_PARALLEL_TESTS)

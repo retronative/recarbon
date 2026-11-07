@@ -1396,6 +1396,7 @@ namespace gpu::renderer
             ShaderStage stage;
             uint64_t hash;
             TranslatedShader info;         // immutable once loaded
+            bool hdrGrade = false;         // ReCarbon: NFS: Carbon's grade pass with its HDR path (HdrGradePatch)
             std::mutex compileMutex;
             bool vertexCompiled = false;
             VkShaderModule module = VK_NULL_HANDLE;  // VS
@@ -5263,9 +5264,415 @@ void main()
                 p.srcBase, p.rect, p.frame, p.seconds }).detach();
         }
 
+        // ReCarbon: HDR Output, from SpeedBreaker: Carbon v0.1.1 (1578342),
+        // unchanged but for the RECARBON_ variable names.
+        // HDR (NFS: Carbon on an HDR display). Carbon draws its scene in 7e3
+        // floats, with light far above 1.0 (a sunlit street: a third of the
+        // picture, up to 8), then resolves it into an 8-bit texture before
+        // its colour grade, which clips all of that (the 360 did the same).
+        // While the presenter's swapchain is HDR (s_hdrScene), each resolve
+        // of a 7e3 target the size of the front buffer into an 8-bit one
+        // also keeps a float copy beside it (HdrSideResolve); the grade pass
+        // (ps_e1db6ca59e1163be, patched: HdrGradePatch) samples the copy and
+        // adds what lies above its LUT's range back into its own 7e3 target;
+        // that target's resolve into the front buffer keeps a copy too, and
+        // the presenter takes it with the frame (HdrFrontFloat) for the HDR
+        // composite's highlights. The HUD is drawn after the grade, at its
+        // own values, so it stays at SDR white. Off (SDR): none of this runs.
+        constexpr uint64_t kHdrGradeShader = 0xe1db6ca59e1163beull;
+        constexpr uint32_t kHdrGradeFlag = 0x80000000u;  // DrawConstants::flags: this draw's grade reads a float copy
+        struct HdrSide
+        {
+            uint32_t dest = 0, guestWidth = 0, guestHeight = 0;
+            bool swap = false;  // the resolve swaps red and blue (as its 8-bit copy holds them)
+            gpu::RenderScale scale;
+            Image image;  // R16G16B16A16_SFLOAT, VK_IMAGE_LAYOUT_GENERAL
+            uint32_t width = 0, height = 0;  // host pixels
+            uint64_t frame = ~0ull;  // the frame (s_frame) its copy is from; ~0: none current
+            std::unordered_map<uint32_t, VkImageView> views;  // by texture fetch swizzle
+        };
+        HdrSide s_hdrSides[3];
+        bool s_hdrScene = false;
+        uint32_t s_hdrFrontPitch = 0, s_hdrFrontHeight = 0;  // the last front buffer's (guest)
+        // The front buffer's float copy as the presenter has it (written
+        // where the front image is, PresentFrontBuffer).
+        Image s_frontFloat;
+        uint32_t s_frontFloatWidth = 0, s_frontFloatHeight = 0;
+        std::unordered_map<uint32_t, VkImageView> s_frontFloatViews;  // by the swizzle the presenter reads it with
+        bool s_frontFloatSwap = false;  // its resolve swapped red and blue
+        // The grade pass's target as the grade left it, before the HUD is
+        // drawn over it (HdrGradeSnapshot), from the frame s_hdrGradeFrame:
+        // the presenter's copy is the smaller of it and the front buffer's,
+        // channel by channel (kHdrMinGlsl), so light the HUD itself draws
+        // above 1.0 (Carbon's minimap route) adds nothing, and an opaque HUD
+        // element over a light keeps the light's highlight from showing
+        // through; where no HUD was drawn the two are the same.
+        RenderTarget* s_hdrGradeTarget = nullptr;  // the grade's target, until its snapshot
+        VkRect2D s_hdrGradeRect{};  // what the grade drew (host pixels)
+        Image s_hdrGradeSnap;
+        uint32_t s_hdrGradeSnapWidth = 0, s_hdrGradeSnapHeight = 0;
+        uint64_t s_hdrGradeFrame = ~0ull;
+        const char* kHdrMinGlsl = R"(#version 460
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(set = 0, binding = 0, rgba16f) readonly uniform image2D front;  // the front buffer's float copy
+layout(set = 0, binding = 1, rgba16f) readonly uniform image2D graded; // the grade's target before the HUD
+layout(set = 0, binding = 2, rgba16f) writeonly uniform image2D outImage;
+layout(push_constant) uniform P { ivec2 size; } p;
+void main()
+{
+    ivec2 g = ivec2(gl_GlobalInvocationID.xy);
+    if (any(greaterThanEqual(g, p.size))) return;
+    imageStore(outImage, g, min(imageLoad(front, g), imageLoad(graded, g)));
+}
+)";
+        VkDescriptorSetLayout s_hdrMinSet = VK_NULL_HANDLE;
+        VkPipelineLayout s_hdrMinLayout = VK_NULL_HANDLE;
+        VkPipeline s_hdrMinPipeline = VK_NULL_HANDLE;
+        uint32_t s_frontFloatSwizzle = 0x688;  // and the front buffer's swizzle (both as HdrFloatView's)
+
+        float HalfToFloat(uint16_t h)
+        {
+            const uint32_t sign = uint32_t(h >> 15) << 31, exponent = (h >> 10) & 0x1F, mantissa = h & 0x3FF;
+            uint32_t bits;
+            if (exponent == 0)
+            {
+                const float v = std::ldexp(float(mantissa), -24);
+                memcpy(&bits, &v, 4);
+                bits |= sign;
+            }
+            else if (exponent == 31)
+                bits = sign | 0x7F800000u | (mantissa << 13);
+            else
+                bits = sign | ((exponent + 112) << 23) | (mantissa << 13);
+            float f;
+            memcpy(&f, &bits, 4);
+            return f;
+        }
+
+        // RECARBON_CHECK_FLOAT_SEC=<s>[,<s>...] (diagnostics, with HDR or
+        // RECARBON_HDR_SCENE=1): at each time after the first present, the front
+        // buffer's float copy into build/float_check_<k>.pfm (32-bit RGB, as
+        // the presenter reads it) and that picture into
+        // build/float_check_<k>_front.ppm, from the same frame.
+        void CheckFloatFront(const Image& front, uint32_t frontW, uint32_t frontH)
+        {
+            static const std::vector<double> at = [] {
+                std::vector<double> v;
+                if (const char* e = std::getenv("RECARBON_CHECK_FLOAT_SEC"))
+                    for (const char* p = e; *p;)
+                    {
+                        char* end = nullptr;
+                        v.push_back(std::strtod(p, &end));
+                        p = *end == ',' ? end + 1 : end + std::strlen(end);
+                    }
+                return v;
+            }();
+            static const auto start = std::chrono::steady_clock::now();
+            static size_t taken = 0;
+            if (taken >= at.size() || std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count() < at[taken])
+                return;
+            const uint32_t k = uint32_t(taken++);
+            const uint32_t w = s_frontFloatWidth, h = s_frontFloatHeight;
+            const VkDeviceSize floatBytes = VkDeviceSize(w) * h * 8, frontBytes = VkDeviceSize(frontW) * frontH * 4;
+            const VkDeviceSize floatAt = RingAllocate(floatBytes);
+            const VkDeviceSize frontAt = floatAt == ~VkDeviceSize(0) ? floatAt : RingAllocate(frontBytes);
+            if (frontAt == ~VkDeviceSize(0) || frontAt < floatAt)
+            {
+                fprintf(stderr, "[renderer] RECARBON_CHECK_FLOAT_SEC: %ux%u floats and %ux%u don't fit a staging slot\n", w, h, frontW, frontH);
+                return;
+            }
+            Begin();
+            FullBarrier();
+            VkBufferImageCopy region{};
+            region.bufferOffset = floatAt;
+            region.imageSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
+            region.imageExtent = { w, h, 1 };
+            vkCmdCopyImageToBuffer(s_cmd, s_frontFloat.image, VK_IMAGE_LAYOUT_GENERAL, s_ring, 1, &region);
+            region.bufferOffset = frontAt;
+            region.imageExtent = { frontW, frontH, 1 };
+            vkCmdCopyImageToBuffer(s_cmd, front.image, VK_IMAGE_LAYOUT_GENERAL, s_ring, 1, &region);
+            Flush();
+            std::vector<uint16_t> halves(size_t(w) * h * 4);
+            memcpy(halves.data(), s_ringHost + floatAt, floatBytes);
+            std::vector<uint8_t> rgba(s_ringHost + frontAt, s_ringHost + frontAt + frontBytes);
+            if (FILE* f = fopen(std::format("build/float_check_{}.pfm", k).c_str(), "wb"))
+            {
+                fprintf(f, "PF\n%u %u\n-1.0\n", w, h);
+                std::vector<float> row(size_t(w) * 3);
+                for (uint32_t y = h; y-- > 0;)  // (PFM: bottom row first)
+                {
+                    for (uint32_t x = 0; x < w; x++)
+                    {
+                        const uint16_t* t = &halves[(size_t(y) * w + x) * 4];
+                        for (int c = 0; c < 3; c++)
+                        {
+                            uint32_t sel = (s_frontFloatSwizzle >> (3 * c)) & 7;
+                            if (s_frontFloatSwap && (sel == 0 || sel == 2))
+                                sel = 2 - sel;
+                            row[size_t(x) * 3 + c] = sel < 4 ? HalfToFloat(t[sel]) : sel == 5 ? 1.0f : 0.0f;
+                        }
+                    }
+                    fwrite(row.data(), sizeof(float), row.size(), f);
+                }
+                fclose(f);
+            }
+            if (FILE* f = fopen(std::format("build/float_check_{}_front.ppm", k).c_str(), "wb"))
+            {
+                fprintf(f, "P6\n%u %u\n255\n", frontW, frontH);
+                for (size_t i = 0; i < size_t(frontW) * frontH; i++)
+                    fwrite(&rgba[i * 4], 1, 3, f);
+                fclose(f);
+            }
+            fprintf(stderr, "[renderer] float front check %u written (%ux%u)\n", k, w, h);
+        }
+
+        // A view of a float copy as its 8-bit one is sampled: the resolve's
+        // red/blue swap, then the fetch constant's swizzle (TextureView's).
+        VkImageView HdrFloatView(VkImage image, std::unordered_map<uint32_t, VkImageView>& views, bool swap, uint32_t swizzle)
+        {
+            auto& view = views[(swizzle & 0xFFF) | (swap ? 0x1000u : 0u)];
+            if (view)
+                return view;
+            auto comp = [swap](uint32_t sel) {
+                switch (sel & 7)
+                {
+                case 0: return swap ? VK_COMPONENT_SWIZZLE_B : VK_COMPONENT_SWIZZLE_R;
+                case 1: return VK_COMPONENT_SWIZZLE_G;
+                case 2: return swap ? VK_COMPONENT_SWIZZLE_R : VK_COMPONENT_SWIZZLE_B;
+                case 3: return VK_COMPONENT_SWIZZLE_A;
+                case 4: return VK_COMPONENT_SWIZZLE_ZERO;
+                case 5: return VK_COMPONENT_SWIZZLE_ONE;
+                default: return VK_COMPONENT_SWIZZLE_IDENTITY;
+                }
+            };
+            VkImageViewCreateInfo vci{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+            vci.image = image;
+            vci.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            vci.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+            vci.components = { comp(swizzle), comp(swizzle >> 3), comp(swizzle >> 6), comp(swizzle >> 9) };
+            vci.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+            Check(vkCreateImageView(s_dev, &vci, nullptr, &view), "vkCreateImageView(HDR float copy)");
+            return view;
+        }
+
+        void DestroyHdrViews(std::unordered_map<uint32_t, VkImageView>& views)
+        {
+            for (auto& [key, view] : views)
+                vkDestroyImageView(s_dev, view, nullptr);
+            views.clear();
+        }
+
+        // (Flushes first: the GPU may still be reading them.)
+        void DestroyHdrSides()
+        {
+            Flush();
+            for (HdrSide& side : s_hdrSides)
+            {
+                DestroyHdrViews(side.views);
+                if (side.image.image)
+                    DestroyImage(side.image);
+                side = HdrSide{};
+            }
+            if (s_frontFloat.image)
+            {
+                video::ReleaseFrontImage(s_frontFloat.image);
+                video::WaitGpuIdle();
+                DestroyHdrViews(s_frontFloatViews);
+                DestroyImage(s_frontFloat);
+            }
+            s_frontFloatWidth = s_frontFloatHeight = 0;
+            if (s_hdrGradeSnap.image)
+                DestroyImage(s_hdrGradeSnap);
+            s_hdrGradeSnapWidth = s_hdrGradeSnapHeight = 0;
+            s_hdrGradeTarget = nullptr;
+            s_hdrGradeFrame = ~0ull;
+        }
+
+        // The grade's target, once the grade has been drawn (the next draw or
+        // resolve): what it drew, copied into s_hdrGradeSnap.
+        void HdrGradeSnapshot()
+        {
+            RenderTarget* target = s_hdrGradeTarget;
+            if (!target)
+                return;
+            s_hdrGradeTarget = nullptr;
+            const VkRect2D r = s_hdrGradeRect;
+            if (r.offset.x != 0 || r.offset.y != 0 || r.extent.width == 0 || r.extent.height == 0 ||
+                r.extent.width > target->width || r.extent.height > target->height)
+                return;
+            EndPass();
+            if (s_hdrGradeSnapWidth != r.extent.width || s_hdrGradeSnapHeight != r.extent.height)
+            {
+                if (s_hdrGradeSnap.image)
+                {
+                    Flush();
+                    DestroyImage(s_hdrGradeSnap);
+                }
+                s_hdrGradeSnap = CreateImage(VK_IMAGE_TYPE_2D, VK_FORMAT_R16G16B16A16_SFLOAT, { r.extent.width, r.extent.height, 1 }, 1,
+                    VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT);
+                Begin();
+                ToGeneral(s_hdrGradeSnap.image, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+                s_hdrGradeSnapWidth = r.extent.width;
+                s_hdrGradeSnapHeight = r.extent.height;
+            }
+            Begin();
+            VkMemoryBarrier before{ VK_STRUCTURE_TYPE_MEMORY_BARRIER };
+            before.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            before.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
+            vkCmdPipelineBarrier(s_cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 1, &before, 0, nullptr, 0, nullptr);
+            VkImageCopy copy{};
+            copy.srcSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
+            copy.dstSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
+            copy.extent = { r.extent.width, r.extent.height, 1 };
+            vkCmdCopyImage(s_cmd, target->image.image, VK_IMAGE_LAYOUT_GENERAL, s_hdrGradeSnap.image, VK_IMAGE_LAYOUT_GENERAL, 1, &copy);
+            VkMemoryBarrier after{ VK_STRUCTURE_TYPE_MEMORY_BARRIER };
+            after.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            after.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            vkCmdPipelineBarrier(s_cmd, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 1, &after, 0, nullptr, 0, nullptr);
+            s_hdrGradeFrame = s_frame;
+        }
+
+        // A resolve just recorded (Resolve): with s_hdrScene, one that
+        // `qualifies` (a 7e3 target into 8-bit texels, unscaled values, the
+        // front buffer's pitch) copies its rectangle's floats into its
+        // destination's float copy: a destination the front buffer's size,
+        // or a band of rows inside one (Carbon resolves its scene in MSAA
+        // tiles, each to the address of a row of the texture: 256, 256 and
+        // 208 rows, or 368 and 352 from 16 rows into the second's address;
+        // the MSAA is the guest's: the host target has one sample). Any other resolve into a copy's memory
+        // leaves it stale. `srcEndX`, `srcEndY`: the rectangle's end in the
+        // source's host pixels.
+        void HdrSideResolve(const RenderTarget& source, const ResolveConstants& rc, uint32_t destHeight, bool qualifies, int32_t srcEndX,
+            int32_t srcEndY)
+        {
+            HdrSide* side = nullptr;
+            uint32_t rows = 0;  // the destination's first row in the copy
+            for (HdrSide& s : s_hdrSides)
+                if (s.image.image && rc.destBase >= s.dest && rc.destBase - s.dest < s.guestWidth * s.guestHeight * 4)
+                {
+                    const uint32_t bytes = rc.destBase - s.dest, row = s.guestWidth * 4;
+                    if (!qualifies || bytes % (row * 32) != 0 ||
+                        (bytes && (s.guestWidth != rc.destPitch || bytes / row + uint32_t(rc.originY) + rc.height > s.guestHeight)))
+                    {
+                        s.frame = ~0ull;
+                        return;
+                    }
+                    side = &s;
+                    rows = bytes / row;
+                }
+            if (!qualifies || (!side && destHeight != s_hdrFrontHeight))
+                return;
+            const bool swap = (rc.flags & 1u) != 0;
+            if (rows && (!(side->scale == source.scale) || side->swap != swap))
+            {
+                side->frame = ~0ull;
+                return;
+            }
+            if (!side || side->guestWidth != rc.destPitch || (!rows && side->guestHeight != destHeight) || !(side->scale == source.scale) ||
+                side->swap != swap)
+            {
+                if (!side)
+                {
+                    // An empty slot, else the one written longest ago.
+                    side = &s_hdrSides[0];
+                    for (HdrSide& s : s_hdrSides)
+                        if (!s.image.image || (side->image.image && (s.frame == ~0ull || (side->frame != ~0ull && s.frame < side->frame))))
+                            side = &s;
+                }
+                Flush();  // (the GPU may still read the old one)
+                DestroyHdrViews(side->views);
+                if (side->image.image)
+                    DestroyImage(side->image);
+                side->dest = rc.destBase;
+                side->guestWidth = rc.destPitch;
+                side->guestHeight = destHeight;
+                side->swap = swap;
+                side->scale = source.scale;
+                side->width = source.scale.x.Size(rc.destPitch);
+                side->height = source.scale.y.Size(destHeight);
+                side->image = CreateImage(VK_IMAGE_TYPE_2D, VK_FORMAT_R16G16B16A16_SFLOAT, { side->width, side->height, 1 }, 1,
+                    VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+                    VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT);
+                Begin();
+                ToGeneral(side->image.image, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+                fprintf(stderr, "[renderer] HDR: float copy of the resolves to %08X (%ux%u, %ux%u host)\n", rc.destBase, rc.destPitch,
+                    destHeight, side->width, side->height);
+            }
+            const int32_t dstX = source.scale.x.EdgeAt(rc.originX), dstY = source.scale.y.EdgeAt(int32_t(rows) + rc.originY);
+            const int32_t w = std::min({ srcEndX, int32_t(source.width) }) - rc.srcOriginX;
+            const int32_t h = std::min({ srcEndY, int32_t(source.height) }) - rc.srcOriginY;
+            const int32_t cw = std::min(w, int32_t(side->width) - dstX), ch = std::min(h, int32_t(side->height) - dstY);
+            if (cw <= 0 || ch <= 0 || rc.srcOriginX < 0 || rc.srcOriginY < 0)
+            {
+                side->frame = ~0ull;
+                return;
+            }
+            Begin();
+            VkMemoryBarrier before{ VK_STRUCTURE_TYPE_MEMORY_BARRIER };
+            before.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            before.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
+            vkCmdPipelineBarrier(s_cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT |
+                    VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 1, &before, 0,
+                nullptr, 0, nullptr);
+            VkImageCopy copy{};
+            copy.srcSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
+            copy.srcOffset = { rc.srcOriginX, rc.srcOriginY, 0 };
+            copy.dstSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
+            copy.dstOffset = { dstX, dstY, 0 };
+            copy.extent = { uint32_t(cw), uint32_t(ch), 1 };
+            vkCmdCopyImage(s_cmd, source.image.image, VK_IMAGE_LAYOUT_GENERAL, side->image.image, VK_IMAGE_LAYOUT_GENERAL, 1, &copy);
+            VkMemoryBarrier after{ VK_STRUCTURE_TYPE_MEMORY_BARRIER };
+            after.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            after.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_TRANSFER_READ_BIT;
+            vkCmdPipelineBarrier(s_cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT,
+                0, 1, &after, 0, nullptr, 0, nullptr);
+            side->frame = s_frame;
+        }
+
+        // The float copy of `dest`, current this frame, of a guest picture
+        // `width` x `height` at `scale` (null: none).
+        HdrSide* HdrCurrentSide(uint32_t dest, uint32_t width, uint32_t height, const gpu::RenderScale* scale)
+        {
+            for (HdrSide& s : s_hdrSides)
+                if (s.image.image && s.dest == dest && s.frame == s_frame && s.guestWidth >= width && s.guestHeight == height &&
+                    (!scale || s.scale == *scale))
+                    return &s;
+            return nullptr;
+        }
+
+        // The grade pass's GLSL (TranslateShader's) with the HDR path: under
+        // kHdrGradeFlag its LUT input is clamped to the LUT's range (as the
+        // 8-bit texture clamped it) and the light above 1.0 is added back
+        // past the LUT, through the same vignette and brightness. Without the
+        // flag it computes exactly what it did. False (unchanged): not the
+        // shader this was written against.
+        bool HdrGradePatch(std::string& g)
+        {
+            const std::string pre = "        vec4 vres = (xmul(r[2].zyxx, u.c[pc.psConstBase + 1u].xxxx) + r[1].zyxx);\n"
+                                    "        r[0].x = vres.x;\n        r[0].y = vres.y;\n        r[0].z = vres.z;\n";
+            const std::string vignette = "        vec4 tdata = texture(t2d_1, vec2(r[3].x, r[3].y), fetchLodBias(1u));\n        r[0].y = tdata.z;\n";
+            const std::string main = "void main()\n{\n";
+            const size_t atPre = g.find(pre), atVignette = g.find(vignette), atMain = g.find(main);
+            const size_t atEnd = g.find("#ifdef ALPHA_TEST", atVignette == std::string::npos ? 0 : atVignette);
+            if (atPre == std::string::npos || atVignette == std::string::npos || atMain == std::string::npos || atEnd == std::string::npos ||
+                !(atMain < atPre && atPre < atVignette && atVignette < atEnd) || g.find(pre, atPre + 1) != std::string::npos)
+                return false;
+            // (Back to front, so the earlier positions hold.)
+            g.insert(atEnd, "    if (hdrOn)  // the light above the LUT's range, as the LUT's output is scaled\n"
+                            "        o_color[0].xyz += max(hdrPre.zyx - 1.0, vec3(0.0)) * (hdrVignette * u.c[pc.psConstBase + 0u].x);\n");
+            g.insert(atVignette + vignette.size(), "        hdrVignette = tdata.z;\n");
+            g.insert(atPre + pre.size(), "        hdrPre = vres.xyz;\n"
+                                         "        if (hdrOn) r[0].xyz = clamp(r[0].xyz, 0.0, 1.0);\n");
+            g.insert(atMain + main.size(), "    const bool hdrOn = (pc.flags & 0x80000000u) != 0u;  // kHdrGradeFlag\n"
+                                           "    vec3 hdrPre = vec3(0.0);\n    float hdrVignette = 1.0;\n");
+            return true;
+        }
         void Resolve()
         {
             s_stats.resolves++;
+            HdrGradeSnapshot();  // ReCarbon: HDR Output (the grade's target, before a resolve reads it)
             auto copyControl = Reg<reg::RB_COPY_CONTROL>();
             auto surfaceInfo = Reg<reg::RB_SURFACE_INFO>();
             uint32_t pitch = surfaceInfo.surface_pitch;
@@ -5706,6 +6113,20 @@ void main()
                         FullBarrier();  // (above 1x: as before)
                     else
                         ResolveBarrier(rangeBase, rangeBytes, fused ? fused->guestStart : 0);
+                    // ReCarbon: HDR Output (from SpeedBreaker: Carbon v0.1.1): a
+                    // 7e3 scene resolved into an 8-bit texture keeps a float copy.
+                    if (s_hdrScene)
+                    {
+                        const auto cf = xenos::ColorRenderTargetFormat(source->format);
+                        const bool floats = cf == xenos::ColorRenderTargetFormat::k_2_10_10_10_FLOAT ||
+                            cf == xenos::ColorRenderTargetFormat::k_2_10_10_10_FLOAT_AS_16_16_16_16 ||
+                            cf == xenos::ColorRenderTargetFormat::k_16_16_16_16_FLOAT;
+                        const bool qualifies = !depthSource && floats && source->vkFormat == VK_FORMAT_R16G16B16A16_SFLOAT &&
+                            format == uint32_t(xenos::TextureFormat::k_8_8_8_8) && destInfo.copy_dest_exp_bias == 0 &&
+                            !destInfo.copy_dest_array && wholeBlocks && rc.destPitch == s_hdrFrontPitch;
+                        HdrSideResolve(*source, rc, destPitch.copy_dest_height, qualifies, source->scale.x.EdgeAt(r.x1 + shiftX),
+                            source->scale.y.EdgeAt(r.y1 + shiftY));
+                    }
                     if (s_logShadowMap && depthSource && pitch == 1600 && bl == 2)
                         ShadowMapProbeRecord(rangeBase, rangeBytes, rc, r, source->base);
                     SubmitIfStarving();
@@ -7443,6 +7864,16 @@ void main()
             for (uint32_t i = 0; i < dwords; i++)
                 ucode[i] = __builtin_bswap32(words[i]);
             slot->info = TranslateShader(slot->stage, ucode.data(), dwords);
+            // ReCarbon: HDR Output (from SpeedBreaker: Carbon v0.1.1). Patched
+            // whether HDR is on or not: without kHdrGradeFlag the patched
+            // shader computes what the original did.
+            if (h == kHdrGradeShader && slot->stage == ShaderStage::Pixel && slot->info.ok)
+            {
+                slot->hdrGrade = HdrGradePatch(slot->info.glsl);
+                fprintf(stderr, slot->hdrGrade ? "[renderer] HDR: the grade pass (ps_%016llx) can take its scene's float copy\n"
+                                               : "[renderer] HDR: the grade pass (ps_%016llx) isn't the one expected: no float highlights\n",
+                    (unsigned long long)h);
+            }
             if (!slot->info.ok)
                 fprintf(stderr, "[renderer] %s_%016llx: translation failed: %s\n", type == 0 ? "vs" : "ps",
                     (unsigned long long)h, slot->info.error.c_str());
@@ -7873,6 +8304,19 @@ void main()
                 if (!(s_exp & 8))  // RECARBON_GPU_EXP bit 8: placeholders only (texture cost experiment)
                     ii.imageView = GetTexture(n, d == 0 ? TexDim::k2D : d == 1 ? TexDim::k3D : TexDim::kCube, ii.sampler);
             }
+        // ReCarbon: HDR Output (from SpeedBreaker: Carbon v0.1.1). The grade
+        // pass samples its scene's float copy instead of the 8-bit one
+        // (HdrSide), when this frame has one.
+        bool hdrGrade = false;
+        if (s_hdrScene && s_ps->hdrGrade && (layout.psMasks[0] & 1u))
+        {
+            const uint32_t* f = &s_regs[XE_GPU_REG_SHADER_CONSTANT_FETCH_00_0];
+            if (HdrSide* side = HdrCurrentSide(f[1] & 0x1FFFF000u, (f[2] & 0x1FFFu) + 1, ((f[2] >> 13) & 0x1FFFu) + 1, nullptr))
+            {
+                textureInfos[0].imageView = HdrFloatView(side->image.image, side->views, side->swap, (f[3] >> 1) & 0xFFFu);
+                hdrGrade = true;
+            }
+        }
 
         // Vertex data the guest may reuse before the GPU runs this draw (its
         // fences are published early, see g_eagerWrites): small ranges are
@@ -8271,7 +8715,13 @@ void main()
             VertexBarrierIfNeeded(layout.vsMasks, pc.indexAddress, pc.indexAddress ? count << (src.is32 ? 2 : 1) : 0);
         if (passprofile::SplitDue(s_profileSplit, s_profiling, s_passActive ? s_passDrawCount : 0))
             EndPass();
+        HdrGradeSnapshot();  // ReCarbon: HDR Output (the draw after the grade: its target as the grade left it)
         BeginPass(color, depth, scissor);
+        if (s_hdrScene && s_ps->hdrGrade)
+        {
+            s_hdrGradeTarget = color[0];
+            s_hdrGradeRect = scissor;
+        }
         if (s_profiling && !s_passInfos.empty())
         {
             PassInfo& pi = s_passInfos.back();
@@ -8294,6 +8744,8 @@ void main()
         pc.posScale[2] = 2.0f * ox / w - 1.0f;
         pc.posScale[3] = 2.0f * oy / h - 1.0f;
         pc.flags = 1u | (vte.vtx_w0_fmt ? 2u : 0u) | (vte.vtx_xy_fmt ? 4u : 0u) | (vte.vtx_z_fmt ? 8u : 0u);
+        if (hdrGrade)
+            pc.flags |= kHdrGradeFlag;  // ReCarbon: HDR Output
         // Ultrawide (game/ultrawide): the 16:9 guest frame is stretched to the
         // screen and the front-end (HUD and menu) matrix is narrowed by s to
         // match. Full-screen front-end layers (fades to black, the dims behind
@@ -9418,6 +9870,11 @@ void main()
             fetch[1] & 0x1FFFF000u, pitch ? pitch : (width + 31) & ~31u, (fetch[0] >> 31) & 1, (fetch[1] >> 6) & 3,
             fetch[1] & 0x3F, (fetch[3] >> 1) & 0xFFF, width, height, 1, 1, 0, 0, 1, 1 };
         uint32_t frontBytes = pc.pitch * ((height + 31) & ~31u) * 4;
+        if (!showTexture[0])
+        {
+            s_hdrFrontPitch = pc.pitch;  // ReCarbon: HDR Output (which resolves keep a float copy)
+            s_hdrFrontHeight = height;
+        }
         // At host resolution when a scaled resolve wrote it (the game's frames;
         // movies and loading screens drawn at 1x use the 1x image). At 1.5x
         // only a front buffer of whole blocks (even; 1280x720 is).
@@ -9473,10 +9930,75 @@ void main()
         s_pushDescriptorSet(s_cmd, VK_PIPELINE_BIND_POINT_COMPUTE, s_frontLayout, 0, AddSharedParts(w, 4), w);
         vkCmdPushConstants(s_cmd, s_frontLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pc), &pc);
         vkCmdDispatch(s_cmd, (outW + 7) / 8, (outH + 7) / 8, 1);
+        VkImage floatImage = VK_NULL_HANDLE;
+        VkImageView floatView = VK_NULL_HANDLE;
+        {
+            // ReCarbon: HDR Output (from SpeedBreaker: Carbon v0.1.1; ReCarbon
+            // has no in-between pictures, so every present is a real one). The
+            // front buffer's float copy, if its resolve kept one this frame,
+            // for the presenter (into an image of its own, written here as the
+            // front image is).
+            if (s_hdrScene && !showTexture[0])
+            {
+                // (Only with this frame's grade: a frame without it has no highlights of its own.)
+                HdrSide* side = pc.tiled && s_hdrGradeFrame == s_frame ? HdrCurrentSide(pc.base, width, height, nullptr) : nullptr;
+                if (side && s_hdrGradeSnapWidth >= side->scale.x.Size(width) && s_hdrGradeSnapHeight >= side->scale.y.Size(height))
+                {
+                    const uint32_t fw = side->scale.x.Size(width), fh = side->scale.y.Size(height);
+                    if (fw != s_frontFloatWidth || fh != s_frontFloatHeight)
+                    {
+                        if (s_frontFloat.image)
+                        {
+                            Flush();
+                            video::ReleaseFrontImage(s_frontFloat.image);
+                            video::WaitGpuIdle();
+                            DestroyHdrViews(s_frontFloatViews);
+                            DestroyImage(s_frontFloat);
+                        }
+                        s_frontFloat = CreateImage(VK_IMAGE_TYPE_2D, VK_FORMAT_R16G16B16A16_SFLOAT, { fw, fh, 1 }, 1,
+                            VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_IMAGE_VIEW_TYPE_2D,
+                            VK_IMAGE_ASPECT_COLOR_BIT);
+                        Begin();
+                        ToGeneral(s_frontFloat.image, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+                        s_frontFloatWidth = fw;
+                        s_frontFloatHeight = fh;
+                        fprintf(stderr, "[renderer] HDR: the front buffer's float copy %ux%u goes to the presenter\n", fw, fh);
+                    }
+                    Begin();
+                    if (!s_hdrMinPipeline)
+                    {
+                        VkDescriptorSetLayoutBinding mb[3] = {
+                            { 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr },
+                            { 1, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr },
+                            { 2, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr },
+                        };
+                        CreateComputePipeline(kHdrMinGlsl, mb, 3, 2 * sizeof(int32_t), s_hdrMinSet, s_hdrMinLayout, s_hdrMinPipeline);
+                    }
+                    VkDescriptorImageInfo mi[3] = { { VK_NULL_HANDLE, side->image.view, VK_IMAGE_LAYOUT_GENERAL },
+                        { VK_NULL_HANDLE, s_hdrGradeSnap.view, VK_IMAGE_LAYOUT_GENERAL }, { VK_NULL_HANDLE, s_frontFloat.view, VK_IMAGE_LAYOUT_GENERAL } };
+                    VkWriteDescriptorSet mw[3];
+                    for (uint32_t i = 0; i < 3; i++)
+                        mw[i] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, VK_NULL_HANDLE, i, 0, 1, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, &mi[i],
+                            nullptr, nullptr };
+                    const int32_t size[2] = { int32_t(fw), int32_t(fh) };
+                    s_stateEpoch++;
+                    vkCmdBindPipeline(s_cmd, VK_PIPELINE_BIND_POINT_COMPUTE, s_hdrMinPipeline);
+                    s_pushDescriptorSet(s_cmd, VK_PIPELINE_BIND_POINT_COMPUTE, s_hdrMinLayout, 0, 3, mw);
+                    vkCmdPushConstants(s_cmd, s_hdrMinLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(size), size);
+                    vkCmdDispatch(s_cmd, (fw + 7) / 8, (fh + 7) / 8, 1);
+                    floatImage = s_frontFloat.image;
+                    floatView = HdrFloatView(s_frontFloat.image, s_frontFloatViews, side->swap, pc.swizzle);
+                    s_frontFloatSwap = side->swap;
+                    s_frontFloatSwizzle = pc.swizzle;
+                }
+            }
+        }
         GuardGpu(pc.base, frontBytes, false, "front buffer");
         FullBarrier();
         SubmitRecorded(7);  // the presenter's blit comes later in queue order
-        video::SubmitFrontImage(front.image, outW, outH, width, height);
+        video::SubmitFrontImage(front.image, outW, outH, width, height, floatImage, floatView);
+        if (floatView)
+            CheckFloatFront(front, outW, outH);  // ReCarbon: HDR Output's RECARBON_CHECK_FLOAT_SEC
         // Back at 1x (a live change): the host-resolution image is no longer
         // needed. The presenter has this frame to show instead.
         if (!scaled && s_frontScaled.image && s_renderScale.IsOne())
@@ -9557,6 +10079,18 @@ void main()
         {
             ApplyLiveSettings();
             DynamicScaleStep(frame);
+        }
+        // ReCarbon: HDR Output (from SpeedBreaker: Carbon v0.1.1).
+        // RECARBON_HDR_SCENE=1 (diagnostics): the float copies without an HDR
+        // swapchain (RECARBON_CHECK_FLOAT_SEC reads them; the SDR picture then
+        // carries the grade's extra light, clipped).
+        static const bool forceScene = [] { const char* v = std::getenv("RECARBON_HDR_SCENE"); return v && v[0] == '1'; }();
+        if (s_vk && (forceScene || video::HdrOutputActive()) != s_hdrScene)
+        {
+            s_hdrScene = !s_hdrScene;
+            fprintf(stderr, "[renderer] HDR: %s\n", s_hdrScene ? "the scene's float copies on (an HDR swapchain)" : "the scene's float copies off");
+            if (!s_hdrScene)
+                DestroyHdrSides();
         }
         if (s_uploadLog)
         {

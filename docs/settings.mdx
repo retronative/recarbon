@@ -62,6 +62,31 @@ the standard its size matches exactly; `settings.toml` and `RECARBON_RESOLUTION`
 - **Sharpening** is a separate pass on top of Sharp or FSR 1 (for FSR 1, the share of its RCAS
   sharpening's full strength). 0 turns it off. It doesn't change how the picture is scaled.
 
+### HDR
+
+HDR (Settings > Display, off by default) comes from SpeedBreaker: Carbon v0.1.1. The game's
+picture, its front end included, is decoded to linear light and its highlights are expanded
+above SDR white; the grade pass that would clip them reads a floating-point copy of the scene
+instead. The settings overlay stays at SDR white.
+
+- **Cost:** measured on a MacBook Air M1 at QHD (2x) in a 1280x800 window, Expanded View on, on
+  the same stretch of a race: 36.8 fps with HDR off, 28.9 with it on (about 21% lower; GPU busy
+  27.3 to 34.7 ms per frame). About 1.8 ms of it is the final composite pass; most of the rest
+  is the renderer's floating-point copies.
+- **HDR Type** (`hdr_format`): **macOS HDR** (`edr`) is Extended Dynamic Range (EDR): a 16-bit
+  floating-point, extended linear sRGB picture whose highlights reach the display's current
+  headroom, at most Highlight Brightness. **HDR10** (`hdr10`) sends a 10-bit PQ (SMPTE ST 2084)
+  signal in Rec. 2020 with HDR10 static metadata; macOS still decides whether the display is in
+  HDR mode. **Auto** uses macOS HDR on a display that reports EDR headroom, otherwise SDR.
+- **Highlight Brightness** (`hdr_strength`): the brightest highlight in multiples of SDR white:
+  Normal 2x, Bright 3x, Brightest 4x. A frame that is mostly white (a boot flash, a full-screen
+  logo) is held near SDR white, and a large bright area such as smoke is limited to a small
+  share of extra light (`RECARBON_HDR_LOCAL_BUDGET`, 0.1 by default; 0 turns it off).
+- **HDR10 White Level** (`hdr_paper_white`): SDR white in HDR10, in nits (paper white). Auto is
+  100 nits on a Mac. The peak is Highlight Brightness times this: 200 nits by default.
+- The line under the HDR rows shows what is in use: `Extended Linear (EDR), up to 1.94x
+  (headroom 1.94)` for macOS HDR, `HDR10 (PQ), up to 200 nits`, or `Standard range`.
+
 ### Other options
 
 - **Anti-Aliasing:** an FXAA-style pass over the finished picture.

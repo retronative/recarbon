@@ -77,6 +77,9 @@ peak. The recompiler produces 72,864 functions in 289 files (181 MB).
 | `RECARBON_INPUT_SCRIPT` | Scripted input, e.g. `12:START,15.5:A,30-90/4:DOWN` |
 | `RECARBON_VIRTUAL_PAD` | An SDL virtual controller for tests without a person |
 | `RECARBON_INPUT_LOG=1` | The left stick and triggers once a second, raw and as the game gets them |
+| `RECARBON_HDR_SCENE=1` | HDR's floating-point scene copies without an HDR display (diagnostics) |
+| `RECARBON_CHECK_FLOAT_SEC=<s>[,<s>...]` | With HDR or `RECARBON_HDR_SCENE=1`: at each second, the front buffer's float copy into `build/float_check_<k>.pfm` and the picture into `build/float_check_<k>_front.ppm` |
+| `RECARBON_HDR_AVG_LOG=1` | HDR's frame-average level and limited peak in the log, every 30 frames |
 
 Each Settings option also has one: see [Settings](settings.mdx).
 

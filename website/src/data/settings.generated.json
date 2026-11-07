@@ -149,6 +149,107 @@
 			"default": "On"
 		},
 		{
+			"id": "Hdr",
+			"category": "Display",
+			"type": "Bool",
+			"apply": "Live",
+			"table": "video",
+			"key": "hdr",
+			"label": "HDR",
+			"description": "Brighter highlights on an HDR display. The settings overlay stays at normal brightness. Lowers the frame rate: about 20% on a MacBook Air M1 at QHD.",
+			"env": "RECARBON_HDR",
+			"default": "Off"
+		},
+		{
+			"id": "HdrFormat",
+			"category": "Display",
+			"type": "Enum",
+			"apply": "Live",
+			"table": "video",
+			"key": "hdr_format",
+			"label": "HDR Type",
+			"description": "Auto uses macOS HDR on a display that supports it. HDR10 for an external HDR TV or monitor; its HDR mode follows macOS.",
+			"env": "RECARBON_HDR_FORMAT",
+			"values": [
+				{
+					"token": "auto",
+					"label": "Auto"
+				},
+				{
+					"token": "edr",
+					"label": "macOS HDR"
+				},
+				{
+					"token": "hdr10",
+					"label": "HDR10"
+				}
+			],
+			"default": "Auto",
+			"defaultToken": "auto"
+		},
+		{
+			"id": "HdrStrength",
+			"category": "Display",
+			"type": "Enum",
+			"apply": "Live",
+			"table": "video",
+			"key": "hdr_strength",
+			"label": "Highlight Brightness",
+			"description": "How far highlights go above white. Mostly-white frames are dimmed automatically.",
+			"env": "RECARBON_HDR_STRENGTH",
+			"values": [
+				{
+					"token": "2x",
+					"label": "Normal"
+				},
+				{
+					"token": "3x",
+					"label": "Bright"
+				},
+				{
+					"token": "4x",
+					"label": "Brightest"
+				}
+			],
+			"default": "Normal",
+			"defaultToken": "2x"
+		},
+		{
+			"id": "HdrPaperWhite",
+			"category": "Display",
+			"type": "Enum",
+			"apply": "Live",
+			"table": "video",
+			"key": "hdr_paper_white",
+			"label": "HDR10 White Level",
+			"description": "Raise it if HDR10 looks dimmer than the game without HDR.",
+			"env": "RECARBON_HDR_PAPER_WHITE",
+			"values": [
+				{
+					"token": "auto",
+					"label": "Auto"
+				},
+				{
+					"token": "100",
+					"label": "100 nits"
+				},
+				{
+					"token": "200",
+					"label": "200 nits"
+				},
+				{
+					"token": "300",
+					"label": "300 nits"
+				},
+				{
+					"token": "400",
+					"label": "400 nits"
+				}
+			],
+			"default": "Auto",
+			"defaultToken": "auto"
+		},
+		{
 			"id": "Sharpening",
 			"category": "Graphics",
 			"type": "Float",

@@ -85,6 +85,14 @@ SPEC = {
     # run_attempt.sh sets RECARBON_RESOLUTION: the run keeps it (no rescale), the menu's value is saved.
     'video.internal_resolution': dict(presses=1, hold=4, how=HOW_ENV, absent=r'^\[renderer\] internal resolution \S+ -> ',
                                       baseline=r'^\[renderer\] internal resolution '),
+    # ReCarbon: HDR. Turning it on logs Auto's choice on any display (HDR or standard range: the
+    # picture depends on the display, so it isn't judged). With HDR off by default, its other rows
+    # change nothing visible: their menu lines and saved values are checked.
+    'video.hdr': dict(presses=1, hold=4, effect=r'^\[video\] HDR: Auto chose ',
+                      baseline=r'^\[video\] swapchain: '),
+    'video.hdr_format': dict(presses=1),
+    'video.hdr_strength': dict(presses=1),
+    'video.hdr_paper_white': dict(presses=1),
     'audio.master_volume': dict(presses=-10, hold=3, effect=r'^\[audio\] gain 0\.2500 \(volume 50%',
                                 baseline=r'^\[audio\] gain '),
     'audio.mute': dict(presses=1, hold=3, how=HOW_ENV, absent=r'^\[audio\] gain 0\.0000 \(volume \d+%, muted\)',

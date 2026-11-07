@@ -223,7 +223,7 @@ function parseUi(uiCpp, menuCpp, settingsH, internalH) {
 // The Settings menu's option table (settings.cpp kOptions), as macOS builds
 // it. Platform constants are resolved for macOS here, explicitly: a new one
 // fails the generator until it is added.
-const MACOS_CONSTANTS = { kFullscreenHidden: false, kPresentScaleHidden: true, kFsr1Offered: true };
+const MACOS_CONSTANTS = { kFullscreenHidden: false, kPresentScaleHidden: true, kFsr1Offered: true, kHdrHidden: false, kHdrFormatHidden: false };
 
 function parseEnumEntries(settingsCpp) {
 	const tables = {};

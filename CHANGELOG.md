@@ -3,6 +3,22 @@
 What changed in each ReCarbon version, newest first. The game shows the current version's entry
 once, the first time that version starts (it's built into the game: runtime/CMakeLists.txt).
 
+## v0.1.5
+
+### What's new
+
+- HDR (Settings > Display > HDR, off by default): brighter highlights on an HDR display such as
+  a MacBook's built-in screen or an external HDR monitor: the brightest parts of the picture go
+  above normal white while the rest stays as it was; the settings overlay stays at normal
+  brightness. HDR Type chooses macOS HDR (Auto picks it on a display that supports it) or
+  HDR10 for an external HDR TV or monitor; Highlight Brightness sets how far highlights go;
+  HDR10 White Level matches HDR10's white to the game without HDR. Mostly-white frames, such as
+  a boot flash, are dimmed automatically. Ported from SpeedBreaker: Carbon v0.1.1.
+- HDR costs performance: on a MacBook Air M1 at QHD a race ran about 21% slower with it on
+  (36.8 to 28.9 fps). Details in the Settings docs.
+- Known issues: as in v0.1.4. It needs an Apple silicon Mac with macOS 27 or later.
+  Experimental switches in this build stay off.
+
 ## v0.1.4
 
 ### What's new

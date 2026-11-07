@@ -26,7 +26,21 @@ namespace video
     // written by a queue submission made before this call. `aspectWidth` x
     // `aspectHeight`: the frame's shape when the image is at another
     // resolution (internal resolution scaling; 0: the image's own).
-    void SubmitFrontImage(VkImage image, uint32_t width, uint32_t height, uint32_t aspectWidth = 0, uint32_t aspectHeight = 0);
+    // `hdrImage`/`hdrView`: the same picture in floats, above 1.0 where the
+    // 8-bit one clipped (NFS: Carbon with an HDR display, gpu/renderer.cpp's
+    // HdrSide), for the HDR composite's highlights; null otherwise.
+    // (ReCarbon: HDR Output from SpeedBreaker: Carbon v0.1.1.)
+    void SubmitFrontImage(VkImage image, uint32_t width, uint32_t height, uint32_t aspectWidth = 0, uint32_t aspectHeight = 0,
+        VkImage hdrImage = VK_NULL_HANDLE, VkImageView hdrView = VK_NULL_HANDLE);
+
+    // Any thread: the swapchain is HDR (EDR or HDR10), so a float picture
+    // given to SubmitFrontImage is used.
+    bool HdrOutputActive();
+
+    // The HDR mode in use, for Settings > Display's help line: "Standard
+    // range", "Extended Linear (EDR), up to 2.00x (headroom 2.50)", or
+    // "HDR10 (PQ), up to 200 nits". Main thread.
+    const char* HdrStatus();
 
     // Wait until the queue is idle (resource replacement).
     void WaitGpuIdle();
@@ -82,7 +96,7 @@ namespace video
     };
     PostTiming GetPostTiming();
 
-    // Any thread: `image` (given to SubmitFrontImage) is about to be
+    // Any thread: `image` (given to SubmitFrontImage, as either image) is about to be
     // destroyed. Returns once the presenter holds no reference it could still
     // record; the caller then waits for the GPU (WaitGpuIdle) and destroys it.
     void ReleaseFrontImage(VkImage image);

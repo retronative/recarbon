@@ -95,6 +95,45 @@ namespace settings
         // to the screen); elsewhere the window's size is the player's.
         constexpr bool kPresentScaleHidden = !kFullscreenHidden;
 
+        // ReCarbon: HDR Output, from SpeedBreaker: Carbon v0.1.1, with ReCarbon's
+        // player-facing labels and help text (the technical terms are in
+        // docs/settings.mdx; keys, stored values and variables are unchanged).
+        // HDR Output: on a Mac (EDR, or HDR10) and on Linux, SteamOS and
+        // Windows (HDR10, where the system is in HDR: the presenter offers
+        // it only on a surface that has an HDR10 format). Not on iOS (the
+        // layer would need poking itself) or Android. HDR Format chooses
+        // between EDR and HDR10, so only a Mac shows it.
+#if (defined(__APPLE__) && TARGET_OS_IOS) || defined(__ANDROID__)
+        constexpr bool kHdrHidden = true;
+#else
+        constexpr bool kHdrHidden = false;
+#endif
+#if defined(__APPLE__) && !TARGET_OS_IOS
+        constexpr bool kHdrFormatHidden = false;
+#else
+        constexpr bool kHdrFormatHidden = true;
+#endif
+
+        constexpr EnumEntry kHdrFormatEntries[] = {
+            { 0, "auto", "Auto" },
+            { 1, "edr", "macOS HDR" },
+            { 2, "hdr10", "HDR10" },
+        };
+
+        constexpr EnumEntry kHdrStrengthEntries[] = {
+            { 2, "2x", "Normal" },
+            { 3, "3x", "Bright" },
+            { 4, "4x", "Brightest" },
+        };
+
+        constexpr EnumEntry kHdrPaperWhiteEntries[] = {
+            { 0, "auto", "Auto" },
+            { 100, "100", "100 nits" },
+            { 200, "200", "200 nits" },
+            { 300, "300", "300 nits" },
+            { 400, "400", "400 nits" },
+        };
+
         constexpr EnumEntry kAspectEntries[] = {
             { int32_t(AspectMode::Auto), "auto", "On" },  // ReCarbon: Expanded View's names; the tokens stay
             { int32_t(AspectMode::Widescreen), "16:9", "Off" },
@@ -190,6 +229,22 @@ namespace settings
               .table = "video", .key = "xbox_display_gamma", .label = "Xbox 360 Picture",
               .description = "The console's TV look: slightly deeper shadows and brighter mid-tones. Off: a flatter picture.",
               .env = "RECARBON_DISPLAY_GAMMA", .defaultValue = 1 },
+            { .id = Id::Hdr, .category = Category::Display, .type = Type::Bool, .apply = Apply::Live, .hidden = kHdrHidden,
+              .table = "video", .key = "hdr", .label = "HDR",
+              .description = "Brighter highlights on an HDR display. The settings overlay stays at normal brightness. Lowers the frame rate: about 20% on a MacBook Air M1 at QHD.",
+              .env = "RECARBON_HDR", .defaultValue = 0 },
+            { .id = Id::HdrFormat, .category = Category::Display, .type = Type::Enum, .apply = Apply::Live, .hidden = kHdrFormatHidden,
+              .table = "video", .key = "hdr_format", .label = "HDR Type",
+              .description = "Auto uses macOS HDR on a display that supports it. HDR10 for an external HDR TV or monitor; its HDR mode follows macOS.",
+              .env = "RECARBON_HDR_FORMAT", .defaultValue = 0, .entries = kHdrFormatEntries },
+            { .id = Id::HdrStrength, .category = Category::Display, .type = Type::Enum, .apply = Apply::Live, .hidden = kHdrHidden,
+              .table = "video", .key = "hdr_strength", .label = "Highlight Brightness",
+              .description = "How far highlights go above white. Mostly-white frames are dimmed automatically.",
+              .env = "RECARBON_HDR_STRENGTH", .defaultValue = 2, .entries = kHdrStrengthEntries },
+            { .id = Id::HdrPaperWhite, .category = Category::Display, .type = Type::Enum, .apply = Apply::Live, .hidden = kHdrHidden,
+              .table = "video", .key = "hdr_paper_white", .label = "HDR10 White Level",
+              .description = "Raise it if HDR10 looks dimmer than the game without HDR.",
+              .env = "RECARBON_HDR_PAPER_WHITE", .defaultValue = 0, .entries = kHdrPaperWhiteEntries },
             { .id = Id::Sharpening, .category = Category::Graphics, .type = Type::Float, .apply = Apply::Live,
               .table = "video", .key = "sharpening", .label = "Sharpening",
               .description = kFsr1Offered

@@ -136,9 +136,11 @@ EFFECTS = {  # what the game logs right after each forward change
     'video.frame_rate': ['[perf] 31.0 fps (worst frame 40.0 ms) | ...', '[perf] 30.0 fps (worst frame 34.0 ms) | ...',
                          '[perf] 30.1 fps (worst frame 34.0 ms) | ...'],
     'video.fullscreen': ['[video] fullscreen on (setting)'],
+    'video.hdr': ['[video] HDR: Auto chose standard range (the display reports no HDR)'],  # ReCarbon: HDR
 }
 HEADER = ['[ui] ready (Dear ImGui 1.91): F1 or Back + Start opens the settings',
           '[renderer] internal resolution 2x (2560x1440, Auto; surface pitches 640-1280)',
+          '[video] swapchain: SDR (B8G8R8A8_UNORM, sRGB; 60 offered)',  # ReCarbon: HDR's baseline
           '[video] present mode FIFO (V-Sync on)', '[audio] gain 1.0000 (volume 100%) from 0.00 s of output',
           '[perf] 60.0 fps (worst frame 17.0 ms) | ...', '[perf] 60.0 fps (worst frame 17.0 ms) | ...',
           '[perf] 59.9 fps (worst frame 17.0 ms) | ...']
@@ -231,7 +233,7 @@ with tempfile.TemporaryDirectory() as tmp:
     check(not bad, f'a run where everything applied: all PASS ({bad[:4]})')
     # Eight: Expanded View (the aspect_ratio row) is shown again, judged leniently.
     check(len(verdicts(good, check_='picture')) == 8, 'menu: eight picture rows are judged')
-    check(len(verdicts(good, check_='effect')) == 7, 'menu: seven rows are judged by a log line')
+    check(len(verdicts(good, check_='effect')) == 8, 'menu: eight rows are judged by a log line')
 
     # ---- one effect line missing: exactly that row FAILs ----
     for row in ('video.mipmaps', 'video.vsync', 'audio.master_volume', 'audio.mute_in_background'):

@@ -191,10 +191,11 @@ if(TARGET glslang::SPIRV)
 endif()
 # platform/apple/*.mm (iOS: linked by scripts/ios/build.sh): Foundation, and
 # on macOS AppKit (file_dialog.mm), CoreFoundation (install/placement.cpp:
-# is a folder in iCloud Drive) and IOKit.
+# is a folder in iCloud Drive), IOKit and QuartzCore.
 if(APPLE AND NOT IOS)
     target_link_libraries(ReCarbon PRIVATE "-framework Foundation" "-framework AppKit" "-framework CoreFoundation"
-        "-framework IOKit")  # kernel/imports_sync.cpp: RECARBON_SLEEP0_TRACE's core clusters
+        "-framework IOKit"  # kernel/imports_sync.cpp: RECARBON_SLEEP0_TRACE's core clusters
+        "-framework QuartzCore")  # platform/apple/macos_window.mm: the Metal layer's EDRMetadata (HDR Output)
 endif()
 target_include_directories(ReCarbon SYSTEM PRIVATE ${FFMPEG_INCLUDE_DIR} ${XR}/thirdparty/tomlplusplus/include)
 # Assertions stay on in every build type: ported code marks its unhandled

@@ -973,6 +973,8 @@ namespace ui
                 ImGui::TextUnformatted("Takes effect the next time the game starts.");
                 PopAccentText();
             }
+            else if (o.id == Id::Hdr || o.id == Id::HdrFormat || o.id == Id::HdrStrength || o.id == Id::HdrPaperWhite)
+                ImGui::TextDisabled("In use: %s.", video::HdrStatus());  // ReCarbon: HDR Output, from SpeedBreaker: Carbon v0.1.1
             else if (o.apply == settings::Apply::Restart)
                 ImGui::TextDisabled("Changes take effect the next time the game starts.");
             else if (std::string note = o.id == Id::FrameRate ? video::AutoFrameRateNote() : std::string(); !note.empty())
