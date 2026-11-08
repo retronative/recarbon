@@ -51,15 +51,15 @@ const MILESTONES = [
 	{ id: 'M4', state: 'completed', summary: 'The EA logos and the movies render through MoltenVK on Metal, with no unknown texture formats or dropped draws.' },
 	{
 		id: 'M5',
-		state: 'accepted',
-		summary: 'Music, movies and keyboard menus pass. Accepted with its open limitations, none of them recorded as passed.',
+		state: 'completed',
+		summary: 'Music, movies, keyboard and controller menus pass. The physical controller was tested by hand on an 8BitDo Ultimate 2 Wireless, and movies are paced evenly since v0.1.1.',
 		criteria: [
 			{ id: 'M5.5', title: 'Front-end music plays 5 minutes with no underruns' },
 			{ id: 'M5.6', title: 'The intro movie plays at the correct speed' },
 			{ id: 'M5.10', title: 'Default keyboard and controller mappings pinned by unit tests' },
 			{ id: 'M5.9', title: 'Keyboard rebinding in Settings > Controls works and persists' },
-			{ id: 'M5.7', title: 'Menus with a physical controller (the keyboard passed by hand)', state: 'deferred' },
-			{ id: 'M5.3', title: 'Smoother movie frame pacing', state: 'deferred' },
+			{ id: 'M5.7', title: 'Menus with a physical controller and with the keyboard, by hand' },
+			{ id: 'M5.3', title: 'Smoother movie frame pacing (frames off the even cadence from 18.5% to 1.7%)' },
 		],
 	},
 	{
@@ -76,7 +76,7 @@ const MILESTONES = [
 	{
 		id: 'M7',
 		state: 'accepted',
-		summary: 'Accepted for the alpha: every criterion met under the alpha criteria. Still open, none recorded as passed: the physical controller, Xbox 360 physics equivalence, and audio sync, which rests on the tester\'s report.',
+		summary: 'Accepted for the alpha: every criterion met under the alpha criteria. The physical controller has since been tested by hand. Still open, none recorded as passed: Xbox 360 physics equivalence, audio sync, which rests on the tester\'s report, and Reverse on the keyboard by hand.',
 		criteria: [
 			{ id: 'M7.3', title: 'AI opponents spawn, race and finish' },
 			{ id: 'M7.4', title: 'A full career race finishes and its progress survives a restart' },
@@ -90,7 +90,7 @@ const MILESTONES = [
 	{
 		id: 'M8',
 		state: 'accepted',
-		summary: 'Completed for the alpha: v0.1.0, the first playable alpha, is released (2026-10-26). A release candidate passes every automated check and was installed and played by hand on a MacBook Air M5, including a clean install on a fresh macOS account. Deferred: render scaling and widescreen. Not verified: a physical controller, Game Mode on a fresh account, and an install on a MacBook Air M1.',
+		summary: 'Completed for the alpha: v0.1.0, the first playable alpha, is released (2026-10-26). A release candidate passes every automated check and was installed and played by hand on a MacBook Air M5, including a clean install on a fresh macOS account. Render scaling and widescreen followed in v0.1.4 (Internal Resolution and Expanded View), and a physical controller was tested by hand. Not verified: controller rebinding on a physical controller, Game Mode on a fresh account, and an install on a MacBook Air M1.',
 		criteria: [
 			{ id: 'M8.7', title: 'Keyboard presets: WASD (the default) and Arrows' },
 			{ id: 'M8.8', title: 'Separate keyboard and controller profiles that persist' },
@@ -103,7 +103,7 @@ const MILESTONES = [
 			{ id: 'M8.4', title: 'A clean install from a disc image on a fresh macOS account' },
 			{ id: 'M8.1', title: 'The installer parametrized for Carbon' },
 			{ id: 'M8.2', title: 'The app packaged and released with its notices and third-party source archive' },
-			{ id: 'M8.3', title: 'Optional: render scaling and widescreen', state: 'deferred' },
+			{ id: 'M8.3', title: 'Optional: render scaling and widescreen (Internal Resolution and Expanded View, v0.1.4)' },
 		],
 	},
 ];
@@ -120,6 +120,7 @@ const FEATURES = [
 	{ title: 'A career race, won', text: 'Zone Heat 1 finished in 1st place against AI opponents; the cash and progress were still there after a restart (hand test 4).', evidence: 'hand-verified', date: '2026-10-23', milestone: 'M7', task: 'M7.4' },
 	{ title: 'Keyboard and controller profiles', text: 'WASD and Arrows presets, custom profiles, controller button rebinding and migration of existing bindings, in scripted runs and unit tests.', evidence: 'automated', date: '2026-10-24', milestone: 'M8', task: 'M8.9' },
 	{ title: 'Playable racing on the keyboard', text: 'Quick Races driven by hand on the WASD keys, on a MacBook Air M5 and an M1: steering, throttle, brake, camera, Handbrake (Space), Speedbreaker (Left Shift) and, on a car that has it, Nitrous (Backspace). On the M5, 1st place over 8 laps against 7 AI opponents who all finished.', evidence: 'hand-verified', date: '2026-10-25', milestone: 'M7', task: 'M7.1' },
+	{ title: 'Physical controller', text: 'An 8BitDo Ultimate 2 Wireless in menus and races: every current button and mapping is correct, and View + Menu together open Settings.', evidence: 'hand-verified', date: '2026-10-31', milestone: 'M5', task: 'M5.7' },
 	{ title: 'Game actions on a virtual controller', text: 'In a Quick Race: RB changes the camera, LB looks back, the right stick shifts gears, the Left Trigger reverses and Start pauses.', evidence: 'automated', date: '2026-10-24', milestone: 'M8' },
 	{ title: '48 unit tests', text: 'Every ctest entry passes on a MacBook Air M5 and an M1 Mac.', evidence: 'automated', date: '2026-10-24', milestone: 'M8', task: 'M8.6' },
 ];
@@ -129,7 +130,6 @@ const FEATURES = [
 const ISSUES = [
 	{ title: 'Occasional stalls of about 1 s', text: 'The presenter waits for a free drawable while holding the GPU queue lock. Why no drawable is free isn\'t known yet.', state: 'open' },
 	{ title: 'GPU-idle stalls of 250–600 ms', text: 'No lock wait is involved. The cause is unknown.', state: 'open' },
-	{ title: 'Physical controller not yet tested', text: 'The virtual-controller and hot-unplug tests pass, but they don\'t show that a physical pad works.', state: 'deferred' },
 	{ title: 'Frame rate falls in long races on a MacBook Air M1', text: 'Races start at about 30 fps and fall with time under load, to 16–22 fps in 9- to 15-minute races. GPU throttling on the fanless M1 is a hypothesis, not a confirmed cause. The MacBook Air M5 held about 51 fps with no fall.', state: 'open' },
 	{ title: 'Texture cache grows during play', text: 'Textures are kept until a setting reloads them, so long sessions use more memory: about 500 MB over 7 laps. On current evidence it doesn\'t cause the M1 frame-rate drop. An experimental eviction is in v0.1.1, off by default until a realistic budget is tested.', state: 'deferred' },
 	{ title: 'Hitches in the first race after a fresh install', text: 'With an empty shader cache the first race compiles its pipelines as it goes: the worst frame was 450 ms on a fresh macOS account (MacBook Air M5), and 100 ms in the next session.', state: 'open' },
@@ -140,18 +140,19 @@ const HUMAN_TESTS = [
 	{ title: 'The new-profile route', covers: 'A new profile, a race load and the save found after a restart, run as the fresh-account install (M6.6, MacBook Air M5). Free-roam wasn\'t in that route; the 15-minute free-roam test covers it.', state: 'completed' },
 	{ title: 'The Arrows preset by hand', covers: 'The tester played the game on the Arrows preset and reports that it worked (M8.11, 2026-10-26). No log was kept of that session. WASD drove every hand-tested race.', state: 'completed' },
 	{ title: 'Profile switching and a restart, by hand', covers: 'Switching profiles without a restart, and a custom profile across a restart (M8.11). Verified in scripted runs and unit tests only.', state: 'unverified' },
-	{ title: 'Hand test 5: the remaining keys', covers: 'Reverse, Look Back and Pause on the keyboard (Handbrake, Nitrous, Speedbreaker, the camera and the gear shifts on K / ; were found by hand on 2026-10-25).', state: 'unverified' },
+	{ title: 'Hand test 5: the remaining keys', covers: 'Reverse on the keyboard. Look Back, Change Camera, Pause and the gear shifts on O / L were tried by hand on 2026-11-03; Handbrake, Nitrous, Speedbreaker, the camera and the gear shifts on K / ; on 2026-10-25.', state: 'unverified' },
 	{ title: 'Sessions 3–5: the M7 route, 3 times', covers: 'Controls, physics, frame times, audio and picture over full races: three on a MacBook Air M1 and two on an M5 (M7.1, M7.2, M7.5–M7.7). Audio sync rests on the tester\'s report.', state: 'completed' },
 	{ title: 'Clean install on a fresh macOS account', covers: 'Installing from a disc image on a new user account, a new profile, a race, and the save found after a relaunch (M8.4, MacBook Air M5). Game Mode wasn\'t captured on that account.', state: 'completed' },
 	{ title: 'Release candidate on a MacBook Air M5', covers: 'Install from a disc image, Game Mode, a race to the results, the save kept after a relaunch, a clean quit (the main account).', state: 'completed' },
 	{ title: 'Release candidate on a MacBook Air M1', covers: 'The same checks on the M1. Not run: testing for the alpha ended first.', state: 'unverified' },
-	{ title: 'Physical controller', covers: 'Menus and driving on a real pad, once one is available. Never recorded as passed before then.', state: 'deferred' },
+	{ title: 'Physical controller', covers: 'Menus and driving on an 8BitDo Ultimate 2 Wireless: every current button and mapping correct, View + Menu open Settings (2026-10-31), and a play-test of the v0.1.5 release candidate with it (2026-11-07). Rebinding on the pad was checked with a virtual controller only.', state: 'completed' },
 ];
 
 // Recent achievements: each of progress.json's newest entries must match one
 // of these by its opening words; an unmatched one fails the run, so nothing
 // reaches the site unreviewed. The text shown is `text`.
 const ACHIEVEMENTS = [
+	{ starts: 'ReCarbon v0.1.5 released', text: 'ReCarbon v0.1.5: HDR, off by default, gives brighter highlights on an HDR display, with macOS HDR or HDR10, ported from SpeedBreaker: Carbon v0.1.1. With HDR off it runs level with v0.1.4. Experimental switches stay off.' },
 	{ starts: 'ReCarbon v0.1.4 released', text: 'ReCarbon v0.1.4: Expanded View, on by default, shows more of the game world on a screen that isn\'t 16:9, such as a MacBook\'s 16:10, with Off for the original 16:9 view; the settings are named in plain words; a 4K render cap and an Export Performance Report. Experimental switches stay off.' },
 	{ starts: 'ReCarbon v0.1.3 released', text: 'ReCarbon v0.1.3, a performance and stability update: the game\'s waits for the GPU no longer spin a CPU core, so races on a MacBook Air M5 use less than half the CPU on the main thread and the Mac throttles later; vertex data up to 128 KB is copied with its draw, removing a stall; the Frame Rate setting explains each choice. Thermal judder at 2x on a fanless Mac remains a known limitation.' },
 	{ starts: 'M6 and M8 closed for the alpha', text: 'M6 and M8 closed for the alpha: the new-profile route (a new profile, a race and the save found after a restart, on a fresh macOS account) and the alpha packaging, with v0.1.0 released. Not verified: a physical controller, Game Mode on a fresh account, an install on a MacBook Air M1.' },

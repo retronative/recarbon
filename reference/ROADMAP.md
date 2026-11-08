@@ -149,7 +149,13 @@ Diagnosing a failure is progress. It does not pass a criterion.
 - **Verify:** `scripts/run_attempt.sh` windowed, three times. Each log shows a presented frame,
   and the screenshot matches.
 
-## M5 — Audio, movies, input *(Accepted 2026-10-23, by the user's decision, with open non-blocking limitations)*
+## M5 — Audio, movies, input *(Passed 2026-11-08: every criterion met, the physical controller by hand and the movie pacing; accepted 2026-10-23 with them open)*
+- **Passed** (2026-11-08, at the user's request to close milestones the evidence supports): the physical
+  controller was hand-tested on an 8BitDo Ultimate 2 Wireless (2026-10-31: every current button and mapping
+  correct, View + Menu open Settings; docs/controls.mdx), and menus and races were played with it in the
+  v0.1.5 release candidate's play-test (2026-11-07). Movie pacing is smoothed since v0.1.1
+  (game/movie_pacing.cpp, on by default: 18.5% → 1.7% of movie frames off the two-refresh cadence). The
+  key labels on a non-Latin keyboard layout stay a known limitation, not a criterion.
 - **Status decision** (user, 2026-10-23): M5 is closed as accepted. These stay open and are **not**
   recorded as passed:
   - the physical controller: Deferred — not verified;
@@ -178,7 +184,7 @@ Diagnosing a failure is progress. It does not pass a criterion.
   - Hand test 2 (2026-10-23, by the user): keyboard navigation, `[keys]` rebinding in game
     surviving a restart, audio quality, movie lip-sync and audio latency on the built-in
     speakers all pass (FEASIBILITY §6a).
-  - **Physical controller: Deferred — not verified.** By the user's decision (2026-10-23) it is no longer an
+  - **Physical controller: passed by hand 2026-10-31** (see Passed above). Before that: by the user's decision (2026-10-23) it was no longer an
     alpha gate. It is to be tested by hand once the 8BitDo is available, and never recorded as a
     pass before then. The SDL virtual controller (menus, hot-unplug with `DETACH`/`ATTACH`, commit
     7d74acf) is automated evidence for the input path, not proof that physical controllers work.
@@ -262,7 +268,8 @@ customization.
 - **Status decision** (user, 2026-10-25): M7 is closed for the alpha. M7.1–M7.7 are completed
   under the agreed alpha criteria (reference/M7_ACCEPTANCE.md). These stay open and are **not**
   recorded as passed:
-  - the physical controller: Deferred — not verified (M7.1 is judged on the keyboard);
+  - the physical controller: Deferred — not verified (M7.1 is judged on the keyboard). *Since verified by
+    hand: the 8BitDo hand test (2026-10-31) and the v0.1.5 release candidate's play-test (2026-11-07).*
   - M7.2's comparison with the Xbox 360 version: playable driving physics are accepted, and Xbox
     360 physics equivalence is **deferred and unverified** (the criterion revision is below);
   - M7.6's audio and video sync rests on the tester's subjective reports, not on instrumented
@@ -385,10 +392,13 @@ customization. The controls criterion is judged on the default mappings.
 - **Status decision** (user, 2026-10-26): M8 is **Completed for Alpha**. No mandatory alpha
   criterion remains (reference/M8_ACCEPTANCE.md). These stay open and are **not** recorded as
   passed:
-  - **Deferred:** M8.3, render scaling and widescreen (optional);
+  - **Deferred:** M8.3, render scaling and widescreen (optional). *Completed 2026-11-08: shipped in
+    v0.1.4 as Internal Resolution (HD to 4K UHD) and Expanded View.*
   - **Unverified:** the physical controller (deferred since M5; controller rebinding on hardware
     with it), Game Mode on the fresh account (M8.4), and an install of a release candidate on
-    the MacBook Air M1.
+    the MacBook Air M1. *The physical controller has since passed by hand (2026-10-31, see M5);
+    controller rebinding on hardware, Game Mode on a fresh account and an M1 install stay
+    unverified.*
 
   Testing ended on 2026-10-26 by the user's decision; the acceptance criteria below are
   unchanged.
