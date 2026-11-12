@@ -76,8 +76,8 @@ set_target_properties(pad_map_test PROPERTIES SKIP_BUILD_RPATH OFF)
 # (gpu/shader_translator.cpp, gpu/xenos/ucode.cpp; ReCarbon M5: see-through road).
 recarbon_test(shader_gradients_test SOURCES ${RT}/gpu/shader_translator.cpp ${RT}/gpu/xenos/ucode.cpp)
 # gpu/sm3_mul_glsl.h: the Shader Model 3 multiply, bit by bit (+-0, denormals, Inf, NaN), the current
-# and the select form (RECARBON_SELECT_MUL=1) alike, and the translator's output unchanged with the
-# flag off; both outputs compiled by glslangValidator when it is installed.
+# and the select form (the default; RECARBON_SELECT_MUL=0 turns it off) alike, and the translator's
+# output with the current form unchanged; both outputs compiled by glslangValidator when it is installed.
 recarbon_test(sm3_mul_test SOURCES ${RT}/gpu/shader_translator.cpp ${RT}/gpu/xenos/ucode.cpp
     ARGS ${CMAKE_CURRENT_BINARY_DIR}/sm3_mul_glsl)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/sm3_mul_glsl)
@@ -196,9 +196,16 @@ recarbon_test(memory_plan_test)
 recarbon_test(texture_eviction_test)
 # gpu/scaled_wanted.h: which scaled resolves keep their samples (SpeedBreaker v0.2.0's ScaledWanted).
 recarbon_test(scaled_wanted_test)
+# gpu/hdr_side_defer.h: HDR Output's float copy waits for the next pass; the present reads its target (ReCarbon's own).
+recarbon_test(hdr_side_defer_test)
 # gpu/scaled_fuse.h: which scaled texture a scaled resolve may store into, and the index of them
 # (SpeedBreaker v0.1.9's SCALED_FUSE, write-through).
 recarbon_test(scaled_fuse_test)
+# gpu/vertex_narrow.h + the translator's per fetch constant stride/extent: large dynamic vertex ranges as each
+# draw's vertices only (SpeedBreaker v0.2.0's NFSMW_NARROW_VERTICES; ReCarbon: on by default for the guard's stalls).
+recarbon_test(vertex_narrow_test SOURCES ${RT}/gpu/shader_translator.cpp ${RT}/gpu/xenos/ucode.cpp)
+# gpu/texture_snapshot.h: a texture load's untile reads a copy of its source in the ring (ReCarbon's own).
+recarbon_test(texture_snapshot_test)
 # gpu/vertex_copy.h: which vertex ranges a draw copies (128 KB, or 64 KB) and which the write watch guards.
 recarbon_test(vertex_copy_test)
 # video/aa_gate.h: when the presenter skips its AA pass (RECARBON_AA_DOWNSCALE_GATE=1, a picture
@@ -376,7 +383,7 @@ set(RECARBON_PARALLEL_TESTS
     profile_store_test render_scale_test dynamic_scale_test picture_fit_test vert_plus_test display_cap_test resolution_label_test resolution_settle_test frame_rate_policy_test
     swapchain_policy_test quit_game_test depth24_pack_test depth_only_test zpd_report_test
     pipeline_cache_header_test display_tone_test hdr_output_test hdr_shader_test present_schedule_test fullscreen_policy_test
-    cursor_idle_test audio_cadence_test memory_plan_test texture_eviction_test scaled_wanted_test
+    cursor_idle_test audio_cadence_test memory_plan_test texture_eviction_test scaled_wanted_test hdr_side_defer_test vertex_narrow_test texture_snapshot_test
     scaled_fuse_test vertex_copy_test aa_gate_test pass_profile_test sleep0_backoff_test
     sleep0_trace_test sleep0_schedule_test sleep0_predict_test movie_hold_test render_queue_log_test report_zip_test
     wait_span_test game_time_log_test perf_report_test perf_report_check_test

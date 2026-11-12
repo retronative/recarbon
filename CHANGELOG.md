@@ -3,6 +3,21 @@
 What changed in each ReCarbon version, newest first. The game shows the current version's entry
 once, the first time that version starts (it's built into the game: runtime/CMakeLists.txt).
 
+## v0.1.6
+
+### What's new
+
+- Fewer hitches in races: the game no longer stops to wait for the graphics chip when it streams
+  in new track textures or rewrites the cars' vertex data beside data the chip is still drawing
+  with. On a MacBook Air M1 at Full HD (1080p) with HDR on, a race had about 40-60% fewer late
+  frames.
+- Faster rendering, with the same picture: HDR's highlight copy, the game's shaders and the
+  higher internal resolutions do less work each frame, about 1-2 ms on a MacBook Air M1 (the
+  most at QHD with HDR on). Every frame compared was identical to v0.1.5's.
+- The first races after updating may stutter briefly while the game prepares its graphics again.
+- Known issues: as in v0.1.5. It needs an Apple silicon Mac with macOS 27 or later.
+  Experimental switches in this build stay off.
+
 ## v0.1.5
 
 ### What's new

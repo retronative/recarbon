@@ -113,7 +113,10 @@
     /* ReCarbon (SpeedBreaker v0.1.9's SCALED_FUSE): a writer's sample i (from its block's corner) of a */       \
     /* reader's texel t (sub in its block, t counted from the reader's own first texel): the reader's host */    \
     /* pixel the untile fills with it (a resolve storing straight into a scaled texture). */                     \
-    uint sbReaderHost(uint t, uint sub, uint i, uint num, uint den) { return sbHostEdge(t - sub, num, den) + i; }
+    uint sbReaderHost(uint t, uint sub, uint i, uint num, uint den) { return sbHostEdge(t - sub, num, den) + i; } \
+    /* ReCarbon: on one axis, a scaled resolve's samples of a pixel (its host corner c) are its 1x */            \
+    /* average's (px()): a whole scale, and none clamped to the source's size (c < 0 wraps: refused). */         \
+    uint sbSamplesArePx(uint c, uint num, uint den, uint size) { return den == 1u && c < size && num <= size - c ? 1u : 0u; }
 
 #define SB_SCALE_STRINGIFY_(...) #__VA_ARGS__
 #define SB_SCALE_STRINGIFY(...) SB_SCALE_STRINGIFY_(__VA_ARGS__)

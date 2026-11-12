@@ -37,6 +37,15 @@ namespace gpu
         bool usesMemExport = false;
         uint32_t vertexFetchMask = 0;    // fetch constant slots used by vfetch (x3 dwords... slot = const index)
         uint32_t vertexFetchConstants[3] = {};  // the vertex fetch constants (0..95) vfetch reads
+        // ReCarbon (from SpeedBreaker v0.2.0, GPL-3.0-or-later): per vertex fetch constant (0..95), for a
+        // vertex shader: the largest dword stride its vfetches use, and the furthest dword past a
+        // vertex's start they read (offset + 4); vertexIndexOther marks the constants some vfetch of
+        // which doesn't index by the vertex index as it comes in (r0.x, before anything writes r0), a
+        // negative offset, or a pixel shader's. The others read only the draw's vertices' records: the
+        // renderer copies or guards just those (gpu/vertex_narrow.h).
+        uint8_t vertexStride[96] = {};
+        uint8_t vertexExtent[96] = {};
+        uint32_t vertexIndexOther[3] = {};
         uint32_t texture2DMask = 0;      // texture fetch slots used, by dimension
         uint32_t texture3DMask = 0;
         uint32_t textureCubeMask = 0;
@@ -51,8 +60,9 @@ namespace gpu
     // RECARBON_CP_OPT bit 8 (on by default): translate shaders with packed constants.
     bool PackedConstantsEnabled();
 
-    // RECARBON_SELECT_MUL=1 (an experiment, off by default): translate with the select form of the
-    // Shader Model 3 multiply (gpu/sm3_mul_glsl.h), the same bits with fewer operations.
+    // Translate with the select form of the Shader Model 3 multiply (gpu/sm3_mul_glsl.h), the same
+    // bits with fewer operations: on by default (ReCarbon, 2026-11-12: the same frames on an M1 Air
+    // and an M5, about 0.5-1 ms less GPU time a frame on the M1 at 1080p); RECARBON_SELECT_MUL=0 turns it off.
     bool SelectMulEnabled();
 
     // `ucode` is in host byte order (swap the guest's big-endian words first). `selectMul`: the

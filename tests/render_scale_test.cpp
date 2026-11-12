@@ -523,6 +523,23 @@ static void TestParse()
     CHECK(half.Exact(1280, 720) && !half.Exact(1279, 720) && !half.Exact(640, 359) && RenderScale::Whole(2, 2).Exact(1279, 359), "exact");
 }
 
+// ReCarbon (M1 GPU time): a scaled resolve's 1x word is summed from the samples it has just
+// fetched for the scaled memory only when they are px()'s on an axis: a whole scale (den 1:
+// the pixel's num host pixels from its corner, in px()'s order) and none of them clamped to
+// the source (the corner and its last pixel inside). Hand-computed.
+static void TestSamplesArePx()
+{
+    printf("scaled resolves: the 1x word from the scaled samples\n");
+    gpu::ScaleGlsl g{};
+    CHECK(g.sbSamplesArePx(0, 2, 1, 2560) == 1u && g.sbSamplesArePx(2558, 2, 1, 2560) == 1u, "2x inside, to the last pixel");
+    CHECK(g.sbSamplesArePx(2559, 2, 1, 2560) == 0u && g.sbSamplesArePx(2560, 2, 1, 2560) == 0u, "2x: its second pixel clamped, or both");
+    CHECK(g.sbSamplesArePx(0, 3, 2, 1920) == 0u, "3/2: the 1x average weights its pixels (sbOverlap), so not px()'s sum");
+    CHECK(g.sbSamplesArePx(uint32_t(-2), 2, 1, 2560) == 0u && g.sbSamplesArePx(uint32_t(-1), 2, 1, 2560) == 0u,
+        "a corner left of the source (clamped by px()) wraps, and is refused");
+    CHECK(g.sbSamplesArePx(3837, 3, 1, 3840) == 1u && g.sbSamplesArePx(3838, 3, 1, 3840) == 0u, "3x: the last pixel and one past it");
+    CHECK(g.sbSamplesArePx(5, 1, 1, 6) == 1u && g.sbSamplesArePx(6, 1, 1, 6) == 0u, "1x");
+}
+
 // The shaders that touch the scaled memory take the shared code.
 static void TestShaders(const char* rendererPath)
 {
@@ -546,8 +563,11 @@ static void TestShaders(const char* rendererPath)
         CHECK(body.find("sbSampleWord") != std::string::npos || body.find("sbBlockIndex") != std::string::npos,
             "%s doesn't use the block layout", shader);
     }
+    size_t resolve = text.find("const char* kResolveGlsl = R\"(");
+    CHECK(resolve != std::string::npos && text.substr(resolve, text.find("\n)\";", resolve) - resolve).find("sbSamplesArePx(") != std::string::npos,
+        "the resolve shader doesn't decide the 1x word's samples with sbSamplesArePx");
     const std::string glsl = GLSL_SCALE_CODE;
-    for (const char* fn : { "uint sbHostEdge(", "uint sbOverlap(", "uint sbCenterHost(", "uint sbBlockIndex(", "uint sbSampleWord(" })
+    for (const char* fn : { "uint sbHostEdge(", "uint sbOverlap(", "uint sbCenterHost(", "uint sbBlockIndex(", "uint sbSampleWord(", "uint sbSamplesArePx(" })
         CHECK(glsl.find(fn) != std::string::npos, "GLSL_SCALE_CODE lacks %s", fn);
     size_t comments = 0;
     for (size_t at = glsl.find("//"); at != std::string::npos; at = glsl.find("//", at + 2))
@@ -563,6 +583,7 @@ int main(int argc, char** argv)
     TestSlotLayout();
     TestRoundTrip();
     TestHostedTexture();
+    TestSamplesArePx();
     TestParse();
     if (argc > 1)
         TestShaders(argv[1]);

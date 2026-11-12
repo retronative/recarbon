@@ -9,8 +9,9 @@
 // kXmulGlslCurrent is the form shaders have always had (in ShaderCommonGlsl):
 // a compare-and-sum per operand, then a select (vec4), or a short-circuit ||
 // that compiles to a branch (scalar). kXmulGlslSelect gives the same bits for
-// every input with two nested selects and no branch. RECARBON_SELECT_MUL=1
-// (an experiment, off by default) translates with it. tests/sm3_mul_test.cpp
+// every input with two nested selects and no branch. Translated shaders use it
+// by default (ReCarbon, 2026-11-12); RECARBON_SELECT_MUL=0 returns them to the
+// current form. tests/sm3_mul_test.cpp
 // pins both texts and checks their results bit by bit.
 #pragma once
 

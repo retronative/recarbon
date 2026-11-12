@@ -4,6 +4,8 @@
 #include <stdafx.h>
 #include "renderer.h"
 #include "vertex_copy.h"
+#include "vertex_narrow.h"
+#include "texture_snapshot.h"
 #include "edram_format.h"
 #include <cpu/guest_thread.h>
 #include <cpu/host_cpu.h>
@@ -22,6 +24,7 @@
 #include "dynamic_scale.h"
 #include "texture_eviction.h"
 #include "scaled_wanted.h"
+#include "hdr_side_defer.h"
 #include "scaled_fuse.h"
 #include "pass_profile.h"
 #include "resolution_settle.h"
@@ -761,6 +764,11 @@ namespace gpu::renderer
         }
 
         void EndPass();
+        // ReCarbon: HDR Output's waiting side copy (gpu/hdr_side_defer.h), recorded now: before a
+        // pass (any of its targets may be the copy's), or before `rt` is destroyed (its own only).
+        void HdrRecordWaitingSide();
+        void HdrRecordWaitingSideOf(const void* rt);
+        void HdrDropWaitingSide();  // (HDR Output's images are being destroyed)
         // Bumped when the command buffer's graphics state is unknown (a new
         // command buffer; compute work, which shares the push constants).
         uint64_t s_stateEpoch = 1;
@@ -768,6 +776,55 @@ namespace gpu::renderer
         // gpu/vertex_copy.h: vertex ranges up to this are copied with their draws, larger ones
         // guarded (128 KB; RECARBON_VERTEX_COPY_128=0: 64 KB, as before).
         uint32_t s_vertexCopyMax = gpu::vertexcopy::Threshold(std::getenv("RECARBON_VERTEX_COPY_128"));
+        // ReCarbon (from SpeedBreaker v0.2.0's NFSMW_NARROW_VERTICES, gpu/vertex_narrow.h): large dynamic
+        // vertex ranges copied or guarded as each draw's vertices only. On by default (the write watch's
+        // stalls on Carbon's dynamic vertex buffer); RECARBON_NARROW_VERTICES=0 turns it off, =alt
+        // narrows in odd 10 s windows from launch only (an A/B in one run; logged at each switch).
+        const int s_narrowVertices = [] {
+            const char* v = std::getenv("RECARBON_NARROW_VERTICES");
+            return !v ? 1 : std::strcmp(v, "alt") == 0 ? 2 : v[0] == '0' ? 0 : 1;
+        }();
+        gpu::vertexnarrow::DynamicRanges s_dynamicVertexRanges;
+        // ReCarbon (gpu/texture_snapshot.h): a texture load's untiles read a copy of its source taken
+        // into the ring, and its guest memory isn't guarded for them. On by default;
+        // RECARBON_TEXTURE_SNAPSHOT=0 turns it off, =alt copies in odd 10 s windows from launch only
+        // (an A/B in one run; logged at each switch).
+        const int s_textureSnapshot = [] {
+            const char* v = std::getenv("RECARBON_TEXTURE_SNAPSHOT");
+            return !v ? 1 : std::strcmp(v, "alt") == 0 ? 2 : v[0] == '0' ? 0 : 1;
+        }();
+        uint64_t s_textureSnapshots = 0;  // since launch
+        bool TextureSnapshotNow()
+        {
+            if (s_textureSnapshot != 2)
+                return s_textureSnapshot == 1;
+            static const auto start = std::chrono::steady_clock::now();
+            const bool on = int64_t(std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count() / 10) % 2 == 1;
+            static int last = -1;
+            if (int(on) != last)
+            {
+                last = int(on);
+                fprintf(stderr, "[snapshot] RECARBON_TEXTURE_SNAPSHOT=alt: %s (%llu loads copied so far)\n", on ? "on" : "off",
+                    (unsigned long long)s_textureSnapshots);
+            }
+            return on;
+        }
+        uint64_t s_narrowedRanges = 0;  // since launch (the [perf] line's window)
+        bool NarrowVerticesNow()
+        {
+            if (s_narrowVertices != 2)
+                return s_narrowVertices == 1;
+            static const auto start = std::chrono::steady_clock::now();
+            const bool on = int64_t(std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count() / 10) % 2 == 1;
+            static int last = -1;
+            if (int(on) != last)
+            {
+                last = int(on);
+                fprintf(stderr, "[narrow] RECARBON_NARROW_VERTICES=alt: %s (%llu ranges narrowed so far)\n", on ? "on" : "off",
+                    (unsigned long long)s_narrowedRanges);
+            }
+            return on;
+        }
         // RECARBON_LOG_VCOPY=1 (diagnostic): per 120 frames, the vertex ranges copied with their draws
         // (up to the threshold), those guarded that a copy could take instead (to 128 KB, and over),
         // and the upload ring's pressure (submits because a slot was full, the fullest slot).
@@ -2189,6 +2246,7 @@ namespace gpu::renderer
 
         void DestroyTarget(RenderTarget& rt)
         {
+            HdrRecordWaitingSideOf(&rt);
             if (rt.sampleView && rt.sampleView != rt.image.view)
                 vkDestroyImageView(s_dev, rt.sampleView, nullptr);
             rt.sampleView = VK_NULL_HANDLE;
@@ -2332,6 +2390,7 @@ namespace gpu::renderer
 
         void BeginPass(RenderTarget* const color[4], RenderTarget* depth, VkRect2D area)
         {
+            HdrRecordWaitingSide();
             bool sameTargets = s_passActive && depth == s_passDepth && std::equal(color, color + 4, s_passColor);
             if (sameTargets && Contains(s_passArea, area))
                 return;
@@ -4220,6 +4279,22 @@ void main()
                         return TextureView(t, f.swizzle);
                     }
                     s_hitch.textureBytes += size + mipSize;
+                    // ReCarbon (gpu/texture_snapshot.h): the untiles below read copies of the source.
+                    const bool snapshot = TextureSnapshotNow() && gpu::texsnap::Eligible(size, mipSize, s_splitMemory, s_shadowMode);
+                    if (snapshot)
+                        s_textureSnapshots++;
+                    VkDescriptorBufferInfo sourceInfo = s_sharedInfo[0];
+                    // A copy of [from, from + bytes) at the start of a ring allocation of `extra` more
+                    // bytes; returns the allocation (~0: none) and points the untile's source at it.
+                    auto copySource = [&](uint32_t from, uint32_t bytes, VkDeviceSize extra, uint32_t address, uint32_t& srcBase) {
+                        const VkDeviceSize block = RingAllocate(gpu::texsnap::CopyBytes(bytes) + extra);
+                        if (block == ~VkDeviceSize(0))
+                            return block;
+                        memcpy(s_ringHost + block, s_sharedHost + from, bytes);
+                        srcBase = gpu::texsnap::SourceBase(block, from, address);
+                        sourceInfo = { s_ring, 0, kRingSize };
+                        return block;
+                    };
                     EnsureShadow(base, size);
                     if (mipSize)
                         EnsureShadow(mipBase, mipSize);
@@ -4244,9 +4319,12 @@ void main()
                             Begin();
                             UntileConstants uc{ base + slice * sliceStride, f.tiled ? 1u : 0u, f.tiled ? pitchAligned : rowBytes, fi.bpbLog2,
                                 offX, offY, bw, bh, uint32_t(f.endianness), fi.convert, 0, 0, 0, 0 };
+                            sourceInfo = s_sharedInfo[0];
+                            if (snapshot && copySource(base, size, 0, base + slice * sliceStride, uc.srcBase) == ~VkDeviceSize(0))
+                                return dummy;
                             VkDescriptorImageInfo ii{ VK_NULL_HANDLE, t.storeViews[slice], VK_IMAGE_LAYOUT_GENERAL };
                             VkWriteDescriptorSet w[5] = {
-                                { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, VK_NULL_HANDLE, 0, 0, 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nullptr, &s_sharedInfo[0], nullptr },
+                                { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, VK_NULL_HANDLE, 0, 0, 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nullptr, &sourceInfo, nullptr },
                                 { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, VK_NULL_HANDLE, 1, 0, 1, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, &ii, nullptr, nullptr },
                             };
                             if (!t.uploaded && slice == 0)
@@ -4261,24 +4339,29 @@ void main()
                             SubmitIfStarving();
                             continue;
                         }
-                        VkDeviceSize staging = RingAllocate(VkDeviceSize(rowWords) * 4 * bh);
+                        uint32_t layer = volume ? 0 : slice, zSlice = volume ? slice : 0;
+                        uint32_t sliceBase = base + (volume ? (f.tiled ? 0 : zSlice * sliceStride) : layer * sliceStride);
+                        uint32_t srcBase = sliceBase;
+                        sourceInfo = s_sharedInfo[0];
+                        const VkDeviceSize stagingBytes = VkDeviceSize(rowWords) * 4 * bh;
+                        VkDeviceSize staging = snapshot ? copySource(base, size, stagingBytes, sliceBase, srcBase) : RingAllocate(stagingBytes);
                         if (staging == ~VkDeviceSize(0))
                         {
                             LogOnce(0x2200, "texture %ux%u format %u is too large for a staging slot", width, height, format);
                             return dummy;
                         }
+                        if (snapshot)
+                            staging = gpu::texsnap::StagingAt(staging, size);
                         EndPass();
                         Begin();
-                        uint32_t layer = volume ? 0 : slice, zSlice = volume ? slice : 0;
-                        uint32_t sliceBase = base + (volume ? (f.tiled ? 0 : zSlice * sliceStride) : layer * sliceStride);
-                        UntileConstants uc{ sliceBase, f.tiled ? 1u : 0u, f.tiled ? pitchAligned : rowBytes, fi.bpbLog2,
+                        UntileConstants uc{ srcBase, f.tiled ? 1u : 0u, f.tiled ? pitchAligned : rowBytes, fi.bpbLog2,
                             offX, offY, bw, bh, uint32_t(f.endianness), fi.convert, uint32_t(staging / 4), rowWords,
                             zSlice, heightAligned3D };
                         if (volume && f.tiled)
                             uc.tiled = 2;
                         VkDescriptorBufferInfo ring{ s_ring, 0, kRingSize };
                         VkWriteDescriptorSet w[5] = {
-                            { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, VK_NULL_HANDLE, 0, 0, 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nullptr, &s_sharedInfo[0], nullptr },
+                            { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, VK_NULL_HANDLE, 0, 0, 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nullptr, &sourceInfo, nullptr },
                             { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, VK_NULL_HANDLE, 1, 0, 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nullptr, &ring, nullptr },
                         };
                         s_stateEpoch++;
@@ -4325,18 +4408,23 @@ void main()
                         }
                         for (uint32_t layer = 0; layer < layers; layer++)
                         {
-                            VkDeviceSize staging = RingAllocate(VkDeviceSize(levelRowWords) * 4 * lbh);
+                            uint32_t srcBase = levelBase + layer * mips.SliceStride(storage);
+                            sourceInfo = s_sharedInfo[0];
+                            const VkDeviceSize stagingBytes = VkDeviceSize(levelRowWords) * 4 * lbh;
+                            VkDeviceSize staging = snapshot ? copySource(mipBase, mipSize, stagingBytes, srcBase, srcBase) : RingAllocate(stagingBytes);
                             if (staging == ~VkDeviceSize(0))
                                 break;
+                            if (snapshot)
+                                staging = gpu::texsnap::StagingAt(staging, mipSize);
                             EndPass();
                             Begin();
-                            UntileConstants uc{ levelBase + layer * mips.SliceStride(storage), f.tiled ? 1u : 0u,
+                            UntileConstants uc{ srcBase, f.tiled ? 1u : 0u,
                                 f.tiled ? mips.PitchBlocks(storage) : mips.RowBytes(storage), fi.bpbLog2,
                                 levelOffX, levelOffY, lbw, lbh, uint32_t(f.endianness), fi.convert, uint32_t(staging / 4), levelRowWords,
                                 0, 0 };
                             VkDescriptorBufferInfo ring{ s_ring, 0, kRingSize };
                             VkWriteDescriptorSet w[5] = {
-                                { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, VK_NULL_HANDLE, 0, 0, 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nullptr, &s_sharedInfo[0], nullptr },
+                                { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, VK_NULL_HANDLE, 0, 0, 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nullptr, &sourceInfo, nullptr },
                                 { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, VK_NULL_HANDLE, 1, 0, 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nullptr, &ring, nullptr },
                             };
                             s_stateEpoch++;
@@ -4358,11 +4446,13 @@ void main()
                     }
                     t.uploaded = true;
                     writewatch::Watch(base, size);
-                    GuardGpu(base, size, false, "texture", true);  // the untile runs later
+                    if (!snapshot)
+                        GuardGpu(base, size, false, "texture", true);  // the untile runs later
                     if (mipSize)
                     {
                         writewatch::Watch(mipBase, mipSize);
-                        GuardGpu(mipBase, mipSize, false, "texture mips", true);
+                        if (!snapshot)
+                            GuardGpu(mipBase, mipSize, false, "texture mips", true);
                     }
                     if (s_textureVerify)
                         HashLoadedTexture(t);
@@ -4794,6 +4884,11 @@ void main()
     uint x = uint(p.origin.x) + gx, y = uint(p.origin.y) + gy;
     uint word = ((p.destBase + tiled2D(x, y, p.destPitch, bl)) & 0x1FFFFFFFu) >> 2;
     uint w;
+    // ReCarbon (M1 GPU time): the 1x word from the samples fetched for the scaled memory when
+    // they are px()'s (sbSamplesArePx), summed in its order, so the same bits without
+    // fetching them again (a third of a QHD resolve's reads).
+    vec4 sum = vec4(0.0), first = vec4(0.0);
+    bool reuse = false;
     if (bl == 2u && p.scaledWrite != 0u)
     {
         // Each host sample this guest pixel owns into its block's place in
@@ -4819,6 +4914,7 @@ void main()
                 for (uint i = i0; i < i1; i++)
                 {
                     vec4 v = texelFetch(src, clamp(c0 + ivec2(i, j), ivec2(0), ivec2(p.srcSize) - 1), 0);
+                    if (i + j == 0u) { sum = v; first = v; } else sum += v;
                     if ((p.flags & 2u) == 0u)
                     {
                         v *= p.expScale;
@@ -4838,6 +4934,8 @@ void main()
                             int(sbReaderHost(y + p.hostY, subY, j, p.scale.y, kDen.y))), uvec4(swapWord(word32, p.hostEndian), 0u, 0u, 0u));
 #endif
                 }
+            reuse = sbSamplesArePx(uint(c0.x), p.scale.x, kDen.x, p.srcSize.x) != 0u &&
+                sbSamplesArePx(uint(c0.y), p.scale.y, kDen.y, p.srcSize.y) != 0u;
         }
 #ifdef COALESCED
         if (subX == 0u && subY == 0u)  // (every pixel at a whole scale)
@@ -4866,7 +4964,19 @@ void main()
         memStore(word + 1u, w1);
         return;
     }
-    if (bl == 2u) w = pack32(px(gx, gy));
+    if (bl == 2u && reuse)
+    {
+        vec4 v = first;
+        if ((p.flags & 2u) == 0u)
+        {
+            v = sum;
+            if (p.scale.x * p.scale.y > 1u) v /= float(p.scale.x * p.scale.y);
+            v *= p.expScale;
+            if ((p.flags & 1u) != 0u) v = v.bgra;
+        }
+        w = pack32(v);
+    }
+    else if (bl == 2u) w = pack32(px(gx, gy));
     else if (bl == 1u) w = pack16(px(gx, gy)) | (pack16(px(gx + 1u, gy)) << 16);
     else w = unorm(px(gx, gy).r, 255.0) | (unorm(px(gx + 1u, gy).r, 255.0) << 8) |
         (unorm(px(gx + 2u, gy).r, 255.0) << 16) | (unorm(px(gx + 3u, gy).r, 255.0) << 24);
@@ -5314,15 +5424,16 @@ void main()
         uint64_t s_hdrGradeFrame = ~0ull;
         const char* kHdrMinGlsl = R"(#version 460
 layout(local_size_x = 8, local_size_y = 8) in;
-layout(set = 0, binding = 0, rgba16f) readonly uniform image2D front;  // the front buffer's float copy
+#extension GL_EXT_samplerless_texture_functions : require
+layout(set = 0, binding = 0) uniform texture2D front;                   // the front buffer's float copy, or its target from `off`
 layout(set = 0, binding = 1, rgba16f) readonly uniform image2D graded; // the grade's target before the HUD
 layout(set = 0, binding = 2, rgba16f) writeonly uniform image2D outImage;
-layout(push_constant) uniform P { ivec2 size; } p;
+layout(push_constant) uniform P { ivec2 size; ivec2 off; } p;
 void main()
 {
     ivec2 g = ivec2(gl_GlobalInvocationID.xy);
     if (any(greaterThanEqual(g, p.size))) return;
-    imageStore(outImage, g, min(imageLoad(front, g), imageLoad(graded, g)));
+    imageStore(outImage, g, min(texelFetch(front, g + p.off, 0), imageLoad(graded, g)));
 }
 )";
         VkDescriptorSetLayout s_hdrMinSet = VK_NULL_HANDLE;
@@ -5465,6 +5576,7 @@ void main()
         // (Flushes first: the GPU may still be reading them.)
         void DestroyHdrSides()
         {
+            HdrDropWaitingSide();
             Flush();
             for (HdrSide& side : s_hdrSides)
             {
@@ -5544,9 +5656,61 @@ void main()
         // the MSAA is the guest's: the host target has one sample). Any other resolve into a copy's memory
         // leaves it stale. `srcEndX`, `srcEndY`: the rectangle's end in the
         // source's host pixels.
+        // A side copy: the rectangle at `src` in its target into `side` at `dst`.
+        struct HdrSideCopy
+        {
+            const RenderTarget* rt;
+            HdrSide* side;
+            VkOffset3D src, dst;
+            VkExtent3D extent;
+        };
+        // ReCarbon: the copy of a whole side waits (gpu/hdr_side_defer.h): the present reads the
+        // front buffer's target instead when it still does.
+        gpu::hdrsidedefer::Pending<HdrSideCopy> s_hdrSideWait;
+
+        void RecordHdrSideCopy(const HdrSideCopy& c)
+        {
+            EndPass();
+            Begin();
+            VkMemoryBarrier before{ VK_STRUCTURE_TYPE_MEMORY_BARRIER };
+            before.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            before.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
+            vkCmdPipelineBarrier(s_cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT |
+                    VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 1, &before, 0,
+                nullptr, 0, nullptr);
+            VkImageCopy copy{};
+            copy.srcSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
+            copy.srcOffset = c.src;
+            copy.dstSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
+            copy.dstOffset = c.dst;
+            copy.extent = c.extent;
+            vkCmdCopyImage(s_cmd, c.rt->image.image, VK_IMAGE_LAYOUT_GENERAL, c.side->image.image, VK_IMAGE_LAYOUT_GENERAL, 1, &copy);
+            VkMemoryBarrier after{ VK_STRUCTURE_TYPE_MEMORY_BARRIER };
+            after.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            after.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_TRANSFER_READ_BIT;
+            vkCmdPipelineBarrier(s_cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT,
+                0, 1, &after, 0, nullptr, 0, nullptr);
+        }
+
+        void HdrRecordWaitingSide()
+        {
+            if (auto c = s_hdrSideWait.Take())
+                RecordHdrSideCopy(*c);
+        }
+
+        void HdrDropWaitingSide() { s_hdrSideWait.Drop(); }
+
+        void HdrRecordWaitingSideOf(const void* rt)
+        {
+            if (auto c = s_hdrSideWait.TakeFor(rt))
+                RecordHdrSideCopy(*c);
+        }
+
         void HdrSideResolve(const RenderTarget& source, const ResolveConstants& rc, uint32_t destHeight, bool qualifies, int32_t srcEndX,
             int32_t srcEndY)
         {
+            // (The waiting copy first: its side may be replaced below, or be this one.)
+            HdrRecordWaitingSide();
             HdrSide* side = nullptr;
             uint32_t rows = 0;  // the destination's first row in the copy
             for (HdrSide& s : s_hdrSides)
@@ -5609,25 +5773,11 @@ void main()
                 side->frame = ~0ull;
                 return;
             }
-            Begin();
-            VkMemoryBarrier before{ VK_STRUCTURE_TYPE_MEMORY_BARRIER };
-            before.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-            before.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
-            vkCmdPipelineBarrier(s_cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT |
-                    VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 1, &before, 0,
-                nullptr, 0, nullptr);
-            VkImageCopy copy{};
-            copy.srcSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
-            copy.srcOffset = { rc.srcOriginX, rc.srcOriginY, 0 };
-            copy.dstSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
-            copy.dstOffset = { dstX, dstY, 0 };
-            copy.extent = { uint32_t(cw), uint32_t(ch), 1 };
-            vkCmdCopyImage(s_cmd, source.image.image, VK_IMAGE_LAYOUT_GENERAL, side->image.image, VK_IMAGE_LAYOUT_GENERAL, 1, &copy);
-            VkMemoryBarrier after{ VK_STRUCTURE_TYPE_MEMORY_BARRIER };
-            after.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-            after.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_TRANSFER_READ_BIT;
-            vkCmdPipelineBarrier(s_cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT,
-                0, 1, &after, 0, nullptr, 0, nullptr);
+            const HdrSideCopy c{ &source, side, { rc.srcOriginX, rc.srcOriginY, 0 }, { dstX, dstY, 0 }, { uint32_t(cw), uint32_t(ch), 1 } };
+            if (dstX == 0 && dstY == 0 && uint32_t(cw) == side->width && uint32_t(ch) == side->height)
+                s_hdrSideWait.Defer(c);  // (nothing waited: recorded above)
+            else
+                RecordHdrSideCopy(c);  // (a band: the present's read of the target would need the others too)
             side->frame = s_frame;
         }
 
@@ -8334,6 +8484,57 @@ void main()
         if (g_eagerWrites || s_shadowMode)
         {
             using Range = SnapshotRange;
+            // ReCarbon (SpeedBreaker v0.2.0, gpu/vertex_narrow.h): a vertex shader's large range of a
+            // dynamic buffer as the draw's vertices' records: non-indexed, its own vertices; indexed,
+            // the indices scanned (up to kNarrowScan). Static buffers (no CPU write since their last
+            // draw) keep the whole range.
+            constexpr uint32_t kNarrowScan = 4096;
+            const bool narrowNow = NarrowVerticesNow();
+            int64_t vertexMin = -1, vertexMax = -1;  // -2: unknown
+            auto drawVertices = [&]() {
+                if (vertexMin != -1)
+                    return vertexMin >= 0;
+                vertexMin = vertexMax = -2;
+                const uint32_t first = s_regs[XE_GPU_REG_VGT_INDX_OFFSET];
+                if (count == 0)
+                    return false;
+                if (!src.indexed)
+                {
+                    vertexMin = int64_t(first);
+                    vertexMax = int64_t(first) + count - 1;
+                    return true;
+                }
+                if (count > kNarrowScan || uint64_t(src.base) + uint64_t(count) * (src.is32 ? 4 : 2) > kSharedSize)
+                    return false;
+                uint32_t lo = ~0u, hi = 0;
+                for (uint32_t i = 0; i < count; i++)
+                {
+                    const uint32_t v = src.Get(i);
+                    if (restartEnabled && v == resetIndex)
+                        continue;
+                    lo = std::min(lo, v);
+                    hi = std::max(hi, v);
+                }
+                if (lo > hi)
+                    return false;
+                vertexMin = int64_t(lo) + first;
+                vertexMax = int64_t(hi) + first;
+                return true;
+            };
+            auto narrow = [&](Range& r, uint32_t constant) {
+                const auto& info = s_vs->info;
+                if ((info.vertexIndexOther[constant / 32] >> (constant % 32)) & 1)
+                    return;
+                const uint64_t seen = s_dynamicVertexRanges.Seen(r.base, r.size);
+                if (src.indexed && !s_dynamicVertexRanges.Dynamic(r.base, r.size, writewatch::Current(),
+                                       seen && writewatch::WrittenSince(r.base, r.size, seen)))
+                    return;
+                if (!drawVertices())
+                    return;
+                if (gpu::vertexnarrow::Narrow(r.base, r.size, uint64_t(vertexMin), uint64_t(vertexMax), info.vertexStride[constant] * 4u,
+                        info.vertexExtent[constant] * 4u))
+                    s_narrowedRanges++;
+            };
             for (const Shader* shader : { s_vs, s_ps })
                 for (uint32_t word = 0; word < 3; word++)
                     for (uint32_t bits = shader->info.vertexFetchConstants[word]; bits; bits &= bits - 1)
@@ -8342,6 +8543,8 @@ void main()
                         const uint32_t* vf = &s_regs[XE_GPU_REG_SHADER_CONSTANT_FETCH_00_0 + constant * 2];
                         Range r{ vf[0] & 0x1FFFFFFC, ((vf[1] >> 2) & 0xFFFFFF) * 4 };
                         r.size = std::min<uint32_t>(r.size, uint32_t(kSharedSize) - r.base);
+                        if (narrowNow && r.size > s_vertexCopyMax && shader == s_vs)
+                            narrow(r, constant);
                         if (r.size == 0 || std::any_of(copies, copies + copyCount, [&](const Range& c) { return c.base == r.base && c.size == r.size; }))
                             continue;
                         // gpu/vertex_copy.h: copied up to the threshold (128 KB), else guarded.
@@ -9968,19 +10171,26 @@ void main()
                     if (!s_hdrMinPipeline)
                     {
                         VkDescriptorSetLayoutBinding mb[3] = {
-                            { 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr },
+                            { 0, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr },
                             { 1, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr },
                             { 2, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr },
                         };
-                        CreateComputePipeline(kHdrMinGlsl, mb, 3, 2 * sizeof(int32_t), s_hdrMinSet, s_hdrMinLayout, s_hdrMinPipeline);
+                        CreateComputePipeline(kHdrMinGlsl, mb, 3, 4 * sizeof(int32_t), s_hdrMinSet, s_hdrMinLayout, s_hdrMinPipeline);
                     }
-                    VkDescriptorImageInfo mi[3] = { { VK_NULL_HANDLE, side->image.view, VK_IMAGE_LAYOUT_GENERAL },
+                    // ReCarbon: the side's copy still waiting (no pass since its resolve: the
+                    // frame's last) reads its target, the same texels, and is never made.
+                    const std::optional<HdrSideCopy> target = s_hdrSideWait.ReadAtPresent(side);
+                    if (!target)
+                        HdrRecordWaitingSide();  // (another side's; recorded before anything reads this one)
+                    Begin();
+                    VkDescriptorImageInfo mi[3] = { { VK_NULL_HANDLE, target ? target->rt->sampleView : side->image.view, VK_IMAGE_LAYOUT_GENERAL },
                         { VK_NULL_HANDLE, s_hdrGradeSnap.view, VK_IMAGE_LAYOUT_GENERAL }, { VK_NULL_HANDLE, s_frontFloat.view, VK_IMAGE_LAYOUT_GENERAL } };
                     VkWriteDescriptorSet mw[3];
                     for (uint32_t i = 0; i < 3; i++)
-                        mw[i] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, VK_NULL_HANDLE, i, 0, 1, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, &mi[i],
-                            nullptr, nullptr };
-                    const int32_t size[2] = { int32_t(fw), int32_t(fh) };
+                        mw[i] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, VK_NULL_HANDLE, i, 0, 1,
+                            i == 0 ? VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, &mi[i], nullptr, nullptr };
+                    const int32_t size[4] = { int32_t(fw), int32_t(fh), target ? target->src.x - target->dst.x : 0,
+                        target ? target->src.y - target->dst.y : 0 };
                     s_stateEpoch++;
                     vkCmdBindPipeline(s_cmd, VK_PIPELINE_BIND_POINT_COMPUTE, s_hdrMinPipeline);
                     s_pushDescriptorSet(s_cmd, VK_PIPELINE_BIND_POINT_COMPUTE, s_hdrMinLayout, 0, 3, mw);

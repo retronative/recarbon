@@ -238,7 +238,11 @@ int main(int argc, char** argv)
             Check(Write(std::string(argv[1]) + "/sm3_mul_on.frag", on.glsl), "wrote sm3_mul_on.frag");
         }
     }
-    Check(!gpu::SelectMulEnabled() || std::getenv("RECARBON_SELECT_MUL"), "the flag is off unless RECARBON_SELECT_MUL is set");
+    // ReCarbon (M1 GPU time, 2026-11-12): on by default; RECARBON_SELECT_MUL=0 restores the current form.
+    {
+        const char* v = std::getenv("RECARBON_SELECT_MUL");
+        Check(gpu::SelectMulEnabled() == !(v && v[0] == '0'), "the select form is on unless RECARBON_SELECT_MUL=0");
+    }
 
     if (g_failures)
     {
