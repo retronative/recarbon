@@ -1,0 +1,17 @@
+{
+  "$schema": "https://recomp.fyi/schema/v1.json",
+  "game": "Need for Speed: Carbon",
+  "wikidata": "Q219795",
+  "system": "Xbox 360",
+  "type": "recomp",
+  "original": { "region": "USA", "revision": "0.0.0.1", "serial": "EA-2028" },
+  "project": "ReCarbon",
+  "status": "playable",
+  "targets": ["macOS"],
+  "toolchain": "Xenonrecomp",
+  "approach": "Static recompilation to native arm64 for Apple Silicon, on the SpeedBreaker runtime (NFS: Most Wanted) with a Metal renderer",
+  "started": "2026-10-22",
+  "maintainers": [{ "name": "thixpin", "link": "https://github.com/thixpin" }],
+  "links": [{ "label": "Website", "url": "https://retronative.github.io/recarbon/" }],
+  "notes": "Alpha. Career, free-roam and races are playable on Apple Silicon Macs with a keyboard or controller, with HDR and resolutions up to 4K. Needs your own copy of the USA Xbox 360 game; no game files are included."
+}
